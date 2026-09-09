@@ -403,8 +403,66 @@ async def _call_gemini_with_media(
     return _parsed_object(text), tokens
 
 
+def _schema_contract(schema: Optional[dict]) -> str:
+    """O schema do Gemini escrito como texto, para quem não aceita schema.
+
+    `response_format: json_object` garante JSON VÁLIDO, não JSON no formato
+    combinado — e a diferença derrubou a leitura de currículo em produção: o
+    modelo devolveu `{"anos_experiencia": 2.5, "competencias": [...]}`, com a
+    lista de tecnologias sob um nome que ninguém lê. O JSON era perfeito, o
+    currículo entrou vazio, e nada falhou em lugar nenhum.
+
+    Revalidar a resposta (como o resume_parser faz) não resolve isso: não há
+    como recuperar uma chave que o modelo decidiu chamar de outra coisa. O
+    nome precisa ir no pedido.
+
+    Renderiza só o FORMATO, não as regras — estas continuam no prompt de cada
+    chamador, que é onde fazem sentido.
+    """
+    if not schema:
+        return ""
+    return (
+        "\n\nFORMATO DA RESPOSTA — um objeto JSON com EXATAMENTE estas chaves, "
+        "com estes nomes, sem trocar por sinônimos:\n"
+        f"{_render_shape(schema, 0)}\n"
+        'Chave sem informação vem vazia ("" ou []), nunca omitida nem renomeada.'
+    )
+
+
+def _render_shape(node: dict, depth: int) -> str:
+    """Um nó do schema como pseudo-JSON legível. Recursivo porque os schemas
+    deste app aninham objeto dentro de array (questões, fases, tecnologias)."""
+    tipo = str(node.get("type", "STRING")).upper()
+    recuo = "  " * (depth + 1)
+
+    if tipo == "OBJECT":
+        propriedades = node.get("properties") or {}
+        if not propriedades:
+            return "{}"
+        linhas = [
+            f'{recuo}"{nome}": {_render_shape(filho, depth + 1)}'
+            for nome, filho in propriedades.items()
+        ]
+        return "{\n" + ",\n".join(linhas) + "\n" + "  " * depth + "}"
+
+    if tipo == "ARRAY":
+        return "[" + _render_shape(node.get("items") or {}, depth) + "]"
+
+    return {
+        "STRING": "string",
+        "INTEGER": "inteiro",
+        "NUMBER": "número",
+        "BOOLEAN": "booleano",
+    }.get(tipo, "string")
+
+
 async def _call_openai_compatible(
-    base_url: str, model: str, system_prompt: str, user_prompt: str, api_key: str
+    base_url: str,
+    model: str,
+    system_prompt: str,
+    user_prompt: str,
+    api_key: str,
+    schema: Optional[dict] = None,
 ) -> tuple[dict, int]:
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
         response = await client.post(
@@ -414,7 +472,10 @@ async def _call_openai_compatible(
                 "model": model,
                 "messages": [
                     {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": user_prompt},
+                    # O contrato vai no fim da mensagem do usuário, e não no
+                    # system: é a última coisa que o modelo lê antes de
+                    # responder, que é onde instrução de formato pega melhor.
+                    {"role": "user", "content": user_prompt + _schema_contract(schema)},
                 ],
                 "response_format": {"type": "json_object"},
             },
@@ -488,8 +549,12 @@ def _text_candidates() -> list[_Candidate]:
             candidates.append(
                 _Candidate(
                     _named(provider, index, len(keys)),
-                    lambda sp, up, _schema, key=key, base_url=base_url, model=model: (
-                        _call_openai_compatible(base_url, model, sp, up, key)
+                    # O schema chega aqui também. Ele era descartado (`_schema`)
+                    # porque estes provedores não aceitam schema na requisição —
+                    # mas aceitam no texto, e sem ele cada modelo inventa os
+                    # próprios nomes de chave.
+                    lambda sp, up, schema, key=key, base_url=base_url, model=model: (
+                        _call_openai_compatible(base_url, model, sp, up, key, schema)
                     ),
                 )
             )

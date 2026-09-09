@@ -145,3 +145,59 @@ def test_erro_desconhecido_nao_e_engolido():
     assert ai._as_failure(RuntimeError("bug")) is None
     assert ai._as_failure(httpx.ConnectTimeout("lento")).kind == ai.TRANSIENT
     assert ai._as_failure(ValueError("json ruim")).kind == ai.TRANSIENT
+
+
+# ---------------------------------------------------------------------------
+# Contrato de formato para quem não aceita schema
+# ---------------------------------------------------------------------------
+
+
+def test_contrato_nomeia_as_chaves_do_schema():
+    """O bug de producao: `response_format: json_object` garante JSON VALIDO,
+    nao JSON no formato combinado. O modelo devolveu a lista de tecnologias sob
+    a chave `competencias` e o curriculo entrou vazio, sem nada falhar."""
+    schema = {
+        "type": "OBJECT",
+        "properties": {
+            "anos_experiencia": {"type": "NUMBER"},
+            "tecnologias": {
+                "type": "ARRAY",
+                "items": {
+                    "type": "OBJECT",
+                    "properties": {
+                        "nome": {"type": "STRING"},
+                        "proficiencia": {"type": "INTEGER"},
+                    },
+                },
+            },
+        },
+    }
+    contrato = ai._schema_contract(schema)
+
+    assert '"tecnologias"' in contrato
+    assert '"anos_experiencia"' in contrato
+    # As chaves aninhadas tambem: o modelo errou uma de primeiro nivel, mas
+    # nada impede que erre `nome` dentro do array.
+    assert '"nome"' in contrato
+    assert '"proficiencia"' in contrato
+    assert "sinônimos" in contrato
+
+
+def test_contrato_vazio_quando_nao_ha_schema():
+    """Chamador sem schema (nenhum hoje, mas a assinatura permite) nao deve
+    ganhar um paragrafo de instrucao vazio colado no fim do prompt."""
+    assert ai._schema_contract(None) == ""
+    assert ai._schema_contract({}) == ""
+
+
+def test_contrato_traduz_os_tipos():
+    schema = {
+        "type": "OBJECT",
+        "properties": {
+            "titulo": {"type": "STRING"},
+            "semanas": {"type": "INTEGER"},
+            "horas": {"type": "NUMBER"},
+        },
+    }
+    contrato = ai._schema_contract(schema)
+    assert "string" in contrato and "inteiro" in contrato and "número" in contrato

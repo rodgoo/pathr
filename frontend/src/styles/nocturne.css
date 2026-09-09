@@ -186,18 +186,26 @@ textarea.input { min-height: 90px; resize: vertical; }
   box-shadow: inset 0 0 0 4px var(--color-bg);
 }
 .radio input:focus-visible + .dot { outline: 2px solid var(--color-accent); outline-offset: 2px; }
-.seg {
-  display: inline-flex; overflow: hidden;
-  border: 1px solid var(--color-divider); border-radius: var(--radius-md);
-}
+.seg { display: inline-flex; }
 .seg-opt {
   display: inline-flex; align-items: center; gap: 6px;
   padding: 7px 12px; font-size: 13px; cursor: pointer;
 }
-.seg-opt + .seg-opt { border-left: 1px solid var(--color-divider); }
-.seg-opt:has(input:checked) { color: var(--color-accent); box-shadow: inset 0 0 0 1px var(--color-accent); }
+/* A borda mora em cada opcao, nao no grupo, e as vizinhas se sobrepoem em 1px.
+   O destaque da marcada passa a ser a borda inteira dela, arredondada junto
+   com o grupo nas pontas, em vez de um anel retangular desenhado dentro de um
+   container que cortava as quinas no raio e deixava o roxo encostado na linha
+   cinza. A geometria externa nao muda: o 1px que era do grupo agora e da opcao. */
+.seg > .seg-opt { position: relative; border: 1px solid var(--color-divider); }
+.seg > .seg-opt + .seg-opt { margin-left: -1px; }
+.seg > .seg-opt:first-child { border-radius: var(--radius-md) 0 0 var(--radius-md); }
+.seg > .seg-opt:last-child { border-radius: 0 var(--radius-md) var(--radius-md) 0; }
+.seg > .seg-opt:only-child { border-radius: var(--radius-md); }
+/* z-index para o roxo cobrir a borda de quem vem depois, sem linha dupla. */
+.seg > .seg-opt:has(input:checked) { border-color: var(--color-accent); z-index: 1; }
+.seg-opt:has(input:checked) { color: var(--color-accent); }
 .seg-opt:not(:has(input:checked)):hover { background: color-mix(in srgb, var(--color-text) 7%, transparent); }
-.seg-opt:has(input:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: -2px; }
+.seg-opt:has(input:focus-visible) { outline: 2px solid var(--color-accent); outline-offset: -2px; z-index: 2; }
 
 /* — cards — */
 .card {
