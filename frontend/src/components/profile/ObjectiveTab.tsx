@@ -13,9 +13,14 @@
  * Salva ao sair do campo, e não num botão "Salvar": um formulário de
  * configuração com botão faz a pessoa achar que perdeu o que digitou quando
  * troca de aba.
+ *
+ * Salvar sozinho só funciona se a tela DISSER que salvou, e disser ao lado do
+ * campo que a pessoa acabou de mexer. Um aviso no topo da página, longe do
+ * cursor, não é confirmação — é o mesmo silêncio de antes. Por isso o estado
+ * de salvamento carrega qual campo o produziu, e cada painel mostra só o seu.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { profile as profileApi } from "@/api/endpoints";
 import type { Profile } from "@/api/types";
 import { useQuery } from "@/hooks/useApi";
@@ -69,34 +74,68 @@ const ATALHOS = [
 
 const HORAS = [4, 6, 8, 10, 15, 20];
 
+/** Os campos que salvam sozinhos. O estado de salvamento nomeia um deles para
+ * a confirmação aparecer no painel certo. */
+type Campo = "destino" | "contexto" | "horas";
+
+type Salvamento =
+  | { campo: Campo; estado: "salvando" }
+  | { campo: Campo; estado: "salvo" }
+  | { campo: Campo; estado: "erro"; mensagem: string }
+  | null;
+
+/** O texto livre vira lista de metas: uma linha, um item. O banco guarda
+ * lista porque o gerador lê item a item. */
+function metas(texto: string): string[] {
+  return texto
+    .split("\n")
+    .map((linha) => linha.trim())
+    .filter(Boolean);
+}
+
 export function ObjectiveTab() {
   const carregado = useQuery(() => profileApi.get(), []);
   const [perfil, setPerfil] = useState<Profile | null>(null);
   const [contexto, setContexto] = useState("");
-  const [salvo, setSalvo] = useState(false);
-  const [erro, setErro] = useState<string | null>(null);
+  // O que já está no servidor. Sem isto, sair do campo sem ter digitado nada
+  // dispararia uma escrita e anunciaria "salvo" para quem só passou o cursor.
+  const [contextoSalvo, setContextoSalvo] = useState("");
+  const [salvamento, setSalvamento] = useState<Salvamento>(null);
+  const temporizador = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     if (!carregado.data) return;
     setPerfil(carregado.data);
-    // `goals` é lista no banco (o gerador lê item a item). Aqui vira um texto
-    // só: junta na leitura, separa por linha na escrita.
-    setContexto((carregado.data.goals ?? []).map(String).join("\n"));
+    const texto = (carregado.data.goals ?? []).map(String).join("\n");
+    setContexto(texto);
+    setContextoSalvo(texto);
   }, [carregado.data]);
+
+  // O "salvo" some sozinho depois de um tempo; se o componente sair antes
+  // disso, o timer pendente escreveria em estado que não existe mais.
+  useEffect(() => () => window.clearTimeout(temporizador.current), []);
 
   if (carregado.loading) return <Loading />;
   if (carregado.error) return <ErrorState message={carregado.error} onRetry={carregado.reload} />;
   if (!perfil) return null;
 
-  async function salvar(mudanca: Partial<Profile>) {
-    setErro(null);
+  async function salvar(mudanca: Partial<Profile>, campo: Campo) {
+    // Um salvamento novo cancela o "salvo" do anterior — sem isso, o timer
+    // antigo apagaria a confirmação deste antes da hora.
+    window.clearTimeout(temporizador.current);
+    setSalvamento({ campo, estado: "salvando" });
     setPerfil((atual) => (atual ? { ...atual, ...mudanca } : atual));
     try {
       await profileApi.update(mudanca);
-      setSalvo(true);
-      window.setTimeout(() => setSalvo(false), 2500);
+      if (mudanca.goals) setContextoSalvo(metas(contexto).join("\n"));
+      setSalvamento({ campo, estado: "salvo" });
+      temporizador.current = window.setTimeout(() => setSalvamento(null), 2500);
     } catch (caught) {
-      setErro(caught instanceof Error ? caught.message : "Não consegui salvar.");
+      setSalvamento({
+        campo,
+        estado: "erro",
+        mensagem: caught instanceof Error ? caught.message : "Não consegui salvar.",
+      });
     }
   }
 
@@ -111,11 +150,7 @@ export function ObjectiveTab() {
           <span style={{ fontSize: 11.5, color: TEXT.faint }}>
             escolha um destino ou descreva o seu abaixo
           </span>
-          {salvo ? (
-            <span role="status" style={{ marginLeft: "auto", fontSize: 11.5, color: C.verde }}>
-              salvo
-            </span>
-          ) : null}
+          <Estado salvamento={salvamento} campo="destino" />
         </div>
 
         <div
@@ -135,7 +170,7 @@ export function ObjectiveTab() {
                 type="button"
                 role="radio"
                 aria-checked={ativo}
-                onClick={() => void salvar({ target_role: destino.titulo })}
+                onClick={() => void salvar({ target_role: destino.titulo }, "destino")}
                 style={{
                   display: "flex",
                   gap: 9,
@@ -199,6 +234,7 @@ export function ObjectiveTab() {
           >
             gera o plano inteiro
           </span>
+          <Estado salvamento={salvamento} campo="contexto" />
         </div>
         <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 11.2px", maxWidth: "70ch" }}>
           Conte onde você está, para onde quer ir e o que atrapalha. A partir disso o roadmap sai
@@ -218,15 +254,14 @@ export function ObjectiveTab() {
             onChange={(event) => setContexto(event.target.value)}
             // Salva ao sair do campo. Um botão faria a pessoa achar que perdeu
             // o texto ao trocar de aba — e este é o campo mais caro de perder.
-            onBlur={() =>
-              void salvar({
-                goals: contexto
-                  .split("\n")
-                  .map((linha) => linha.trim())
-                  .filter(Boolean),
-              })
-            }
+            onBlur={() => {
+              if (contexto === contextoSalvo) return;
+              void salvar({ goals: metas(contexto) }, "contexto");
+            }}
           />
+          <p style={{ fontSize: 11.5, color: TEXT.faint, margin: "5.6px 0 0" }}>
+            Salva sozinho quando você sai do campo — não há botão a apertar.
+          </p>
         </div>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 5.6, marginTop: 8.4 }}>
@@ -234,7 +269,11 @@ export function ObjectiveTab() {
             <button
               key={atalho}
               type="button"
-              onClick={() => setContexto((atual) => (atual ? `${atual}\n${atalho}` : atalho))}
+              onClick={() => {
+                const proximo = contexto ? `${contexto}\n${atalho}` : atalho;
+                setContexto(proximo);
+                void salvar({ goals: metas(proximo) }, "contexto");
+              }}
               style={{
                 padding: "5px 10px",
                 borderRadius: 6,
@@ -266,7 +305,7 @@ export function ObjectiveTab() {
                 key={horas}
                 type="button"
                 aria-pressed={ativo}
-                onClick={() => void salvar({ weekly_hours: horas })}
+                onClick={() => void salvar({ weekly_hours: horas }, "horas")}
                 style={{
                   padding: "7px 14px",
                   borderRadius: 6,
@@ -284,8 +323,29 @@ export function ObjectiveTab() {
           })}
         </div>
       </Panel>
-
-      {erro ? <ErrorState message={erro} /> : null}
     </div>
+  );
+}
+
+/**
+ * O que aconteceu com o último salvamento DESTE campo.
+ *
+ * Cada painel monta o seu; o estado carrega qual campo o gerou, então a
+ * confirmação nasce ao lado do que a pessoa mexeu em vez de num canto da tela
+ * que ela não está olhando.
+ */
+function Estado({ salvamento, campo }: { salvamento: Salvamento; campo: Campo }) {
+  if (!salvamento || salvamento.campo !== campo) return null;
+  const cor =
+    salvamento.estado === "salvo" ? C.verde : salvamento.estado === "erro" ? C.rosa : TEXT.faint;
+  return (
+    <span
+      role="status"
+      style={{ marginLeft: "auto", fontSize: 11.5, color: cor, textAlign: "right" }}
+    >
+      {salvamento.estado === "salvando" ? "salvando…" : null}
+      {salvamento.estado === "salvo" ? "salvo" : null}
+      {salvamento.estado === "erro" ? `não salvou — ${salvamento.mensagem}` : null}
+    </span>
   );
 }
