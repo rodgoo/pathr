@@ -65,39 +65,68 @@ protegeria nada.
 
 ## DNS
 
-Na zona `notter.com.br`, dois registros apontando para o host do PathR:
+Tudo na zona `notter.com.br`, no Cloudflare — sete registros:
 
-```
-pathr        A    <IP do servidor>
-api.pathr    A    <IP do servidor>
-```
+| Nome | Tipo | Destino | Proxy |
+| --- | --- | --- | --- |
+| `pathr` | CNAME | `<projeto>.pages.dev` | laranja |
+| `api.pathr` | CNAME | `pathr-backend.fly.dev` | **cinza (DNS only)** |
+| `noreply.pathr` | CNAME | `noreply-pathr-notter-com-br.brand.brevosend.com` | cinza |
+| `brevo1._domainkey.pathr` | CNAME | `b1.pathr-notter-com-br.dkim.brevo.com` | cinza |
+| `brevo2._domainkey.pathr` | CNAME | `b2.pathr-notter-com-br.dkim.brevo.com` | cinza |
+| `_dmarc.pathr` | TXT | política DMARC | — |
+| `mail._domainkey.pathr` | TXT | chave pública DKIM | — |
 
-Se o Notter usa Cloudflare, deixe os dois com proxy **desligado** (nuvem
-cinza) até o Caddy emitir os certificados — o desafio HTTP-01 do Let's
-Encrypt precisa alcançar a porta 80 do servidor diretamente. Depois de o
-primeiro certificado sair, o proxy pode ser religado.
+Os cinco de e-mail estão em `infra/dns/pathr-email.txt`, no formato que o
+import do Cloudflare aceita.
 
-## Duas rotas de deploy
+As duas cores são opostas de propósito. `api.pathr` precisa ficar **cinza**
+porque a Fly emite o certificado por desafio ACME e o proxy do Cloudflare
+intercepta esse desafio. Já `pathr` é servido pelo próprio Cloudflare, então
+laranja é o certo — e o Pages escreve esse registro sozinho ao ativar o
+domínio.
 
-| | Render (sem servidor próprio) | Self-host (VPS) |
+### A armadilha da delegação
+
+Até 2026-09-09 o subdomínio `pathr.notter.com.br` inteiro estava **delegado**
+aos nameservers do Brevo (`ns1`/`ns2.sendinblue.com`) — é o que o modo
+"automático" dele faz. Enquanto valeu, nenhum registro criado no Cloudflare
+sob esse nome funcionava: o painel os marcava como *shadowed* e a delegação
+vencia. O site e a API não tinham como existir.
+
+Se um dia o e-mail for reconfigurado pelo modo automático do Brevo, ele
+recria essa delegação e derruba os dois. Use sempre o modo manual, com os
+registros do arquivo acima.
+
+## Onde cada parte roda
+
+| | Produção | Self-host (VPS) |
 | --- | --- | --- |
-| Backend | `render.yaml` (Blueprint, plano free) | `docker-compose.prod.yml` + Caddy |
+| Backend | Fly, região `gru` (`backend/fly.toml`) | `docker-compose.prod.yml` + Caddy |
 | Frontend | Cloudflare Pages (build estático) | o mesmo compose serve o `dist/` |
-| TLS | do Render / Cloudflare | Caddy, Let's Encrypt automático |
-| Custo | zero | a VPS |
-| Ressalva | dorme após 15 min sem tráfego (30-60s no primeiro acesso) | sempre ligado |
+| TLS | Fly na API, Cloudflare no site | Caddy, Let's Encrypt automático |
+| Custo | próximo de zero | a VPS |
+
+A região `gru` não é arbitrária: o Supabase deste projeto fica em
+`sa-east-1`, São Paulo. Um deploy anterior rodou em `oregon`, e cada consulta
+ao banco atravessava o continente na ida e na volta.
 
 ### O ponto que decide se a sessão funciona
 
-O cookie é `SameSite=Strict`, o que exige API e app no **mesmo domínio
-registrável**. Com o host padrão do Render (`pathr-backend.onrender.com`)
-contra `pathr.notter.com.br`, isso é cross-site: o navegador não envia o
-cookie, e a pessoa entra e cai de volta no login.
+O cookie é host-only e `SameSite=Strict`, o que exige API e app no **mesmo
+domínio registrável**. `pathr.notter.com.br` e `api.pathr.notter.com.br`
+satisfazem isso — ambos ficam sob `notter.com.br` —, e é só por isso que o
+cookie viaja entre os dois.
 
-Antes de usar em produção, adicione o domínio customizado
-`api.pathr.notter.com.br` ao serviço (Render → Settings → Custom Domains,
-disponível no plano free) e aponte o CNAME. Só então `COOKIE_DOMAIN` e
-`COOKIE_SAMESITE=strict` do `render.yaml` fazem sentido.
+Apontar o front para o host padrão do provedor quebra tudo. Tanto `fly.dev`
+quanto `onrender.com` estão na Public Suffix List, então `pathr-backend.fly.dev`
+conta como um domínio registrável próprio, distinto de `notter.com.br`. O
+navegador descartaria o cookie em todo pedido: o login autenticaria e o
+pedido seguinte chegaria anônimo.
+
+Ou seja, o domínio próprio na API não é estética — é requisito de
+funcionamento. Foi exatamente o motivo de o backend sair do Render, cujo
+plano não permitia adicionar mais um domínio.
 
 > Baixar para `COOKIE_SAMESITE=none` faria a sessão funcionar em qualquer
 > domínio, ao preço da proteção contra CSRF que o Strict dá de graça. Serve
@@ -114,8 +143,8 @@ Anote, em Project Settings → API e → Database:
 
 - `SUPABASE_URL` e `SUPABASE_SERVICE_ROLE_KEY`
 - `DATABASE_URL` — a string do **pooler** (`aws-...pooler.supabase.com`), não
-  a do host direto: `db.<ref>.supabase.co` resolve só em IPv6 e o Render não
-  alcança.
+  a do host direto: `db.<ref>.supabase.co` só resolve em IPv6, e nem todo
+  host de aplicação alcança.
 
 ### 2. Preencha o `.env.local` e rode o bootstrap
 
@@ -144,10 +173,40 @@ e sem apelidos, e o CV que escreve "postgres" e o que escreve "PostgreSQL"
 viram dois assuntos diferentes. (`scripts/seed_tags.py` faz só essa parte, se
 precisar reexecutar isolado.)
 
-No Render, rode pelo Shell do serviço; no self-host,
+Na Fly, rode com `fly ssh console --app pathr-backend -C "python -m scripts.bootstrap"`;
+no self-host,
 `docker compose -f docker-compose.prod.yml run --rm pathr-backend python -m scripts.bootstrap`.
 
 ## Subir
+
+### Produção: Fly (API) e Cloudflare Pages (site)
+
+```bash
+cd backend
+fly apps create pathr-backend            # só na primeira vez
+python scripts/fly_secrets.py --check    # confere sem enviar
+python scripts/fly_secrets.py            # envia as 12 credenciais
+fly deploy
+fly certs add api.pathr.notter.com.br
+```
+
+Use `fly apps create`, **não** `fly launch`: o launch reescreve o `fly.toml`
+com um scaffold genérico e descarta a configuração daqui.
+
+O `fly_secrets.py` lê o `.env.local` e manda os valores por um cano até o
+`fly secrets import`. Eles não passam pela tela nem pela linha de comando do
+processo, onde um `ps` de outro usuário leria. Ele também recusa o envio se
+alguma variável vier com o próprio nome colado no valor — o defeito que
+derrubou dois deploys, quando a linha inteira do `.env` foi colada no campo
+de valor do painel.
+
+O site não precisa de comando: o Pages faz build a cada push no `main`. O que
+ele exige é a variável `VITE_API_URL` no painel do projeto. Sem ela o build
+falha de propósito (ver `frontend/vite.config.ts`), porque o Vite embute essa
+URL no bundle em tempo de build — sem a trava, o deploy terminaria verde
+publicando um site que aponta para `localhost`.
+
+### Self-host (VPS)
 
 ```bash
 cp backend/.env.example .env.local     # preencha tudo

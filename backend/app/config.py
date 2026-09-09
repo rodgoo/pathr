@@ -131,7 +131,7 @@ class Settings(BaseSettings):
         ambiente.
 
         Exigir a edição manual seria um passo a mais para errar em cada
-        ambiente — inclusive ao colar a variável no painel do Render, onde o
+        ambiente — inclusive ao colar a variável no painel do host, onde o
         erro só aparece no log do primeiro deploy. Normalizar aqui é o lugar
         onde a correção vale para todos eles de uma vez.
 

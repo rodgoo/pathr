@@ -6,7 +6,7 @@ PostgREST) ainda está no schema antigo. Nesse intervalo toda rota que toca a
 coluna responde 500, e o app parece quebrado sem estar.
 
 Por isso `/health` só devolve 200 quando as tabelas centrais deste app estão
-visíveis pelo PostgREST. O Render (ver render.yaml) usa esta rota como
+visíveis pelo PostgREST. A Fly (ver backend/fly.toml) usa esta rota como
 `healthCheckPath`: enquanto ela não passar, ele segura o deploy em vez de
 promover uma versão que responderia 500.
 
