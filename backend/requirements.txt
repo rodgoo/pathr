@@ -39,3 +39,16 @@ python-docx==1.2.0
 
 # E-mail transacional (verificação, recuperação de senha)
 # — mesma conta Brevo do Notter, ver services/email.py.
+
+# Modo leitura: o artigo aberto DENTRO do PathR.
+#
+# Metade dos sites de artigo recusa ser exibida num quadro (x-frame-options,
+# frame-ancestors), e o bloqueio nao e detectavel pelo JavaScript — o quadro
+# so fica em branco. Entao o servidor busca a pagina e extrai o texto.
+#
+# trafilatura tira o artigo do meio do menu, banner e rodape. nh3 (bindings
+# Rust do ammonia) sanitiza o HTML resultante: renderizar HTML de terceiro na
+# NOSSA origem sem limpar seria um XSS de mao beijada, com a sessao do usuario
+# ao alcance de quem controlasse a pagina de origem.
+trafilatura==2.2.0
+nh3==0.3.7

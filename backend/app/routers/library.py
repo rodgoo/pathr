@@ -14,7 +14,7 @@ biblioteca vinha vazia para todo mundo — o modelo estava pronto e a fonte
 nunca chegou.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -24,6 +24,7 @@ from supabase import Client
 from app.database import get_supabase
 from app.deps import get_current_user
 from app.services import resource_search
+from app.services import reader
 from app.services.progress import log_activity
 
 router = APIRouter(prefix="/library", tags=["biblioteca"])
@@ -38,6 +39,9 @@ class ResourceProgress(BaseModel):
     # Onde parou: "23:10", "capítulo 4", "seção sobre índices". Texto livre
     # porque metade da biblioteca é artigo e PDF, onde segundo não diz nada.
     position_note: Optional[str] = Field(default=None, max_length=200)
+    # A posição do vídeo em segundos, mandada pelo player. 24h de teto é
+    # absurdo para um material de estudo e ainda assim barra valor corrompido.
+    position_seconds: Optional[int] = Field(default=None, ge=0, le=86_400)
 
 
 def _now() -> datetime:
@@ -116,9 +120,99 @@ def list_resources(
             "user_position_note": (by_resource.get(str(resource["id"])) or {}).get(
                 "position_note"
             ),
+            "user_position_seconds": (by_resource.get(str(resource["id"])) or {}).get(
+                "position_seconds"
+            ),
         }
         for resource in resources
     ]
+
+
+# Quanto tempo o artigo extraído vale antes de ser buscado de novo. Artigo é
+# corrigido e atualizado; um cache eterno mostraria para sempre a primeira
+# versão vista. Sete dias é longo o bastante para uma leitura em partes não
+# gastar duas buscas.
+_VALIDADE_LEITURA = timedelta(days=7)
+
+
+@router.get("/{resource_id}/reader")
+def read_resource(
+    resource_id: str,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """O artigo extraído, para ler DENTRO do PathR.
+
+    Metade dos sites recusa ser exibida num quadro, e o bloqueio não é
+    detectável pelo JavaScript — o quadro só fica em branco. Por isso quem
+    busca é o servidor. Ver services/reader.py.
+
+    O resultado fica na linha do RECURSO, que é compartilhada: uma busca serve
+    todo mundo que abrir o mesmo material, em vez de cada leitor bater de novo
+    no site de origem pelo mesmo texto.
+    """
+    linhas = (
+        supabase.table("pathr_resource")
+        .select("id,title,url,provider,author,kind,reader_html,reader_words,reader_status,reader_error,reader_fetched_at")
+        .eq("id", resource_id)
+        .limit(1)
+        .execute()
+        .data
+    )
+    if not linhas:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Material não encontrado.")
+    recurso = linhas[0]
+
+    if not _leitura_vencida(recurso):
+        return _leitura_publica(recurso)
+
+    campos: dict[str, Any] = {"reader_fetched_at": _now().isoformat()}
+    try:
+        leitura = reader.ler(recurso["url"])
+    except reader.LeituraIndisponivel as exc:
+        # Falhar aqui não é erro do app: o site pode estar fora, recusar robôs
+        # ou não ter texto extraível. A tela mostra o motivo e o link original,
+        # que é uma resposta melhor que um quadro vazio.
+        campos.update({"reader_status": "failed", "reader_error": exc.motivo[:300]})
+    else:
+        campos.update(
+            {
+                "reader_status": "ok",
+                "reader_html": leitura.html,
+                "reader_words": leitura.palavras,
+                "reader_error": None,
+            }
+        )
+    supabase.table("pathr_resource").update(campos).eq("id", resource_id).execute()
+    return _leitura_publica({**recurso, **campos})
+
+
+def _leitura_vencida(recurso: dict[str, Any]) -> bool:
+    if recurso.get("reader_status") != "ok" or not recurso.get("reader_html"):
+        return True
+    buscado = recurso.get("reader_fetched_at")
+    if not buscado:
+        return True
+    try:
+        quando = datetime.fromisoformat(str(buscado).replace("Z", "+00:00"))
+    except ValueError:
+        return True
+    return _now() - quando > _VALIDADE_LEITURA
+
+
+def _leitura_publica(recurso: dict[str, Any]) -> dict[str, Any]:
+    """O que a tela precisa. A fonte vai junto SEMPRE: o modo leitura não
+    substitui o original, e quem escreveu merece o crédito e a visita."""
+    return {
+        "id": str(recurso["id"]),
+        "title": recurso.get("title"),
+        "url": recurso.get("url"),
+        "provider": recurso.get("provider") or recurso.get("author"),
+        "status": recurso.get("reader_status") or "pending",
+        "html": recurso.get("reader_html") if recurso.get("reader_status") == "ok" else None,
+        "words": recurso.get("reader_words"),
+        "error": recurso.get("reader_error"),
+    }
 
 
 @router.put("/{resource_id}/progress")
@@ -149,6 +243,7 @@ def set_progress(
         # Concluído não tem "onde parei": manter a marca faria a tela oferecer
         # retomar um material que a pessoa já terminou.
         fields["position_note"] = None
+        fields["position_seconds"] = None
 
     existing = (
         supabase.table("pathr_user_resource")

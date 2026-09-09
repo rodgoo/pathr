@@ -6,6 +6,7 @@
  * procurar algo que ainda não está no plano.
  */
 
+import { useState } from "react";
 import { library as libraryApi } from "@/api/endpoints";
 import { KIND_LABEL, LIBRARY_FILTERS } from "@/api/library-filters";
 import { useAppState } from "@/hooks/useAppState";
@@ -18,6 +19,7 @@ import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { SCREEN_IN } from "@/components/ui/primitives";
 import { CurateButton } from "@/components/library/CurateButton";
 import { LibraryRow } from "@/components/library/LibraryRow";
+import { ResourceViewer } from "@/components/library/ResourceViewer";
 
 const LANGS: readonly { value: ContentLang; label: string }[] = [
   { value: "pt", label: "Português" },
@@ -26,6 +28,9 @@ const LANGS: readonly { value: ContentLang; label: string }[] = [
 ];
 
 export function LibraryPage() {
+  // Qual material esta aberto no visualizador. Um por vez: dois videos
+  // tocando juntos e ruido, e a tela perde o foco do que se esta estudando.
+  const [aberto, setAberto] = useState<string | null>(null);
   const { state, dispatch } = useAppState();
   const resources = useQuery(
     () =>
@@ -140,9 +145,11 @@ export function LibraryPage() {
       {resources.data && resources.data.length > 0 ? (
         <div style={{ display: "flex", flexDirection: "column", gap: 8.4 }}>
           {resources.data.map((resource) => (
+            <div key={resource.id}>
             <LibraryRow
-              key={resource.id}
               resource={resource}
+              aberto={aberto === resource.id}
+              onAbrir={() => setAberto((atual) => (atual === resource.id ? null : resource.id))}
               kindLabel={KIND_LABEL[resource.kind] ?? resource.kind}
               onProgress={async (next) => {
                 resources.set((current) =>
@@ -169,6 +176,27 @@ export function LibraryPage() {
                 });
               }}
             />
+              {aberto === resource.id ? (
+                <ResourceViewer
+                  resource={resource}
+                  onFechar={() => setAberto(null)}
+                  onProgresso={(mudanca) =>
+                    resources.set((current) =>
+                      current.map((item) =>
+                        item.id === resource.id
+                          ? {
+                              ...item,
+                              user_status: mudanca.status,
+                              user_progress_pct: mudanca.progress_pct,
+                              user_position_seconds: mudanca.position_seconds,
+                            }
+                          : item,
+                      ),
+                    )
+                  }
+                />
+              ) : null}
+            </div>
           ))}
         </div>
       ) : null}

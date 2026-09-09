@@ -214,6 +214,9 @@ export interface Resource {
   user_rating: number | null;
   /** Onde a pessoa parou. Nulo quando nunca foi marcado. */
   user_position_note: string | null;
+  /** A posicao do video em segundos. Nulo para artigo e para o que nunca
+   * foi aberto. */
+  user_position_seconds: number | null;
 }
 
 export interface QuizQuestion {
@@ -324,6 +327,22 @@ export interface EnglishItem {
   context: string | null;
   options: string[];
   order_index: number;
+}
+
+/** O artigo extraido pelo servidor, pronto para renderizar.
+ *
+ * `status`: "ok" traz o html; "failed" traz o motivo; "pending" nunca foi
+ * buscado. A tela mostra os tres de forma diferente -- nunca um quadro vazio.
+ */
+export interface ReaderContent {
+  id: string;
+  title: string;
+  url: string;
+  provider: string | null;
+  status: "ok" | "failed" | "pending";
+  html: string | null;
+  words: number | null;
+  error: string | null;
 }
 
 export interface EnglishAssessment {

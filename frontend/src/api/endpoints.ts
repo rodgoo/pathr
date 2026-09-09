@@ -15,6 +15,7 @@ import type {
   Overview,
   Profile,
   Quiz,
+  ReaderContent,
   QuizResult,
   Resource,
   Resume,
@@ -138,6 +139,9 @@ export const library = {
       nodeId ? `/library/curate?node_id=${nodeId}` : "/library/curate",
       {},
     ),
+  /** O artigo extraido, para ler dentro do PathR. Ver services/reader.py. */
+  reader: (resourceId: string) =>
+    api.get<ReaderContent>(`/library/${resourceId}/reader`),
   setProgress: (
     resourceId: string,
     body: {
@@ -147,6 +151,8 @@ export const library = {
       minutes_spent?: number;
       /** Onde parou: "23:10", "capitulo 4". E o que permite retomar. */
       position_note?: string | null;
+      /** A posicao do video em segundos, mandada pelo player. */
+      position_seconds?: number | null;
     },
   ) => api.put(`/library/${resourceId}/progress`, body),
 };

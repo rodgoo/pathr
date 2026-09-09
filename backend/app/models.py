@@ -387,6 +387,21 @@ class PathrResource(SQLModel, table=True):
     added_by: Optional[uuid.UUID] = Field(default=None, sa_type=PGUUID(as_uuid=True))
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
+    # -- Modo leitura: o artigo extraído, para abrir DENTRO do PathR.
+    #
+    # Mora aqui, na linha do recurso, e não na do usuário: a tabela é
+    # compartilhada (a url é única), então uma busca serve todo mundo que
+    # abrir o mesmo material. Ver services/reader.py.
+    reader_html: Optional[str] = Field(default=None)
+    reader_words: Optional[int] = Field(default=None)
+    # pending|ok|failed — a tela trata os três de forma diferente: mostra,
+    # nunca buscou, ou explica o motivo e oferece o link original.
+    reader_status: str = Field(default="pending")
+    reader_error: Optional[str] = Field(default=None)
+    reader_fetched_at: Optional[datetime] = Field(
+        default=None, sa_type=sa.DateTime(timezone=True)
+    )
+
 
 class PathrUserResource(SQLModel, table=True):
     __tablename__ = "pathr_user_resource"
@@ -402,6 +417,9 @@ class PathrUserResource(SQLModel, table=True):
     # pessoa: o material abre em outra aba, e o app não observa um player que
     # não é dele.
     position_note: Optional[str] = Field(default=None)
+    # A posição do vídeo, em segundos. Número, e não texto como o campo acima,
+    # porque o player devolve segundos e retomar exige o segundo exato.
+    position_seconds: Optional[int] = Field(default=None)
     rating: Optional[int] = Field(default=None)  # 1..5
     notes: Optional[str] = Field(default=None)
     minutes_spent: int = Field(default=0)

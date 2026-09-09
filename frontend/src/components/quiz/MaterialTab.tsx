@@ -9,13 +9,16 @@
 import { library as libraryApi } from "@/api/endpoints";
 import { KIND_LABEL } from "@/api/library-filters";
 import type { RoadmapNode } from "@/api/types";
+import { useState } from "react";
 import { useQuery } from "@/hooks/useApi";
 import { TEXT } from "@/lib/tokens";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { CurateButton } from "@/components/library/CurateButton";
 import { LibraryRow } from "@/components/library/LibraryRow";
+import { ResourceViewer } from "@/components/library/ResourceViewer";
 
 export function MaterialTab({ node }: { node: RoadmapNode }) {
+  const [aberto, setAberto] = useState<string | null>(null);
   const resources = useQuery(() => libraryApi.list({ only_mine: true }), []);
 
   if (resources.loading) return <Loading label="Buscando material…" />;
@@ -46,9 +49,11 @@ export function MaterialTab({ node }: { node: RoadmapNode }) {
         deste módulo.
       </p>
       {matching.map((resource) => (
+        <div key={resource.id}>
         <LibraryRow
-          key={resource.id}
           resource={resource}
+          aberto={aberto === resource.id}
+          onAbrir={() => setAberto((atual) => (atual === resource.id ? null : resource.id))}
           kindLabel={KIND_LABEL[resource.kind] ?? resource.kind}
           onProgress={async (next) => {
             resources.set((current) =>
@@ -75,6 +80,27 @@ export function MaterialTab({ node }: { node: RoadmapNode }) {
             });
           }}
         />
+          {aberto === resource.id ? (
+            <ResourceViewer
+              resource={resource}
+              onFechar={() => setAberto(null)}
+              onProgresso={(mudanca) =>
+                resources.set((current) =>
+                  current.map((item) =>
+                    item.id === resource.id
+                      ? {
+                          ...item,
+                          user_status: mudanca.status,
+                          user_progress_pct: mudanca.progress_pct,
+                          user_position_seconds: mudanca.position_seconds,
+                        }
+                      : item,
+                  ),
+                )
+              }
+            />
+          ) : null}
+        </div>
       ))}
     </div>
   );

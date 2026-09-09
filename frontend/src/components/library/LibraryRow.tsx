@@ -9,6 +9,7 @@
 import { useEffect, useState } from "react";
 import type { Resource, ResourceState } from "@/api/types";
 import { ACC, ACC4, C, TEXT, tint } from "@/lib/tokens";
+import { formatarTempo } from "@/components/library/VideoPlayer";
 import { Icon, type IconName } from "@/components/ui/icons";
 
 const ICON_BY_KIND: Record<string, IconName> = {
@@ -49,12 +50,19 @@ export function LibraryRow({
   kindLabel,
   onProgress,
   onPosition,
+  aberto = false,
+  onAbrir,
 }: {
   resource: Resource;
   kindLabel: string;
   onProgress: (next: ResourceState) => void;
   /** Grava onde a pessoa parou. Ver o campo abaixo do título. */
   onPosition: (nota: string) => void;
+  /** O material está aberto no visualizador logo abaixo desta linha. */
+  aberto?: boolean;
+  /** Abre ou fecha o visualizador. Sem isto, a linha volta a ser um link
+   * para fora — que é o que o produto deixou de querer. */
+  onAbrir?: () => void;
 }) {
   const chipColor = resource.kind === "video" ? ACC : resource.kind === "exercise" ? C.verde : C.azul;
 
@@ -88,14 +96,28 @@ export function LibraryRow({
       </span>
 
       <span style={{ flex: 1, minWidth: 180 }}>
-        <a
-          href={resource.url}
-          target="_blank"
-          rel="noreferrer noopener"
-          style={{ display: "block", fontSize: 14, color: "inherit", textDecoration: "none" }}
+        {/* Botão, e não link: o material abre AQUI DENTRO, e o progresso sai
+            do próprio consumo. O link para a fonte continua existindo, dentro
+            do visualizador, onde a pessoa o vê ao ler. */}
+        <button
+          type="button"
+          onClick={onAbrir}
+          aria-expanded={aberto}
+          style={{
+            display: "block",
+            textAlign: "left",
+            width: "100%",
+            padding: 0,
+            border: "none",
+            background: "transparent",
+            font: "inherit",
+            fontSize: 14,
+            color: aberto ? ACC4 : "inherit",
+            cursor: "pointer",
+          }}
         >
           {resource.title}
-        </a>
+        </button>
         <span style={{ display: "block", fontSize: 11.5, color: TEXT.faint }}>
           {[
             resource.provider ?? resource.author,
@@ -106,6 +128,9 @@ export function LibraryRow({
             .filter(Boolean)
             .join(" · ")}
         </span>
+        {resource.user_status === "in_progress" && resource.user_progress_pct > 0 ? (
+          <Progresso pct={resource.user_progress_pct} segundos={resource.user_position_seconds} />
+        ) : null}
         {resource.user_status === "in_progress" ? (
           <ParouEm nota={resource.user_position_note} onSalvar={onPosition} />
         ) : null}
@@ -172,6 +197,35 @@ function ParouEm({
         }}
         style={{ fontSize: 11.5, padding: "2px 7px", width: 150, height: "auto" }}
       />
+    </span>
+  );
+}
+
+/**
+ * O quanto já foi consumido, na própria linha da lista.
+ *
+ * É o que responde "onde eu parei?" antes de abrir: uma lista de dezessete
+ * materiais em que só se lê "em curso" não diz qual está quase no fim e qual
+ * mal começou.
+ */
+function Progresso({ pct, segundos }: { pct: number; segundos: number | null }) {
+  return (
+    <span style={{ display: "flex", alignItems: "center", gap: 5.6, marginTop: 5.6 }}>
+      <span
+        aria-hidden
+        style={{
+          width: 90,
+          height: 3,
+          borderRadius: 2,
+          background: "rgba(233,233,237,.16)",
+          overflow: "hidden",
+        }}
+      >
+        <span style={{ display: "block", width: `${pct}%`, height: "100%", background: ACC }} />
+      </span>
+      <span style={{ fontSize: 11, color: TEXT.faint }}>
+        {pct}%{segundos ? ` · ${formatarTempo(segundos)}` : ""}
+      </span>
     </span>
   );
 }
