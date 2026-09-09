@@ -47,9 +47,11 @@ primary_region = "gru"
   auto_start_machines = true
   min_machines_running = 0
 
-  # Uma instância só, pelo mesmo motivo do `--workers 1` no start.sh: o espelho
-  # em memória do cooldown da rotação de IA é por processo. Duas máquinas
-  # teriam visões divergentes de qual chave está de castigo até relerem o banco.
+  # Mais de uma máquina é seguro: o cooldown da rotação de IA é gravado na
+  # hora em pathr_ai_provider_cooldown, e o espelho em memória (que é por
+  # processo) só serve para leitura, reconciliando a cada 20s. Como candidato
+  # em cooldown é rebaixado e nunca removido, a pior consequência de uma visão
+  # obsoleta é uma tentativa desperdiçada — não uma chamada perdida.
   [[http_service.checks]]
     interval = "30s"
     timeout = "5s"
