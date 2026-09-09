@@ -44,6 +44,11 @@ class ResourceProgress(BaseModel):
     position_seconds: Optional[int] = Field(default=None, ge=0, le=86_400)
 
 
+# Até onde consumir material pode levar o nível sozinho. Ver
+# `_aprendeu_com_o_material`.
+_TETO_POR_CONSUMO = 2
+
+
 def _now() -> datetime:
     return datetime.now(timezone.utc)
 
@@ -275,6 +280,7 @@ def set_progress(
     # Só registra atividade na PRIMEIRA conclusão: reabrir e marcar de novo
     # não deveria render XP e streak outra vez.
     if payload.status == "done" and not was_done:
+        _aprendeu_com_o_material(supabase, user_id, resource)
         log_activity(
             supabase,
             user=current_user,
@@ -286,6 +292,57 @@ def set_progress(
         )
 
     return row
+
+
+def _aprendeu_com_o_material(
+    supabase: Client, user_id: str, recurso: dict[str, Any]
+) -> None:
+    """Concluir um material sobe a proficiência nas tecnologias dele.
+
+    Era o buraco no meio do produto: o app media o nível pelo que a pessoa
+    RESPONDIA e ignorava o que ela CONSUMIA. Terminar cinco vídeos e três
+    artigos sobre Docker não mexia em nada — o sistema seguia perguntando como
+    se ela nunca tivesse aberto o assunto, e a dificuldade dos quizzes não
+    andava.
+
+    Sobe UM nível por vez e para em 2 ("aprendiz"). O teto é mais baixo que o
+    de concluir um módulo (3, "autônomo") de propósito: assistir e ler
+    comprovam contato, não autonomia. Quem quiser passar de 2 entrega um
+    módulo, acerta um quiz ou edita o próprio nível — e aí há evidência.
+
+    Best-effort como o `log_activity`: perder a subida custa uma calibragem;
+    derrubar a conclusão custa o que a pessoa acabou de estudar.
+    """
+    try:
+        tag_ids = [str(tag) for tag in (recurso.get("tag_ids") or [])]
+        if not tag_ids:
+            return
+        linhas = (
+            supabase.table("pathr_user_tag")
+            .select("id,proficiency,confidence")
+            .eq("user_id", user_id)
+            .in_("tag_id", tag_ids)
+            .execute()
+            .data
+            or []
+        )
+        for linha in linhas:
+            atual = int(linha.get("proficiency") or 0)
+            if atual >= _TETO_POR_CONSUMO:
+                continue
+            supabase.table("pathr_user_tag").update(
+                {
+                    "proficiency": atual + 1,
+                    # A confiança sobe menos que no módulo concluído: a
+                    # evidência aqui é mais fraca, e o número precisa dizer
+                    # isso a quem for ler depois.
+                    "confidence": min(1.0, float(linha.get("confidence") or 0.5) + 0.1),
+                    "source": "library",
+                    "last_assessed_at": _now().isoformat(),
+                }
+            ).eq("id", linha["id"]).execute()
+    except Exception:  # noqa: BLE001
+        return
 
 
 @router.get("/mine")

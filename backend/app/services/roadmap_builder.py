@@ -19,6 +19,7 @@ Duas decisões que moldam o prompt:
 from typing import Any
 
 from app.ai_providers import AiResult, generate_json
+from app.services import escada
 
 ROADMAP_SCHEMA: dict[str, Any] = {
     "type": "OBJECT",
@@ -72,9 +73,12 @@ Regras:
    módulos: o total precisa caber em (horas por semana x número de semanas),
    com folga de 15% para imprevisto. É melhor entregar um plano menor e
    inteiro do que um plano grande e abandonado.
-3. De 3 a 5 fases, em ordem de dependência: nada de Docker antes de a pessoa
-   conseguir rodar a aplicação, nada de arquitetura antes de ela escrever o
-   suficiente para ter o que arquitetar.
+3. De 3 a 5 fases, em ordem de dependência. Quando o pedido trouxer o bloco
+   ORDEM OBRIGATORIA, ele NÃO é sugestão: é a ordem em que as tecnologias
+   podem ser estudadas, e um módulo nunca pode vir antes daquilo de que
+   depende. Onde o bloco não disser nada, use o bom senso da área — nada de
+   arquitetura antes de a pessoa escrever o suficiente para ter o que
+   arquitetar.
 4. O campo tipo de cada módulo: skill, project, checkpoint ou reading.
    Toda fase termina com um project ou checkpoint — leitura sem entrega
    não comprova nada.
@@ -133,6 +137,24 @@ def build_prompt(
         "TECNOLOGIAS CONHECIDAS PELO SISTEMA (use estes nomes nas tags):",
         ", ".join(catalog_names[:400]),
     ]
+
+    # A ordem de aprendizado vai como DADO, e não como pedido de bom senso.
+    #
+    # Ordenar é o que o modelo mais erra, e aqui o erro custa a trilha inteira:
+    # a pessoa abre o plano, vê Docker na primeira semana e não tem como saber
+    # que aquilo está fora de ordem. O grafo de services/escada.py é curado e
+    # revisável, e diz o que vem antes do quê.
+    #
+    # Entra ANTES da geração, e não só como correção depois: reordenar módulos
+    # prontos conserta a sequência, mas o CONTEÚDO de cada um continua sem
+    # supor o que veio antes — e é isso que separa uma trilha de uma lista.
+    dependencias = escada.ordem_para_o_prompt(catalog_names[:400])
+    if dependencias:
+        lines += [
+            "",
+            "ORDEM OBRIGATORIA (o que so pode ser estudado depois de que):",
+            dependencias,
+        ]
     return "\n".join(lines)
 
 

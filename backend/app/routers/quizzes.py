@@ -167,11 +167,25 @@ async def generate_quiz(
             f"com outro enunciado e outro exemplo):\n{linhas_revisao}\n"
         )
 
+    # O que a pessoa JA CONSUMIU sobre estas tags. Sem isto, o quiz perguntava
+    # o assunto no abstrato e ignorava que ela tinha acabado de assistir 40
+    # minutos sobre exatamente aquilo -- e a pergunta caia longe do que ela
+    # estudou, que e o oposto de exercitar o que se aprendeu.
+    estudado = _materiais_concluidos(supabase, user_id, tag_ids)
+    ja_viu = ""
+    if estudado:
+        linhas_material = "\n".join(f"- {titulo}" for titulo in estudado)
+        ja_viu = (
+            "\nJA ESTUDOU (a pessoa concluiu estes materiais; pergunte sobre o "
+            f"que eles cobrem, aplicado, e nao definicao decorada):\n{linhas_material}\n"
+        )
+
     prompt = (
         f"TECNOLOGIAS: {', '.join(names)}\n"
         f"NIVEL ATUAL DA PESSOA: {average:.1f} de 5\n"
         f"QUANTIDADE DE QUESTOES: {payload.question_count}\n"
         f"DIFICULDADE PEDIDA: {dificuldade}\n"
+        f"{ja_viu}"
         f"{revisar}\n"
         "Escreva questoes que uma pessoa neste nivel consiga responder pensando, "
         "mas nao consiga responder por eliminacao."
@@ -396,6 +410,52 @@ def submit_quiz(
         # que faz o erro parecer punição em vez de etapa.
         "review": reciclados,
     }
+
+
+def _materiais_concluidos(
+    supabase: Client, user_id: str, tag_ids: list[str], limite: int = 12
+) -> list[str]:
+    """Os titulos do que a pessoa terminou sobre estas tecnologias.
+
+    So o TITULO viaja para o modelo, e nao o texto do artigo: o titulo ja diz
+    o recorte ("CI/CD com GitHub Actions", "Git em 5 minutos") e mandar o
+    conteudo inteiro encheria o prompt com milhares de palavras para ganhar
+    pouco -- alem de custar em toda geracao de quiz.
+
+    Best-effort: sem esta lista o quiz continua funcionando, so mais generico.
+    """
+    try:
+        progresso = (
+            supabase.table("pathr_user_resource")
+            .select("resource_id")
+            .eq("user_id", user_id)
+            .eq("status", "done")
+            .limit(200)
+            .execute()
+            .data
+            or []
+        )
+        ids = [str(linha["resource_id"]) for linha in progresso]
+        if not ids:
+            return []
+        recursos = (
+            supabase.table("pathr_resource")
+            .select("title,tag_ids")
+            .in_("id", ids)
+            .limit(200)
+            .execute()
+            .data
+            or []
+        )
+        alvo = {str(t) for t in tag_ids}
+        titulos = [
+            str(r["title"])
+            for r in recursos
+            if alvo & {str(t) for t in (r.get("tag_ids") or [])}
+        ]
+        return titulos[:limite]
+    except Exception:  # noqa: BLE001
+        return []
 
 
 def _due_reviews(supabase: Client, user_id: str, tag_ids: list[str], limit: int = 4) -> list[dict]:

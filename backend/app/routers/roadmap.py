@@ -15,7 +15,7 @@ from supabase import Client
 
 from app.database import get_supabase
 from app.deps import get_current_user
-from app.services import roadmap_builder
+from app.services import escada, roadmap_builder
 from app.services.progress import log_activity
 from app.services.tag_catalog import TagCatalog
 
@@ -212,6 +212,10 @@ def _persist(
     )
 
     order = 0
+    # O módulo anterior da trilha, em ordem de estudo. É ele que vira o
+    # pré-requisito do próximo — ver `_ordem_de_estudo`.
+    anterior: Optional[str] = None
+
     for phase in plan["fases"]:
         phase_row = (
             supabase.table("pathr_roadmap_node")
@@ -232,30 +236,76 @@ def _persist(
         )
         order += 1
 
-        for module in phase["modulos"]:
+        for module in _ordem_de_estudo(phase["modulos"]):
             tag_ids = [str(catalog.resolve(name)["id"]) for name in module["tags"]]
-            supabase.table("pathr_roadmap_node").insert(
-                {
-                    "roadmap_id": roadmap["id"],
-                    "parent_id": phase_row["id"],
-                    "title": module["titulo"],
-                    "description": module["descricao"],
-                    "kind": module["tipo"],
-                    "tag_ids": tag_ids,
-                    "order_index": order,
-                    "level": module["nivel"],
-                    "estimated_hours": module["horas"],
-                    "week_start": module["semana_inicio"] or None,
-                    "week_end": module["semana_fim"] or None,
-                    # O primeiro módulo do plano já nasce em andamento: abrir o
-                    # roadmap e ver tudo "a fazer" não diz por onde começar.
-                    "status": "doing" if order == 1 else "todo",
-                    "objectives": module["objetivos"],
-                }
-            ).execute()
+            criado = (
+                supabase.table("pathr_roadmap_node")
+                .insert(
+                    {
+                        "roadmap_id": roadmap["id"],
+                        "parent_id": phase_row["id"],
+                        "title": module["titulo"],
+                        "description": module["descricao"],
+                        "kind": module["tipo"],
+                        "tag_ids": tag_ids,
+                        "order_index": order,
+                        "level": module["nivel"],
+                        "estimated_hours": module["horas"],
+                        "week_start": module["semana_inicio"] or None,
+                        "week_end": module["semana_fim"] or None,
+                        # A cadeia de pré-requisitos, enfim preenchida. O campo
+                        # existia no modelo desde o começo, com a docstring
+                        # dizendo que era o que "trava/destrava um nó", e
+                        # ninguém escrevia nele — então a trilha não tinha
+                        # ordem nenhuma: vinte módulos abertos ao mesmo tempo,
+                        # e nada dizendo por onde ir.
+                        "depends_on": [anterior] if anterior else [],
+                        # Só o primeiro está aberto. O resto TRAVA até o
+                        # anterior ser concluído: é isso que faz a trilha ir do
+                        # mais fácil para o mais difícil de verdade, em vez de
+                        # só sugerir uma ordem que nada sustenta.
+                        "status": "doing" if anterior is None else "locked",
+                        "objectives": module["objetivos"],
+                    }
+                )
+                .execute()
+                .data[0]
+            )
+            anterior = str(criado["id"])
             order += 1
 
     return roadmap
+
+
+# Leitura antes de prática, prática antes de entrega. Um checkpoint é o que
+# fecha a fase, então vai por último mesmo que venha marcado como iniciante.
+_PESO_DO_TIPO = {"reading": 0, "skill": 1, "project": 2, "checkpoint": 3}
+
+_PESO_DO_NIVEL = {"iniciante": 0, "intermediario": 1, "avancado": 2}
+
+
+def _ordem_de_estudo(modulos: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Os módulos de uma fase na ordem em que se estuda.
+
+    O critério principal é a CAMADA das tecnologias do módulo — o grafo de
+    pré-requisitos de services/escada.py. É ele que sabe que Docker vem depois
+    de Linux e que Kubernetes vem depois de Docker; o nível declarado
+    ("iniciante") não sabe, porque descreve a profundidade do tratamento e não
+    a posição na dependência. Um módulo "iniciante de Kubernetes" continua
+    exigindo Docker.
+
+    Nível e tipo entram como desempate, e a ordenação é estável: módulos
+    equivalentes mantêm a ordem em que o modelo os escreveu, que carrega a
+    dependência que só ele conhece.
+    """
+    return sorted(
+        modulos,
+        key=lambda m: (
+            escada.camada_do_conjunto(m.get("tags") or []),
+            _PESO_DO_NIVEL.get(str(m.get("nivel") or "").lower(), 1),
+            _PESO_DO_TIPO.get(str(m.get("tipo") or "").lower(), 1),
+        ),
+    )
 
 
 @router.get("")
@@ -389,6 +439,7 @@ def patch_node(
             tag_ids=tag_ids,
         )
         _bump_proficiency(supabase, str(current_user["id"]), tag_ids)
+        _destravar_dependentes(supabase, node_id, str(node["roadmap_id"]))
         _advance_next(supabase, node)
 
     return updated
@@ -487,6 +538,62 @@ def _owned_node(supabase: Client, node_id: str, user_id: str) -> dict[str, Any]:
     if not owner:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Módulo não encontrado.")
     return node
+
+
+def _destravar_dependentes(supabase: Client, node_id: str, roadmap_id: str) -> None:
+    """Concluir um módulo abre o que dependia dele.
+
+    É a outra metade da trava. Sem isto, marcar `locked` na criação da trilha
+    a fecharia para sempre: a pessoa terminaria o primeiro módulo e o segundo
+    continuaria bloqueado, sem nada no sistema capaz de abri-lo.
+
+    Abre em `todo`, e não em `doing`: quem escolhe o que está fazendo agora é
+    a pessoa, e marcar em andamento por ela criaria um "atual" que ela não
+    decidiu — logo depois de terminar outra coisa, que é quando ela mais
+    provavelmente vai parar.
+
+    Best-effort: falhar aqui não pode desfazer a conclusão que a pessoa
+    acabou de registrar. O próximo módulo destravado na conclusão seguinte
+    recupera a trilha.
+    """
+    try:
+        candidatos = (
+            supabase.table("pathr_roadmap_node")
+            .select("id,status,depends_on")
+            .eq("roadmap_id", roadmap_id)
+            .eq("status", "locked")
+            .execute()
+            .data
+            or []
+        )
+        # Um módulo só abre quando TODOS os pré-requisitos dele estão prontos.
+        # Hoje a cadeia é linear e isso dá no mesmo, mas o campo é uma lista e
+        # a checagem precisa valer para o dia em que ela deixar de ser.
+        concluidos = {
+            str(linha["id"])
+            for linha in (
+                supabase.table("pathr_roadmap_node")
+                .select("id")
+                .eq("roadmap_id", roadmap_id)
+                .eq("status", "done")
+                .execute()
+                .data
+                or []
+            )
+        }
+        concluidos.add(str(node_id))
+
+        abrir = [
+            str(c["id"])
+            for c in candidatos
+            if {str(d) for d in (c.get("depends_on") or [])} <= concluidos
+        ]
+        if abrir:
+            supabase.table("pathr_roadmap_node").update({"status": "todo"}).in_(
+                "id", abrir
+            ).execute()
+    except Exception:  # noqa: BLE001
+        return
 
 
 def _bump_proficiency(supabase: Client, user_id: str, tag_ids: list[str]) -> None:

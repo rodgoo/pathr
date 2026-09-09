@@ -29,6 +29,9 @@ class _Consulta:
         self._banco = banco
         self._tabela = tabela
         self._filtros: list[tuple[str, Any]] = []
+        # Filtros de pertinência (`in_`), separados dos de igualdade porque a
+        # comparação é outra: "está nesta lista", e não "é igual a isto".
+        self._filtros_in: list[tuple[str, set[str]]] = []
         self._operacao = "select"
         self._payload: Any = None
         self._limite: Optional[int] = None
@@ -61,6 +64,12 @@ class _Consulta:
         self._filtros.append((coluna, valor))
         return self
 
+    def in_(self, coluna: str, valores: Any) -> "_Consulta":
+        # str() nos dois lados, como em `_casa`: o PostgREST devolve UUID como
+        # texto e o código compara ora com UUID, ora com str.
+        self._filtros_in.append((coluna, {str(v) for v in (valores or [])}))
+        return self
+
     def is_(self, coluna: str, valor: Any) -> "_Consulta":
         # O PostgREST usa is_(coluna, "null") para IS NULL. Guardamos como um
         # filtro de None, que é como a linha aparece no dicionário.
@@ -84,6 +93,9 @@ class _Consulta:
                 if atual is not None:
                     return False
             elif str(atual) != str(valor):
+                return False
+        for coluna, valores in self._filtros_in:
+            if str(linha.get(coluna)) not in valores:
                 return False
         return True
 
