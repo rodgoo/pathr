@@ -1,0 +1,21 @@
+; Registros de e-mail do Brevo para pathr.notter.com.br
+;
+; Procedencia: ate 2026-09-09 o subdominio pathr.notter.com.br era DELEGADO
+; aos nameservers do Brevo (ns1/ns2.sendinblue.com). Isso impedia apontar
+; pathr e api.pathr para o Render — qualquer registro criado no Cloudflare
+; ficava sombreado pela delegacao. A delegacao foi removida, e estes valores
+; foram extraidos da zona do Brevo ANTES dela sair do ar, consultando
+; ns1.sendinblue.com nome a nome (o AXFR era recusado).
+;
+; Ficam versionados porque, uma vez removida a delegacao, nao ha mais de onde
+; recupera-los: o painel do Brevo so os reexibe apos reautenticar o dominio.
+;
+; Importar em: Cloudflare -> notter.com.br -> DNS -> Records -> Import and
+; Export -> Import. Marcar os CNAMEs como DNS only (nuvem cinza): sao alvos
+; de e-mail, nao de HTTP, e o proxy do Cloudflare nao se aplica a eles.
+
+noreply.pathr.notter.com.br.            3600 IN CNAME noreply-pathr-notter-com-br.brand.brevosend.com.
+brevo1._domainkey.pathr.notter.com.br.  3600 IN CNAME b1.pathr-notter-com-br.dkim.brevo.com.
+brevo2._domainkey.pathr.notter.com.br.  3600 IN CNAME b2.pathr-notter-com-br.dkim.brevo.com.
+_dmarc.pathr.notter.com.br.             3600 IN TXT   "v=DMARC1; p=none; rua=mailto:rua@dmarc.brevo.com"
+mail._domainkey.pathr.notter.com.br.    3600 IN TXT   "k=rsa;p=MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQDeMVIzrCa3T14JsNY0IRv5/2V1/v2itlviLQBwXsa7shBD6TrBkswsFUToPyMRWC9tbR/5ey0nRBH0ZVxp+lsmTxid2Y2z+FApQ6ra2VsXfbJP3HE6wAO0YTVEJt1TmeczhEd2Jiz/fcabIISgXEdSpTYJhb0ct0VJRxcg4c8c7wIDAQAB"
