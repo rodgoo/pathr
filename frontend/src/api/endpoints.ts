@@ -10,6 +10,7 @@ import type {
   EnglishAnswerResult,
   EnglishAssessment,
   LanguageCatalogEntry,
+  LanguageImprovements,
   LanguageProfile,
   Overview,
   Profile,
@@ -164,6 +165,12 @@ export const languages = {
   startAssessment: (language = "en") =>
     api.post<EnglishAssessment>(`/languages/assessment?language=${language}`),
   getAssessment: (id: string) => api.get<EnglishAssessment>(`/languages/assessment/${id}`),
+  /** O nivelamento em andamento, ou `null`. É o que permite retomar depois de
+   * um F5 ou de uma ida a outra tela. */
+  activeAssessment: (language = "en") =>
+    api.get<EnglishAssessment | null>(`/languages/assessment/active?language=${language}`),
+  /** O que a pessoa errou e ainda não recuperou. */
+  improvements: () => api.get<LanguageImprovements>("/languages/improvements"),
   answer: (assessmentId: string, itemId: string, answer: number) =>
     api.post<EnglishAnswerResult>(`/languages/assessment/${assessmentId}/answer`, {
       item_id: itemId,

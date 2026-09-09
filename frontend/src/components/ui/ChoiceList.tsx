@@ -68,6 +68,15 @@ interface ChoiceListProps {
   onPick: (index: number) => void;
   /** Quiz questions letter their options; scenarios and reviews do not. */
   letters?: boolean;
+  /**
+   * A resposta está a caminho do servidor.
+   *
+   * Trava a lista antes de o gabarito chegar. Sem isto, a lista só travava
+   * quando a correção voltava — e a janela entre o clique e a resposta era
+   * larga o bastante para um segundo clique gravar duas respostas para o
+   * mesmo item.
+   */
+  busy?: boolean;
   english?: boolean;
   /** Names the set of choices for assistive tech. */
   label: string;
@@ -80,9 +89,11 @@ export function ChoiceList({
   onPick,
   letters = false,
   english = false,
+  busy = false,
   label,
 }: ChoiceListProps) {
   const answered = pick !== null && answer !== undefined;
+  const locked = answered || busy;
 
   return (
     <div
@@ -96,9 +107,9 @@ export function ChoiceList({
           <button
             key={text}
             type="button"
-            aria-disabled={answered}
+            aria-disabled={locked}
             onClick={() => {
-              if (!answered) onPick(index);
+              if (!locked) onPick(index);
             }}
             style={{
               display: "flex",
@@ -109,7 +120,7 @@ export function ChoiceList({
               borderRadius: 8,
               font: "inherit",
               fontSize: 14,
-              cursor: answered ? "default" : "pointer",
+              cursor: locked ? "default" : "pointer",
               border: `1px solid ${state.border}`,
               background: state.background,
               color: state.color,

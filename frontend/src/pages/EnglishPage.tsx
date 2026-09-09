@@ -11,9 +11,9 @@
 
 import { useState } from "react";
 import { english as englishApi } from "@/api/endpoints";
-import type { EnglishAssessment } from "@/api/types";
+import type { EnglishAssessment, LanguageImprovements } from "@/api/types";
 import { useMutation, useQuery } from "@/hooks/useApi";
-import { ACC, ACC4, RING, TEXT } from "@/lib/tokens";
+import { ACC, ACC4, C, HAIRLINE, RING, TEXT } from "@/lib/tokens";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
 import { Placement } from "@/components/english/Placement";
@@ -30,6 +30,12 @@ export function EnglishPage() {
   const idioma = escolhido ?? ligados[0]?.language ?? "en";
 
   const profile = useQuery(() => englishApi.profile(idioma), [idioma]);
+  // O nivelamento aberto vem do SERVIDOR, e não de um estado que morre ao
+  // trocar de tela. Era só na memória da tela que o id existia: um F5 ou uma
+  // ida ao Roadmap apagavam o caminho de volta e o progresso ficava gravado
+  // no banco sem nada que soubesse alcançá-lo.
+  const aberto = useQuery(() => englishApi.activeAssessment(idioma), [idioma]);
+  const melhoras = useQuery(() => englishApi.improvements(), []);
   const [assessment, setAssessment] = useState<EnglishAssessment | null>(null);
   const start = useMutation(() => englishApi.startAssessment(idioma));
   const toggle = useMutation((enabled: boolean) => englishApi.update(idioma, { enabled }));
@@ -40,6 +46,9 @@ export function EnglishPage() {
 
   const data = profile.data;
   const reached = data.cefr_level ? BANDS.indexOf(data.cefr_level as (typeof BANDS)[number]) + 1 : 0;
+  // Um nivelamento aberto só vale como retomada se ainda faltar responder.
+  const emAndamento =
+    aberto.data && aberto.data.answered_count < aberto.data.item_count ? aberto.data : null;
 
   if (assessment) {
     return (
@@ -48,6 +57,8 @@ export function EnglishPage() {
         onFinished={() => {
           setAssessment(null);
           profile.reload();
+          aberto.reload();
+          melhoras.reload();
         }}
       />
     );
@@ -181,27 +192,41 @@ export function EnglishPage() {
                 ? "Nivelamento feito. Refaça quando sentir que evoluiu."
                 : "Sem nivelamento ainda. O teste leva cerca de 12 minutos e destrava a prática."}
             </p>
-            <button
-              type="button"
-              className="btn btn-primary btn-block"
-              disabled={start.pending}
-              onClick={async () => {
-                const created = await start.run();
-                if (created) setAssessment(created);
-              }}
-            >
-              {start.pending
-                ? "Preparando o teste…"
-                : data.cefr_level
-                  ? "Refazer nivelamento"
-                  : "Fazer o nivelamento"}
-            </button>
+            {emAndamento ? (
+              <Retomar
+                assessment={emAndamento}
+                onContinuar={() => setAssessment(emAndamento)}
+                onRecomecar={async () => {
+                  const created = await start.run();
+                  if (created) setAssessment(created);
+                }}
+                recomecando={start.pending}
+              />
+            ) : (
+              <button
+                type="button"
+                className="btn btn-primary btn-block"
+                disabled={start.pending}
+                onClick={async () => {
+                  const created = await start.run();
+                  if (created) setAssessment(created);
+                }}
+              >
+                {start.pending
+                  ? "Preparando o teste…"
+                  : data.cefr_level
+                    ? "Refazer nivelamento"
+                    : "Fazer o nivelamento"}
+              </button>
+            )}
             {start.error ? (
               <p style={{ fontSize: 12, color: "#cfa25e", marginTop: 8.4 }}>{start.error}</p>
             ) : null}
           </Panel>
 
           <SubScores scores={data.sub_scores} />
+
+          <Melhoras dados={melhoras.data} />
         </div>
       )}
     </div>
@@ -262,6 +287,116 @@ function SubScores({ scores }: { scores: Record<string, number> }) {
             </div>
           ))}
         </div>
+      )}
+    </Panel>
+  );
+}
+
+
+/**
+ * A ponte de volta para um nivelamento que ficou pela metade.
+ *
+ * Antes, sair da tela abandonava o teste na prática: o progresso continuava
+ * gravado, mas a única porta de entrada criava um teste NOVO — as respostas já
+ * dadas viravam trabalho perdido sem que nada avisasse. O card diz quanto já
+ * foi feito e deixa as duas saídas explícitas, em vez de escolher por conta
+ * própria qual delas a pessoa queria.
+ */
+function Retomar({
+  assessment,
+  onContinuar,
+  onRecomecar,
+  recomecando,
+}: {
+  assessment: EnglishAssessment;
+  onContinuar: () => void;
+  onRecomecar: () => void;
+  recomecando: boolean;
+}) {
+  const feito = Math.round((assessment.answered_count / assessment.item_count) * 100);
+  return (
+    <div>
+      <div
+        style={{
+          padding: 11.2,
+          borderRadius: 8,
+          marginBottom: 8.4,
+          border: `1px solid ${ACC}`,
+          background: "rgba(145,132,217,.10)",
+        }}
+      >
+        <div style={{ fontSize: 12.5, color: TEXT.full }}>Nivelamento em andamento</div>
+        <div style={{ fontSize: 11.5, color: "rgba(233,233,237,.65)", margin: "4px 0 8.4px" }}>
+          {assessment.answered_count} de {assessment.item_count} respondidas · {feito}%
+        </div>
+        <div
+          aria-hidden
+          style={{
+            height: 4,
+            borderRadius: 2,
+            background: "rgba(233,233,237,.18)",
+            overflow: "hidden",
+          }}
+        >
+          <div style={{ width: `${feito}%`, height: "100%", background: ACC4 }} />
+        </div>
+      </div>
+      <button type="button" className="btn btn-primary btn-block" onClick={onContinuar}>
+        Continuar de onde parei
+      </button>
+      <button
+        type="button"
+        className="btn btn-ghost btn-block"
+        style={{ marginTop: 5.6 }}
+        disabled={recomecando}
+        onClick={onRecomecar}
+      >
+        {recomecando ? "Preparando o teste…" : "Recomeçar do zero"}
+      </button>
+    </div>
+  );
+}
+
+/**
+ * O que a pessoa errou e ainda não recuperou.
+ *
+ * Errar era o único desfecho que o nivelamento jogava fora: o acerto virava
+ * nota, o erro não virava nada. Mas o erro é a única coisa que o teste prova
+ * de verdade sobre uma lacuna — e é o que precisa voltar. Cada item errado
+ * entra na mesma fila de repetição espaçada que o quiz técnico usa.
+ */
+function Melhoras({ dados }: { dados: LanguageImprovements | null }) {
+  const itens = dados?.items ?? [];
+
+  return (
+    <Panel>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 8.4, marginBottom: 11.2 }}>
+        <Kicker>Pontos de melhora</Kicker>
+        {dados && dados.due_count > 0 ? (
+          <span style={{ fontSize: 11.5, color: C.ambar }}>{dados.due_count} para rever</span>
+        ) : null}
+      </div>
+      {itens.length === 0 ? (
+        <p style={{ fontSize: 12.5, color: TEXT.muted, margin: 0 }}>
+          Nada pendente. O que você errar no nivelamento aparece aqui para voltar depois.
+        </p>
+      ) : (
+        <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+          {itens.slice(0, 6).map((item) => (
+            <li
+              key={item.id}
+              style={{
+                fontSize: 12.5,
+                lineHeight: 1.45,
+                padding: "8.4px 0",
+                borderTop: `1px solid ${HAIRLINE}`,
+              }}
+            >
+              <div style={{ color: "rgba(233,233,237,.8)" }}>{item.front}</div>
+              <div style={{ color: TEXT.faint, marginTop: 4 }}>{item.back}</div>
+            </li>
+          ))}
+        </ul>
       )}
     </Panel>
   );

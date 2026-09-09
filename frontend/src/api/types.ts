@@ -332,6 +332,23 @@ export interface EnglishAssessment {
   items: EnglishItem[];
 }
 
+/** Um erro do nivelamento que ainda não foi recuperado. `front` é o enunciado
+ * que a pessoa errou; `back`, a resposta certa com a explicação. */
+export interface LanguageImprovement {
+  id: string;
+  front: string;
+  back: string;
+  due_at: string;
+  lapses: number;
+  repetitions: number;
+}
+
+export interface LanguageImprovements {
+  items: LanguageImprovement[];
+  /** Quantos já venceram. É o número que a tela mostra. */
+  due_count: number;
+}
+
 export interface EnglishAnswerResult {
   is_correct: boolean;
   correct_index: number;

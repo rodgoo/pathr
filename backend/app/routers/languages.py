@@ -10,6 +10,7 @@ anterior, então o teste converge no nível em ~20 itens em vez de precisar de
 100.
 """
 
+import re
 from datetime import datetime, timezone
 from typing import Any, Optional
 
@@ -26,6 +27,14 @@ from app.services.progress import log_activity
 router = APIRouter(prefix="/languages", tags=["idioma"])
 
 BANDS = ["A1", "A2", "B1", "B2", "C1", "C2"]
+
+# As habilidades que o nivelamento pontua. `listening` mede a compreensao de
+# fala pela TRANSCRICAO do dialogo, e nao por audio: o app nao reproduz som, e
+# o desenho ja previa "Listening com transcricao". Medir pelo texto e menos do
+# que medir pelo som, mas e o que da para entregar de verdade.
+SKILLS = frozenset(
+    {"grammar", "vocabulary", "reading", "listening", "writing", "speaking", "business"}
+)
 
 ITEMS_SCHEMA: dict[str, Any] = {
     "type": "OBJECT",
@@ -64,10 +73,51 @@ Regras:
    cognato, tradução literal, tom errado), não absurdos.
 4. O campo habilidade: grammar, vocabulary, reading, listening, writing,
    speaking ou business.
-5. O campo banda: A1, A2, B1, B2, C1 ou C2 — a dificuldade real do item.
-6. A explicação diz por que a certa soa natural e por que a mais tentadora
+5. O item se responde SÓ com o que está escrito nele. Não há áudio, vídeo
+   nem anexo para abrir: nunca escreva "based on the audio", "listen to the
+   recording", "in the video" ou equivalente. Se o item depende de uma fala,
+   de um e-mail ou de um trecho de reunião, o texto INTEIRO vai no contexto.
+6. Item de listening é a TRANSCRIÇÃO do diálogo, com quem fala em cada linha
+   ("Ana: ...", "Marc: ..."), uma linha por fala, e o enunciado pergunta
+   sobre o que foi dito ali. O contexto é o diálogo, não a descrição da cena:
+   "Daily stand-up on Zoom" sozinho não diz a ninguém quem ficou com a tarefa.
+7. O campo banda: A1, A2, B1, B2, C1 ou C2 — a dificuldade real do item.
+8. A explicação diz por que a certa soa natural e por que a mais tentadora
    das erradas soa estranha para um falante nativo.
-7. Responda apenas o JSON."""
+9. Responda apenas o JSON."""
+
+
+# Um item que manda ouvir alguma coisa é um item sem resposta: o app não
+# reproduz som, e a coluna `audio_url` nunca foi preenchida por ninguém. O
+# prompt já proíbe essa formulação, mas o modelo é o modelo — a guarda é o que
+# garante que ela não chegue à tela.
+_REMETE_A_MIDIA = re.compile(
+    r"(?:based on|according to|in|from)\s+the\s+(?:audio|recording|video|clip|conversation you)"
+    r"|listen(?:ing)?\s+to\s+the"
+    r"|you\s+(?:just\s+)?(?:heard|hear)"
+    r"|no\s+áudio|na\s+gravação",
+    re.IGNORECASE,
+)
+
+# Uma transcrição traz quem fala em cada linha; uma descrição de cena não traz
+# nada disso. É a diferença entre "Ana: I'll push it after lunch." e "Daily
+# stand-up meeting on Zoom." — só a primeira deixa a pergunta respondível.
+_MIN_TRANSCRICAO = 60
+
+
+def _tem_transcricao(contexto: str) -> bool:
+    return len(contexto) >= _MIN_TRANSCRICAO and ":" in contexto
+
+
+def _respondivel(prompt: str, skill: str, contexto: str) -> bool:
+    """O item traz tudo que a pergunta cobra?
+
+    Vale para qualquer habilidade que remeta a uma mídia inexistente, e vale
+    sempre para `listening`: ali a transcrição não é enfeite, é o enunciado.
+    """
+    if skill == "listening" and not _tem_transcricao(contexto):
+        return False
+    return not (_REMETE_A_MIDIA.search(prompt) and not _tem_transcricao(contexto))
 
 
 class EnglishSettings(BaseModel):
@@ -239,10 +289,26 @@ async def start_assessment(
     user_id = str(current_user["id"])
     profile = _profile(supabase, user_id, codigo)
 
+    # Começar um novo encerra o anterior explicitamente. Sem isto, o de antes
+    # ficaria "in_progress" para sempre e `/assessment/active` continuaria
+    # oferecendo a retomada de um teste que a pessoa já decidiu refazer.
+    supabase.table("pathr_english_assessment").update({"status": "abandoned"}).eq(
+        "user_id", user_id
+    ).eq("language", codigo).eq("status", "in_progress").execute()
+
     assessment = (
         supabase.table("pathr_english_assessment")
         .insert(
-            {"user_id": user_id, "kind": "placement", "item_count": 20, "language": codigo}
+            {
+                "user_id": user_id,
+                "kind": "placement",
+                "item_count": 20,
+                "language": codigo,
+                # Explícito, e não herdado do default da coluna: é este campo
+                # que decide se a tela oferece retomar o teste, e um default
+                # de banco é longe demais de onde a decisão é lida.
+                "status": "in_progress",
+            }
         )
         .execute()
         .data[0]
@@ -266,19 +332,47 @@ async def _generate_items(
     alvo = languages.idioma(language)
     nome = alvo.nome if alvo else "Ingles"
     nativo = alvo.nativo if alvo else "English"
-    result = await generate_json(
-        SYSTEM_PROMPT,
+    pedido = (
         # O idioma vai explicito e duas vezes (nome em portugues e endonimo):
         # so o codigo ISO fazia o modelo escrever em ingles de qualquer jeito,
         # que e o idioma em que ele viu mais itens de nivelamento.
         f"IDIOMA AVALIADO: {nome} ({nativo}). O enunciado, o contexto e as "
         f"alternativas sao em {nome}; so a explicacao e em portugues do Brasil.\n"
         f"Gere {count} itens de nivel {band} para um profissional de tecnologia "
-        "brasileiro. Varie a habilidade entre eles.",
-        ITEMS_SCHEMA,
+        "brasileiro. Varie a habilidade entre eles."
     )
-    rows = []
-    for index, item in enumerate(result.content.get("itens") or []):
+
+    rows: list[dict[str, Any]] = []
+    # Descartar item impossivel abre a chance de um lote inteiro cair, e um
+    # lote vazio trava a tela em "Preparando as proximas perguntas...". Uma
+    # segunda tentativa custa uma chamada e evita o beco sem saida.
+    for tentativa in range(2):
+        result = await generate_json(SYSTEM_PROMPT, pedido, ITEMS_SCHEMA)
+        rows = _linhas_de_itens(
+            result.content.get("itens") or [], assessment_id, user_id, band, offset
+        )
+        if rows or tentativa:
+            break
+
+    if rows:
+        supabase.table("pathr_english_item").insert(rows).execute()
+
+
+def _linhas_de_itens(
+    itens: list[Any],
+    assessment_id: str,
+    user_id: str,
+    band: str,
+    offset: int,
+) -> list[dict[str, Any]]:
+    """Os itens do modelo virados em linhas da tabela, sem os que nao servem.
+
+    Item malformado (alternativas de menos, indice fora da faixa) sempre caiu
+    aqui. O que passou a cair tambem e o item que cobra uma midia que o app
+    nao tem — ver `_respondivel`.
+    """
+    rows: list[dict[str, Any]] = []
+    for item in itens:
         if not isinstance(item, dict):
             continue
         options = [str(option).strip() for option in (item.get("alternativas") or []) if str(option).strip()]
@@ -290,26 +384,31 @@ async def _generate_items(
         if not prompt or len(options) != 4 or not 0 <= correct <= 3:
             continue
         skill = str(item.get("habilidade") or "grammar").strip().lower()
+        if skill not in SKILLS:
+            skill = "grammar"
+        contexto = str(item.get("contexto") or "").strip()[:1000]
+        if not _respondivel(prompt, skill, contexto):
+            continue
         item_band = str(item.get("banda") or band).strip().upper()
         rows.append(
             {
                 "assessment_id": assessment_id,
                 "user_id": user_id,
-                "skill": skill if skill in
-                {"grammar", "vocabulary", "reading", "listening", "writing", "speaking", "business"}
-                else "grammar",
+                "skill": skill,
                 "type": "mcq",
                 "cefr_band": item_band if item_band in BANDS else band,
                 "prompt": prompt[:2000],
-                "context": str(item.get("contexto") or "").strip()[:1000] or None,
+                "context": contexto or None,
                 "options": options,
                 "correct": {"index": correct},
                 "feedback": str(item.get("explicacao") or "").strip()[:1500],
-                "order_index": offset + index,
+                # A posicao vem da linha aceita, e nao do indice cru: com item
+                # descartado no meio, o indice cru abriria buracos e, na
+                # segunda tentativa, repetiria ordem ja usada.
+                "order_index": offset + len(rows),
             }
         )
-    if rows:
-        supabase.table("pathr_english_item").insert(rows).execute()
+    return rows
 
 
 def _assessment_payload(supabase: Client, assessment_id: str, user_id: str) -> dict[str, Any]:
@@ -335,6 +434,72 @@ def _assessment_payload(supabase: Client, assessment_id: str, user_id: str) -> d
         or []
     )
     return {**rows[0], "items": [item for item in items if item.get("is_correct") is None]}
+
+
+@router.get("/improvements")
+def improvements(
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """O que a pessoa errou e ainda não recuperou, do mais atrasado ao mais
+    recente.
+
+    É a contrapartida do nivelamento: a nota diz onde ela está, isto diz o que
+    fazer a respeito. Ordena por vencimento porque o que venceu há mais tempo
+    é o que corre mais risco de virar lacuna permanente.
+    """
+    linhas = (
+        supabase.table("pathr_review_item")
+        .select("id,front,back,due_at,lapses,repetitions")
+        .eq("user_id", str(current_user["id"]))
+        .eq("kind", "language")
+        .order("due_at")
+        .limit(50)
+        .execute()
+        .data
+        or []
+    )
+    agora = _now().isoformat()
+    return {
+        "items": linhas,
+        # Quantos já venceram — é este número que a tela mostra, e não o total:
+        # ponto agendado para semana que vem não é dívida de hoje.
+        "due_count": sum(1 for linha in linhas if str(linha.get("due_at") or "") <= agora),
+    }
+
+
+@router.get("/assessment/active")
+def active_assessment(
+    language: str = "en",
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """O nivelamento em andamento deste idioma, ou `null`.
+
+    O id do nivelamento só existia na memória da tela: trocar de aba ou dar
+    F5 apagava o caminho de volta, e o progresso ficava gravado no banco sem
+    nada que soubesse alcançá-lo. Com esta rota a tela pergunta "há um teste
+    aberto?" e oferece a retomada — e o `answered_count` que vem junto é o que
+    ela usa para dizer quanto já foi respondido.
+
+    Declarada ANTES de `/assessment/{assessment_id}`: as rotas são casadas em
+    ordem, e o caminho variável engoliria "active" como se fosse um id.
+    """
+    codigo = _idioma_valido(language)
+    rows = (
+        supabase.table("pathr_english_assessment")
+        .select("*")
+        .eq("user_id", str(current_user["id"]))
+        .eq("language", codigo)
+        .eq("status", "in_progress")
+        .order("started_at", desc=True)
+        .limit(1)
+        .execute()
+        .data
+    )
+    if not rows:
+        return None
+    return _assessment_payload(supabase, str(rows[0]["id"]), str(current_user["id"]))
 
 
 @router.get("/assessment/{assessment_id}")
@@ -368,10 +533,22 @@ async def answer_assessment(
     if not items:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Item não encontrado.")
     item = items[0]
-    if item.get("is_correct") is not None:
-        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Item já respondido.")
-
     expected = int((item.get("correct") or {}).get("index", -1))
+
+    if item.get("is_correct") is not None:
+        # Já respondido: devolve o MESMO desfecho em vez de 409.
+        #
+        # O 409 criava um beco sem saída real. A gravação acontece antes da
+        # resposta chegar ao navegador, então bastava a conexão cair, a aba
+        # trocar ou a pessoa clicar duas vezes para o item ficar respondido no
+        # servidor e sem gabarito na tela — e o clique seguinte só dizia "item
+        # já respondido", sem gabarito e sem "Próxima". O nivelamento travava
+        # ali, com o progresso preso.
+        #
+        # Repetir o desfecho gravado não inventa nem perde nada: a resposta
+        # aceita continua sendo a primeira, e uma segunda escolha diferente é
+        # ignorada em vez de sobrescrever.
+        return _resultado_gravado(supabase, current_user, assessment_id, item, expected)
     is_correct = payload.answer == expected
 
     supabase.table("pathr_english_item").update(
@@ -381,6 +558,9 @@ async def answer_assessment(
             "answered_at": _now().isoformat(),
         }
     ).eq("id", item["id"]).execute()
+
+    if not is_correct:
+        _guarda_ponto_de_melhora(supabase, user_id, item)
 
     assessment = (
         supabase.table("pathr_english_assessment")
@@ -435,6 +615,110 @@ async def answer_assessment(
         "answered": answered,
         "total": int(assessment.get("item_count") or 20),
     }
+
+
+def _guarda_ponto_de_melhora(supabase: Client, user_id: str, item: dict[str, Any]) -> None:
+    """O item errado vira um ponto de melhora, vencendo hoje.
+
+    Errar era o único desfecho que o nivelamento descartava: o acerto virava
+    nota e o erro não virava nada, então a lacuna que o teste acabou de provar
+    era justamente a que ninguém guardava. O quiz técnico já reciclava o erro
+    em `pathr_review_item` (ver `routers/quizzes.py`); aqui é a mesma mesa e o
+    mesmo SM-2, com `kind="language"` para separar o que é de idioma.
+
+    Best-effort, como o `log_activity`: perder um ponto de melhora custa uma
+    repetição; derrubar a correção que a pessoa acabou de responder custa a
+    resposta dela.
+    """
+    try:
+        enunciado = str(item.get("prompt") or "").strip()
+        if not enunciado:
+            return
+        if _melhora_ja_pendente(supabase, user_id, enunciado):
+            return
+        alternativas = item.get("options") or []
+        indice = int((item.get("correct") or {}).get("index", -1))
+        certa = str(alternativas[indice]) if 0 <= indice < len(alternativas) else ""
+        supabase.table("pathr_review_item").insert(
+            {
+                "user_id": user_id,
+                "kind": "language",
+                "front": enunciado[:2000],
+                "back": " ".join(
+                    parte for parte in [certa, str(item.get("feedback") or "")] if parte
+                )[:2000],
+                # Vence agora: é uma lacuna confirmada, não uma suspeita.
+                "due_at": _now().isoformat(),
+                "lapses": 1,
+            }
+        ).execute()
+    except Exception:  # noqa: BLE001
+        return
+
+
+def _melhora_ja_pendente(supabase: Client, user_id: str, enunciado: str) -> bool:
+    """Este ponto já está na fila?
+
+    Sem a checagem, refazer o nivelamento e errar a mesma ideia criaria uma
+    segunda linha, e a pessoa reveria a mesma lacuna duas vezes em paralelo —
+    o que o docstring de `PathrReviewItem` pede para evitar. A comparação usa
+    a chave normalizada de `services/review.py`, a mesma do quiz.
+    """
+    chave = review.concept_key(enunciado)
+    existentes = (
+        supabase.table("pathr_review_item")
+        .select("front")
+        .eq("user_id", user_id)
+        .eq("kind", "language")
+        .limit(200)
+        .execute()
+        .data
+        or []
+    )
+    return any(review.concept_key(linha.get("front")) == chave for linha in existentes)
+
+
+def _resultado_gravado(
+    supabase: Client,
+    user: dict,
+    assessment_id: str,
+    item: dict[str, Any],
+    expected: int,
+) -> dict[str, Any]:
+    """O desfecho de um item que JÁ foi respondido, no formato que a tela lê.
+
+    Só relê o que está gravado: não conta a resposta de novo, não mexe na
+    banda do próximo lote e não fecha o nivelamento por conta própria. Se o
+    nivelamento já terminou, devolve o resultado dele junto — é o que a tela
+    precisa para mostrar o nível em vez de pedir a próxima pergunta.
+    """
+    assessment = (
+        supabase.table("pathr_english_assessment")
+        .select("*")
+        .eq("id", assessment_id)
+        .limit(1)
+        .execute()
+        .data[0]
+    )
+    answered = int(assessment.get("answered_count") or 0)
+    total = int(assessment.get("item_count") or 20)
+    base = {
+        "is_correct": bool(item.get("is_correct")),
+        "correct_index": expected,
+        "explanation": item.get("feedback"),
+    }
+    if assessment.get("status") == "done":
+        return {
+            **base,
+            "finished": True,
+            "result": _com_exame(_perfil_do_idioma(supabase, user, assessment)),
+        }
+    return {**base, "finished": False, "answered": answered, "total": total}
+
+
+def _perfil_do_idioma(supabase: Client, user: dict, assessment: dict[str, Any]) -> dict[str, Any]:
+    """O perfil do idioma em que este nivelamento foi feito."""
+    return _profile(supabase, str(user["id"]), assessment.get("language") or "en")
 
 
 def _next_band(current: str, went_up: bool) -> str:

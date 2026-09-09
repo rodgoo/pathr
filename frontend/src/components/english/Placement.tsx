@@ -14,7 +14,7 @@ import { useState } from "react";
 import { english as englishApi } from "@/api/endpoints";
 import type { EnglishAnswerResult, EnglishAssessment } from "@/api/types";
 import { useMutation } from "@/hooks/useApi";
-import { ACC, ACC4, C, TEXT } from "@/lib/tokens";
+import { ACC, ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
 import { ChoiceList } from "@/components/ui/ChoiceList";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Panel, SCREEN_IN } from "@/components/ui/primitives";
@@ -66,6 +66,10 @@ export function Placement({
   }
 
   async function submit(choice: number) {
+    // Um envio de cada vez. O clique duplo gravava duas respostas para o mesmo
+    // item, e a segunda voltava sem gabarito — a tela ficava sem correção e
+    // sem "Próxima", com o teste parado.
+    if (answer.pending || feedback) return;
     setPick(choice);
     const result = await answer.run(item.id, choice);
     if (result) setFeedback(result);
@@ -89,12 +93,31 @@ export function Placement({
       </p>
 
       <Panel pad={22.4}>
-        {item.context ? (
-          <div style={{ fontSize: 11.5, color: TEXT.muted, marginBottom: 8.4 }}>{item.context}</div>
-        ) : null}
         <div style={{ fontSize: 11, color: ACC, marginBottom: 8.4 }}>
           {item.skill} · {item.cefr_band}
         </div>
+        {item.context ? (
+          /* O contexto É o item quando a habilidade é listening: a
+             transcrição do diálogo mora aqui, e é dela que sai a resposta.
+             Por isso ele tem corpo de texto e não de legenda, e por isso
+             `pre-wrap` — uma fala por linha só se lê como diálogo se as
+             quebras sobreviverem. */
+          <div
+            style={{
+              fontSize: 14,
+              lineHeight: 1.6,
+              color: TEXT.strong,
+              whiteSpace: "pre-wrap",
+              background: "rgba(233,233,237,.04)",
+              borderLeft: `2px solid ${HAIRLINE}`,
+              borderRadius: 8,
+              padding: "11.2px 14px",
+              marginBottom: 16.8,
+            }}
+          >
+            {item.context}
+          </div>
+        ) : null}
         <h2 style={{ fontSize: 17, lineHeight: 1.4, marginBottom: 16.8, fontWeight: 500 }}>
           {item.prompt}
         </h2>
@@ -104,10 +127,28 @@ export function Placement({
           options={item.options}
           pick={pick}
           answer={feedback ? feedback.correct_index : undefined}
+          busy={answer.pending}
           onPick={(choice) => void submit(choice)}
         />
 
-        {answer.error ? <ErrorState message={answer.error} /> : null}
+        {answer.pending ? (
+          <p style={{ fontSize: 12, color: TEXT.faint, margin: "11.2px 0 0" }} role="status">
+            Corrigindo…
+          </p>
+        ) : null}
+
+        {answer.error ? (
+          /* Sair do impasse é obrigação da tela, não da pessoa: se a correção
+             não chegou, "Recarregar a pergunta" busca do servidor o estado
+             real do nivelamento em vez de deixar a tela parada. */
+          <ErrorState
+            message={answer.error}
+            onRetry={() => {
+              answer.clearError();
+              void next();
+            }}
+          />
+        ) : null}
 
         {feedback ? (
           <div
