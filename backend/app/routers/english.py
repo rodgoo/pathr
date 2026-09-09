@@ -20,6 +20,7 @@ from supabase import Client
 from app.ai_providers import generate_json
 from app.database import get_supabase
 from app.deps import get_current_user
+from app.services import review
 from app.services.progress import log_activity
 
 router = APIRouter(prefix="/english", tags=["idioma"])
@@ -421,9 +422,11 @@ def review_vocab(
     SM-2 e não um intervalo fixo porque o que consolida vocabulário é revisar
     ANTES de esquecer, e esse ponto é diferente para cada palavra e cada
     pessoa. Um erro (quality < 3) zera o intervalo: a palavra volta hoje.
-    """
-    from datetime import timedelta
 
+    O cálculo mora em services/review.py desde que o quiz passou a reciclar
+    erro pelo mesmo algoritmo. Duas cópias divergiriam na primeira correção
+    feita só de um lado — e as duas tabelas têm os mesmos campos.
+    """
     rows = (
         supabase.table("pathr_english_vocab")
         .select("*")
@@ -437,31 +440,16 @@ def review_vocab(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cartão não encontrado.")
     card = rows[0]
 
-    ease = float(card.get("ease") or 2.5)
-    repetitions = int(card.get("repetitions") or 0)
-    interval = int(card.get("interval_days") or 0)
-
-    if payload.quality < 3:
-        repetitions = 0
-        interval = 0
-    else:
-        repetitions += 1
-        interval = 1 if repetitions == 1 else 6 if repetitions == 2 else round(interval * ease)
-        ease = max(
-            1.3,
-            ease + (0.1 - (5 - payload.quality) * (0.08 + (5 - payload.quality) * 0.02)),
-        )
+    # `pathr_english_vocab` não tem coluna `lapses`; o agendador devolve o
+    # campo só no erro, e mandá-lo ao PostgREST daria erro de coluna
+    # inexistente. As outras chaves são as mesmas nas duas tabelas.
+    proximo = review.schedule(card, payload.quality)
+    proximo.pop("lapses", None)
+    proximo.pop("last_reviewed_at", None)
 
     updated = (
         supabase.table("pathr_english_vocab")
-        .update(
-            {
-                "ease": round(ease, 2),
-                "repetitions": repetitions,
-                "interval_days": interval,
-                "due_at": (_now() + timedelta(days=max(interval, 0))).isoformat(),
-            }
-        )
+        .update(proximo)
         .eq("id", vocab_id)
         .execute()
         .data[0]

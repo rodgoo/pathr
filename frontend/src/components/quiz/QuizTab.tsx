@@ -20,7 +20,7 @@ export function QuizTab({ node }: { node: RoadmapNode | null }) {
   const { dispatch } = useAppState();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const generate = useMutation(() =>
-    quizzesApi.generate({ node_id: node?.id, question_count: 6, difficulty: "medio" }),
+    quizzesApi.generate({ node_id: node?.id, question_count: 6, difficulty: "adaptativo" }),
   );
 
   async function start() {

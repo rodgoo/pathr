@@ -241,6 +241,16 @@ export interface QuizResult {
     is_correct: boolean;
     explanation: string;
   }[];
+  /**
+   * O que o erro virou. `volta` são os conceitos que reaparecerão reescritos
+   * no próximo quiz da tag; `aprendido` são os que a pessoa acabou de fechar
+   * ao acertar uma questão reciclada.
+   *
+   * Opcional porque tentativas gravadas antes da reciclagem existir não têm
+   * este campo — e uma tela que quebra ao abrir um resultado antigo seria
+   * pior que uma que só não mostra o aviso.
+   */
+  review?: { volta: string[]; aprendido: string[] };
 }
 
 export interface EnglishProfile {

@@ -21,6 +21,7 @@ from supabase import Client
 from app.ai_providers import generate_json
 from app.database import get_supabase
 from app.deps import get_current_user
+from app.services import review
 from app.services.progress import log_activity
 
 router = APIRouter(prefix="/quizzes", tags=["quiz"])
@@ -34,6 +35,7 @@ QUIZ_SCHEMA: dict[str, Any] = {
             "items": {
                 "type": "OBJECT",
                 "properties": {
+                    "conceito": {"type": "STRING"},
                     "enunciado": {"type": "STRING"},
                     "codigo": {"type": "STRING"},
                     "linguagem": {"type": "STRING"},
@@ -65,14 +67,27 @@ Regras:
    (java, python, javascript, sql...). Não coloque a resposta em comentário.
 6. O campo dificuldade: facil, medio ou dificil. Distribua conforme o nível
    informado — não faça todas fáceis.
-7. Responda apenas o JSON."""
+7. O campo conceito diz, em até 8 palavras, QUAL ideia a questão testa —
+   "diferença entre COPY e ADD", "escopo de variável em closure". É o que
+   permite reconhecer a mesma lacuna em perguntas escritas de formas
+   diferentes, então descreva a ideia, nunca o enunciado.
+8. Quando vier uma lista PARA REVISAR, escreva uma questão para cada conceito
+   dela, na ordem, ANTES das questões novas. Elas cobram algo que a pessoa já
+   errou, e por isso precisam ser REESCRITAS: outro enunciado, outro exemplo,
+   outro ângulo de ataque. Repita o conceito, nunca a frase — quem decora o
+   texto da pergunta não aprendeu a ideia. Copie o conceito tal como veio, no
+   campo conceito, para o sistema reconhecê-lo.
+9. Responda apenas o JSON."""
 
 
 class GenerateQuiz(BaseModel):
     tag_ids: list[str] = Field(default_factory=list, max_length=6)
     node_id: Optional[str] = None
     question_count: int = Field(default=6, ge=3, le=15)
-    difficulty: str = Field(default="medio", pattern="^(facil|medio|dificil|adaptativo)$")
+    # "adaptativo" por padrão: quem chama normalmente não sabe o nível atual da
+    # pessoa melhor que o histórico dela. Os três valores fixos continuam
+    # aceitos para quem quiser forçar.
+    difficulty: str = Field(default="adaptativo", pattern="^(facil|medio|dificil|adaptativo)$")
 
 
 class SubmitAnswers(BaseModel):
@@ -129,11 +144,35 @@ async def generate_quiz(
         sum(int(row.get("proficiency") or 0) for row in levels) / len(levels) if levels else 0
     )
 
+    # O que a pessoa ja errou nestas tags e esta vencido. Vem antes de decidir
+    # a dificuldade porque a quantidade de pendencias e o freio da escada.
+    pendentes = _due_reviews(supabase, user_id, tag_ids)
+
+    dificuldade = payload.difficulty
+    if dificuldade == "adaptativo":
+        dificuldade = review.next_difficulty(
+            proficiency=average,
+            recent_scores=_recent_scores(supabase, user_id),
+            pending_reviews=len(pendentes),
+        )
+
+    revisar = ""
+    if pendentes:
+        # So o conceito viaja para o modelo, nunca o enunciado antigo. Mandar o
+        # texto original convidaria a parafrasear a frase, e o que precisa
+        # voltar e a ideia -- reescrita de verdade.
+        linhas_revisao = "\n".join(f"- {item['front']}" for item in pendentes)
+        revisar = (
+            "\nPARA REVISAR (a pessoa errou estes conceitos; reescreva cada um "
+            f"com outro enunciado e outro exemplo):\n{linhas_revisao}\n"
+        )
+
     prompt = (
         f"TECNOLOGIAS: {', '.join(names)}\n"
         f"NIVEL ATUAL DA PESSOA: {average:.1f} de 5\n"
         f"QUANTIDADE DE QUESTOES: {payload.question_count}\n"
-        f"DIFICULDADE PEDIDA: {payload.difficulty}\n\n"
+        f"DIFICULDADE PEDIDA: {dificuldade}\n"
+        f"{revisar}\n"
         "Escreva questoes que uma pessoa neste nivel consiga responder pensando, "
         "mas nao consiga responder por eliminacao."
     )
@@ -154,7 +193,7 @@ async def generate_quiz(
                 "kind": "practice",
                 "node_id": payload.node_id,
                 "tag_ids": tag_ids,
-                "difficulty": payload.difficulty,
+                "difficulty": dificuldade,
                 "question_count": len(questions),
                 "generated_by": result.model,
             }
@@ -162,6 +201,11 @@ async def generate_quiz(
         .execute()
         .data[0]
     )
+
+    # De qual item pendente cada questão nasceu. O modelo devolve o conceito
+    # copiado da lista PARA REVISAR, e é por ele que se reconhece a origem —
+    # o enunciado não serve, porque reescrevê-lo é o objetivo.
+    por_conceito = {review.concept_key(item["front"]): item["id"] for item in pendentes}
 
     supabase.table("pathr_question").insert(
         [
@@ -174,6 +218,8 @@ async def generate_quiz(
                 "options": question["alternativas"],
                 "correct": {"index": question["correta"]},
                 "explanation": question["explicacao"],
+                "concept": question["conceito"] or None,
+                "review_item_id": por_conceito.get(review.concept_key(question["conceito"])),
                 "difficulty": question["dificuldade"],
                 "tag_ids": tag_ids,
                 "order_index": index,
@@ -216,6 +262,10 @@ def _clean_questions(raw: Any) -> list[dict[str, Any]]:
                 "correta": correct,
                 "explicacao": str(item.get("explicacao") or "").strip()[:2000],
                 "dificuldade": difficulty if difficulty in {"facil", "medio", "dificil"} else "medio",
+                # Pode vir vazio: modelo mais fraco às vezes ignora o campo. A
+                # questão continua utilizável — só não alimenta a revisão, o
+                # que é melhor que descartá-la por falta de metadado.
+                "conceito": str(item.get("conceito") or "").strip()[:200],
             }
         )
     return cleaned
@@ -323,6 +373,7 @@ def submit_quiz(
     )
 
     _apply_result_to_tags(supabase, user_id, tag_ids, score)
+    reciclados = _recycle(supabase, user_id, questions, results)
     log_activity(
         supabase,
         user=current_user,
@@ -340,7 +391,163 @@ def submit_quiz(
         "correct_count": correct_count,
         "total": len(questions),
         "results": results,
+        # O que vai voltar reescrito e o que foi dado como aprendido. A tela
+        # mostra isso no fim do quiz: errar sem saber que a pergunta volta é o
+        # que faz o erro parecer punição em vez de etapa.
+        "review": reciclados,
     }
+
+
+def _due_reviews(supabase: Client, user_id: str, tag_ids: list[str], limit: int = 4) -> list[dict]:
+    """Conceitos vencidos nestas tags, do mais atrasado para o menos.
+
+    O teto de 4 existe para o quiz não virar só revisão: com 6 questões, quatro
+    recicladas ainda deixam duas novas. Um plano que só repete o que a pessoa
+    errou para de avançar, e um que nunca repete não consolida nada.
+    """
+    if not tag_ids:
+        return []
+    return (
+        supabase.table("pathr_review_item")
+        .select("id,front,back,tag_id,ease,repetitions,interval_days,lapses")
+        .eq("user_id", user_id)
+        .in_("tag_id", tag_ids)
+        .lte("due_at", _now().isoformat())
+        .order("due_at")
+        .limit(limit)
+        .execute()
+        .data
+        or []
+    )
+
+
+def _recent_scores(supabase: Client, user_id: str, limit: int = 3) -> list[float]:
+    """As últimas notas, para a escada de dificuldade.
+
+    Três tentativas: menos que isso e um dia ruim derruba o nível; mais e a
+    escada demora demais a reagir a quem melhorou.
+    """
+    rows = (
+        supabase.table("pathr_attempt")
+        .select("score")
+        .eq("user_id", user_id)
+        .not_.is_("score", "null")
+        .order("finished_at", desc=True)
+        .limit(limit)
+        .execute()
+        .data
+        or []
+    )
+    return [float(row["score"]) for row in rows]
+
+
+def _recycle(
+    supabase: Client, user_id: str, questions: list[dict], results: list[dict]
+) -> dict[str, list[str]]:
+    """Fecha o ciclo do erro: o que caiu vira pendência, o que subiu se afasta.
+
+    Três casos por questão, e é a combinação deles que produz a "linha de
+    aprendizagem":
+
+    - errou uma questão reciclada -> o item volta a vencer hoje, com ease menor;
+    - acertou uma questão reciclada -> o SM-2 empurra a próxima aparição para
+      frente, e depois de algumas repetições ela para de vir;
+    - errou uma questão nova -> nasce um item, vencendo hoje.
+
+    Best-effort como o `log_activity`: uma falha aqui não pode derrubar a
+    correção que a pessoa acabou de terminar. Perder um item de revisão custa
+    uma repetição; perder a nota custa o trabalho dela.
+    """
+    por_id = {str(q["id"]): q for q in questions}
+    volta: list[str] = []
+    aprendido: list[str] = []
+
+    for resultado in results:
+        questao = por_id.get(resultado["question_id"])
+        if not questao:
+            continue
+        conceito = (questao.get("concept") or "").strip()
+        item_id = questao.get("review_item_id")
+        acertou = resultado["is_correct"]
+
+        try:
+            if item_id:
+                atuais = (
+                    supabase.table("pathr_review_item")
+                    .select("ease,repetitions,interval_days,lapses")
+                    .eq("id", str(item_id))
+                    .limit(1)
+                    .execute()
+                    .data
+                )
+                if not atuais:
+                    continue
+                proximo = review.schedule(
+                    atuais[0], review.QUALITY_HIT if acertou else review.QUALITY_MISS
+                )
+                supabase.table("pathr_review_item").update(proximo).eq(
+                    "id", str(item_id)
+                ).execute()
+                (aprendido if acertou else volta).append(conceito or "conceito revisado")
+                continue
+
+            # Questão nova. Só o erro vira item — acertar de primeira não é
+            # coisa a revisar, e criar item para tudo encheria a fila com o que
+            # a pessoa já sabe.
+            if acertou or not conceito:
+                continue
+            if _ja_pendente(supabase, user_id, questao, conceito):
+                continue
+
+            correta = int((questao.get("correct") or {}).get("index", -1))
+            alternativas = questao.get("options") or []
+            resposta = alternativas[correta] if 0 <= correta < len(alternativas) else ""
+            supabase.table("pathr_review_item").insert(
+                {
+                    "user_id": user_id,
+                    "kind": "question",
+                    "tag_id": (questao.get("tag_ids") or [None])[0],
+                    "question_id": str(questao["id"]),
+                    "front": conceito,
+                    "back": " ".join(
+                        part for part in [str(resposta), questao.get("explanation") or ""] if part
+                    )[:2000],
+                    # Vence agora: o próximo quiz sobre a tag já recicla.
+                    "due_at": _now().isoformat(),
+                    "lapses": 1,
+                }
+            ).execute()
+            volta.append(conceito)
+        except Exception:  # noqa: BLE001
+            continue
+
+    return {"volta": volta, "aprendido": aprendido}
+
+
+def _ja_pendente(supabase: Client, user_id: str, questao: dict, conceito: str) -> bool:
+    """Este conceito já está na fila?
+
+    Sem esta checagem, errar duas questões sobre a mesma ideia no mesmo quiz
+    criaria dois itens, e a pessoa responderia a mesma lacuna duas vezes em
+    paralelo — o que o docstring de `PathrReviewItem` pede para evitar.
+
+    A comparação é pela chave normalizada e acontece em Python, e não no banco:
+    são poucas linhas por tag, e um `ilike` no PostgREST não daria a
+    equivalência sem acento que `concept_key` dá.
+    """
+    chave = review.concept_key(conceito)
+    tag_id = (questao.get("tag_ids") or [None])[0]
+    existentes = (
+        supabase.table("pathr_review_item")
+        .select("front")
+        .eq("user_id", user_id)
+        .eq("tag_id", tag_id)
+        .limit(200)
+        .execute()
+        .data
+        or []
+    )
+    return any(review.concept_key(row.get("front")) == chave for row in existentes)
 
 
 def _apply_result_to_tags(

@@ -423,6 +423,17 @@ class PathrQuestion(SQLModel, table=True):
     correct: dict[str, Any] = Field(default_factory=dict, sa_column=_jsonb())
     explanation: Optional[str] = Field(default=None)
     difficulty: str = Field(default="medio")
+    # O que a questão testa, em uma frase, escrito pela IA junto com ela.
+    # É por aqui que duas questões diferentes sobre a MESMA ideia viram um
+    # item de revisão só — o enunciado não serve para isso, porque reescrever
+    # o enunciado é justamente o que a reciclagem faz.
+    concept: Optional[str] = Field(default=None)
+    # Preenchido quando esta questão nasceu de um erro anterior. É o fio que
+    # liga a resposta de hoje ao item de revisão que a gerou, e sem ele o
+    # acerto de uma questão reciclada não teria como aposentar o item.
+    review_item_id: Optional[uuid.UUID] = Field(
+        default=None, sa_type=PGUUID(as_uuid=True), index=True
+    )
     tag_ids: list[uuid.UUID] = Field(default_factory=list, sa_column=_uuid_array())
     order_index: int = Field(default=0)
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))

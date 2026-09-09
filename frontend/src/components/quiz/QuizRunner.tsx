@@ -17,7 +17,7 @@ import { useState } from "react";
 import { quizzes as quizzesApi } from "@/api/endpoints";
 import type { Quiz, QuizResult } from "@/api/types";
 import { useMutation } from "@/hooks/useApi";
-import { ACC, ACC4, C, TEXT } from "@/lib/tokens";
+import { ACC, ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
 import { ChoiceList } from "@/components/ui/ChoiceList";
 import { ErrorState } from "@/components/ui/States";
 import { Panel } from "@/components/ui/primitives";
@@ -157,6 +157,7 @@ function Review({
             ? "Bom resultado — a proficiência das tags deste quiz subiu no seu perfil."
             : "Abaixo de 70%. Revise o material antes de seguir; o perfil não subiu."}
         </p>
+        <ReviewOutcome review={result.review} />
       </div>
 
       <div style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
@@ -216,5 +217,50 @@ function Review({
         </button>
       ) : null}
     </Panel>
+  );
+}
+
+/**
+ * O que o erro virou.
+ *
+ * Dizer isto no fim do quiz é o que separa "errei" de "vou ver de novo". Sem
+ * a frase, a reciclagem acontece em silêncio e a pessoa reencontra a mesma
+ * ideia semanas depois sem entender por quê — ou pior, acha que o app está
+ * repetindo pergunta por preguiça.
+ *
+ * O texto diz "com outras palavras" de propósito: se voltasse igual, decorar
+ * o enunciado bastaria, e é exatamente isso que a reescrita evita.
+ */
+function ReviewOutcome({ review }: { review?: { volta: string[]; aprendido: string[] } }) {
+  if (!review) return null;
+  const { volta, aprendido } = review;
+  if (volta.length === 0 && aprendido.length === 0) return null;
+
+  return (
+    <div
+      style={{
+        marginTop: 16.8,
+        paddingTop: 14,
+        borderTop: `1px solid ${HAIRLINE}`,
+        fontSize: 12.5,
+        lineHeight: 1.6,
+        color: TEXT.muted,
+      }}
+    >
+      {aprendido.length > 0 ? (
+        <div style={{ color: C.verde }}>
+          {aprendido.length === 1
+            ? "1 conceito que você tinha errado voltou e você acertou."
+            : `${aprendido.length} conceitos que você tinha errado voltaram e você acertou.`}{" "}
+          Eles vão rarear até sumir.
+        </div>
+      ) : null}
+      {volta.length > 0 ? (
+        <div style={{ marginTop: aprendido.length > 0 ? 5.6 : 0 }}>
+          {volta.length === 1 ? "1 conceito volta" : `${volta.length} conceitos voltam`} no próximo
+          quiz desta trilha, com outras palavras: {volta.join(" · ")}
+        </div>
+      ) : null}
+    </div>
   );
 }
