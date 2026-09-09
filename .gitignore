@@ -1,0 +1,18 @@
+# Segredos. O .env.example é versionado; o .env.local, nunca — ele carrega as
+# chaves do Supabase, dos provedores de IA e do Brevo.
+.env
+.env.local
+*.local
+
+# Dependências e artefatos de build
+node_modules/
+dist/
+.venv/
+__pycache__/
+*.pyc
+*.tsbuildinfo
+
+# Ferramentas
+.pytest_cache/
+coverage/
+.DS_Store

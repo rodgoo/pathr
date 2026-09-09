@@ -1,0 +1,53 @@
+# Borda de produção do PathR.
+#
+# Termina TLS de verdade (Let's Encrypt, emitido e renovado sozinho) para os
+# dois hosts e encaminha para os containers pela rede privada do Docker, que
+# não é alcançável de fora — só este Caddy é.
+#
+# Dois hosts, mesmo registrable domain:
+#   pathr.notter.com.br      -> SPA estático (frontend)
+#   api.pathr.notter.com.br  -> esta API
+#
+# Estarem os dois sob notter.com.br é o que permite COOKIE_SAMESITE=strict:
+# subdomínios do mesmo domínio registrável são same-site, então o cookie de
+# sessão emitido pela API acompanha as requisições do app. Se a API morasse em
+# outro domínio, seria cross-site e só SameSite=None funcionaria — perdendo a
+# proteção contra CSRF que o Strict dá de graça.
+
+{
+	email {$ACME_EMAIL}
+}
+
+{$DOMAIN_API} {
+	reverse_proxy pathr-backend:8031 {
+		# Descarta o que o CLIENTE mandou nestes headers antes de definir os
+		# nossos. Sem isso, qualquer um poderia forjar o IP de origem batendo
+		# direto neste Caddy e cegar tudo que depende dele: o bloqueio por
+		# tentativas de login, o limite do forgot-password e a própria trilha
+		# de auditoria em pathr_security_event. Este Caddy é o único salto
+		# entre a internet e o backend, então é aqui que "o que o cliente
+		# alega" vira "o que a conexão TCP mostra".
+		header_up -Cf-Connecting-Ip
+		header_up X-Forwarded-For {http.request.remote.host}
+	}
+}
+
+{$DOMAIN_APP} {
+	root * /srv/pathr
+	encode gzip zstd
+
+	# Os assets com hash no nome nunca mudam de conteúdo — podem ser
+	# cacheados para sempre.
+	@assets path /assets/*
+	header @assets Cache-Control "public, max-age=31536000, immutable"
+
+	# O index.html NÃO pode ser cacheado: é ele que aponta para os assets
+	# novos depois de um deploy.
+	@index path /index.html /
+	header @index Cache-Control "no-cache"
+
+	# SPA: qualquer rota desconhecida devolve o index e o roteamento acontece
+	# no navegador.
+	try_files {path} /index.html
+	file_server
+}

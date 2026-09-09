@@ -1,0 +1,72 @@
+# Produção do PathR: a API, o SPA e a borda TLS.
+#
+# O banco NÃO está aqui — é um projeto Supabase gerenciado e exclusivo do
+# PathR. Este arquivo sobe só o que roda por nossa conta.
+#
+# Antes de subir, em .env.local ao lado deste arquivo:
+#   DOMAIN_APP=pathr.notter.com.br
+#   DOMAIN_API=api.pathr.notter.com.br
+#   ACME_EMAIL=voce@exemplo.com
+# e o restante das variáveis do backend (ver backend/.env.example).
+
+services:
+  pathr-backend:
+    build:
+      context: ./backend
+    restart: unless-stopped
+    env_file: .env.local
+    environment:
+      ENVIRONMENT: production
+      COOKIE_SAMESITE: strict
+      # Sem COOKIE_DOMAIN: o cookie fica host-only, ou seja, volta só para
+      # api.pathr.notter.com.br, que é quem o emitiu e o único host que a
+      # aplicação chama. Ampliá-lo para ".notter.com.br" mandaria a sessão do
+      # PathR junto em requisições ao Notter e ao FinanceR.
+      FRONTEND_URL: https://${DOMAIN_APP}
+      API_URL: https://${DOMAIN_API}
+      CORS_ORIGINS: '["https://${DOMAIN_APP}"]'
+    # Sem `ports`: o backend só é alcançável pela rede privada. Quem fala com
+    # a internet é o Caddy.
+    expose:
+      - "8031"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import httpx,sys; sys.exit(0 if httpx.get('http://localhost:8031/health').status_code==200 else 1)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  pathr-frontend-build:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: https://${DOMAIN_API}
+    # Container de build: produz o dist/ no volume e sai. Não é um serviço.
+    command: ["sh", "-c", "cp -r /app/dist/. /srv/pathr/"]
+    volumes:
+      - spa:/srv/pathr
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN_APP: ${DOMAIN_APP}
+      DOMAIN_API: ${DOMAIN_API}
+      ACME_EMAIL: ${ACME_EMAIL}
+    volumes:
+      - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - spa:/srv/pathr:ro
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      - pathr-backend
+      - pathr-frontend-build
+
+volumes:
+  spa:
+  caddy-data:
+  caddy-config:

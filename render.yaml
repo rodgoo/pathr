@@ -1,0 +1,112 @@
+# Blueprint do Render (https://render.com/docs/blueprint-spec) para o backend
+# do PathR — alternativa ao self-host via docker-compose.prod.yml + Caddy,
+# quando não há VPS própria. Ver deploy/README.md.
+#
+# Uso: no dashboard do Render, "New +" -> "Blueprint", apontando para este
+# repo. As variáveis com `sync: false` ficam em branco e são preenchidas à mão
+# no dashboard — nunca commitadas aqui.
+#
+# ATENÇÃO ao domínio (o ponto que decide se a sessão funciona):
+# o cookie de sessão é SameSite=Strict, o que exige que a API e o app estejam
+# no MESMO domínio registrável. Com o host padrão do Render
+# (pathr-backend.onrender.com) contra pathr.notter.com.br isso é cross-site, e
+# o navegador simplesmente não envia o cookie — a pessoa entra e cai de volta
+# no login. Adicione o domínio customizado `api.pathr.notter.com.br` ao
+# serviço (Settings -> Custom Domains; funciona no plano free) e aponte o CNAME
+# antes de usar em produção.
+#
+# O plano free dorme após 15 min sem tráfego: a primeira requisição depois
+# disso leva 30-60s. É também a razão de o cooldown da rotação de IA ser
+# persistido (app/ai_providers.py) — sem isso, cada acordar tornaria a bater
+# numa chave cuja cota diária já acabou.
+services:
+  - type: web
+    name: pathr-backend
+    runtime: docker
+    plan: free
+    region: oregon
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    # Roda `alembic upgrade head` antes do uvicorn e escuta em $PORT — ver
+    # backend/start.sh, inclusive sobre por que é um script e não um
+    # `sh -c "a && b"` aqui.
+    dockerCommand: sh start.sh
+    # Não é liveness ("o processo respondeu"), é prontidão de schema: só
+    # devolve 200 quando as tabelas do PathR estão visíveis pelo PostgREST
+    # (app/health.py). Enquanto não passar, o Render segura o deploy em vez de
+    # promover uma versão que responderia 500 em toda rota.
+    healthCheckPath: /health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      # Cookie de sessão. `strict` funciona porque pathr.notter.com.br e
+      # api.pathr.notter.com.br estão sob o mesmo domínio registrável — ver o
+      # aviso sobre domínio customizado no topo.
+      #
+      # COOKIE_DOMAIN fica VAZIO de propósito (host-only): a API é quem emite
+      # o cookie e é para ela que ele volta. Ampliar para ".notter.com.br"
+      # anexaria a sessão do PathR em requisições ao Notter e ao FinanceR, que
+      # são outros apps com outras contas.
+      - key: COOKIE_SAMESITE
+        value: strict
+
+      # --- Supabase: projeto EXCLUSIVO do PathR (crie um novo) ---
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      # Só o Alembic usa. Use a string do POOLER
+      # (aws-...pooler.supabase.com): o host direto db.<ref>.supabase.co
+      # resolve apenas em IPv6, e o Render não alcança.
+      - key: DATABASE_URL
+        sync: false
+      # Bucket PRIVADO do Supabase Storage onde ficam os currículos.
+      # Crie antes do primeiro deploy — o upload falha sem ele.
+      - key: RESUME_BUCKET
+        value: pathr-resumes
+
+      # --- Auth ---
+      # openssl rand -hex 32
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      # Fernet, 32 bytes url-safe base64. NÃO use generateValue: o formato do
+      # Fernet é específico e um valor aleatório qualquer quebra o MFA no
+      # primeiro uso. Gere com:
+      #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+      - key: MFA_ENCRYPTION_KEY
+        sync: false
+
+      # --- Endereços públicos ---
+      - key: FRONTEND_URL
+        value: https://pathr.notter.com.br
+      - key: API_URL
+        value: https://api.pathr.notter.com.br
+      - key: CORS_ORIGINS
+        value: '["https://pathr.notter.com.br"]'
+
+      # --- E-mail transacional (confirmação e recuperação de senha) ---
+      # Sem estes, o cadastro funciona mas o link de confirmação só aparece no
+      # log do servidor (services/email.py). Não é opcional em produção.
+      - key: BREVO_API_KEY
+        sync: false
+      - key: BREVO_FROM_EMAIL
+        sync: false
+      - key: BREVO_SENDER_NAME
+        value: PathR
+
+      # --- Provedores de IA: chaves EXCLUSIVAS do PathR ---
+      # Não reaproveite as do Notter: são contas e cotas separadas, e é isso
+      # que faz o cooldown de um app não rebaixar a chave do outro.
+      # Cada uma aceita lista separada por vírgula (k1,k2,k3) = uma cota por
+      # chave. O Gemini é o único com visão e é ele que lê o PDF do currículo;
+      # sem ele a leitura cai para o texto extraído.
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: MISTRAL_API_KEY
+        sync: false
+      - key: CEREBRAS_API_KEY
+        sync: false

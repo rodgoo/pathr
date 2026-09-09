@@ -1,0 +1,152 @@
+"""Dependências de requisição: quem está chamando, e de onde.
+
+A sessão vive em dois cookies: um access token JWT curto e um refresh token
+opaco e longo. O access token carrega `sid` (o id da linha em
+`pathr_refresh_token`), então uma sessão revogada para de valer no próximo
+uso mesmo com o JWT ainda dentro da validade — sem isso, "sair de todos os
+dispositivos" não faria nada por até `access_token_minutes`.
+
+O header `Authorization: Bearer` é aceito em paralelo para clientes que não
+guardam cookie (um app nativo, um script). O cookie continua sendo o caminho
+do navegador, porque é o único que o JavaScript da página não consegue ler.
+"""
+
+from datetime import datetime, timezone
+from typing import Any, Optional
+
+from fastapi import Depends, HTTPException, Request, status
+from supabase import Client
+
+from app.database import get_supabase
+from app.security import decode_access_token
+
+ACCESS_COOKIE = "pathr_access"
+REFRESH_COOKIE = "pathr_refresh"
+
+
+def client_ip(request: Optional[Request]) -> Optional[str]:
+    """O IP real do chamador.
+
+    Confia em `cf-connecting-ip` e depois no PRIMEIRO item de
+    `x-forwarded-for` porque em produção existe exatamente um proxy à frente
+    (o Caddy de deploy/Caddyfile), que reescreve os dois headers a partir do
+    endereço TCP observado. Sem essa reescrita na borda, qualquer um poderia
+    forjar o header e cegar o bloqueio por tentativas.
+    """
+    if request is None:
+        return None
+    cloudflare = request.headers.get("cf-connecting-ip")
+    if cloudflare:
+        return cloudflare.strip()
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else None
+
+
+def user_agent(request: Optional[Request]) -> Optional[str]:
+    if request is None:
+        return None
+    raw = request.headers.get("user-agent")
+    # A coluna é texto livre; truncar evita que um header absurdo entupa a
+    # linha de auditoria.
+    return raw[:400] if raw else None
+
+
+def _bearer_token(request: Request) -> Optional[str]:
+    header = request.headers.get("authorization") or ""
+    if header.lower().startswith("bearer "):
+        return header[7:].strip() or None
+    return None
+
+
+def _session_is_live(supabase: Client, session_id: str) -> bool:
+    """A sessão referenciada pelo JWT ainda vale?
+
+    Um erro de rede aqui devolve True: derrubar todo mundo porque o Supabase
+    piscou é pior que aceitar por mais alguns minutos um JWT cuja sessão foi
+    revogada — a revogação volta a valer assim que a consulta funcionar.
+    """
+    try:
+        rows = (
+            supabase.table("pathr_refresh_token")
+            .select("id,revoked_at,expires_at")
+            .eq("id", session_id)
+            .limit(1)
+            .execute()
+            .data
+        )
+    except Exception:  # noqa: BLE001
+        return True
+    if not rows:
+        return False
+    row = rows[0]
+    if row.get("revoked_at"):
+        return False
+    expires_at = row.get("expires_at")
+    if expires_at:
+        parsed = datetime.fromisoformat(str(expires_at).replace("Z", "+00:00"))
+        if parsed <= datetime.now(timezone.utc):
+            return False
+    return True
+
+
+def _unauthorized(detail: str = "Sessão inválida ou expirada.") -> HTTPException:
+    return HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=detail)
+
+
+def get_current_user(
+    request: Request, supabase: Client = Depends(get_supabase)
+) -> dict[str, Any]:
+    """O usuário autenticado, ou 401. E-mail não verificado é recusado aqui."""
+    user = _resolve_user(request, supabase)
+    if not user.get("email_verified_at"):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Confirme seu e-mail para continuar.",
+        )
+    return user
+
+
+def get_current_user_allow_unverified(
+    request: Request, supabase: Client = Depends(get_supabase)
+) -> dict[str, Any]:
+    """Para as poucas rotas que a pessoa precisa alcançar antes de confirmar o
+    e-mail: reenviar a confirmação, ver o próprio cadastro, sair."""
+    return _resolve_user(request, supabase)
+
+
+def _resolve_user(request: Request, supabase: Client) -> dict[str, Any]:
+    token = request.cookies.get(ACCESS_COOKIE) or _bearer_token(request)
+    if not token:
+        raise _unauthorized("Não autenticado.")
+
+    payload = decode_access_token(token)
+    if not payload:
+        raise _unauthorized()
+
+    session_id = payload.get("sid")
+    if not session_id or not _session_is_live(supabase, session_id):
+        raise _unauthorized("Sessão encerrada. Entre novamente.")
+
+    try:
+        rows = (
+            supabase.table("pathr_user")
+            .select("*")
+            .eq("id", payload.get("sub"))
+            .limit(1)
+            .execute()
+            .data
+        )
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Banco indisponível agora. Tente de novo em instantes.",
+        ) from exc
+
+    if not rows:
+        raise _unauthorized()
+
+    user = rows[0]
+    user["session_id"] = session_id
+    return user

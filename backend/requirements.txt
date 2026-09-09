@@ -1,0 +1,41 @@
+# Web
+fastapi==0.141.1
+uvicorn[standard]==0.52.1
+python-multipart==0.0.31
+starlette==1.3.1
+
+# Persistência. O runtime fala com o Postgres via PostgREST (supabase-py);
+# SQLModel/psycopg existem só para o Alembic descrever e migrar o schema.
+sqlmodel==0.0.39
+psycopg[binary]>=3.3.4
+alembic==1.19.1
+supabase==2.31.0
+
+# Configuração
+python-dotenv==1.2.2
+pydantic-settings==2.7.1
+# EmailStr nos schemas de auth valida o endereço de verdade (sintaxe + domínio
+# resolvível), em vez de uma regex que aceita "a@b".
+email-validator==2.2.0
+
+# Auth: Argon2id nas senhas, TOTP no MFA, Fernet no segredo do MFA em repouso,
+# JWT no access token.
+argon2-cffi==25.1.0
+pyotp==2.9.0
+qrcode[pil]==8.2
+pillow==12.3.0
+pyjwt[crypto]==2.13.0
+cryptography==50.0.0
+
+# Provedores de IA e chamadas externas
+httpx==0.28.1
+
+# Leitura de currículo. pypdf extrai o texto de um PDF com camada de texto;
+# python-docx cobre .docx. Um PDF escaneado (só imagem) não passa por
+# nenhum dos dois — esse caminho vai direto ao Gemini como mídia, ver
+# services/resume_parser.py.
+pypdf==6.15.0
+python-docx==1.2.0
+
+# E-mail transacional (verificação, recuperação de senha)
+# — mesma conta Brevo do Notter, ver services/email.py.
