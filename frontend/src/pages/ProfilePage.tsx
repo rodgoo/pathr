@@ -32,8 +32,15 @@ export function ProfilePage() {
   if (!overview.data || !tags.data) return null;
 
   const { profile, streak, roadmap } = overview.data;
-  const proven = tags.data.filter((tag) => tag.proficiency > 0);
-  const planned = tags.data.filter((tag) => tag.proficiency === 0);
+
+  // Os três grupos são os MESMOS do gerador de roadmap (ver
+  // backend/app/services/roadmap_builder.py: build_prompt). Antes a tela
+  // dividia em "tem nível" e "não tem", o que juntava N1 com N5 e sugeria que
+  // só o N0 entrava no plano — duas afirmações falsas. O corte de verdade é
+  // em N3, e a ordem abaixo é a ordem em que o plano ataca os assuntos.
+  const dominadas = tags.data.filter((tag) => tag.proficiency >= 3);
+  const parciais = tags.data.filter((tag) => tag.proficiency > 0 && tag.proficiency < 3);
+  const doZero = tags.data.filter((tag) => tag.proficiency === 0);
 
   const toggle = async (tagId: string, next: boolean) => {
     // Atualiza a tela antes da resposta: a escrita é pequena e previsível, e
@@ -85,15 +92,22 @@ export function ProfilePage() {
       ) : (
         <Panel pad={16.8}>
           <TagGroup
-            title={`Domínio atual · ${proven.length}`}
-            hint="o que o currículo comprovou ou o quiz confirmou"
-            tags={proven}
+            title={`Você domina · ${dominadas.length}`}
+            hint="N3 ou mais — o roadmap NÃO gasta tempo com isto"
+            tags={dominadas}
             onToggle={toggle}
           />
           <TagGroup
-            title={`No plano · ${planned.length}`}
-            hint="ainda em N0 — é o que o roadmap vai cobrir"
-            tags={planned}
+            title={`O plano começa por aqui · ${parciais.length}`}
+            hint="N1 e N2 — entram para aprofundar, e vêm primeiro: a distância é curta e o resultado aparece nas primeiras semanas"
+            tags={parciais}
+            onToggle={toggle}
+            style={{ marginTop: 16.8 }}
+          />
+          <TagGroup
+            title={`Do zero · ${doZero.length}`}
+            hint="N0 — também entram. O que o objetivo exige vai cedo, por ser o mais longo; o resto fica para o fim e é o primeiro a sair se as horas não fecharem"
+            tags={doZero}
             dashed
             onToggle={toggle}
             style={{ marginTop: 16.8 }}
