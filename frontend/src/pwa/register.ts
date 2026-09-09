@@ -77,7 +77,19 @@ export function registerServiceWorker(): void {
 
   window.addEventListener("load", () => {
     void navigator.serviceWorker
-      .register(CAMINHO)
+      // `updateViaCache: "none"` obriga o navegador a buscar o sw.js na rede
+      // em toda checagem, ignorando o cache HTTP.
+      //
+      // Não é redundância com o `Cache-Control: no-cache` do `public/_headers`:
+      // o Cloudflare Pages NÃO honra aquela regra — ele serve o sw.js com
+      // `max-age=14400` de qualquer jeito (verificado em produção). E o sw.js
+      // é o arquivo que sabe quais assets existem nesta versão: servir uma
+      // cópia velha dele é o deploy não chegar a quem instalou o app na tela
+      // de início, que é justamente quem não tem como recarregar para forçar.
+      //
+      // A regra no `_headers` fica: se o Pages passar a honrá-la, as duas
+      // dizem a mesma coisa. Esta aqui é a que não depende do host.
+      .register(CAMINHO, { updateViaCache: "none" })
       .then((registro) => {
         observa(registro);
         // Uma checagem ao voltar para o app: quem deixa o PathR aberto na

@@ -7,6 +7,12 @@
 # O sw.js sabe quais arquivos existem nesta versão. Servir uma cópia velha
 # dele faz o deploy não chegar a quem instalou o app na tela de início — e
 # essa pessoa não tem como recarregar para forçar.
+#
+# ATENÇÃO: o Cloudflare Pages NÃO honra esta regra — ele serve o sw.js com
+# `max-age=14400` mesmo com ela aqui (verificado em produção). Quem garante a
+# busca na rede é o `updateViaCache: "none"` em src/pwa/register.ts. Esta
+# regra fica porque descreve a intenção e passa a valer sozinha se o Pages
+# mudar de comportamento; não confie só nela.
 /sw.js
   Cache-Control: no-cache
 /manifest.webmanifest
