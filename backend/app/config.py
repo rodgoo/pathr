@@ -110,7 +110,11 @@ class Settings(BaseSettings):
     groq_api_key: str = ""  # https://console.groq.com/keys
     groq_model: str = "openai/gpt-oss-120b"
     openrouter_api_key: str = ""  # https://openrouter.ai/keys
-    openrouter_model: str = "openai/gpt-oss-20b:free"
+    # Sem o sufixo ":free": a OpenRouter retirou essa variante do catalogo e o
+    # slug antigo respondia 404 a cada tentativa. Este modelo cobra, e barato --
+    # e o proprio OpenRouter e um roteador pago, entao manter um slug morto so
+    # para "parecer gratuito" era gastar um candidato da rotacao a toa.
+    openrouter_model: str = "openai/gpt-oss-20b"
     mistral_api_key: str = ""  # https://console.mistral.ai/api-keys
     mistral_model: str = "open-mistral-nemo"
     cerebras_api_key: str = ""  # https://cloud.cerebras.ai

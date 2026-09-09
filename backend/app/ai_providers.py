@@ -37,12 +37,16 @@ inteiro para o modelo em vez de só o texto extraído, o que preserva o layout
 de duas colunas e as tabelas de skills que a extração de texto embaralha.
 
 Todo provedor é opcional (sem chave = ignorado em silêncio). Um clone novo
-funciona com uma única chave configurada. Todos têm tier gratuito real:
-  - Gemini      https://aistudio.google.com/apikey
-  - Groq        https://console.groq.com/keys
-  - OpenRouter  https://openrouter.ai/keys            (slugs ":free")
-  - Mistral     https://console.mistral.ai/api-keys
-  - Cerebras    https://cloud.cerebras.ai
+funciona com uma única chave configurada:
+  - Gemini      https://aistudio.google.com/apikey     (tier gratuito)
+  - Groq        https://console.groq.com/keys          (tier gratuito)
+  - Mistral     https://console.mistral.ai/api-keys    (tier gratuito)
+  - Cerebras    https://cloud.cerebras.ai              (tier gratuito)
+  - OpenRouter  https://openrouter.ai/keys             (cobra por uso)
+
+O OpenRouter já teve slugs ":free" e não tem mais os que este app usava — o
+antigo `openai/gpt-oss-20b:free` saiu do catálogo e passou a responder 404 em
+toda tentativa, gastando um candidato da rotação sem nunca poder dar certo.
 
 Saída estruturada: o Gemini recebe o `responseSchema` nativo dele; os outros
 são APIs OpenAI-compatible e recebem `response_format: {"type":
@@ -483,6 +487,7 @@ async def _call_openai_compatible(
     user_prompt: str,
     api_key: str,
     schema: Optional[dict] = None,
+    extra: Optional[dict] = None,
 ) -> tuple[dict, int]:
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
         response = await client.post(
@@ -498,6 +503,8 @@ async def _call_openai_compatible(
                     {"role": "user", "content": user_prompt + _schema_contract(schema)},
                 ],
                 "response_format": {"type": "json_object"},
+                "max_tokens": _MAX_TOKENS,
+                **(extra or {}),
             },
         )
     if response.status_code != 200:
@@ -538,13 +545,45 @@ def _sentence(reason: str) -> str:
     return reason[:1].upper() + reason[1:] if reason else reason
 
 
+# Teto de tokens da resposta. Nada limitava o tamanho da geração, e um modelo
+# de raciocínio sem teto pensa até onde o contexto deixar — com contextos de um
+# milhão de tokens por aí, "sem teto" e "pendurado" são a mesma coisa vistos do
+# lado de cá. O valor cobre com folga o maior pedido real (o roadmap fechou em
+# 6.275 tokens de saída) sem cortar a resposta no meio, que quebraria o JSON.
+_MAX_TOKENS = 8000
+
+# Parâmetros extras por provedor, além do corpo comum.
+#
+# O OpenRouter é o único que precisa: o gpt-oss é modelo de raciocínio e, no
+# pedido do roadmap, 2.948 dos 6.275 tokens de saída eram raciocínio que a
+# gente descarta — quase metade do tempo de espera gasto em algo que nunca
+# chega à tela. Desligar não é opção ("Reasoning is mandatory for this
+# endpoint", HTTP 400), mas baixar o esforço é.
+#
+# `sort: throughput` porque o OpenRouter é um roteador: ele escolhe entre
+# vários provedores de upstream por trás do mesmo nome de modelo, e sem pedir
+# nada ele pode cair num lento. Foi o que fez a mesma chamada ora responder em
+# 2s, ora passar de um minuto.
+_EXTRA_OPENROUTER = {"reasoning": {"effort": "low"}, "provider": {"sort": "throughput"}}
+
 # rótulo -> (atributo com a(s) chave(s), base URL OpenAI-compatible, atributo
-# com o modelo). O Gemini não está aqui: tem formato próprio de requisição.
+# com o modelo, corpo extra). O Gemini não está aqui: tem formato próprio de
+# requisição.
+#
+# A ORDEM é a ordem de tentativa dos saudáveis, e ela importa: o orçamento da
+# rotação é gasto do primeiro para o último, então quem responde mais rápido
+# vem antes. Os tempos são medidos com o pedido do roadmap em produção.
 _OPENAI_COMPATIBLE = [
-    ("Groq", "groq_api_key", "https://api.groq.com/openai/v1", "groq_model"),
-    ("OpenRouter", "openrouter_api_key", "https://openrouter.ai/api/v1", "openrouter_model"),
-    ("Mistral", "mistral_api_key", "https://api.mistral.ai/v1", "mistral_model"),
-    ("Cerebras", "cerebras_api_key", "https://api.cerebras.ai/v1", "cerebras_model"),
+    ("Groq", "groq_api_key", "https://api.groq.com/openai/v1", "groq_model", {}),
+    ("Mistral", "mistral_api_key", "https://api.mistral.ai/v1", "mistral_model", {}),
+    ("Cerebras", "cerebras_api_key", "https://api.cerebras.ai/v1", "cerebras_model", {}),
+    (
+        "OpenRouter",
+        "openrouter_api_key",
+        "https://openrouter.ai/api/v1",
+        "openrouter_model",
+        _EXTRA_OPENROUTER,
+    ),
 ]
 
 
@@ -562,7 +601,7 @@ def _text_candidates() -> list[_Candidate]:
             )
         )
 
-    for provider, key_attr, base_url, model_attr in _OPENAI_COMPATIBLE:
+    for provider, key_attr, base_url, model_attr, extra in _OPENAI_COMPATIBLE:
         keys = _keys(getattr(settings, key_attr, "") or "")
         model = getattr(settings, model_attr)
         for index, key in enumerate(keys):
@@ -573,8 +612,8 @@ def _text_candidates() -> list[_Candidate]:
                     # porque estes provedores não aceitam schema na requisição —
                     # mas aceitam no texto, e sem ele cada modelo inventa os
                     # próprios nomes de chave.
-                    lambda sp, up, schema, key=key, base_url=base_url, model=model: (
-                        _call_openai_compatible(base_url, model, sp, up, key, schema)
+                    lambda sp, up, schema, key=key, base_url=base_url, model=model, extra=extra: (
+                        _call_openai_compatible(base_url, model, sp, up, key, schema, extra)
                     ),
                 )
             )
@@ -701,7 +740,7 @@ def _model_for(provider_name: str) -> str:
     base = provider_name.split(" #")[0]
     if base == "Gemini":
         return _GEMINI_MODEL
-    for provider, _key_attr, _base_url, model_attr in _OPENAI_COMPATIBLE:
+    for provider, _key_attr, _base_url, model_attr, _extra in _OPENAI_COMPATIBLE:
         if provider == base:
             return getattr(settings, model_attr, "")
     return ""
