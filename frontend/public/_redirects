@@ -1,0 +1,9 @@
+# O roteamento do PathR é feito no cliente (history.pushState), então abrir
+# /roadmap direto — ou só recarregar a página — pede ao servidor um arquivo
+# que não existe no disco. Esta reescrita entrega o index.html com status 200
+# e deixa o JavaScript resolver a rota.
+#
+# É o equivalente, no Cloudflare Pages, do bloco `routes` do render.yaml: o
+# Pages não lê aquele arquivo. Arquivos estáticos que existem de verdade
+# (/assets/*) continuam sendo servidos antes desta regra.
+/*    /index.html   200
