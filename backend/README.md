@@ -50,6 +50,19 @@ O refresh **rotaciona**: cada uso queima o token e emite outro, guardando de
 qual veio. Se um token já usado reaparecer, isso é cookie copiado, e a
 resposta é derrubar todas as sessões daquele usuário.
 
+### O nível decide a forma do módulo
+
+O plano não exclui nada por nível — ele muda o FORMATO. Até N2 é módulo de
+ensino. De N3 para cima é revisão: um checkpoint de no máximo 2h com o caso
+difícil, a armadilha de produção e a decisão de arquitetura, e exercícios de
+nível avançado. Nunca do zero — quem está em N4 lendo "o que é um container"
+fecha o app.
+
+A revisão tem teto (uma por fase, 10% do orçamento de horas) e é a segunda
+coisa cortada quando o prazo não fecha, depois do que está em zero e o
+objetivo não exige. Reforço é bom; gastar metade do prazo repassando o que a
+pessoa já sabe, não.
+
 ### Avisos entre aparelhos
 
 `GET /events` é um canal SSE por usuário: quando uma escrita passa, todas as
