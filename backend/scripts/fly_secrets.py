@@ -41,6 +41,13 @@ SEGREDOS = (
     "BRAVE_API_KEY",
 )
 
+# Segredos que podem faltar sem o app ficar quebrado — a ausência desliga uma
+# fonte, não uma função. Tavily e Brave são ou-um-ou-outro (services/
+# resource_search.py usa o Tavily quando os dois existem), e sem YOUTUBE a
+# busca cai na reserva por IA. Uma lista onde tudo é obrigatório reprovaria o
+# envio inteiro por causa de uma chave que ninguém precisa ter.
+OPCIONAIS = frozenset({"YOUTUBE_API_KEY", "TAVILY_API_KEY", "BRAVE_API_KEY"})
+
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
 
 
@@ -64,7 +71,8 @@ def problemas(valores: dict[str, str]) -> list[str]:
     for nome in SEGREDOS:
         valor = valores.get(nome, "")
         if not valor:
-            achados.append(f"{nome}: ausente ou vazia")
+            if nome not in OPCIONAIS:
+                achados.append(f"{nome}: ausente ou vazia")
             continue
         # O defeito que derrubou dois deploys no Render: a linha inteira do
         # .env colada no campo de valor do painel.
@@ -120,7 +128,11 @@ def main() -> int:
 
     # O texto vai por stdin: não aparece na tela nem na linha de comando do
     # processo, onde um `ps` de outro usuário poderia lê-lo.
-    payload = "".join(f"{nome}={valores[nome]}\n" for nome in SEGREDOS)
+    # Só o que tem valor: `valores[nome]` daria KeyError num opcional ausente,
+    # e mandar `NOME=` vazio criaria na Fly um segredo em branco que sombreia
+    # o default do config.py em vez de deixá-lo valer.
+    enviaveis = [nome for nome in SEGREDOS if valores.get(nome)]
+    payload = "".join(f"{nome}={valores[nome]}\n" for nome in enviaveis)
     processo = subprocess.run(
         ["fly", "secrets", "import", "--app", opcoes.app],
         input=payload,
