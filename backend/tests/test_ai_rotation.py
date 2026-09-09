@@ -5,6 +5,8 @@ falha, rebaixar (sem remover) quem estourou cota, e nunca declarar derrota
 enquanto houver candidato não tentado.
 """
 
+import asyncio
+import time
 from datetime import timedelta
 
 import httpx
@@ -201,3 +203,86 @@ def test_contrato_traduz_os_tipos():
     }
     contrato = ai._schema_contract(schema)
     assert "string" in contrato and "inteiro" in contrato and "número" in contrato
+
+
+# ---------------------------------------------------------------------------
+# O teto de tempo da rotacao inteira.
+#
+# O caso real: "Gerar plano" ficava carregando e terminava em "Nao consegui
+# falar com o servidor" -- fetch rejeitado, sem resposta HTTP nenhuma. Com 45s
+# POR candidato e candidatos tentados em sequencia, tres candidatos lentos
+# passam de dois minutos e o proxy da borda corta a conexao antes de a rota
+# responder. A pessoa espera e nao recebe nem o motivo.
+# ---------------------------------------------------------------------------
+
+
+def _demora(segundos: float):
+    async def call(_sp, _up, _schema):
+        await asyncio.sleep(segundos)
+        return {"ok": True}, 1
+
+    return call
+
+
+@pytest.mark.asyncio
+async def test_rotacao_para_quando_o_orcamento_acaba(monkeypatch):
+    """Sem teto, os tres candidatos lentos somariam bem mais que o orcamento."""
+    tentados = []
+
+    def _registra(nome):
+        async def call(_sp, _up, _schema):
+            tentados.append(nome)
+            await asyncio.sleep(0.15)
+            raise _CandidateFailed(ai.TRANSIENT, "nao respondeu a tempo")
+
+        return call
+
+    candidatos = [_Candidate(nome, _registra(nome)) for nome in ("A", "B", "C")]
+    # A gasta 0.15 e sobra 0.25 -> B roda. B gasta 0.15 e sobra 0.10, abaixo
+    # do minimo -> C nao e tentado.
+    monkeypatch.setattr(ai, "_MIN_ATTEMPT", 0.12)
+
+    result, failures = await ai._run_rotation(
+        candidatos, lambda c: c.call("s", "u", None), budget=0.4
+    )
+
+    assert result is None
+    # A e B cabem; C nao chega a ser tentado, e a mensagem diz isso em vez de
+    # afirmar que ele falhou.
+    assert tentados == ["A", "B"]
+    assert any("sem tempo de serem tentados" in falha for falha in failures)
+
+
+@pytest.mark.asyncio
+async def test_candidato_lento_nao_consome_alem_do_orcamento(monkeypatch):
+    """Um candidato que trava sozinho e cortado no fim do orcamento."""
+    monkeypatch.setattr(ai, "_MIN_ATTEMPT", 0.05)
+    inicio = time.monotonic()
+
+    result, failures = await ai._run_rotation(
+        [_Candidate("Lento", _demora(30))], lambda c: c.call("s", "u", None), budget=0.3
+    )
+
+    assert result is None
+    assert time.monotonic() - inicio < 5
+    assert failures == ["Lento: não respondeu a tempo"]
+
+
+@pytest.mark.asyncio
+async def test_candidato_rapido_ainda_vence_dentro_do_orcamento(monkeypatch):
+    """O teto nao pode atrapalhar o caminho feliz."""
+    monkeypatch.setattr(
+        ai,
+        "_text_candidates",
+        lambda: [_Candidate("A", _fails(ai.QUOTA, "limite")), _Candidate("B", _works({"ok": 1}))],
+    )
+    result = await ai.generate_json("sistema", "usuario")
+    assert result.provider == "B"
+
+
+def test_timeout_do_orcamento_e_falha_transitoria():
+    """`asyncio.wait_for` levanta TimeoutError; sem reconhece-lo, a rotacao
+    trataria o corte como bug nosso e levantaria em vez de tentar o proximo."""
+    falha = ai._as_failure(TimeoutError())
+    assert falha is not None
+    assert falha.kind == ai.TRANSIENT

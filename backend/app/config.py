@@ -115,6 +115,11 @@ class Settings(BaseSettings):
     mistral_model: str = "open-mistral-nemo"
     cerebras_api_key: str = ""  # https://cloud.cerebras.ai
     cerebras_model: str = "gpt-oss-120b"
+    # Teto de tempo da rotação INTEIRA, em segundos. Precisa caber na janela
+    # do proxy da borda: estourá-la troca a nossa mensagem de erro por um 502
+    # mudo, depois de a pessoa ter esperado à toa. Ver `_BUDGET` em
+    # app/ai_providers.py.
+    ai_budget_seconds: int = 50
 
     # --- Busca de material (biblioteca) ---
     # Alimentam services/resource_search.py. Sem chave, a fonte correspondente

@@ -51,8 +51,10 @@ do prompt já descreve o formato desejado, e todo chamador aqui revalida o
 resultado antes de confiar nele.
 """
 
+import asyncio
 import base64
 import json
+import time
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Awaitable, Callable, Optional
@@ -66,6 +68,24 @@ from app.config import settings
 # um chat de texto; 45s dá folga sem deixar a rotação inteira estourar o
 # timeout do cliente no pior caso de vários candidatos em sequência.
 _TIMEOUT = 45
+
+# O teto da rotação INTEIRA, e não de um candidato só.
+#
+# 45s é por candidato, e os candidatos são tentados em sequência: com duas
+# chaves de Gemini e mais um provedor configurado, três candidatos lentos
+# somam 135s. O proxy da borda encerra a conexão bem antes disso, e o que a
+# pessoa recebe depois de esperar é um 502 sem explicação nenhuma — a rota
+# nunca chegou a responder. Com o teto, a última coisa que acontece dentro da
+# janela é a NOSSA resposta, dizendo o que falhou.
+#
+# 50s é escolhido para caber com folga na janela de 60s que os proxies usam
+# como padrão. Quem tem borda mais generosa pode subir por env.
+_BUDGET = max(1, int(getattr(settings, "ai_budget_seconds", 0) or 50))
+
+# Abaixo disto não vale começar uma tentativa: o candidato não teria tempo de
+# responder, e a tentativa só gastaria o resto do orçamento sem chance de dar
+# certo.
+_MIN_ATTEMPT = 5
 
 # Quanto tempo um candidato fica fora da ordem preferida depois de cada tipo
 # de falha. Cota é o caso comum (tier gratuito acabou): longo o bastante para
@@ -594,7 +614,10 @@ def _as_failure(exc: Exception) -> Optional[_CandidateFailed]:
     problema do provedor, e não pode ser engolido como "tenta o próximo"."""
     if isinstance(exc, _CandidateFailed):
         return exc
-    if isinstance(exc, (httpx.TimeoutException, httpx.RequestError)):
+    if isinstance(exc, (httpx.TimeoutException, httpx.RequestError, TimeoutError)):
+        # `TimeoutError` é o que `asyncio.wait_for` levanta quando o orçamento
+        # da rotação acaba durante a tentativa — do ponto de vista do
+        # candidato é a mesma coisa que não ter respondido a tempo.
         return _CandidateFailed(TRANSIENT, "não respondeu a tempo")
     if isinstance(exc, (KeyError, IndexError, ValueError)):
         # ValueError cobre json.JSONDecodeError: o provedor respondeu algo
@@ -608,14 +631,34 @@ async def _run_rotation(
     candidates: list[_Candidate],
     invoke: Callable[[_Candidate], Awaitable[Any]],
     on_success: Optional[Callable[[_Candidate, Any], Awaitable[None]]] = None,
+    budget: float = _BUDGET,
 ) -> tuple[Any, list[str]]:
     """Tenta cada candidato em ordem, registra por que cada um falhou e
     devolve o primeiro sucesso. Não levanta em falha de provedor — devolve
-    (None, falhas) para o chamador escolher a própria mensagem."""
+    (None, falhas) para o chamador escolher a própria mensagem.
+
+    A rotação inteira cabe em `budget` segundos: cada tentativa recebe o que
+    sobrou, e quando não sobra o bastante a rotação para. Ver `_BUDGET`.
+    """
     failures: list[str] = []
-    for candidate in _attempt_order(candidates):
+    # O relógio monotônico, e não o de parede: um ajuste de horário no meio da
+    # rotação encurtaria ou esticaria o orçamento sem que nada tivesse mudado.
+    fim = time.monotonic() + budget
+    ordem = _attempt_order(candidates)
+    for posicao, candidate in enumerate(ordem):
+        restante = fim - time.monotonic()
+        if restante < _MIN_ATTEMPT:
+            # Parar aqui é o que transforma um 502 mudo em uma resposta. Os
+            # candidatos que sobraram entram na mensagem: sem isso, "todos
+            # falharam" seria mentira sobre quem nem chegou a ser tentado.
+            nao_tentados = len(ordem) - posicao
+            failures.append(
+                f"{nao_tentados} candidato(s) sem tempo de serem tentados "
+                f"dentro de {budget}s"
+            )
+            break
         try:
-            result = await invoke(candidate)
+            result = await asyncio.wait_for(invoke(candidate), timeout=restante)
         except Exception as exc:  # noqa: BLE001 — relançado abaixo se não for falha de provedor
             failure = _as_failure(exc)
             if failure is None:
