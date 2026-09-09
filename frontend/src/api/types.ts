@@ -347,6 +347,8 @@ export interface ReaderContent {
 
 export interface EnglishAssessment {
   id: string;
+  /** O idioma medido. A tela usa para escolher a voz do listening. */
+  language: string;
   status: string;
   item_count: number;
   answered_count: number;

@@ -15,6 +15,7 @@ import { english as englishApi } from "@/api/endpoints";
 import type { EnglishAnswerResult, EnglishAssessment } from "@/api/types";
 import { useMutation } from "@/hooks/useApi";
 import { ACC, ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
+import { ListeningPlayer } from "@/components/english/ListeningPlayer";
 import { ChoiceList } from "@/components/ui/ChoiceList";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Panel, SCREEN_IN } from "@/components/ui/primitives";
@@ -96,12 +97,15 @@ export function Placement({
         <div style={{ fontSize: 11, color: ACC, marginBottom: 8.4 }}>
           {item.skill} · {item.cefr_band}
         </div>
-        {item.context ? (
-          /* O contexto É o item quando a habilidade é listening: a
-             transcrição do diálogo mora aqui, e é dela que sai a resposta.
-             Por isso ele tem corpo de texto e não de legenda, e por isso
-             `pre-wrap` — uma fala por linha só se lê como diálogo se as
-             quebras sobreviverem. */
+        {item.skill === "listening" && item.context ? (
+          /* Listening tem ÁUDIO: o navegador lê o diálogo em voz alta, e a
+             transcrição fica escondida até ser pedida — mostrada junto, o
+             item viraria leitura e pararia de medir escuta. */
+          <ListeningPlayer contexto={item.context} idioma={current.language ?? "en"} />
+        ) : item.context ? (
+          /* Nas outras habilidades o contexto É para ler: o e-mail ou o
+             trecho de reunião que enquadra a pergunta. Corpo de texto e não
+             de legenda, e `pre-wrap` para as quebras sobreviverem. */
           <div
             style={{
               fontSize: 14,

@@ -28,10 +28,14 @@ router = APIRouter(prefix="/languages", tags=["idioma"])
 
 BANDS = ["A1", "A2", "B1", "B2", "C1", "C2"]
 
-# As habilidades que o nivelamento pontua. `listening` mede a compreensao de
-# fala pela TRANSCRICAO do dialogo, e nao por audio: o app nao reproduz som, e
-# o desenho ja previa "Listening com transcricao". Medir pelo texto e menos do
-# que medir pelo som, mas e o que da para entregar de verdade.
+# As habilidades que o nivelamento pontua.
+#
+# `listening` tem audio de verdade: a transcricao guardada aqui e lida em voz
+# alta pelo navegador (speechSynthesis) na tela, e a transcricao so aparece se
+# a pessoa pedir. A sintese e do proprio aparelho -- sem chave, sem requisicao
+# e sem custo por caractere -- que foi o que permitiu o listening existir sem
+# virar cobranca por uso, ja que o nivelamento gera itens novos a cada lote,
+# para cada pessoa, em cada tentativa.
 SKILLS = frozenset(
     {"grammar", "vocabulary", "reading", "listening", "writing", "speaking", "business"}
 )
@@ -77,10 +81,11 @@ Regras:
    nem anexo para abrir: nunca escreva "based on the audio", "listen to the
    recording", "in the video" ou equivalente. Se o item depende de uma fala,
    de um e-mail ou de um trecho de reunião, o texto INTEIRO vai no contexto.
-6. Item de listening é a TRANSCRIÇÃO do diálogo, com quem fala em cada linha
-   ("Ana: ...", "Marc: ..."), uma linha por fala, e o enunciado pergunta
-   sobre o que foi dito ali. O contexto é o diálogo, não a descrição da cena:
-   "Daily stand-up on Zoom" sozinho não diz a ninguém quem ficou com a tarefa.
+6. Item de listening traz o DIÁLOGO no contexto, com quem fala em cada linha
+   ("Ana: ...", "Marc: ..."), uma linha por fala — é esse texto que a tela lê
+   em voz alta para a pessoa ouvir. O contexto é o diálogo, e não a descrição
+   da cena: "Daily stand-up on Zoom" sozinho não diz a ninguém quem ficou com
+   a tarefa. Escreva falas curtas e naturais, como gente fala numa reunião.
 7. O campo banda: A1, A2, B1, B2, C1 ou C2 — a dificuldade real do item.
 8. A explicação diz por que a certa soa natural e por que a mais tentadora
    das erradas soa estranha para um falante nativo.
@@ -443,7 +448,40 @@ def _assessment_payload(supabase: Client, assessment_id: str, user_id: str) -> d
         .data
         or []
     )
-    return {**rows[0], "items": [item for item in items if item.get("is_correct") is None]}
+    pendentes = [item for item in items if item.get("is_correct") is None]
+    return {**rows[0], "items": _sem_impossiveis(supabase, pendentes)}
+
+
+def _sem_impossiveis(supabase: Client, pendentes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Descarta item que cobra o que não está nele, e APAGA a linha.
+
+    A guarda de `_respondivel` filtra na geração, mas item ruim gerado antes
+    dela continuava gravado e chegava à tela — foi o que aconteceu: a correção
+    subiu e a pessoa seguiu vendo "Based on the audio…" sem áudio nenhum,
+    porque aquele item já estava no banco.
+
+    Apagar, e não só esconder: o item pendente entra na contagem que decide
+    quando gerar o próximo lote, então escondê-lo travaria o teste esperando
+    resposta de algo que a tela nunca mostra.
+
+    Best-effort na escrita — não poder apagar não pode impedir de esconder.
+    """
+    bons, lixo = [], []
+    for item in pendentes:
+        if _respondivel(
+            str(item.get("prompt") or ""),
+            str(item.get("skill") or ""),
+            str(item.get("context") or ""),
+        ):
+            bons.append(item)
+        else:
+            lixo.append(str(item["id"]))
+    if lixo:
+        try:
+            supabase.table("pathr_english_item").delete().in_("id", lixo).execute()
+        except Exception:  # noqa: BLE001
+            pass
+    return bons
 
 
 @router.get("/improvements")
