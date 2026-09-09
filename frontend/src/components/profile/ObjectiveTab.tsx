@@ -234,7 +234,6 @@ export function ObjectiveTab() {
           >
             gera o plano inteiro
           </span>
-          <Estado salvamento={salvamento} campo="contexto" />
         </div>
         <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 11.2px", maxWidth: "70ch" }}>
           Conte onde você está, para onde quer ir e o que atrapalha. A partir disso o roadmap sai
@@ -255,13 +254,32 @@ export function ObjectiveTab() {
             // Salva ao sair do campo. Um botão faria a pessoa achar que perdeu
             // o texto ao trocar de aba — e este é o campo mais caro de perder.
             onBlur={() => {
-              if (contexto === contextoSalvo) return;
+              // Compara o texto JA normalizado dos dois lados. `contextoSalvo`
+              // guarda o que o servidor tem, que passou por `metas()`; comparar
+              // com o texto cru faria uma linha em branco no fim contar como
+              // mudanca e gravar de novo a cada saida do campo.
+              const proximo = metas(contexto).join("\n");
+              if (proximo === contextoSalvo) return;
               void salvar({ goals: metas(contexto) }, "contexto");
             }}
           />
-          <p style={{ fontSize: 11.5, color: TEXT.faint, margin: "5.6px 0 0" }}>
-            Salva sozinho quando você sai do campo — não há botão a apertar.
-          </p>
+          {/* O aviso e a confirmacao moram na mesma linha, colada no campo:
+              o topo do painel fica longe demais do cursor de quem acabou de
+              sair do textarea para servir de resposta. */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              gap: 8.4,
+              margin: "5.6px 0 0",
+              minHeight: 16,
+            }}
+          >
+            <span style={{ fontSize: 11.5, color: TEXT.faint }}>
+              Salva sozinho quando você sai do campo — não há botão a apertar.
+            </span>
+            <Estado salvamento={salvamento} campo="contexto" />
+          </div>
         </div>
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 5.6, marginTop: 8.4 }}>
@@ -292,7 +310,10 @@ export function ObjectiveTab() {
       </Panel>
 
       <Panel pad={16.8}>
-        <Kicker style={{ display: "block", marginBottom: 5.6 }}>Horas por semana</Kicker>
+        <div style={{ display: "flex", alignItems: "baseline", gap: 11.2, marginBottom: 5.6 }}>
+          <Kicker>Horas por semana</Kicker>
+          <Estado salvamento={salvamento} campo="horas" />
+        </div>
         <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 11.2px", maxWidth: "70ch" }}>
           O plano é dimensionado por isto, e não pelo ideal do assunto. Um plano que exige 20h de
           quem tem 6h não é ambicioso — é um plano abandonado na terceira semana.
@@ -341,7 +362,7 @@ function Estado({ salvamento, campo }: { salvamento: Salvamento; campo: Campo })
   return (
     <span
       role="status"
-      style={{ marginLeft: "auto", fontSize: 11.5, color: cor, textAlign: "right" }}
+      style={{ fontSize: 11.5, color: cor, whiteSpace: "nowrap" }}
     >
       {salvamento.estado === "salvando" ? "salvando…" : null}
       {salvamento.estado === "salvo" ? "salvo" : null}
