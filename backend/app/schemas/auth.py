@@ -72,6 +72,10 @@ class UserOut(BaseModel):
     locale: str
     timezone_name: str
     theme: str
+    # Se ha foto, e nao a foto em si: os bytes saem por GET /profile/avatar.
+    # Embutir a imagem aqui engordaria toda resposta de sessao com algo que a
+    # tela so precisa uma vez.
+    has_avatar: bool = False
 
 
 class SessionOut(BaseModel):

@@ -84,6 +84,14 @@ class PathrUser(SQLModel, table=True):
 
     email_verified_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
 
+    # Caminho da foto no bucket de avatares, NÃO uma URL.
+    #
+    # O bucket é privado e a imagem sai pela nossa rota (GET /profile/avatar),
+    # como o currículo. Guardar URL pública aqui deixaria a foto de qualquer
+    # pessoa legível por quem tivesse o endereço, e uma foto de perfil não é
+    # algo que alguém decidiu publicar ao enviá-la.
+    avatar_path: Optional[str] = Field(default=None)
+
     # -- Preferências
     locale: str = Field(default="pt-BR")
     timezone_name: str = Field(default="America/Sao_Paulo")

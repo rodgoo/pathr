@@ -55,6 +55,9 @@ class Settings(BaseSettings):
     database_url: str = ""
     # Bucket do Supabase Storage onde o PDF/DOCX do currículo é guardado.
     resume_bucket: str = "pathr-resumes"
+    # Bucket das fotos de perfil. Separado do de currículos porque o ciclo de
+    # vida é outro: a foto é substituída no lugar, o currículo se acumula.
+    avatar_bucket: str = "pathr-avatars"
 
     # --- Origens e cookies ---
     # O app vive em pathr.notter.com.br e a API em api.pathr.notter.com.br:
@@ -143,6 +146,10 @@ class Settings(BaseSettings):
 
     # --- Limites de upload ---
     max_resume_mb: int = 10
+    # A foto é exibida num quadrado de 64px. 5 MB é folga larga para qualquer
+    # retrato de celular e ainda barra o upload acidental de uma imagem de
+    # câmera profissional inteira.
+    max_avatar_mb: int = 5
 
     @field_validator("database_url")
     @classmethod

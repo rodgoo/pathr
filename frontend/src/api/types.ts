@@ -18,6 +18,8 @@ export interface User {
   locale: string;
   timezone_name: string;
   theme: string;
+  /** Se ha foto. Os bytes vem por GET /profile/avatar. */
+  has_avatar: boolean;
 }
 
 export interface Session {

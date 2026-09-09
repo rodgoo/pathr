@@ -70,6 +70,10 @@ export const profile = {
   exportData: () => api.get<Record<string, unknown>>("/profile/export"),
   /** Apaga a conta e tudo que pende dela. Sem carencia. */
   deleteAccount: () => api.del<void>("/profile/account"),
+  /** Os bytes da foto de perfil de quem esta logado. */
+  avatar: () => api.blob("/profile/avatar"),
+  uploadAvatar: (file: File) => api.upload<{ has_avatar: boolean }>("/profile/avatar", file),
+  removeAvatar: () => api.del<void>("/profile/avatar"),
 };
 
 export const resumes = {

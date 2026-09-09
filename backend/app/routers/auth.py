@@ -87,6 +87,7 @@ def _user_out(user: dict[str, Any]) -> UserOut:
         locale=user.get("locale") or "pt-BR",
         timezone_name=user.get("timezone_name") or "America/Sao_Paulo",
         theme=user.get("theme") or "system",
+        has_avatar=bool(user.get("avatar_path")),
     )
 
 

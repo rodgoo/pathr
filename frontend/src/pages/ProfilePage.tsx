@@ -16,6 +16,7 @@ import { useQuery } from "@/hooks/useApi";
 import { ACC4, TEXT } from "@/lib/tokens";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Meter, Panel, SCREEN_IN } from "@/components/ui/primitives";
+import { Avatar } from "@/components/profile/Avatar";
 import { TagButton } from "@/components/profile/TagButton";
 import { MASTERY_LABELS } from "@/components/profile/TechnologyRow";
 
@@ -118,13 +119,6 @@ function IdentityCard({
   roadmap: import("@/api/types").RoadmapSummary | null;
   onEdit: () => void;
 }) {
-  const initials = name
-    .split(" ")
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join("");
-
   const fields = [
     { label: "Cargo", value: profile.current_role },
     { label: "Senioridade", value: profile.seniority },
@@ -149,23 +143,7 @@ function IdentityCard({
         alignItems: "flex-start",
       }}
     >
-      <div
-        aria-hidden
-        style={{
-          width: 64,
-          height: 64,
-          flex: "none",
-          borderRadius: 16,
-          background: "rgba(233,233,237,.07)",
-          boxShadow: "inset 0 0 0 1px rgba(233,233,237,.16)",
-          display: "grid",
-          placeItems: "center",
-          fontSize: 22,
-          color: "#d2cefd",
-        }}
-      >
-        {initials || "?"}
-      </div>
+      <Avatar nome={name} editavel />
 
       <div style={{ flex: 1, minWidth: 220, display: "flex", flexDirection: "column", gap: 11.2 }}>
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: 8.4 }}>

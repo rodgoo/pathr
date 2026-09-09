@@ -10,10 +10,11 @@ outro lugar.
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, File, HTTPException, Response, UploadFile, status
 from pydantic import BaseModel, Field, field_validator
 from supabase import Client
 
+from app.config import settings
 from app.database import get_supabase
 from app.deps import get_current_user
 from app.schemas.auth import SignupRequest
@@ -164,7 +165,139 @@ def update_account(
         "timezone_name": user.get("timezone_name"),
         "theme": user.get("theme"),
         "onboarding_completed": bool(user.get("onboarding_completed")),
+        "has_avatar": bool(user.get("avatar_path")),
     }
+
+
+# Tipos de imagem aceitos -> extensão do arquivo no bucket.
+#
+# Lista fechada, e conferida pelos BYTES e não pelo `content-type` que o
+# navegador declara: o cabeçalho é escolhido por quem envia, e aceitar por ele
+# deixaria qualquer arquivo entrar com o rótulo de imagem.
+_IMAGENS = {"image/jpeg": "jpg", "image/png": "png", "image/webp": "webp"}
+
+# A assinatura de cada formato nos primeiros bytes. É o que separa uma imagem
+# de verdade de um arquivo renomeado.
+_ASSINATURAS = (
+    (b"\xff\xd8\xff", "image/jpeg"),
+    (b"\x89PNG\r\n\x1a\n", "image/png"),
+)
+
+
+def _tipo_real(data: bytes) -> Optional[str]:
+    """O formato que os bytes dizem ser, ou None se não for imagem aceita."""
+    for assinatura, tipo in _ASSINATURAS:
+        if data.startswith(assinatura):
+            return tipo
+    # WebP: "RIFF????WEBP" — o tamanho fica entre as duas marcas.
+    if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+        return "image/webp"
+    return None
+
+
+@router.post("/avatar")
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """Troca a foto de perfil.
+
+    Substitui no lugar em vez de acumular: a foto anterior não é histórico de
+    nada, e guardar todas encheria o bucket com o que ninguém vai olhar.
+    """
+    data = await file.read()
+    if not data:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Arquivo vazio.")
+
+    limite = settings.max_avatar_mb * 1024 * 1024
+    if len(data) > limite:
+        raise HTTPException(
+            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
+            detail=f"Imagem acima de {settings.max_avatar_mb} MB.",
+        )
+
+    tipo = _tipo_real(data)
+    if tipo is None:
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="Formato não aceito. Envie JPG, PNG ou WebP.",
+        )
+
+    user_id = str(current_user["id"])
+    caminho = f"{user_id}/avatar.{_IMAGENS[tipo]}"
+    try:
+        supabase.storage.from_(settings.avatar_bucket).upload(
+            caminho, data, {"content-type": tipo, "upsert": "true"}
+        )
+    except Exception as exc:  # noqa: BLE001
+        # Aqui NÃO é best-effort, ao contrário do currículo: lá os bytes já
+        # tinham sido lidos e o arquivo era só para reprocessar depois; aqui o
+        # arquivo é o recurso. Gravar o caminho de algo que não subiu deixaria
+        # a tela pedindo uma imagem que não existe.
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="Não consegui guardar a imagem. Tente de novo.",
+        ) from exc
+
+    # A extensão muda quando o formato muda (era .png, agora .jpg), e a antiga
+    # ficaria órfã ocupando espaço e podendo ser servida por engano.
+    anterior = current_user.get("avatar_path")
+    if anterior and anterior != caminho:
+        _remove_do_bucket(supabase, anterior)
+
+    supabase.table("pathr_user").update({"avatar_path": caminho}).eq("id", user_id).execute()
+    return {"has_avatar": True}
+
+
+@router.delete("/avatar", status_code=status.HTTP_204_NO_CONTENT)
+def delete_avatar(
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """Remove a foto. As iniciais voltam a aparecer."""
+    caminho = current_user.get("avatar_path")
+    if caminho:
+        _remove_do_bucket(supabase, caminho)
+    supabase.table("pathr_user").update({"avatar_path": None}).eq(
+        "id", str(current_user["id"])
+    ).execute()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.get("/avatar")
+def get_avatar(
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """Devolve os bytes da foto de quem está logado.
+
+    A imagem sai por aqui, e não por URL pública do bucket, para continuar
+    valendo a sessão: quem não está logado não alcança a foto de ninguém.
+    """
+    caminho = current_user.get("avatar_path")
+    if not caminho:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sem foto de perfil.")
+    try:
+        data = supabase.storage.from_(settings.avatar_bucket).download(caminho)
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Foto de perfil não encontrada."
+        ) from exc
+    extensao = caminho.rsplit(".", 1)[-1]
+    tipo = next((t for t, ext in _IMAGENS.items() if ext == extensao), "application/octet-stream")
+    # `private` porque a resposta depende de quem está logado: um cache
+    # compartilhado poderia entregar a foto de uma pessoa para outra.
+    return Response(content=data, media_type=tipo, headers={"Cache-Control": "private, max-age=60"})
+
+
+def _remove_do_bucket(supabase: Client, caminho: str) -> None:
+    """Best-effort: um arquivo órfão custa bytes; falhar a troca da foto por
+    causa da limpeza do anterior custa a ação que a pessoa pediu."""
+    try:
+        supabase.storage.from_(settings.avatar_bucket).remove([caminho])
+    except Exception:  # noqa: BLE001
+        return
 
 
 @router.get("/overview")

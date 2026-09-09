@@ -82,8 +82,16 @@ async function parseError(response: Response): Promise<ApiError> {
   );
 }
 
-export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const send = () =>
+/**
+ * O pedido em si: cookie, renovação transparente e erro tipado.
+ *
+ * Separado de `request` porque nem toda resposta é JSON — a foto de perfil
+ * sai como imagem. Sem isto, quem precisasse dos bytes teria que repetir a
+ * lógica de renovação, e uma segunda cópia dela é o tipo de coisa que passa a
+ * divergir na primeira correção feita só de um lado.
+ */
+async function send(path: string, options: RequestOptions = {}): Promise<Response> {
+  const disparar = () =>
     fetch(`${BASE_URL}${path}`, {
       method: options.method ?? (options.body || options.formData ? "POST" : "GET"),
       credentials: "include",
@@ -92,15 +100,20 @@ export async function request<T>(path: string, options: RequestOptions = {}): Pr
       signal: options.signal,
     });
 
-  let response = await send();
+  let response = await disparar();
 
   if (response.status === 401 && !NO_REFRESH.some((route) => path.startsWith(route))) {
     if (await refreshSession()) {
-      response = await send();
+      response = await disparar();
     }
   }
 
   if (!response.ok) throw await parseError(response);
+  return response;
+}
+
+export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const response = await send(path, options);
   if (response.status === 204) return undefined as T;
   return (await response.json()) as T;
 }
@@ -111,6 +124,14 @@ export const api = {
   patch: <T>(path: string, body: unknown) => request<T>(path, { method: "PATCH", body }),
   put: <T>(path: string, body: unknown) => request<T>(path, { method: "PUT", body }),
   del: <T>(path: string) => request<T>(path, { method: "DELETE" }),
+  /**
+   * Uma resposta que não é JSON — hoje, a foto de perfil.
+   *
+   * A imagem vem por aqui e não por `<img src="https://api…">`: o app e a API
+   * estão em hosts diferentes, então a tag `img` não mandaria o cookie de
+   * sessão e a foto voltaria 401. Buscando como blob, o cookie vai junto.
+   */
+  blob: (path: string) => send(path).then((response) => response.blob()),
   upload: <T>(path: string, file: File) => {
     const form = new FormData();
     form.append("file", file);

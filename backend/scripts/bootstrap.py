@@ -4,7 +4,7 @@ Roda os três passos que um projeto recém-criado precisa, na ordem, e verifica
 o resultado de cada um:
 
     1. migrations   -> cria as 28 tabelas pathr_
-    2. bucket       -> cria pathr-resumes, PRIVADO
+    2. buckets      -> cria pathr-resumes e pathr-avatars, PRIVADOS
     3. seed         -> insere as 91 tags do catálogo base
 
 Idempotente: pode rodar de novo sem duplicar nada. É de propósito — a primeira
@@ -129,30 +129,35 @@ def check_tables(dry: bool = False) -> Step:
 
 
 def ensure_bucket(dry: bool) -> Step:
-    """Cria o bucket dos currículos, PRIVADO.
+    """Cria os buckets do app, os dois PRIVADOS.
 
-    Privado não é detalhe: o currículo tem nome, telefone e histórico
-    profissional de alguém. Um bucket público deixaria qualquer pessoa com a
-    URL baixar o arquivo — e a URL é previsível (user_id/hash.pdf).
+    Privado não é detalhe. O currículo tem nome, telefone e histórico
+    profissional de alguém; a foto de perfil é o rosto da pessoa. Um bucket
+    público deixaria qualquer um com a URL baixar o arquivo — e a URL é
+    previsível (user_id/hash.pdf, user_id/avatar.jpg). Os dois saem pelas
+    nossas rotas, que exigem sessão.
     """
     from app.config import settings
 
-    step = Step(f"bucket {settings.resume_bucket}")
+    alvos = (settings.resume_bucket, settings.avatar_bucket)
+    step = Step("buckets " + ", ".join(alvos))
     try:
         from app.database import get_supabase
 
         storage = get_supabase().storage
         # Compara pelo `id`, que é como o storage.from_() endereça o bucket.
         # O `name` costuma ser igual, mas é o id que a aplicação usa.
-        existing = {bucket.id for bucket in storage.list_buckets()}
-        if settings.resume_bucket in existing:
-            return step.done("já existe")
+        existentes = {bucket.id for bucket in storage.list_buckets()}
+        faltando = [nome for nome in alvos if nome not in existentes]
+        if not faltando:
+            return step.done("já existem")
         if dry:
-            return step.done("(--check: seria criado)")
-        storage.create_bucket(settings.resume_bucket, options={"public": False})
+            return step.done(f"(--check: seria criado {', '.join(faltando)})")
+        for nome in faltando:
+            storage.create_bucket(nome, options={"public": False})
     except Exception as exc:  # noqa: BLE001
         return step.failed(f"{exc.__class__.__name__}: {exc}")
-    return step.done("criado como privado")
+    return step.done(f"criado como privado: {', '.join(faltando)}")
 
 
 def _tables_exist() -> bool:
