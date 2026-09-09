@@ -69,6 +69,25 @@ def _url() -> str:
             "Recole o valor sem espaços em volta."
         )
 
+    # A função roda num namespace isolado nos testes (o mesmo texto que roda
+    # no deploy), então nada de imports aqui — só operações de string.
+    nome, igual, _resto = url.partition("=")
+    if igual and nome and nome == nome.upper() and nome.replace("_", "").isalnum():
+        # Aconteceu de verdade num deploy: a linha inteira do .env.local foi
+        # colada no campo de VALOR do painel, virando
+        # "DATABASE_URL=postgresql://...". O painel guarda o texto literal, e
+        # o resultado é uma URL cujo esquema é "DATABASE_URL=postgresql".
+        #
+        # Vale conferir as OUTRAS variáveis também: quem colou assim uma vez
+        # provavelmente repetiu, e as demais não têm validação própria — elas
+        # simplesmente não funcionam, sem erro no boot.
+        raise RuntimeError(
+            f"DATABASE_URL contém o nome da variável no valor "
+            f"(começa com '{nome}='). No painel, o nome vai no "
+            "campo Key e só a URL no campo Value. Confira as outras variáveis: "
+            "se esta foi colada assim, as demais provavelmente também."
+        )
+
     if url.startswith("psql "):
         # O painel do Supabase oferece um botão de cópia "psql", que entrega o
         # COMANDO inteiro: psql 'postgresql://...'. É a causa mais provável de

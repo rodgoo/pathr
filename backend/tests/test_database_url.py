@@ -103,3 +103,20 @@ def test_nenhuma_mensagem_vaza_a_url(url_check):
         with pytest.raises(RuntimeError) as erro:
             url_check(valor)
         assert "s3nh4" not in str(erro.value)
+
+
+def test_acusa_o_nome_da_variavel_colado_no_valor(url_check):
+    """Aconteceu num deploy real: a linha inteira do .env.local foi colada no
+    campo de valor do painel do Render. O erro que aparecia era um esquema
+    absurdo ("DATABASE_URL=postgresql"), que não sugeria a causa."""
+    with pytest.raises(RuntimeError) as erro:
+        url_check(f"DATABASE_URL={VALIDA}")
+    mensagem = str(erro.value)
+    assert "campo Key" in mensagem
+    assert "outras variáveis" in mensagem
+
+
+def test_o_aviso_do_nome_colado_nao_vaza_a_senha(url_check):
+    with pytest.raises(RuntimeError) as erro:
+        url_check(f"DATABASE_URL={VALIDA}")
+    assert "s3nh4" not in str(erro.value)
