@@ -7,7 +7,7 @@
 
 import { useAppState } from "@/hooks/useAppState";
 import { moduleStatusStyle } from "@/lib/moduleStatus";
-import { C, TEXT } from "@/lib/tokens";
+import { C, SIZE, TEXT } from "@/lib/tokens";
 import type { Roadmap } from "@/api/types";
 import { Panel } from "@/components/ui/primitives";
 
@@ -61,6 +61,7 @@ export function PhaseColumns({ roadmap }: { roadmap: Roadmap }) {
                     boxShadow: `0 0 0 1px ${style.border}`,
                     color: "inherit",
                     font: "inherit",
+                    fontSize: SIZE.corpo,
                     cursor: "pointer",
                   }}
                 >

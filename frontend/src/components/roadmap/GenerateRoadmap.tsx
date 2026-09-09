@@ -13,6 +13,7 @@
 import { useState, type FormEvent } from "react";
 import { roadmap as roadmapApi, tags as tagsApi } from "@/api/endpoints";
 import { useAppState } from "@/hooks/useAppState";
+import { curarModulo } from "@/lib/curadoria";
 import { useMutation, useQuery } from "@/hooks/useApi";
 import { ACC, TEXT } from "@/lib/tokens";
 import { Segmented } from "@/components/ui/Segmented";
@@ -66,7 +67,18 @@ export function GenerateRoadmap({
   async function submit(event: FormEvent) {
     event.preventDefault();
     const result = await generate.run();
-    if (result) onGenerated();
+    if (!result) return;
+
+    // A busca de material começa junto com o plano, para o módulo atual, e
+    // NÃO é esperada: ela leva segundos (duas APIs externas mais a
+    // verificação de cada link) e segurar a navegação por ela deixaria a
+    // pessoa olhando um formulário parado depois de o plano já existir.
+    const atual = result.phases
+      .flatMap((fase) => fase.modules)
+      .find((modulo) => modulo.status !== "done");
+    if (atual) void curarModulo(atual.id);
+
+    onGenerated();
   }
 
   // Sem competências não há lacuna a cobrir, e o backend recusaria — dizer
@@ -189,7 +201,9 @@ function ContextField({ value, onChange }: { value: string; onChange: (next: str
       <textarea
         id="context"
         className="input"
-        style={{ minHeight: 100, fontSize: 13.5 }}
+        // Sem `fontSize` inline: ele venceria a regra de toque e o Safari do
+        // iPhone daria zoom na página ao focar o campo.
+        style={{ minHeight: 100 }}
         placeholder="ex: sou frontend há 3 anos, quero virar fullstack Java, e a entrevista é em junho"
         value={value}
         onChange={(event) => onChange(event.target.value)}

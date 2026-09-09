@@ -16,6 +16,7 @@ export type Screen =
   | "ingles"
   | "perfil"
   | "biblioteca"
+  | "material"
   | "config";
 
 /** Idioma do material curado. "both" é ausência de filtro, não um terceiro. */

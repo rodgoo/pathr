@@ -9,12 +9,14 @@
 import { roadmap as roadmapApi } from "@/api/endpoints";
 import type { RoadmapNode } from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
+import { useIsCompact } from "@/hooks/useMediaQuery";
 import { useMutation, useQuery } from "@/hooks/useApi";
 import { moduleStatusStyle } from "@/lib/moduleStatus";
-import { ACC, ACC4, TEXT } from "@/lib/tokens";
+import { ACC, ACC4, SIZE, TEXT } from "@/lib/tokens";
 import type { ModuleTab } from "@/types";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
+import { Icon } from "@/components/ui/icons";
 import { ModuleDot } from "@/components/roadmap/ModuleDot";
 import { MaterialTab } from "@/components/quiz/MaterialTab";
 import { QuizTab } from "@/components/quiz/QuizTab";
@@ -28,6 +30,7 @@ const TABS: readonly { value: ModuleTab; label: string }[] = [
 
 export function ModulePage() {
   const { state, dispatch } = useAppState();
+  const compacto = useIsCompact();
   const plan = useQuery(() => roadmapApi.current(), []);
   const complete = useMutation((nodeId: string) =>
     roadmapApi.patchNode(nodeId, { status: "done", minutes: 30 }),
@@ -45,6 +48,7 @@ export function ModulePage() {
             className="btn btn-primary"
             onClick={() => dispatch({ type: "navigate", screen: "roadmap" })}
           >
+            <Icon name="plus" size={15} />
             Gerar plano
           </button>
         }
@@ -79,10 +83,11 @@ export function ModulePage() {
       <button
         type="button"
         className="btn btn-ghost"
-        style={{ marginBottom: 11.2, fontSize: 12.5, alignSelf: "flex-start" }}
+        style={{ marginBottom: 11.2, fontSize: SIZE.apoio, alignSelf: "flex-start" }}
         onClick={() => dispatch({ type: "navigate", screen: "roadmap" })}
       >
-        ← Roadmap
+        <Icon name="arrowLeft" size={14} />
+        Roadmap
       </button>
 
       <div style={{ fontSize: 12.5, color: TEXT.muted }}>
@@ -91,15 +96,20 @@ export function ModulePage() {
       </div>
       <h1 style={{ fontSize: 26, margin: "0 0 16.8px" }}>{node.title}</h1>
 
+      {/* Uma coluna no celular, três no desktop (o conteúdo ocupa duas).
+          O `span 2` NÃO pode sobrar na versão estreita: ele obriga a grade a
+          ter duas colunas mesmo quando só cabe uma, e aí o conteúdo fica com
+          a largura inteira enquanto os painéis de baixo ficam com metade —
+          era isso que deixava os cartões desalinhados. */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fit,minmax(290px,1fr))",
-          gap: 16.8,
+          gridTemplateColumns: compacto ? "minmax(0,1fr)" : "repeat(auto-fit,minmax(290px,1fr))",
+          gap: compacto ? 11.2 : 16.8,
           alignItems: "start",
         }}
       >
-        <div style={{ minWidth: 0, gridColumn: "span 2" }}>
+        <div style={{ minWidth: 0, gridColumn: compacto ? "auto" : "span 2" }}>
           {node.description ? (
             <p style={{ fontSize: 14, color: "rgba(233,233,237,.75)", maxWidth: "68ch" }}>
               {node.description}
@@ -122,6 +132,7 @@ export function ModulePage() {
                 <button
                   key={tab.value}
                   type="button"
+                  className="toque"
                   aria-current={active ? "true" : undefined}
                   onClick={() => dispatch({ type: "setModuleTab", tab: tab.value })}
                   style={{
@@ -129,7 +140,7 @@ export function ModulePage() {
                     border: 0,
                     background: "none",
                     font: "inherit",
-                    fontSize: 13.5,
+                    fontSize: SIZE.corpo,
                     cursor: "pointer",
                     color: active ? ACC4 : "rgba(233,233,237,.55)",
                     boxShadow: active ? `inset 0 -2px 0 0 ${ACC}` : "none",
@@ -226,19 +237,23 @@ function PhaseModules({
             <button
               key={module.id}
               type="button"
+              className="toque"
               onClick={() => onOpen(module.id)}
               aria-current={active ? "true" : undefined}
               style={{
                 display: "flex",
                 gap: 8.4,
                 alignItems: "center",
-                fontSize: 13,
+                // `font: inherit` ANTES do tamanho: é um atalho, e depois
+                // dele o `fontSize` acima seria zerado — a lista saía com os
+                // 15px da moldura em vez dos 12.5 pedidos aqui.
+                font: "inherit",
+                fontSize: SIZE.apoio,
                 textAlign: "left",
                 border: 0,
                 background: "none",
                 padding: 0,
                 cursor: "pointer",
-                font: "inherit",
                 color: active ? ACC4 : style.color,
               }}
             >

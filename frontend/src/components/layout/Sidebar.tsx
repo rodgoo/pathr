@@ -31,6 +31,8 @@ export function Sidebar() {
   const roadmap = useQuery(() => roadmapApi.current(), []);
   const english = useQuery(() => englishApi.profile(), []);
 
+  // O material aberto pertence à tela de onde veio — ver MobileNav.
+  const telaAtiva = state.screen === "material" ? state.resourceReturn : state.screen;
   const plan = roadmap.data;
   const languageBadge = english.data
     ? english.data.enabled
@@ -113,7 +115,7 @@ export function Sidebar() {
               <NavButton
                 key={item.screen}
                 item={item}
-                active={state.screen === item.screen}
+                active={telaAtiva === item.screen}
                 onClick={() => dispatch({ type: "navigate", screen: item.screen })}
               />
             ))}
@@ -172,6 +174,8 @@ function NavButton({
   return (
     <button
       type="button"
+      // A lateral também aparece no celular deitado, onde o alvo é o dedo.
+      className="toque"
       onClick={onClick}
       aria-current={active ? "page" : undefined}
       style={{
@@ -190,8 +194,8 @@ function NavButton({
         boxShadow: active ? "inset 0 0 0 1px rgba(145,132,217,.35)" : "none",
       }}
     >
-      <span style={{ width: 15, height: 15, flex: "none", display: "grid", placeItems: "center" }}>
-        <Icon name={item.icon} size={15} />
+      <span style={{ width: 16, height: 16, flex: "none", display: "grid", placeItems: "center" }}>
+        <Icon name={item.icon} size={16} filled={active} />
       </span>
       <span style={{ flex: 1, minWidth: 0 }}>{item.label}</span>
       {item.badge ? (

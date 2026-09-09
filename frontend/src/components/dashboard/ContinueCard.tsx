@@ -8,6 +8,7 @@
 import { useAppState } from "@/hooks/useAppState";
 import { ACC4, TEXT } from "@/lib/tokens";
 import type { RoadmapSummary } from "@/api/types";
+import { Icon } from "@/components/ui/icons";
 import { Kicker, Meter, Panel } from "@/components/ui/primitives";
 
 export function ContinueCard({ roadmap }: { roadmap: RoadmapSummary }) {
@@ -64,6 +65,7 @@ export function ContinueCard({ roadmap }: { roadmap: RoadmapSummary }) {
 
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8.4 }}>
         <button type="button" className="btn btn-primary" onClick={open}>
+          <Icon name={node ? "play" : "road"} size={15} />
           {node ? "Retomar" : "Ver roadmap"}
         </button>
         {node?.week_start ? (

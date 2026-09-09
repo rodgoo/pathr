@@ -10,6 +10,7 @@
 import { useAppState } from "@/hooks/useAppState";
 import type { SettingsTab } from "@/types";
 import { Chip } from "@/components/ui/Chip";
+import type { IconName } from "@/components/ui/icons";
 import { SCREEN_IN } from "@/components/ui/primitives";
 import { LanguageSettings } from "@/components/english/LanguageSettings";
 import { AccountTab } from "@/components/profile/AccountTab";
@@ -17,12 +18,12 @@ import { NoticesTab } from "@/components/profile/NoticesTab";
 import { ObjectiveTab } from "@/components/profile/ObjectiveTab";
 import { SkillsTab } from "@/components/profile/SkillsTab";
 
-const TABS: readonly { value: SettingsTab; label: string }[] = [
-  { value: "conta", label: "Conta" },
-  { value: "objetivo", label: "Objetivo" },
-  { value: "skills", label: "Skills" },
-  { value: "idiomas", label: "Idiomas" },
-  { value: "avisos", label: "Avisos e privacidade" },
+const TABS: readonly { value: SettingsTab; label: string; icon: IconName }[] = [
+  { value: "conta", label: "Conta", icon: "user" },
+  { value: "objetivo", label: "Objetivo", icon: "flag" },
+  { value: "skills", label: "Skills", icon: "code" },
+  { value: "idiomas", label: "Idiomas", icon: "globe" },
+  { value: "avisos", label: "Avisos e privacidade", icon: "cog" },
 ];
 
 export function SettingsPage() {
@@ -56,6 +57,7 @@ export function SettingsPage() {
         {TABS.map((entry) => (
           <Chip
             key={entry.value}
+            icon={entry.icon}
             active={tab === entry.value}
             onClick={() => dispatch({ type: "setSettingsTab", tab: entry.value })}
             style={{ borderRadius: 8, fontSize: 13 }}

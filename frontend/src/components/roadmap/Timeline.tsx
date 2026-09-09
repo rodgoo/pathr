@@ -7,8 +7,9 @@
  */
 
 import { useAppState } from "@/hooks/useAppState";
+import { useIsCompact } from "@/hooks/useMediaQuery";
 import { moduleStatusLabel, moduleStatusStyle } from "@/lib/moduleStatus";
-import { C, TEXT } from "@/lib/tokens";
+import { C, SIZE, TEXT } from "@/lib/tokens";
 import type { Roadmap } from "@/api/types";
 import { ModuleDot } from "./ModuleDot";
 
@@ -16,6 +17,10 @@ const PHASE_COLORS = [C.verde, "#9184d9", C.teal, C.azul, C.ambar];
 
 export function Timeline({ roadmap }: { roadmap: Roadmap }) {
   const { dispatch } = useAppState();
+  // No celular a coluna da esquerda comeria um terço da largura para dizer
+  // duas linhas. Ela vira um cabeçalho em cima, e os cartões ficam com a
+  // tela inteira — que e onde o titulo do modulo precisa caber.
+  const compacto = useIsCompact();
 
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -26,12 +31,18 @@ export function Timeline({ roadmap }: { roadmap: Roadmap }) {
             key={phase.id}
             style={{
               display: "grid",
-              gridTemplateColumns: "minmax(110px,140px) minmax(0,1fr)",
-              gap: 16.8,
+              gridTemplateColumns: compacto ? "minmax(0,1fr)" : "minmax(110px,140px) minmax(0,1fr)",
+              gap: compacto ? 8.4 : 16.8,
               paddingBottom: 22.4,
             }}
           >
-            <div style={{ paddingTop: 2 }}>
+            <div
+              style={
+                compacto
+                  ? { display: "flex", alignItems: "baseline", gap: 8.4, flexWrap: "wrap" }
+                  : { paddingTop: 2 }
+              }
+            >
               <div
                 style={{
                   fontSize: 11,
@@ -43,17 +54,21 @@ export function Timeline({ roadmap }: { roadmap: Roadmap }) {
                 Fase {index + 1}
               </div>
               {phase.week_start ? (
-                <div style={{ fontSize: 12.5, color: TEXT.muted, marginTop: 2.8 }}>
+                <div
+                  style={{ fontSize: 12.5, color: TEXT.muted, marginTop: compacto ? 0 : 2.8 }}
+                >
                   semanas {phase.week_start}–{phase.week_end ?? phase.week_start}
                 </div>
               ) : null}
-              <div style={{ marginTop: 8.4, width: 28, height: 2, background: color }} />
+              {compacto ? null : (
+                <div style={{ marginTop: 8.4, width: 28, height: 2, background: color }} />
+              )}
             </div>
 
             <div
               style={{
-                borderLeft: "1px solid rgba(233,233,237,.14)",
-                paddingLeft: 16.8,
+                borderLeft: `1px solid ${compacto ? color + "55" : "rgba(233,233,237,.14)"}`,
+                paddingLeft: compacto ? 11.2 : 16.8,
                 display: "flex",
                 flexDirection: "column",
                 gap: 8.4,
@@ -89,6 +104,7 @@ export function Timeline({ roadmap }: { roadmap: Roadmap }) {
                       boxShadow: `0 0 0 1px ${style.border}`,
                       color: "inherit",
                       font: "inherit",
+                      fontSize: SIZE.corpo,
                       cursor: "pointer",
                     }}
                   >

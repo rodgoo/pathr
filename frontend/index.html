@@ -2,13 +2,64 @@
 <html lang="pt-BR">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- viewport-fit=cover: no iPhone em tela cheia o app precisa pintar até a
+         borda; as áreas do notch e da barra de gestos voltam como
+         env(safe-area-inset-*) e são respeitadas no CSS, não aqui. -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
     <link rel="icon" type="image/svg+xml" href="/logo.svg" />
     <meta name="theme-color" content="#161826" />
     <title>PathR — roadmap de estudos</title>
     <meta
       name="description"
       content="Roadmap de estudos gerado do seu curriculo, com biblioteca curada, quizzes e ingles corporativo."
+    />
+
+    <!-- Instalação na tela de início. O manifest serve a todos os navegadores;
+         as três metas `apple-` abaixo existem porque o Safari do iPhone só
+         passou a ler o manifest no 16.4, e ainda hoje é o `apple-touch-icon`
+         que ele usa como ícone — o do manifest é ignorado. Sem elas o app
+         abriria dentro do Safari, com barra de endereço, e com um retrato da
+         página no lugar do ícone. -->
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-title" content="PathR" />
+    <!-- black-translucent: o conteúdo passa por baixo da barra de status e o
+         app pinta o próprio fundo ali. As alternativas deixariam uma faixa
+         preta ou branca com emenda visível contra o #161826 do produto. O
+         espaço da Dynamic Island volta como safe-area-inset-top, e o AppShell
+         o reserva — sem isso o relógio ficaria sobre o cabeçalho. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- Tela de abertura do app instalado. Sem estas imagens o iOS mostra um
+         retângulo branco entre o toque no ícone e a primeira pintura — num
+         app de fundo escuro, o flash é agressivo. O Safari exige tamanho
+         EXATO por aparelho, daí uma media query por resolução; um arquivo
+         genérico é simplesmente ignorado.
+         402x874 @3x é o iPhone 17 Pro. -->
+    <link
+      rel="apple-touch-startup-image"
+      media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+      href="/splash/splash-1206x2622.png"
+    />
+    <link
+      rel="apple-touch-startup-image"
+      media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+      href="/splash/splash-1320x2868.png"
+    />
+    <link
+      rel="apple-touch-startup-image"
+      media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+      href="/splash/splash-1179x2556.png"
+    />
+    <link
+      rel="apple-touch-startup-image"
+      media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)"
+      href="/splash/splash-1290x2796.png"
     />
   </head>
   <body>

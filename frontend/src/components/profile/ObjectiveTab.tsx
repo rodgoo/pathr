@@ -24,7 +24,7 @@ import { useEffect, useRef, useState } from "react";
 import { profile as profileApi } from "@/api/endpoints";
 import type { Profile } from "@/api/types";
 import { useQuery } from "@/hooks/useApi";
-import { ACC, ACC4, C, TEXT } from "@/lib/tokens";
+import { ACC, ACC4, C, SIZE, TEXT } from "@/lib/tokens";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel } from "@/components/ui/primitives";
 
@@ -180,6 +180,7 @@ export function ObjectiveTab() {
                   borderRadius: 8,
                   cursor: "pointer",
                   font: "inherit",
+                  fontSize: SIZE.corpo,
                   background: ativo ? "rgba(145,132,217,.13)" : "transparent",
                   border: `1px solid ${ativo ? ACC : "rgba(233,233,237,.14)"}`,
                   color: TEXT.full,

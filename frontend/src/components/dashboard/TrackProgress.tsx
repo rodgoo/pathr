@@ -7,7 +7,7 @@
  */
 
 import { useAppState } from "@/hooks/useAppState";
-import { C, TEXT, tint } from "@/lib/tokens";
+import { C, SIZE, TEXT, tint } from "@/lib/tokens";
 import type { Roadmap } from "@/api/types";
 import { Panel } from "@/components/ui/primitives";
 
@@ -22,6 +22,7 @@ export function TrackProgress({ roadmap }: { roadmap: Roadmap }) {
     const done = phase.modules.filter((module) => module.status === "done").length;
     return {
       id: phase.id,
+      order: index + 1,
       title: phase.title,
       meta: `${done} de ${phase.modules.length} módulos`,
       pct: phase.modules.length ? Math.round((100 * done) / phase.modules.length) : 0,
@@ -37,6 +38,7 @@ export function TrackProgress({ roadmap }: { roadmap: Roadmap }) {
           <button
             key={phase.id}
             type="button"
+            className="toque"
             onClick={() => dispatch({ type: "navigate", screen: "roadmap" })}
             style={{
               display: "flex",
@@ -48,6 +50,7 @@ export function TrackProgress({ roadmap }: { roadmap: Roadmap }) {
               padding: 0,
               color: "inherit",
               font: "inherit",
+              fontSize: SIZE.corpo,
               cursor: "pointer",
             }}
           >
@@ -58,9 +61,17 @@ export function TrackProgress({ roadmap }: { roadmap: Roadmap }) {
                 height: 30,
                 flex: "none",
                 borderRadius: 8,
+                display: "grid",
+                placeItems: "center",
+                fontSize: 12.5,
+                fontWeight: 600,
+                lineHeight: 1,
                 background: tint(phase.color, 16),
+                color: phase.color,
               }}
-            />
+            >
+              {phase.order}
+            </span>
             <span style={{ flex: 1, minWidth: 0 }}>
               <span style={{ display: "block", fontSize: 13.5 }}>{phase.title}</span>
               <span style={{ display: "block", fontSize: 11, color: TEXT.faint }}>

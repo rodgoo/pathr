@@ -3,3 +3,11 @@
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+
+# O sw.js sabe quais arquivos existem nesta versão. Servir uma cópia velha
+# dele faz o deploy não chegar a quem instalou o app na tela de início — e
+# essa pessoa não tem como recarregar para forçar.
+/sw.js
+  Cache-Control: no-cache
+/manifest.webmanifest
+  Cache-Control: no-cache

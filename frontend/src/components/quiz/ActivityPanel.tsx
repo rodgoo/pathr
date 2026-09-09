@@ -108,11 +108,13 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
         <label htmlFor="activity-answer">Sua resposta</label>
         <textarea
           id="activity-answer"
-          className="input"
+          className="input campo-codigo"
           value={answer}
           onChange={(event) => setAnswer(event.target.value)}
           placeholder="Escreva aqui, do zero."
-          style={{ minHeight: 200, fontFamily: "ui-monospace, Menlo, monospace", fontSize: 13 }}
+          // A fonte vem da classe e não daqui: inline ela venceria a regra de
+          // toque do app.css, e o Safari do iPhone daria zoom ao focar.
+          style={{ minHeight: 200 }}
         />
       </div>
 

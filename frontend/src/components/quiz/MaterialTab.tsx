@@ -9,20 +9,19 @@
 import { library as libraryApi } from "@/api/endpoints";
 import { KIND_LABEL } from "@/api/library-filters";
 import type { RoadmapNode } from "@/api/types";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useAppState } from "@/hooks/useAppState";
 import { useQuery } from "@/hooks/useApi";
+import { curarModulo } from "@/lib/curadoria";
 import { TEXT } from "@/lib/tokens";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { CurateButton } from "@/components/library/CurateButton";
 import { LibraryRow } from "@/components/library/LibraryRow";
-import { ResourceViewer } from "@/components/library/ResourceViewer";
 
 export function MaterialTab({ node }: { node: RoadmapNode }) {
-  const [aberto, setAberto] = useState<string | null>(null);
+  const { dispatch } = useAppState();
+  const [curando, setCurando] = useState(false);
   const resources = useQuery(() => libraryApi.list({ only_mine: true }), []);
-
-  if (resources.loading) return <Loading label="Buscando material…" />;
-  if (resources.error) return <ErrorState message={resources.error} onRetry={resources.reload} />;
 
   // O filtro por tag acontece no cliente porque a lista já veio filtrada pelo
   // perfil e é pequena — pedir ao servidor de novo, por tag, seria uma
@@ -31,12 +30,39 @@ export function MaterialTab({ node }: { node: RoadmapNode }) {
   const matching = (resources.data ?? []).filter((resource) =>
     resource.tag_ids.some((tag) => wanted.has(tag)),
   );
+  const vazio = !resources.loading && !resources.error && matching.length === 0;
+
+  // Módulo sem material procura sozinho, uma vez. O botão manual continua
+  // logo abaixo para quando a busca automática não trouxer nada — ele é o
+  // caminho de quem quer insistir, e o único que mostra o motivo.
+  useEffect(() => {
+    if (!vazio) return undefined;
+    let vivo = true;
+    setCurando(true);
+    void curarModulo(node.id).then((achou) => {
+      if (!vivo) return;
+      setCurando(false);
+      if (achou) resources.reload();
+    });
+    return () => {
+      vivo = false;
+    };
+    // `resources.reload` é estável (useCallback sem dependências).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vazio, node.id]);
+
+  if (resources.loading) return <Loading label="Buscando material…" />;
+  if (resources.error) return <ErrorState message={resources.error} onRetry={resources.reload} />;
+
+  if (curando) {
+    return <Loading label="Procurando material para este módulo…" />;
+  }
 
   if (matching.length === 0) {
     return (
       <EmptyState
         title="Sem material para este módulo ainda"
-        description="A busca cobre vídeo, artigo e documentação das tecnologias deste módulo. Todo link é verificado antes de entrar na lista."
+        description="Já procurei nas tecnologias deste módulo e não achei nada que passasse na verificação. Tentar de novo mais tarde costuma trazer resultado."
         action={<CurateButton nodeId={node.id} onFound={resources.reload} />}
       />
     );
@@ -49,11 +75,10 @@ export function MaterialTab({ node }: { node: RoadmapNode }) {
         deste módulo.
       </p>
       {matching.map((resource) => (
-        <div key={resource.id}>
         <LibraryRow
+          key={resource.id}
           resource={resource}
-          aberto={aberto === resource.id}
-          onAbrir={() => setAberto((atual) => (atual === resource.id ? null : resource.id))}
+          onAbrir={() => dispatch({ type: "openResource", resourceId: resource.id })}
           kindLabel={KIND_LABEL[resource.kind] ?? resource.kind}
           onProgress={async (next) => {
             resources.set((current) =>
@@ -80,27 +105,6 @@ export function MaterialTab({ node }: { node: RoadmapNode }) {
             });
           }}
         />
-          {aberto === resource.id ? (
-            <ResourceViewer
-              resource={resource}
-              onFechar={() => setAberto(null)}
-              onProgresso={(mudanca) =>
-                resources.set((current) =>
-                  current.map((item) =>
-                    item.id === resource.id
-                      ? {
-                          ...item,
-                          user_status: mudanca.status,
-                          user_progress_pct: mudanca.progress_pct,
-                          user_position_seconds: mudanca.position_seconds,
-                        }
-                      : item,
-                  ),
-                )
-              }
-            />
-          ) : null}
-        </div>
       ))}
     </div>
   );
