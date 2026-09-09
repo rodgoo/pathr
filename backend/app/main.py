@@ -80,7 +80,7 @@ async def validation_error_handler(_request: Request, exc: RequestValidationErro
 
 
 from app import health  # noqa: E402
-from app.routers import auth, english, library, profile, quizzes, resumes, roadmap, tags  # noqa: E402
+from app.routers import auth, languages, library, profile, quizzes, resumes, roadmap, tags  # noqa: E402
 
 app.include_router(health.router)
 app.include_router(auth.router)
@@ -90,4 +90,4 @@ app.include_router(tags.router)
 app.include_router(roadmap.router)
 app.include_router(library.router)
 app.include_router(quizzes.router)
-app.include_router(english.router)
+app.include_router(languages.router)

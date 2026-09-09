@@ -175,7 +175,23 @@ def overview(
     """Tudo que a tela inicial mostra, numa resposta."""
     user_id = str(current_user["id"])
     streak = _one(supabase, "pathr_streak", user_id)
-    english = _one(supabase, "pathr_english_profile", user_id)
+    # Com varios idiomas por pessoa, "o" perfil de idioma deixou de existir.
+    # A tela inicial mostra um cartao so, entao mostra o que esta LIGADO --
+    # e, entre varios ligados, o de nivel medido mais recente. Sem esta
+    # escolha explicita, a linha exibida seria a que o banco devolvesse
+    # primeiro, e mudaria sozinha entre um carregamento e outro.
+    idiomas = (
+        supabase.table("pathr_english_profile")
+        .select("*")
+        .eq("user_id", user_id)
+        .eq("enabled", True)
+        .order("last_assessment_at", desc=True)
+        .limit(1)
+        .execute()
+        .data
+        or []
+    )
+    english = idiomas[0] if idiomas else _one(supabase, "pathr_english_profile", user_id)
     profile = _one(supabase, "pathr_profile", user_id)
 
     roadmap_rows = (

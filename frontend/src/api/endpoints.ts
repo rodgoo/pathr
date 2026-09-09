@@ -9,7 +9,8 @@ import { api } from "./client";
 import type {
   EnglishAnswerResult,
   EnglishAssessment,
-  EnglishProfile,
+  LanguageCatalogEntry,
+  LanguageProfile,
   Overview,
   Profile,
   Quiz,
@@ -142,18 +143,38 @@ export const quizzes = {
   attempts: (id: string) => api.get(`/quizzes/${id}/attempts`),
 };
 
-export const english = {
-  profile: () => api.get<EnglishProfile>("/english/profile"),
-  update: (body: Partial<Pick<EnglishProfile, "enabled" | "target_level" | "daily_goal_min">>) =>
-    api.patch<EnglishProfile>("/english/profile", body),
-  startAssessment: () => api.post<EnglishAssessment>("/english/assessment"),
-  getAssessment: (id: string) => api.get<EnglishAssessment>(`/english/assessment/${id}`),
+export const languages = {
+  /** Idiomas e as provas de cada um, com a equivalencia em CEFR. Vem do
+   * servidor: e a MESMA tabela que converte a meta, e uma copia no front
+   * divergiria na primeira correcao feita so de um lado. */
+  catalog: () => api.get<LanguageCatalogEntry[]>("/languages/catalog"),
+  /** Todos os idiomas que a pessoa estuda, de uma vez. */
+  profiles: () => api.get<LanguageProfile[]>("/languages/profiles"),
+  profile: (language = "en") =>
+    api.get<LanguageProfile>(`/languages/profile?language=${language}`),
+  update: (
+    language: string,
+    body: Partial<
+      Pick<
+        LanguageProfile,
+        "enabled" | "target_level" | "daily_goal_min" | "exam" | "exam_target"
+      >
+    >,
+  ) => api.patch<LanguageProfile>(`/languages/profile?language=${language}`, body),
+  startAssessment: (language = "en") =>
+    api.post<EnglishAssessment>(`/languages/assessment?language=${language}`),
+  getAssessment: (id: string) => api.get<EnglishAssessment>(`/languages/assessment/${id}`),
   answer: (assessmentId: string, itemId: string, answer: number) =>
-    api.post<EnglishAnswerResult>(`/english/assessment/${assessmentId}/answer`, {
+    api.post<EnglishAnswerResult>(`/languages/assessment/${assessmentId}/answer`, {
       item_id: itemId,
       answer,
     }),
-  vocab: (dueOnly = false) => api.get(`/english/vocab?due_only=${dueOnly}`),
+  vocab: (language = "en", dueOnly = false) =>
+    api.get(`/languages/vocab?language=${language}&due_only=${dueOnly}`),
   reviewVocab: (id: string, quality: number) =>
-    api.post(`/english/vocab/${id}/review`, { quality }),
+    api.post(`/languages/vocab/${id}/review`, { quality }),
 };
+
+/** Nome antigo do modulo, de quando ele so falava ingles. Mantido para as
+ * telas que ainda nao foram renomeadas apontarem para o mesmo lugar. */
+export const english = languages;

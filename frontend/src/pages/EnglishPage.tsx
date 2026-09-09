@@ -21,10 +21,18 @@ import { Placement } from "@/components/english/Placement";
 const BANDS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 
 export function EnglishPage() {
-  const profile = useQuery(() => englishApi.profile(), []);
+  // Qual idioma esta tela mostra. Com varios no plano, "o" idioma deixou de
+  // existir: a pessoa escolhe entre os que ligou em Configuracoes, e o padrao
+  // e o primeiro ligado.
+  const meus = useQuery(() => englishApi.profiles(), []);
+  const ligados = (meus.data ?? []).filter((item) => item.enabled);
+  const [escolhido, setEscolhido] = useState<string | null>(null);
+  const idioma = escolhido ?? ligados[0]?.language ?? "en";
+
+  const profile = useQuery(() => englishApi.profile(idioma), [idioma]);
   const [assessment, setAssessment] = useState<EnglishAssessment | null>(null);
-  const start = useMutation(() => englishApi.startAssessment());
-  const toggle = useMutation((enabled: boolean) => englishApi.update({ enabled }));
+  const start = useMutation(() => englishApi.startAssessment(idioma));
+  const toggle = useMutation((enabled: boolean) => englishApi.update(idioma, { enabled }));
 
   if (profile.loading) return <Loading label="Carregando o módulo de idioma…" />;
   if (profile.error) return <ErrorState message={profile.error} onRetry={profile.reload} />;
@@ -58,7 +66,38 @@ export function EnglishPage() {
       >
         <div style={{ flex: 1, minWidth: 250 }}>
           <div style={{ fontSize: 12.5, color: TEXT.muted }}>Módulo opcional</div>
-          <h1 style={{ fontSize: 28, margin: 0 }}>Inglês corporativo</h1>
+          <h1 style={{ fontSize: 28, margin: 0 }}>Idioma para o trabalho</h1>
+          {/* O seletor só aparece com dois ou mais idiomas ligados: com um só,
+              um grupo de um botão é ruído — a tela já é daquele idioma. */}
+          {ligados.length > 1 ? (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 5.6, marginTop: 8.4 }}>
+              {ligados.map((item) => {
+                const ativo = item.language === idioma;
+                return (
+                  <button
+                    key={item.language}
+                    type="button"
+                    aria-pressed={ativo}
+                    onClick={() => setEscolhido(item.language)}
+                    style={{
+                      padding: "4px 10px",
+                      borderRadius: 6,
+                      font: "inherit",
+                      fontSize: 12,
+                      cursor: "pointer",
+                      textTransform: "uppercase",
+                      letterSpacing: ".06em",
+                      border: `1px solid ${ativo ? ACC : "rgba(233,233,237,.16)"}`,
+                      background: ativo ? "rgba(145,132,217,.13)" : "transparent",
+                      color: ativo ? ACC : TEXT.muted,
+                    }}
+                  >
+                    {item.language}
+                  </button>
+                );
+              })}
+            </div>
+          ) : null}
           <p
             style={{
               margin: "5.6px 0 0",

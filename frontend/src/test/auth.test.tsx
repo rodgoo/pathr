@@ -45,7 +45,7 @@ describe("sessão", () => {
       "GET /auth/me": () => ({ body: aUser() }),
       "GET /profile/overview": () => ({ body: anOverview() }),
       "GET /roadmap/current": () => ({ status: 404, body: { detail: "sem plano" } }),
-      "GET /english/profile": () => ({ body: { enabled: true, cefr_level: "B1" } }),
+      "GET /languages/profile": () => ({ body: { enabled: true, cefr_level: "B1" } }),
     });
     renderApp(server);
     expect(await screen.findByText(/Bem-vindo de volta, Lucas/)).toBeInTheDocument();
@@ -68,7 +68,7 @@ describe("entrar", () => {
       "POST /auth/login": () => ({ body: { user: aUser(), access_token: "t", expires_in: 1800 } }),
       "GET /profile/overview": () => ({ body: anOverview() }),
       "GET /roadmap/current": () => ({ status: 404, body: {} }),
-      "GET /english/profile": () => ({ body: { enabled: false, cefr_level: null } }),
+      "GET /languages/profile": () => ({ body: { enabled: false, cefr_level: null } }),
     });
     const { user } = renderApp(server);
 

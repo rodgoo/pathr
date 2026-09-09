@@ -256,6 +256,51 @@ export interface QuizResult {
   review?: { volta: string[]; aprendido: string[] };
 }
 
+/** Uma faixa da prova e o ponto do CEFR que ela representa. */
+export interface ExamBand {
+  rotulo: string;
+  cefr: string;
+  /** Detalhe da nota ("banda 7.0-8.0"), quando o exame publica faixa. */
+  nota: string;
+}
+
+export interface Exam {
+  id: string;
+  nome: string;
+  descricao: string;
+  faixas: ExamBand[];
+}
+
+export interface LanguageCatalogEntry {
+  codigo: string;
+  nome: string;
+  nativo: string;
+  exames: Exam[];
+}
+
+/**
+ * O perfil de UM idioma. Uma pessoa tem uma linha por idioma que estuda.
+ *
+ * `cefr_level` e a escala interna, a unica em que o app mede. `exam_level` e
+ * o mesmo ponto traduzido para a regua escolhida, calculado pelo servidor na
+ * leitura — trocar de exame reapresenta o resultado, nao o invalida.
+ */
+export interface LanguageProfile {
+  user_id: string;
+  language: string;
+  enabled: boolean;
+  cefr_level: string | null;
+  target_level: string;
+  exam: string;
+  exam_target: string | null;
+  exam_level: string | null;
+  target_cefr: string | null;
+  sub_scores: Record<string, number>;
+  focus_areas: unknown[];
+  daily_goal_min: number;
+  last_assessment_at: string | null;
+}
+
 export interface EnglishProfile {
   user_id: string;
   enabled: boolean;

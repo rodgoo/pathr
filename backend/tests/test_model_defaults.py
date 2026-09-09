@@ -20,6 +20,7 @@ import uuid
 from datetime import date, datetime
 
 import pytest
+import sqlalchemy as sa
 from sqlalchemy.dialects import postgresql
 from sqlmodel import SQLModel
 
@@ -54,11 +55,19 @@ def test_chaves_primarias_proprias_geram_uuid_no_banco():
     a FK do usuário — uma linha por conta. Ali o id vem do chamador, e um
     `gen_random_uuid()` criaria uma linha órfã, apontando para usuário nenhum.
     O critério certo é o default do modelo, não "é chave primária".
+
+    Nem toda chave primária com default é uuid: `pathr_english_profile` tem a
+    chave composta (user_id, language), e `language` traz o default 'en' —
+    correto, e espelhado como 'en' no banco. O filtro é por TIPO, não pela
+    presença de default, senão a regra confundiria "a chave é gerada" com "a
+    chave é um uuid gerado".
     """
     alvos = [
         (table, column)
         for table, column in _pathr_columns()
-        if column.primary_key and column.default is not None
+        if column.primary_key
+        and column.default is not None
+        and isinstance(column.type, (postgresql.UUID, sa.Uuid))
     ]
     assert len(alvos) >= 20, "esperava chaves primárias geradas pelo app"
     for table, column in alvos:

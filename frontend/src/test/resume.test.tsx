@@ -18,7 +18,7 @@ import { aUser, mockServer, type Handler } from "./server";
 const shell: Record<string, Handler> = {
   "GET /auth/me": () => ({ body: aUser() }),
   "GET /roadmap/current": () => ({ status: 404, body: {} }),
-  "GET /english/profile": () => ({ body: { enabled: false, cefr_level: null, target_level: "B2", sub_scores: {}, daily_goal_min: 15 } }),
+  "GET /languages/profile": () => ({ body: { enabled: false, cefr_level: null, target_level: "B2", sub_scores: {}, daily_goal_min: 15 } }),
 };
 
 const parsedResume = {

@@ -504,6 +504,18 @@ class PathrEnglishProfile(SQLModel, table=True):
             primary_key=True,
         )
     )
+    # A chave e (user_id, language): uma linha por idioma que a pessoa estuda.
+    # Com user_id sozinho, como era ate a 0007, o banco so tinha lugar para um
+    # idioma -- nenhuma tela resolveria isso.
+    language: str = Field(default="en", primary_key=True)  # ISO 639-1
+    # A regua que a pessoa escolheu ver: cefr, ielts, toefl_ibt, jlpt, hsk...
+    # O app SEMPRE mede em `cefr_level`; este campo diz como apresentar. Ver
+    # services/languages.py.
+    exam: str = Field(default="cefr")
+    # A meta na escala do exame ("7.0", "N2", "95"). O equivalente em CEFR sai
+    # da tabela de conversao, e nao daqui: guardar os dois deixaria os dois
+    # divergirem no dia em que a equivalencia fosse corrigida.
+    exam_target: Optional[str] = Field(default=None)
     enabled: bool = Field(default=False)
     cefr_level: Optional[str] = Field(default=None)  # A1..C2
     target_level: str = Field(default="B2")
@@ -521,6 +533,10 @@ class PathrEnglishAssessment(SQLModel, table=True):
     anterior, então o teste converge no nível CEFR em ~20 itens."""
 
     __tablename__ = "pathr_english_assessment"
+
+    # Qual idioma esta linha mede/pratica. Sem isto o baralho de
+    # espanhol e o de ingles virariam um so.
+    language: str = Field(default="en", index=True)
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id"))
@@ -566,6 +582,10 @@ class PathrEnglishSession(SQLModel, table=True):
 
     __tablename__ = "pathr_english_session"
 
+    # Qual idioma esta linha mede/pratica. Sem isto o baralho de
+    # espanhol e o de ingles virariam um so.
+    language: str = Field(default="en", index=True)
+
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id"))
     # roleplay|interview|meeting|email|presentation|smalltalk|standup
@@ -585,6 +605,10 @@ class PathrEnglishSession(SQLModel, table=True):
 
 class PathrEnglishVocab(SQLModel, table=True):
     __tablename__ = "pathr_english_vocab"
+
+    # Qual idioma esta linha mede/pratica. Sem isto o baralho de
+    # espanhol e o de ingles virariam um so.
+    language: str = Field(default="en", index=True)
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id"))

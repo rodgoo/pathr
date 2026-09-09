@@ -20,10 +20,10 @@ from supabase import Client
 from app.ai_providers import generate_json
 from app.database import get_supabase
 from app.deps import get_current_user
-from app.services import review
+from app.services import languages, review
 from app.services.progress import log_activity
 
-router = APIRouter(prefix="/english", tags=["idioma"])
+router = APIRouter(prefix="/languages", tags=["idioma"])
 
 BANDS = ["A1", "A2", "B1", "B2", "C1", "C2"]
 
@@ -75,6 +75,12 @@ class EnglishSettings(BaseModel):
     target_level: Optional[str] = Field(default=None, pattern="^(A1|A2|B1|B2|C1|C2)$")
     focus_areas: Optional[list[Any]] = None
     daily_goal_min: Optional[int] = Field(default=None, ge=5, le=180)
+    # A regua escolhida (cefr, ielts, toefl_ibt, jlpt...) e a meta NELA. O
+    # equivalente em CEFR e derivado no router, nao enviado pelo cliente: a
+    # tabela de conversao e do servidor, e aceitar os dois do cliente deixaria
+    # alguem declarar "7.0 = A1".
+    exam: Optional[str] = Field(default=None, max_length=32)
+    exam_target: Optional[str] = Field(default=None, max_length=40)
 
 
 class AnswerItem(BaseModel):
@@ -86,57 +92,139 @@ def _now() -> datetime:
     return datetime.now(timezone.utc)
 
 
-def _profile(supabase: Client, user_id: str) -> dict[str, Any]:
+def _idioma_valido(language: str) -> str:
+    """Recusa idioma fora do catalogo antes de tocar no banco.
+
+    Sem isto, um `?language=xx` qualquer criaria uma linha de perfil para um
+    idioma que a tela nao sabe mostrar e o nivelamento nao sabe gerar."""
+    codigo = (language or "en").strip().lower()
+    if not languages.existe(codigo):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Idioma nao suportado: {codigo}.",
+        )
+    return codigo
+
+
+def _com_exame(perfil: dict[str, Any]) -> dict[str, Any]:
+    """Acrescenta o nivel medido TRADUZIDO para a regua escolhida.
+
+    O banco guarda `cefr_level` sempre — e a unica escala em que o app mede.
+    `exam_level` e derivado na leitura, e nao guardado, porque trocar de exame
+    tem que reapresentar o mesmo resultado, nao invalida-lo."""
+    idioma = perfil.get("language") or "en"
+    exame = perfil.get("exam") or "cefr"
+    medido = perfil.get("cefr_level")
+    perfil["exam_level"] = languages.meta_no_exame(idioma, exame, medido) if medido else None
+    perfil["target_cefr"] = (
+        languages.cefr_da_meta(idioma, exame, perfil.get("exam_target") or "")
+        or perfil.get("target_level")
+    )
+    return perfil
+
+
+def _profile(supabase: Client, user_id: str, language: str = "en") -> dict[str, Any]:
     rows = (
         supabase.table("pathr_english_profile")
         .select("*")
         .eq("user_id", user_id)
+        .eq("language", language)
         .limit(1)
         .execute()
         .data
     )
     if rows:
         return rows[0]
-    # Conta criada antes deste módulo existir — cria na primeira visita em vez
-    # de responder 404 por algo que é responsabilidade nossa.
+    # Primeira visita a este idioma — cria em vez de responder 404 por algo
+    # que e responsabilidade nossa.
     return (
         supabase.table("pathr_english_profile")
-        .insert({"user_id": user_id})
+        .insert({"user_id": user_id, "language": language})
         .execute()
         .data[0]
     )
 
 
-@router.get("/profile")
-def get_english_profile(
+@router.get("/catalog")
+def catalog(_current_user: dict = Depends(get_current_user)):
+    """Os idiomas e as provas de cada um, com a equivalencia em CEFR.
+
+    Vem do servidor e nao de uma copia no frontend: a tabela de equivalencia e
+    a mesma que converte a meta, e duas copias divergiriam na primeira correcao
+    feita so de um lado."""
+    return languages.catalogo()
+
+
+@router.get("/profiles")
+def list_profiles(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
 ):
-    return _profile(supabase, str(current_user["id"]))
+    """Todos os idiomas que esta pessoa estuda. A tela precisa dos varios de
+    uma vez para desenhar a lista; pedir um por um seriam nove requisicoes."""
+    rows = (
+        supabase.table("pathr_english_profile")
+        .select("*")
+        .eq("user_id", str(current_user["id"]))
+        .execute()
+        .data
+        or []
+    )
+    return [_com_exame(linha) for linha in rows]
+
+
+@router.get("/profile")
+def get_english_profile(
+    language: str = "en",
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    return _com_exame(_profile(supabase, str(current_user["id"]), _idioma_valido(language)))
 
 
 @router.patch("/profile")
 def update_english_profile(
     payload: EnglishSettings,
+    language: str = "en",
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
 ):
+    codigo = _idioma_valido(language)
+    user_id = str(current_user["id"])
     update = payload.model_dump(exclude_unset=True)
     if not update:
-        return _profile(supabase, str(current_user["id"]))
+        return _com_exame(_profile(supabase, user_id, codigo))
+
+    if "exam" in update and not languages.exame(codigo, update["exam"]):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Exame nao existe para {codigo}.",
+        )
+
+    # A meta na escala do exame vira tambem meta em CEFR: e nela que o
+    # nivelamento mede, e sem a conversao a meta seria texto sem efeito.
+    if "exam_target" in update:
+        exame_atual = update.get("exam") or _profile(supabase, user_id, codigo).get("exam") or "cefr"
+        equivalente = languages.cefr_da_meta(codigo, exame_atual, update["exam_target"] or "")
+        if equivalente:
+            update["target_level"] = equivalente
+
     update["updated_at"] = _now().isoformat()
-    _profile(supabase, str(current_user["id"]))
-    return (
+    _profile(supabase, user_id, codigo)
+    linha = (
         supabase.table("pathr_english_profile")
         .update(update)
-        .eq("user_id", str(current_user["id"]))
+        .eq("user_id", user_id)
+        .eq("language", codigo)
         .execute()
         .data[0]
     )
+    return _com_exame(linha)
 
 
 @router.post("/assessment", status_code=status.HTTP_201_CREATED)
 async def start_assessment(
+    language: str = "en",
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
 ):
@@ -147,27 +235,46 @@ async def start_assessment(
     primeiros. Gerar tudo antes desperdiçaria cota em itens de dificuldade
     errada.
     """
+    codigo = _idioma_valido(language)
     user_id = str(current_user["id"])
-    profile = _profile(supabase, user_id)
+    profile = _profile(supabase, user_id, codigo)
 
     assessment = (
         supabase.table("pathr_english_assessment")
-        .insert({"user_id": user_id, "kind": "placement", "item_count": 20})
+        .insert(
+            {"user_id": user_id, "kind": "placement", "item_count": 20, "language": codigo}
+        )
         .execute()
         .data[0]
     )
     start_band = profile.get("cefr_level") or "B1"
-    await _generate_items(supabase, user_id, str(assessment["id"]), start_band, count=5, offset=0)
+    await _generate_items(
+        supabase, user_id, str(assessment["id"]), start_band, count=5, offset=0, language=codigo
+    )
     return _assessment_payload(supabase, str(assessment["id"]), user_id)
 
 
 async def _generate_items(
-    supabase: Client, user_id: str, assessment_id: str, band: str, count: int, offset: int
+    supabase: Client,
+    user_id: str,
+    assessment_id: str,
+    band: str,
+    count: int,
+    offset: int,
+    language: str = "en",
 ) -> None:
+    alvo = languages.idioma(language)
+    nome = alvo.nome if alvo else "Ingles"
+    nativo = alvo.nativo if alvo else "English"
     result = await generate_json(
         SYSTEM_PROMPT,
-        f"Gere {count} itens de nivel {band} para um profissional de tecnologia brasileiro. "
-        "Varie a habilidade entre eles.",
+        # O idioma vai explicito e duas vezes (nome em portugues e endonimo):
+        # so o codigo ISO fazia o modelo escrever em ingles de qualquer jeito,
+        # que e o idioma em que ele viu mais itens de nivelamento.
+        f"IDIOMA AVALIADO: {nome} ({nativo}). O enunciado, o contexto e as "
+        f"alternativas sao em {nome}; so a explicacao e em portugues do Brasil.\n"
+        f"Gere {count} itens de nivel {band} para um profissional de tecnologia "
+        "brasileiro. Varie a habilidade entre eles.",
         ITEMS_SCHEMA,
     )
     rows = []
@@ -308,7 +415,17 @@ async def answer_assessment(
     # convergir: cada resposta move o alvo em direção ao nível real.
     if pending <= 1:
         band = _next_band(item.get("cefr_band") or "B1", is_correct)
-        await _generate_items(supabase, user_id, assessment_id, band, count=5, offset=answered)
+        # O idioma vem da tentativa, nao de um parametro: trocar de idioma no
+        # meio de um nivelamento invalidaria as respostas ja dadas.
+        await _generate_items(
+            supabase,
+            user_id,
+            assessment_id,
+            band,
+            count=5,
+            offset=answered,
+            language=assessment.get("language") or "en",
+        )
 
     return {
         "is_correct": is_correct,
@@ -342,6 +459,17 @@ def _finish_assessment(
         .data
         or []
     )
+    # De qual idioma foi este nivelamento. Vem da tentativa, e nao de um
+    # parametro, porque o resultado pertence ao idioma em que foi medido.
+    tentativa = (
+        supabase.table("pathr_english_assessment")
+        .select("language")
+        .eq("id", assessment_id)
+        .limit(1)
+        .execute()
+        .data
+    )
+    idioma_da_tentativa = (tentativa[0].get("language") if tentativa else None) or "en"
     correct_bands = [
         BANDS.index(item["cefr_band"])
         for item in items
@@ -364,6 +492,9 @@ def _finish_assessment(
         }
     ).eq("id", assessment_id).execute()
 
+    # O nivel medido vai para a linha DAQUELE idioma. Sem o filtro, terminar
+    # o nivelamento de espanhol sobrescreveria o nivel de ingles -- as duas
+    # linhas tem o mesmo user_id.
     supabase.table("pathr_english_profile").update(
         {
             "cefr_level": level,
@@ -371,7 +502,7 @@ def _finish_assessment(
             "last_assessment_at": _now().isoformat(),
             "updated_at": _now().isoformat(),
         }
-    ).eq("user_id", str(user["id"])).execute()
+    ).eq("user_id", str(user["id"])).eq("language", idioma_da_tentativa).execute()
 
     log_activity(
         supabase,
@@ -388,6 +519,7 @@ def _finish_assessment(
 
 @router.get("/vocab")
 def list_vocab(
+    language: str = "en",
     due_only: bool = False,
     limit: int = 50,
     current_user: dict = Depends(get_current_user),
@@ -399,6 +531,7 @@ def list_vocab(
         supabase.table("pathr_english_vocab")
         .select("*")
         .eq("user_id", str(current_user["id"]))
+        .eq("language", _idioma_valido(language))
     )
     if due_only:
         query = query.lte("due_at", _now().isoformat())

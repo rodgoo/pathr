@@ -19,7 +19,7 @@ import { aUser, anOverview, mockServer, type Handler } from "./server";
 const shell: Record<string, Handler> = {
   "GET /auth/me": () => ({ body: aUser() }),
   "GET /roadmap/current": () => ({ status: 404, body: { detail: "sem plano" } }),
-  "GET /english/profile": () => ({ body: { enabled: false, cefr_level: null, target_level: "B2", sub_scores: {}, daily_goal_min: 15 } }),
+  "GET /languages/profile": () => ({ body: { enabled: false, cefr_level: null, target_level: "B2", sub_scores: {}, daily_goal_min: 15 } }),
 };
 
 function renderApp(routes: Record<string, Handler>, state: Partial<AppState> = {}) {
@@ -84,11 +84,11 @@ describe("barra lateral", () => {
     expect(nav.getByRole("button", { name: /Início/ })).toHaveAttribute("aria-current", "page");
   });
 
-  it("mostra off no idioma quando o módulo está desligado", async () => {
+  it("mostra off nos idiomas quando o módulo está desligado", async () => {
     renderApp({ "GET /profile/overview": () => ({ body: anOverview() }) });
     const nav = within(await screen.findByRole("navigation", { name: "Navegação principal" }));
     await waitFor(() =>
-      expect(nav.getByRole("button", { name: /Inglês/ })).toHaveTextContent("off"),
+      expect(nav.getByRole("button", { name: /Idiomas/ })).toHaveTextContent("off"),
     );
   });
 
