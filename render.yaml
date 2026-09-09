@@ -120,3 +120,34 @@ services:
         sync: false
       - key: CEREBRAS_API_KEY
         sync: false
+
+  # O front é estático: o Vite gera HTML/CSS/JS e não há servidor de aplicação
+  # nenhum. Toda a lógica autenticada mora na API, e a sessão vive num cookie
+  # HttpOnly de host único — por isso o site e a API são hosts irmãos, e não o
+  # mesmo host.
+  - type: web
+    name: pathr-frontend
+    runtime: static
+    buildCommand: cd frontend && npm ci && npm run build
+    staticPublishPath: ./frontend/dist
+    envVars:
+      # Entra em tempo de BUILD: o Vite substitui import.meta.env.* no bundle.
+      # Se faltar, o build quebra de propósito (ver frontend/vite.config.ts) em
+      # vez de publicar um site que aponta para localhost.
+      - key: VITE_API_URL
+        value: https://api.pathr.notter.com.br
+    routes:
+      # O roteamento é feito no cliente com history.pushState, então abrir
+      # /roadmap direto (ou recarregar a página) pede um arquivo que não
+      # existe no disco. Sem esta reescrita, todo acesso que não seja à raiz
+      # devolve 404.
+      - type: rewrite
+        source: /*
+        destination: /index.html
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: Referrer-Policy
+        value: strict-origin-when-cross-origin
