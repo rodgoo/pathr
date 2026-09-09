@@ -10,6 +10,9 @@
 ; Ficam versionados porque, uma vez removida a delegacao, nao ha mais de onde
 ; recupera-los: o painel do Brevo so os reexibe apos reautenticar o dominio.
 ;
+; Extensao .txt porque o seletor de arquivos do Cloudflare so aceita .txt;
+; o conteudo e um arquivo de zona BIND normal.
+;
 ; Importar em: Cloudflare -> notter.com.br -> DNS -> Records -> Import and
 ; Export -> Import. Marcar os CNAMEs como DNS only (nuvem cinza): sao alvos
 ; de e-mail, nao de HTTP, e o proxy do Cloudflare nao se aplica a eles.
