@@ -12,6 +12,7 @@ import type { RoadmapNode } from "@/api/types";
 import { useQuery } from "@/hooks/useApi";
 import { TEXT } from "@/lib/tokens";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
+import { CurateButton } from "@/components/library/CurateButton";
 import { LibraryRow } from "@/components/library/LibraryRow";
 
 export function MaterialTab({ node }: { node: RoadmapNode }) {
@@ -31,8 +32,9 @@ export function MaterialTab({ node }: { node: RoadmapNode }) {
   if (matching.length === 0) {
     return (
       <EmptyState
-        title="Sem material curado para este módulo ainda"
-        description="A curadoria segue as tecnologias do módulo. Enquanto ela não chega, o quiz e a atividade já funcionam."
+        title="Sem material para este módulo ainda"
+        description="A busca cobre vídeo, artigo e documentação das tecnologias deste módulo. Todo link é verificado antes de entrar na lista."
+        action={<CurateButton nodeId={node.id} onFound={resources.reload} />}
       />
     );
   }

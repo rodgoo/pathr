@@ -116,6 +116,22 @@ class Settings(BaseSettings):
     cerebras_api_key: str = ""  # https://cloud.cerebras.ai
     cerebras_model: str = "gpt-oss-120b"
 
+    # --- Busca de material (biblioteca) ---
+    # Alimentam services/resource_search.py. Sem chave, a fonte correspondente
+    # simplesmente não entra na busca — o mesmo contrato dos provedores de IA
+    # acima. Com nenhuma das duas, sobra a curadoria por IA, que já funciona
+    # com as chaves de LLM.
+    #
+    # A do YouTube é a que tem cota apertada de verdade: `search.list` custa
+    # 100 das 10.000 unidades diárias, ou seja ~100 buscas por dia para o app
+    # inteiro. Por isso a curadoria é por TAG (compartilhada entre todos os
+    # usuários) e tem carência — ver pathr_tag.curated_at.
+    youtube_api_key: str = ""  # https://console.cloud.google.com (YouTube Data API v3)
+    # Um buscador para artigo. Preencha UM dos dois; se ambos vierem, o Tavily
+    # ganha por já devolver resumo pronto e dispensar uma segunda chamada.
+    tavily_api_key: str = ""  # https://app.tavily.com
+    brave_api_key: str = ""  # https://brave.com/search/api
+
     # --- Limites de upload ---
     max_resume_mb: int = 10
 

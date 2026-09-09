@@ -7,6 +7,11 @@ andamento, concluído, nota, minutos gastos.
 
 A curadoria é filtrada pelas tags do usuário, e é isso que faz a biblioteca
 parecer pessoal sem ser duplicada.
+
+Quem PREENCHE o catálogo é `POST /curate`, que delega a
+services/resource_search.py. Até ele existir esta tabela só era lida, e a
+biblioteca vinha vazia para todo mundo — o modelo estava pronto e a fonte
+nunca chegou.
 """
 
 from datetime import datetime, timezone
@@ -18,6 +23,7 @@ from supabase import Client
 
 from app.database import get_supabase
 from app.deps import get_current_user
+from app.services import resource_search
 from app.services.progress import log_activity
 
 router = APIRouter(prefix="/library", tags=["biblioteca"])
@@ -208,3 +214,161 @@ def my_library(
         for row in rows
         if by_id.get(str(row["resource_id"]))
     ]
+
+
+# ---------------------------------------------------------------------------
+# Curadoria — quem escreve no catálogo
+# ---------------------------------------------------------------------------
+
+# Quantas tags uma chamada pode buscar. O limite é de COTA, não de tempo:
+# `search.list` do YouTube custa 100 das 10.000 unidades diárias do app
+# inteiro, então três tags por clique são 300 unidades. Quem abre um módulo
+# com seis tecnologias recebe as três mais carentes agora e as outras na
+# chamada seguinte, em vez de o primeiro usuário do dia consumir a cota de
+# todos.
+_MAX_TAGS_PER_CALL = 3
+
+
+@router.post("/curate")
+async def curate_library(
+    node_id: Optional[str] = None,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """Busca material novo para as tags do usuário (ou as de um módulo).
+
+    Devolve o que ENTROU, não o que existe: a tela chama isto e recarrega a
+    lista, e um resumo do catálogo inteiro aqui só duplicaria o GET.
+
+    Não é idempotente por acaso — é por carência. Chamar duas vezes seguidas
+    não busca duas vezes, porque `pathr_tag.curated_at` segura a segunda; o
+    retorno nesse caso traz `tags_buscadas: []`, e é assim que a tela sabe
+    dizer "já procuramos há pouco" em vez de "não achamos nada".
+    """
+    user_id = str(current_user["id"])
+
+    if node_id:
+        node = _owned_node(supabase, node_id, user_id)
+        wanted = [str(tag) for tag in (node.get("tag_ids") or [])]
+    else:
+        wanted = _user_tag_ids(supabase, user_id)
+
+    if not wanted:
+        return {
+            "novos": 0,
+            "tags_buscadas": [],
+            "motivo": "Nenhuma tecnologia associada ainda — preencha o perfil ou gere o roadmap.",
+        }
+
+    tags = (
+        supabase.table("pathr_tag")
+        .select("id,name,slug,category,curated_at")
+        .in_("id", wanted)
+        .execute()
+        .data
+        or []
+    )
+    pendentes = [tag for tag in tags if resource_search.needs_curation(tag)][:_MAX_TAGS_PER_CALL]
+
+    if not pendentes:
+        return {
+            "novos": 0,
+            "tags_buscadas": [],
+            "motivo": "Essas tecnologias foram buscadas há pouco. A curadoria repete a cada 14 dias.",
+        }
+
+    novos = 0
+    for tag in pendentes:
+        candidatos = await resource_search.search_for_tag(tag)
+        novos += _absorve(supabase, candidatos, str(tag["id"]))
+        # Carimba mesmo quando a busca não achou nada: sem isso, uma tag sem
+        # material seria rebuscada a cada clique e gastaria a cota inteira
+        # justamente no assunto que não tem resultado.
+        supabase.table("pathr_tag").update({"curated_at": _now().isoformat()}).eq(
+            "id", str(tag["id"])
+        ).execute()
+
+    # Sem `log_activity` aqui, de propósito. Ela não só escreve no feed: ela
+    # chama `touch_streak`, que avança a sequência de dias mesmo com xp=0. Um
+    # clique em "procurar material" viraria um dia estudado, e o streak
+    # passaria a medir cliques em vez de estudo — justo o número que o app usa
+    # para dizer à pessoa que ela está sendo constante. Procurar material não é
+    # estudar; ler o que foi encontrado é, e isso já entra por `resource_done`.
+    fontes = resource_search.sources_enabled()
+    return {
+        "novos": novos,
+        "tags_buscadas": [tag.get("name") or tag.get("slug") for tag in pendentes],
+        "motivo": None
+        if novos
+        else (
+            "Nenhum material novo passou na verificação de link."
+            if any(fontes.values())
+            else "Nenhuma fonte de busca configurada no servidor."
+        ),
+    }
+
+
+def _absorve(supabase: Client, candidatos: list, tag_id: str) -> int:
+    """Grava os candidatos e devolve quantos são NOVOS.
+
+    Não usa upsert com `on_conflict=url` de propósito. O catálogo é global e um
+    mesmo vídeo serve a várias tags: um upsert sobrescreveria `tag_ids` com a
+    tag desta rodada, e o vídeo que servia Docker e Kubernetes passaria a
+    servir só o último. Aqui a linha que já existe recebe a tag NOVA somada às
+    que ela já tinha.
+    """
+    if not candidatos:
+        return 0
+
+    urls = [item.url for item in candidatos]
+    existentes = {
+        row["url"]: row
+        for row in (
+            supabase.table("pathr_resource").select("id,url,tag_ids").in_("url", urls).execute().data
+            or []
+        )
+    }
+
+    inserir = []
+    for candidato in candidatos:
+        atual = existentes.get(candidato.url)
+        if atual is None:
+            inserir.append(candidato.to_row())
+            continue
+
+        ja_tem = {str(tag) for tag in (atual.get("tag_ids") or [])}
+        if tag_id not in ja_tem:
+            supabase.table("pathr_resource").update(
+                {"tag_ids": sorted(ja_tem | {tag_id})}
+            ).eq("id", atual["id"]).execute()
+
+    if inserir:
+        supabase.table("pathr_resource").insert(inserir).execute()
+    return len(inserir)
+
+
+def _owned_node(supabase: Client, node_id: str, user_id: str) -> dict[str, Any]:
+    """O módulo é deste usuário?
+
+    Mesma checagem em dois passos de roadmap.py: `pathr_roadmap_node` não tem
+    `user_id` — ele pertence ao roadmap, e é o roadmap que pertence a alguém.
+    Sem isto, um id adivinhado gastaria a cota de busca de outra pessoa.
+    """
+    rows = (
+        supabase.table("pathr_roadmap_node").select("*").eq("id", node_id).limit(1).execute().data
+    )
+    if not rows:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Módulo não encontrado.")
+    node = rows[0]
+    owner = (
+        supabase.table("pathr_roadmap")
+        .select("id")
+        .eq("id", node["roadmap_id"])
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+        .data
+    )
+    if not owner:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Módulo não encontrado.")
+    return node

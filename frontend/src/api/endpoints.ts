@@ -109,6 +109,19 @@ export const library = {
     return api.get<Resource[]>(`/library?${query}`);
   },
   mine: (statusFilter = "") => api.get(`/library/mine?status_filter=${statusFilter}`),
+  /**
+   * Manda o servidor procurar material novo — no YouTube, num buscador e, se
+   * nenhum dos dois achar, na IA. Sem `nodeId` busca pelas tags do perfil.
+   *
+   * Devolve o que ENTROU nesta chamada, não o catálogo: quem chama recarrega
+   * a lista depois. `motivo` vem preenchido quando `novos` é 0, e é a
+   * diferença entre "não achamos" e "buscamos há pouco, tente mais tarde".
+   */
+  curate: (nodeId?: string) =>
+    api.post<{ novos: number; tags_buscadas: string[]; motivo: string | null }>(
+      nodeId ? `/library/curate?node_id=${nodeId}` : "/library/curate",
+      {},
+    ),
   setProgress: (
     resourceId: string,
     body: { status: string; progress_pct?: number; rating?: number; minutes_spent?: number },

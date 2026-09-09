@@ -16,6 +16,7 @@ import { Chip } from "@/components/ui/Chip";
 import { Segmented } from "@/components/ui/Segmented";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { SCREEN_IN } from "@/components/ui/primitives";
+import { CurateButton } from "@/components/library/CurateButton";
 import { LibraryRow } from "@/components/library/LibraryRow";
 
 const LANGS: readonly { value: ContentLang; label: string }[] = [
@@ -36,6 +37,14 @@ export function LibraryPage() {
       }),
     [state.librarySearch, state.libraryFilter, state.contentLang],
   );
+
+  // Há um filtro estreitando a lista? O idioma entra na conta: quem deixou em
+  // "Português" e não vê nada pode ter material em inglês esperando, e mandar
+  // buscar de novo não resolveria isso.
+  const filtrando =
+    Boolean(state.librarySearch.trim()) ||
+    state.libraryFilter !== "todos" ||
+    state.contentLang !== "both";
 
   return (
     <div style={SCREEN_IN}>
@@ -116,10 +125,15 @@ export function LibraryPage() {
         <EmptyState
           title="Nada encontrado"
           description={
-            state.librarySearch || state.libraryFilter !== "todos"
+            filtrando
               ? "Tente outro termo ou tire os filtros."
-              : "A curadoria segue as suas tags. Adicione competências ao plano para o material aparecer aqui."
+              : "A busca cobre as suas tags: vídeo no YouTube, artigo num buscador e documentação oficial."
           }
+          // Só oferece a busca quando a lista está vazia de verdade. Com um
+          // filtro ligado, o catálogo pode estar cheio e a tela vazia — aí o
+          // botão gastaria cota para "consertar" algo que se resolve tirando
+          // o filtro.
+          action={filtrando ? undefined : <CurateButton onFound={resources.reload} />}
         />
       ) : null}
 

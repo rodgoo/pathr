@@ -36,6 +36,9 @@ SEGREDOS = (
     "OPENROUTER_API_KEY",
     "MISTRAL_API_KEY",
     "CEREBRAS_API_KEY",
+    "YOUTUBE_API_KEY",
+    "TAVILY_API_KEY",
+    "BRAVE_API_KEY",
 )
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent

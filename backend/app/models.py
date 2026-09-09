@@ -239,6 +239,14 @@ class PathrTag(SQLModel, table=True):
     icon: Optional[str] = Field(default=None)  # slug simple-icons
     aliases: list[Any] = Field(default_factory=list, sa_column=_jsonb("[]"))
     popularity: int = Field(default=0)  # ordena o autocomplete
+    # Quando esta tag foi buscada por material pela última vez. NULL = nunca.
+    # A cota da YouTube Data API dá ~100 buscas por dia para o app inteiro, e
+    # a curadoria é global (uma tag serve todos os usuários) — este carimbo é
+    # o que impede dois usuários no mesmo módulo de gastarem duas buscas pelo
+    # mesmo resultado. Ver services/resource_search.py.
+    curated_at: Optional[datetime] = Field(
+        default=None, sa_type=sa.DateTime(timezone=True), index=True
+    )
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
 
