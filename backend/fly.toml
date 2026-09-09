@@ -1,0 +1,64 @@
+# Deploy do backend do PathR na Fly.
+#
+# Por que não o Render: o plano de lá não permite adicionar outro domínio
+# próprio, e aqui o domínio próprio não é um detalhe de estética. A sessão é
+# um cookie host-only com SameSite=Strict; ele só viaja entre
+# pathr.notter.com.br e api.pathr.notter.com.br porque os dois são o MESMO
+# site (ambos sob notter.com.br). Apontar o front para
+# pathr-backend.onrender.com faria o navegador descartar o cookie em todo
+# pedido: onrender.com está na Public Suffix List, então cada subdomínio de
+# lá conta como um domínio registrável distinto. O login autenticaria e o
+# pedido seguinte chegaria anônimo.
+
+app = "pathr-backend"
+
+# O Supabase deste projeto está em sa-east-1 (São Paulo) e gru é a região da
+# Fly na mesma cidade. No Render o serviço rodava em oregon: cada consulta ao
+# banco atravessava o continente na ida e na volta.
+primary_region = "gru"
+
+[build]
+  dockerfile = "Dockerfile"
+
+# Só o que pode ser lido por qualquer um. Credenciais entram por
+# `fly secrets` — ver scripts/fly_secrets.py.
+#
+# COOKIE_DOMAIN está ausente de propósito: sem ele o cookie é host-only, ou
+# seja, fica preso a api.pathr.notter.com.br. Defini-lo como .notter.com.br
+# entregaria a sessão do PathR para os apps irmãos do mesmo domínio.
+[env]
+  ENVIRONMENT = "production"
+  PORT = "8031"
+  COOKIE_SAMESITE = "strict"
+  RESUME_BUCKET = "pathr-resumes"
+  FRONTEND_URL = "https://pathr.notter.com.br"
+  API_URL = "https://api.pathr.notter.com.br"
+  CORS_ORIGINS = '["https://pathr.notter.com.br"]'
+  BREVO_SENDER_NAME = "PathR"
+
+[http_service]
+  internal_port = 8031
+  force_https = true
+
+  # Suspende em vez de desligar: a máquina volta de um snapshot de memória em
+  # ~1s, contra os ~50s de spin-down do plano gratuito do Render. Numa tela de
+  # login essa diferença é a diferença entre lento e quebrado.
+  auto_stop_machines = "suspend"
+  auto_start_machines = true
+  min_machines_running = 0
+
+  # Uma instância só, pelo mesmo motivo do `--workers 1` no start.sh: o espelho
+  # em memória do cooldown da rotação de IA é por processo. Duas máquinas
+  # teriam visões divergentes de qual chave está de castigo até relerem o banco.
+  [[http_service.checks]]
+    interval = "30s"
+    timeout = "5s"
+    # O container roda `alembic upgrade head` antes do uvicorn; sem folga aqui
+    # o health check reprovaria o boot legítimo de um deploy com migration.
+    grace_period = "30s"
+    method = "GET"
+    path = "/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "512mb"
