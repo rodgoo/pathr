@@ -53,7 +53,9 @@ services:
       # --- Supabase: projeto EXCLUSIVO do PathR (crie um novo) ---
       - key: SUPABASE_URL
         sync: false
-      - key: SUPABASE_SERVICE_ROLE_KEY
+      # Nome novo do Supabase (o painel chama de "secret key", sb_secret_...).
+      # O app também aceita SUPABASE_SERVICE_ROLE_KEY, o nome antigo.
+      - key: SUPABASE_SECRET_KEY
         sync: false
       # Só o Alembic usa. Use a string do POOLER
       # (aws-...pooler.supabase.com): o host direto db.<ref>.supabase.co
@@ -73,6 +75,14 @@ services:
       # Fernet é específico e um valor aleatório qualquer quebra o MFA no
       # primeiro uso. Gere com:
       #   python -c "from cryptography.fernet import Fernet; print(Fernet.generate_key().decode())"
+      #
+      # Use A MESMA do .env.local se o desenvolvimento apontar para este mesmo
+      # projeto Supabase. O segredo TOTP é gravado cifrado no banco: com
+      # chaves diferentes, quem ativou o MFA de um lado não consegue entrar do
+      # outro, e o erro aparece como "código inválido" sem explicar por quê.
+      # (Ao contrário do JWT_SECRET_KEY acima, que pode e deve ser diferente:
+      # ele só invalida sessões, e sessão de produção não deveria valer em
+      # desenvolvimento.)
       - key: MFA_ENCRYPTION_KEY
         sync: false
 
