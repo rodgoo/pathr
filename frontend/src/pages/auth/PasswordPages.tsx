@@ -9,7 +9,7 @@
 import { useState, type FormEvent } from "react";
 import { auth as authApi } from "@/api/endpoints";
 import { errorMessage } from "@/hooks/useAuth";
-import { AuthShell, Field, FormError } from "@/components/auth/AuthShell";
+import { AuthShell, Field, PasswordField, FormError } from "@/components/auth/AuthShell";
 import { C } from "@/lib/tokens";
 
 export function ForgotPasswordPage({ onNavigate }: { onNavigate: (path: string) => void }) {
@@ -127,10 +127,9 @@ export function ResetPasswordPage({
       ) : (
         <form onSubmit={submit} noValidate>
           <FormError>{error}</FormError>
-          <Field
+          <PasswordField
             id="reset-password"
             label="Nova senha"
-            type="password"
             autoComplete="new-password"
             hint="Ao menos 10 caracteres, com letra e número."
             required

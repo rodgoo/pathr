@@ -17,7 +17,6 @@ import { useQuery } from "@/hooks/useApi";
 import { TEXT } from "@/lib/tokens";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { SCREEN_IN } from "@/components/ui/primitives";
-import { UnverifiedBanner } from "@/pages/auth/VerifyEmailPage";
 import { ConsistencyPanel } from "@/components/dashboard/ConsistencyPanel";
 import { ContinueCard } from "@/components/dashboard/ContinueCard";
 import { KpiCards } from "@/components/dashboard/KpiCards";
@@ -50,7 +49,6 @@ export function HomePage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16.8, ...SCREEN_IN }}>
-      <UnverifiedBanner />
 
       <header style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: 11.2 }}>
         <div>

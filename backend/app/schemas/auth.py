@@ -1,14 +1,58 @@
 """Formatos de entrada e saída da autenticação."""
 
+from datetime import date
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, field_validator
+
+
+# Limites de idade do cadastro. O piso existe porque abaixo dele o tratamento
+# de dados de menor exige consentimento de responsável, que este app não
+# coleta. O teto é só sanidade: pega o dedo que digitou 1902 em vez de 1992.
+IDADE_MINIMA = 14
+IDADE_MAXIMA = 110
 
 
 class SignupRequest(BaseModel):
     name: str = Field(min_length=2, max_length=120)
     email: EmailStr
     password: str = Field(min_length=10, max_length=256)
+    birth_date: date
+    city: str = Field(min_length=2, max_length=120)
+    # UF no Brasil; para outros países o próprio campo aceita o nome da região.
+    state: str = Field(min_length=2, max_length=60)
+    country: str = Field(default="BR", min_length=2, max_length=2)
+
+    @field_validator("birth_date")
+    @classmethod
+    def _idade_plausivel(cls, valor: date) -> date:
+        hoje = date.today()
+        if valor > hoje:
+            raise ValueError("A data de nascimento não pode estar no futuro.")
+        # Idade em anos completos: subtrair só os anos erra por um dia quando
+        # o aniversário ainda não chegou no ano corrente.
+        idade = hoje.year - valor.year - ((hoje.month, hoje.day) < (valor.month, valor.day))
+        if idade < IDADE_MINIMA:
+            raise ValueError(f"É preciso ter ao menos {IDADE_MINIMA} anos para criar uma conta.")
+        if idade > IDADE_MAXIMA:
+            raise ValueError("Confira a data de nascimento.")
+        return valor
+
+    @field_validator("country")
+    @classmethod
+    def _pais_maiusculo(cls, valor: str) -> str:
+        return valor.upper()
+
+
+class ResendVerificationRequest(BaseModel):
+    """Reenvio pedido de fora da sessão.
+
+    Existe porque o login passou a exigir e-mail confirmado: quem não
+    confirmou não consegue entrar, e sem esta rota não teria como pedir outro
+    link — ficaria trancado do lado de fora com a conta criada.
+    """
+
+    email: EmailStr
 
 
 class LoginRequest(BaseModel):

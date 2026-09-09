@@ -24,8 +24,17 @@ import type {
 } from "./types";
 
 export const auth = {
-  signup: (body: { name: string; email: string; password: string }) =>
-    api.post<Session>("/auth/signup", body),
+  // Não devolve sessão: a entrada exige e-mail confirmado, então o cadastro
+  // termina numa mensagem, não num login.
+  signup: (body: {
+    name: string;
+    email: string;
+    password: string;
+    birth_date: string;
+    city: string;
+    state: string;
+    country?: string;
+  }) => api.post<{ detail: string }>("/auth/signup", body),
   login: (body: { email: string; password: string; mfa_code?: string }) =>
     api.post<Session>("/auth/login", body),
   logout: () => api.post<{ detail: string }>("/auth/logout"),
@@ -33,6 +42,10 @@ export const auth = {
   me: () => api.get<User>("/auth/me"),
   verifyEmail: (token: string) => api.post<{ detail: string }>("/auth/verify-email", { token }),
   resendVerification: () => api.post<{ detail: string }>("/auth/resend-verification"),
+  // Versão sem sessão: quem não confirmou não consegue entrar, e portanto não
+  // alcançaria a rota acima.
+  resendVerificationPublic: (email: string) =>
+    api.post<{ detail: string }>("/auth/resend-verification-public", { email }),
   forgotPassword: (email: string) => api.post<{ detail: string }>("/auth/forgot-password", { email }),
   resetPassword: (token: string, password: string) =>
     api.post<{ detail: string }>("/auth/reset-password", { token, password }),

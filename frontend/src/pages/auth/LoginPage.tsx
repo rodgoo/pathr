@@ -5,11 +5,16 @@
  * cabeçalho `X-Pathr-Mfa: required`, e o formulário revela o campo do código
  * mantendo e-mail e senha preenchidos. Uma segunda tela obrigaria a repetir o
  * login se o código fosse digitado errado.
+ *
+ * O e-mail não confirmado é o outro caso especial: vem como 403 com
+ * `X-Pathr-Unverified`, e a tela oferece reenviar o link em vez de deixar a
+ * pessoa tentando a senha de novo — a senha estava certa.
  */
 
 import { useState, type FormEvent } from "react";
-import { errorMessage, isMfaRequired, useAuth } from "@/hooks/useAuth";
-import { AuthShell, Field, FormError } from "@/components/auth/AuthShell";
+import { auth as authApi } from "@/api/endpoints";
+import { errorMessage, isEmailUnverified, isMfaRequired, useAuth } from "@/hooks/useAuth";
+import { AuthShell, Field, PasswordField, FormError } from "@/components/auth/AuthShell";
 
 export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }) {
   const { login } = useAuth();
@@ -19,17 +24,30 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
   const [needsMfa, setNeedsMfa] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [unverified, setUnverified] = useState(false);
+  const [resent, setResent] = useState<string | null>(null);
+
+  async function resendVerification() {
+    setResent(null);
+    const { detail } = await authApi.resendVerificationPublic(email.trim());
+    setResent(detail);
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     setPending(true);
     setError(null);
+    setUnverified(false);
+    setResent(null);
     try {
       await login(email, password, needsMfa ? mfaCode : undefined);
     } catch (caught) {
       if (isMfaRequired(caught)) {
         setNeedsMfa(true);
         setError(null);
+      } else if (isEmailUnverified(caught)) {
+        setUnverified(true);
+        setError(errorMessage(caught));
       } else {
         setError(errorMessage(caught));
         setMfaCode("");
@@ -55,6 +73,36 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
       <form onSubmit={submit} noValidate>
         <FormError>{error}</FormError>
 
+        {unverified ? (
+          <div
+            role="status"
+            style={{
+              margin: "0 0 11.2px",
+              padding: "8.4px 11.2px",
+              borderRadius: 8,
+              background: "rgba(207,162,94,.12)",
+              boxShadow: "inset 0 0 0 1px rgba(207,162,94,.35)",
+              fontSize: 12.5,
+            }}
+          >
+            {resent ? (
+              resent
+            ) : (
+              <>
+                Não recebeu o link?{" "}
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  style={{ fontSize: 12, padding: "2px 8px" }}
+                  onClick={resendVerification}
+                >
+                  Reenviar confirmação
+                </button>
+              </>
+            )}
+          </div>
+        ) : null}
+
         <Field
           id="login-email"
           label="E-mail"
@@ -65,10 +113,9 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
           onChange={(event) => setEmail(event.target.value)}
           disabled={needsMfa}
         />
-        <Field
+        <PasswordField
           id="login-password"
           label="Senha"
-          type="password"
           autoComplete="current-password"
           required
           value={password}

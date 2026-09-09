@@ -12,6 +12,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useMutation, useQuery } from "@/hooks/useApi";
 import { C, TEXT } from "@/lib/tokens";
 import { ErrorState, Loading } from "@/components/ui/States";
+import { PasswordField } from "@/components/auth/AuthShell";
 import { Kicker, Panel } from "@/components/ui/primitives";
 
 export function AccountTab() {
@@ -136,28 +137,20 @@ function ChangePassword() {
           gap: 11.2,
         }}
       >
-        <div className="field">
-          <label htmlFor="current-password">Senha atual</label>
-          <input
-            id="current-password"
-            className="input"
-            type="password"
-            autoComplete="current-password"
-            value={currentPassword}
-            onChange={(event) => setCurrentPassword(event.target.value)}
-          />
-        </div>
-        <div className="field">
-          <label htmlFor="new-password">Nova senha</label>
-          <input
-            id="new-password"
-            className="input"
-            type="password"
-            autoComplete="new-password"
-            value={newPassword}
-            onChange={(event) => setNewPassword(event.target.value)}
-          />
-        </div>
+        <PasswordField
+          id="current-password"
+          label="Senha atual"
+          autoComplete="current-password"
+          value={currentPassword}
+          onChange={(event) => setCurrentPassword(event.target.value)}
+        />
+        <PasswordField
+          id="new-password"
+          label="Nova senha"
+          autoComplete="new-password"
+          value={newPassword}
+          onChange={(event) => setNewPassword(event.target.value)}
+        />
       </div>
 
       {change.error ? <ErrorState message={change.error} /> : null}

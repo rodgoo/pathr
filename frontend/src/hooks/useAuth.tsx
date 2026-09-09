@@ -29,7 +29,14 @@ interface AuthContextValue {
   status: Status;
   user: User | null;
   login: (email: string, password: string, mfaCode?: string) => Promise<void>;
-  signup: (name: string, email: string, password: string) => Promise<void>;
+  signup: (body: {
+    name: string;
+    email: string;
+    password: string;
+    birth_date: string;
+    city: string;
+    state: string;
+  }) => Promise<string>;
   logout: () => Promise<void>;
   /** Recarrega o usuário depois de uma mudança (nome, e-mail confirmado). */
   refresh: () => Promise<void>;
@@ -67,11 +74,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setStatus("authenticated");
   }, []);
 
-  const signup = useCallback(async (name: string, email: string, password: string) => {
-    const session = await authApi.signup({ name, email, password });
-    setUser(session.user);
-    setStatus("authenticated");
-  }, []);
+  // Não muda o estado de sessão: o cadastro não loga mais ninguém. Quem
+  // acabou de criar conta segue anônimo até confirmar o e-mail, e a tela de
+  // cadastro mostra a mensagem devolvida aqui.
+  const signup = useCallback(
+    async (body: {
+      name: string;
+      email: string;
+      password: string;
+      birth_date: string;
+      city: string;
+      state: string;
+    }) => {
+      const { detail } = await authApi.signup(body);
+      return detail;
+    },
+    [],
+  );
 
   const logout = useCallback(async () => {
     try {
@@ -102,6 +121,10 @@ export function useAuth(): AuthContextValue {
 /** `true` quando o erro é o backend pedindo o segundo fator. */
 export const isMfaRequired = (error: unknown): boolean =>
   error instanceof ApiError && error.mfaRequired;
+
+/** O login foi recusado só porque o e-mail ainda não foi confirmado. */
+export const isEmailUnverified = (error: unknown): boolean =>
+  error instanceof ApiError && error.emailUnverified;
 
 /** Mensagem pronta para exibir a partir de qualquer erro. */
 export const errorMessage = (error: unknown): string =>

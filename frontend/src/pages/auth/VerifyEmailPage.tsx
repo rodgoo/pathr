@@ -5,7 +5,7 @@
  * clicar no link do próprio e-mail, e pedir mais um clique só adia.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { auth as authApi } from "@/api/endpoints";
 import { errorMessage, useAuth } from "@/hooks/useAuth";
 import { AuthShell } from "@/components/auth/AuthShell";
@@ -24,8 +24,16 @@ export function VerifyEmailPage({
   const [state, setState] = useState<State>(token ? "verifying" : "failed");
   const [message, setMessage] = useState("Este endereço não traz um token de confirmação.");
 
+  // O token é de uso único: a primeira chamada o queima no banco. Sem esta
+  // trava o efeito rodava duas vezes — `status` está nas dependências e vai
+  // de "checking" para "anonymous" logo após a montagem —, e a segunda
+  // chamada recebia "link inválido ou expirado" sobre o token que ela mesma
+  // acabara de gastar. O e-mail era confirmado e a tela dizia que não.
+  const jaTentado = useRef("");
+
   useEffect(() => {
-    if (!token) return;
+    if (!token || jaTentado.current === token) return;
+    jaTentado.current = token;
     let alive = true;
     authApi
       .verifyEmail(token)
@@ -83,59 +91,5 @@ export function VerifyEmailPage({
         {status === "authenticated" ? "Voltar ao app" : "Ir para entrar"}
       </button>
     </AuthShell>
-  );
-}
-
-/**
- * Faixa de aviso para quem entrou mas ainda não confirmou o e-mail.
- *
- * Aparece dentro do app, não no lugar dele: a pessoa pode olhar em volta e
- * decidir se vale a pena confirmar — bloquear tudo antes disso é o caminho
- * mais curto para o abandono.
- */
-export function UnverifiedBanner() {
-  const { user, refresh } = useAuth();
-  const [sent, setSent] = useState(false);
-  const [pending, setPending] = useState(false);
-
-  if (!user || user.email_verified) return null;
-
-  async function resend() {
-    setPending(true);
-    try {
-      await authApi.resendVerification();
-      setSent(true);
-      await refresh();
-    } finally {
-      setPending(false);
-    }
-  }
-
-  return (
-    <div
-      role="status"
-      style={{
-        display: "flex",
-        flexWrap: "wrap",
-        alignItems: "center",
-        gap: 11.2,
-        padding: "8.4px 14px",
-        borderRadius: 8,
-        background: "rgba(207,162,94,.12)",
-        boxShadow: "inset 0 0 0 1px rgba(207,162,94,.35)",
-        fontSize: 12.5,
-      }}
-    >
-      <span style={{ flex: 1, minWidth: 220 }}>
-        {sent
-          ? `Reenviamos o link de confirmação para ${user.email}.`
-          : `Confirme ${user.email} para liberar o plano completo.`}
-      </span>
-      {!sent ? (
-        <button type="button" className="btn btn-ghost" style={{ fontSize: 12 }} onClick={resend} disabled={pending}>
-          {pending ? "Enviando…" : "Reenviar e-mail"}
-        </button>
-      ) : null}
-    </div>
   );
 }

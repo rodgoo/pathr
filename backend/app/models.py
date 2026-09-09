@@ -169,6 +169,15 @@ class PathrProfile(SQLModel, table=True):
             primary_key=True,
         )
     )
+    # Quem a pessoa é, perguntado no cadastro. Fica aqui e não em PathrUser
+    # porque não autentica nada: é dado pessoal, do mesmo tipo do resto deste
+    # arquivo. A data é `date` e não `datetime` de propósito — nascimento não
+    # tem hora, e guardar uma inventaria fuso onde não existe.
+    birth_date: Optional[date] = Field(default=None, sa_type=sa.Date)
+    city: Optional[str] = Field(default=None)
+    state: Optional[str] = Field(default=None)  # UF, duas letras no Brasil
+    country: str = Field(default="BR")  # ISO 3166-1 alfa-2
+
     headline: Optional[str] = Field(default=None)
     current_role: Optional[str] = Field(default=None)
     target_role: Optional[str] = Field(default=None)

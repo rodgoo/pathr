@@ -46,6 +46,12 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Authorization", "Content-Type"],
+    # Sem isto o navegador esconde do JavaScript qualquer cabeçalho que não
+    # seja da lista segura do CORS, e o site (pathr.notter.com.br) fala com
+    # outra origem (api.pathr.notter.com.br). Os dois abaixo carregam decisões
+    # de tela: sem expô-los, o login com segundo fator nunca mostrava o campo
+    # de código, e o e-mail não confirmado apareceria como erro genérico.
+    expose_headers=["X-Pathr-Mfa", "X-Pathr-Unverified"],
 )
 
 

@@ -38,6 +38,7 @@ from app.schemas.auth import (
     MfaSetupOut,
     ResetPasswordRequest,
     SessionOut,
+    ResendVerificationRequest,
     SignupRequest,
     UserOut,
     VerifyEmailRequest,
@@ -249,18 +250,20 @@ def _consume_email_token(supabase: Client, token: str, purpose: str) -> Optional
     return users[0] if users else None
 
 
-@router.post("/signup", response_model=SessionOut, status_code=status.HTTP_201_CREATED)
+@router.post("/signup", response_model=MessageOut, status_code=status.HTTP_201_CREATED)
 def signup(
     payload: SignupRequest,
     request: Request,
     response: Response,
     supabase: Client = Depends(get_supabase),
 ):
-    """Cria a conta e já devolve sessão.
+    """Cria a conta. NÃO devolve sessão: a entrada exige e-mail confirmado.
 
-    A pessoa entra direto e só precisa confirmar o e-mail para usar as rotas
-    que dependem dele — exigir a confirmação antes de qualquer coisa faz
-    metade das pessoas abandonar antes de ver o produto.
+    O desenho anterior deixava entrar na hora e cobrava a confirmação depois,
+    para não perder quem abandona no meio do cadastro. A troca é deliberada:
+    sem a confirmação, qualquer pessoa cria conta com o e-mail de outra, e o
+    endereço é o que usamos para recuperar senha. O custo é uma ida à caixa
+    de entrada antes do primeiro acesso.
     """
     problems = password_problems(payload.password)
     if problems:
@@ -297,7 +300,15 @@ def signup(
     # assume que existem, e criá-los sob demanda espalharia esse "se não
     # existir, cria" por dez lugares.
     user_id = str(created["id"])
-    supabase.table("pathr_profile").insert({"user_id": user_id}).execute()
+    supabase.table("pathr_profile").insert(
+        {
+            "user_id": user_id,
+            "birth_date": payload.birth_date.isoformat(),
+            "city": payload.city.strip(),
+            "state": payload.state.strip(),
+            "country": payload.country,
+        }
+    ).execute()
     supabase.table("pathr_streak").insert({"user_id": user_id}).execute()
     supabase.table("pathr_english_profile").insert({"user_id": user_id}).execute()
 
@@ -305,7 +316,9 @@ def signup(
     send_verification_email(created["email"], created.get("name") or "", token)
     _log_event(supabase, "signup", user_id=user_id, request=request)
 
-    return _issue_session(supabase, created, response, request)
+    return MessageOut(
+        detail="Conta criada. Confirme seu e-mail pelo link que enviamos para entrar."
+    )
 
 
 @router.post("/login", response_model=SessionOut)
@@ -338,6 +351,17 @@ def login(
         supabase.table("pathr_user").update(next_failure_state(user)).eq("id", user["id"]).execute()
         _log_event(supabase, "login_fail", user_id=str(user["id"]), request=request)
         raise invalid
+
+    if not user.get("email_verified_at"):
+        # Só depois da senha conferida. Antes disso, esta resposta diria a
+        # quem sonda que o endereço tem conta — o mesmo vazamento que as
+        # mensagens iguais de e-mail/senha acima evitam.
+        _log_event(supabase, "login_unverified", user_id=str(user["id"]), request=request)
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Confirme seu e-mail para entrar. Enviamos um link quando você criou a conta.",
+            headers={"X-Pathr-Unverified": "1"},
+        )
 
     if user.get("mfa_enabled"):
         if not payload.mfa_code:
@@ -517,6 +541,34 @@ def resend_verification(
     token = _issue_email_token(supabase, str(current_user["id"]), "verify_email", _VERIFY_TTL)
     send_verification_email(current_user["email"], current_user.get("name") or "", token)
     return MessageOut(detail="Enviamos um novo link de confirmação.")
+
+
+@router.post("/resend-verification-public", response_model=MessageOut)
+def resend_verification_public(
+    payload: ResendVerificationRequest,
+    request: Request,
+    supabase: Client = Depends(get_supabase),
+):
+    """Reenvia o link de confirmação sem exigir sessão.
+
+    Necessária desde que o login passou a exigir e-mail confirmado: quem
+    perdeu o e-mail não consegue entrar, e a rota autenticada de reenvio
+    ficaria inalcançável — a conta existiria sem nenhum caminho de volta.
+
+    Responde igual em todos os casos, como /forgot-password: e-mail sem
+    conta, conta já confirmada e envio feito são indistinguíveis de fora.
+    """
+    generica = MessageOut(
+        detail="Se houver uma conta com este e-mail aguardando confirmação, enviamos um novo link."
+    )
+    user = _find_user_by_email(supabase, payload.email)
+    if not user or user.get("email_verified_at"):
+        return generica
+
+    token = _issue_email_token(supabase, str(user["id"]), "verify_email", _VERIFY_TTL)
+    send_verification_email(user["email"], user.get("name") or "", token)
+    _log_event(supabase, "verification_resent", user_id=str(user["id"]), request=request)
+    return generica
 
 
 @router.post("/forgot-password", response_model=MessageOut)

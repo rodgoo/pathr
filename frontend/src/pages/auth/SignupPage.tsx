@@ -5,12 +5,26 @@
  * servidor aplica (backend/app/security.py). Repetir a regra nos dois lados é
  * duplicação consciente: o cliente evita uma ida ao servidor para dizer o
  * óbvio, e o servidor é quem realmente decide.
+ *
+ * O cadastro NÃO loga. Termina numa tela dizendo para abrir o e-mail, porque
+ * a entrada passou a exigir confirmação — ver a regra no backend, em
+ * routers/auth.py.
  */
 
 import { useState, type FormEvent } from "react";
 import { errorMessage, useAuth } from "@/hooks/useAuth";
-import { AuthShell, Field, FormError } from "@/components/auth/AuthShell";
+import {
+  AuthShell,
+  Field,
+  FormError,
+  PasswordField,
+  SelectField,
+} from "@/components/auth/AuthShell";
+import { UFS } from "@/lib/ufs";
 import { C, TEXT } from "@/lib/tokens";
+
+/** Idade mínima, igual à do servidor (backend/app/schemas/auth.py). */
+const IDADE_MINIMA = 14;
 
 function problems(password: string): string[] {
   const found: string[] = [];
@@ -20,16 +34,33 @@ function problems(password: string): string[] {
   return found;
 }
 
+/** A data mais recente que ainda satisfaz a idade mínima. */
+function maxBirthDate(): string {
+  const hoje = new Date();
+  hoje.setFullYear(hoje.getFullYear() - IDADE_MINIMA);
+  return hoje.toISOString().slice(0, 10);
+}
+
 export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void }) {
   const { signup } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [city, setCity] = useState("");
+  const [state, setState] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const [done, setDone] = useState<string | null>(null);
 
   const missing = problems(password);
-  const ready = name.trim().length >= 2 && email.includes("@") && missing.length === 0;
+  const ready =
+    name.trim().length >= 2 &&
+    email.includes("@") &&
+    missing.length === 0 &&
+    birthDate !== "" &&
+    city.trim().length >= 2 &&
+    state !== "";
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -37,12 +68,39 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
     setPending(true);
     setError(null);
     try {
-      await signup(name.trim(), email.trim(), password);
+      const detail = await signup({
+        name: name.trim(),
+        email: email.trim(),
+        password,
+        birth_date: birthDate,
+        city: city.trim(),
+        state,
+      });
+      setDone(detail);
     } catch (caught) {
       setError(errorMessage(caught));
     } finally {
       setPending(false);
     }
+  }
+
+  // Passo seguinte ao envio: a conta existe, mas ninguém entra sem confirmar.
+  if (done) {
+    return (
+      <AuthShell title="Confirme seu e-mail" subtitle={done}>
+        <p style={{ fontSize: 13, color: TEXT.faint, margin: "0 0 16.8px" }}>
+          Enviamos um link para <strong style={{ color: "rgba(233,233,237,.9)" }}>{email.trim()}</strong>.
+          O link vale por três dias. Se não chegar, olhe também o spam.
+        </p>
+        <button
+          type="button"
+          className="btn btn-primary btn-block"
+          onClick={() => onNavigate("/entrar")}
+        >
+          Ir para entrar
+        </button>
+      </AuthShell>
+    );
   }
 
   return (
@@ -79,9 +137,45 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
           onChange={(event) => setEmail(event.target.value)}
         />
         <Field
+          id="signup-birth-date"
+          label="Data de nascimento"
+          type="date"
+          autoComplete="bday"
+          hint={`É preciso ter ao menos ${IDADE_MINIMA} anos.`}
+          max={maxBirthDate()}
+          required
+          value={birthDate}
+          onChange={(event) => setBirthDate(event.target.value)}
+        />
+
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 96px", gap: 8.4 }}>
+          <Field
+            id="signup-city"
+            label="Cidade onde mora"
+            autoComplete="address-level2"
+            required
+            value={city}
+            onChange={(event) => setCity(event.target.value)}
+          />
+          <SelectField
+            id="signup-state"
+            label="UF"
+            required
+            value={state}
+            onChange={(event) => setState(event.target.value)}
+          >
+            <option value="">—</option>
+            {UFS.map((uf) => (
+              <option key={uf} value={uf}>
+                {uf}
+              </option>
+            ))}
+          </SelectField>
+        </div>
+
+        <PasswordField
           id="signup-password"
           label="Senha"
-          type="password"
           autoComplete="new-password"
           required
           value={password}

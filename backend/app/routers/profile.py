@@ -11,16 +11,25 @@ from datetime import date, datetime, timedelta, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 from supabase import Client
 
 from app.database import get_supabase
 from app.deps import get_current_user
+from app.schemas.auth import SignupRequest
 
 router = APIRouter(prefix="/profile", tags=["perfil"])
 
 
 class ProfileUpdate(BaseModel):
+    # Perguntados no cadastro, editáveis aqui: sem isto uma cidade digitada
+    # errada seria permanente. A data reusa a mesma validação de idade do
+    # cadastro — a regra é a mesma, e duplicá-la deixaria as duas divergirem.
+    birth_date: Optional[date] = None
+    city: Optional[str] = Field(default=None, max_length=120)
+    state: Optional[str] = Field(default=None, max_length=60)
+    country: Optional[str] = Field(default=None, min_length=2, max_length=2)
+
     headline: Optional[str] = Field(default=None, max_length=200)
     current_role: Optional[str] = Field(default=None, max_length=120)
     target_role: Optional[str] = Field(default=None, max_length=120)
@@ -32,6 +41,10 @@ class ProfileUpdate(BaseModel):
     bio: Optional[str] = Field(default=None, max_length=2000)
     linkedin_url: Optional[str] = Field(default=None, max_length=300)
     github_url: Optional[str] = Field(default=None, max_length=300)
+
+    _idade = field_validator("birth_date")(
+        lambda cls, valor: valor if valor is None else SignupRequest._idade_plausivel(valor)
+    )
 
 
 class AccountUpdate(BaseModel):

@@ -24,6 +24,14 @@ export class ApiError extends Error {
     message: string,
     /** Presente quando o login pediu o segundo fator. */
     readonly mfaRequired = false,
+    /**
+     * O login foi recusado porque o e-mail ainda não foi confirmado.
+     *
+     * Vem num cabeçalho e não do texto da mensagem: comparar strings de
+     * mensagem para decidir o que a tela mostra quebra na primeira vez que
+     * alguém melhora a redação.
+     */
+    readonly emailUnverified = false,
   ) {
     super(message);
     this.name = "ApiError";
@@ -70,6 +78,7 @@ async function parseError(response: Response): Promise<ApiError> {
     response.status,
     detail,
     response.headers.get("x-pathr-mfa") === "required",
+    response.headers.get("x-pathr-unverified") === "1",
   );
 }
 
