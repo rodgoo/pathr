@@ -157,6 +157,36 @@ async def generate_roadmap(
     return get_roadmap(str(roadmap["id"]), current_user, supabase)
 
 
+def linha_do_roadmap(
+    user_id: str, payload: GenerateRequest, plan: dict[str, Any], model: str
+) -> dict[str, Any]:
+    """A linha de `pathr_roadmap`, montada e nada mais.
+
+    Separada do `_persist` para poder ser conferida sem banco: foi aqui que
+    faltou `goal`, uma coluna NOT NULL, e TODA geração de plano morria num 500
+    logo depois de a IA ter feito o trabalho inteiro. O teste em
+    tests/test_roadmap_persist.py compara estas chaves com as colunas
+    obrigatórias do modelo, então uma coluna nova sem valor reprova antes de
+    chegar à produção.
+    """
+    return {
+        "user_id": user_id,
+        "title": plan["titulo"],
+        # O objetivo em texto livre, inteiro. `target_role` é o mesmo texto
+        # cortado em 120 para caber num rótulo de tela — e cortar não pode ser
+        # o único lugar onde o objetivo existe.
+        "goal": payload.objective,
+        "target_role": payload.objective[:120],
+        "horizon_weeks": payload.horizon_weeks,
+        "weekly_hours": payload.weekly_hours,
+        "status": "active",
+        "is_primary": True,
+        "generated_by": model,
+        "summary": plan["resumo"],
+        "meta": {"objective": payload.objective, "context": payload.context},
+    }
+
+
 def _persist(
     supabase: Client,
     user_id: str,
@@ -176,20 +206,7 @@ def _persist(
 
     roadmap = (
         supabase.table("pathr_roadmap")
-        .insert(
-            {
-                "user_id": user_id,
-                "title": plan["titulo"],
-                "target_role": payload.objective[:120],
-                "horizon_weeks": payload.horizon_weeks,
-                "weekly_hours": payload.weekly_hours,
-                "status": "active",
-                "is_primary": True,
-                "generated_by": model,
-                "summary": plan["resumo"],
-                "meta": {"objective": payload.objective, "context": payload.context},
-            }
-        )
+        .insert(linha_do_roadmap(user_id, payload, plan, model))
         .execute()
         .data[0]
     )

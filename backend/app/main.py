@@ -13,6 +13,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.ai_providers import AiProviderError
 from app.config import settings
@@ -38,6 +39,40 @@ app = FastAPI(
     redoc_url=None,
     openapi_url=None if settings.is_production else "/openapi.json",
 )
+
+class ErroInterno(BaseHTTPMiddleware):
+    """Transforma exceção não tratada numa resposta JSON, DENTRO do CORS.
+
+    Sem isto, uma exceção sobe até o tratador padrão do Starlette, que está
+    FORA do CORSMiddleware — a resposta 500 sai sem `Access-Control-Allow-
+    Origin`, o navegador a descarta antes de o JavaScript vê-la, e o `fetch`
+    rejeita. Na tela isso vira "Não consegui falar com o servidor", que manda
+    procurar problema de rede quando o problema é um erro nosso, com traceback
+    e tudo, esperando no log.
+
+    Foi exatamente o que aconteceu com a geração de roadmap: um NOT NULL
+    violado virava, para quem usava, "verifique sua conexão".
+
+    O detalhe da exceção NÃO vai para o cliente — ele pode conter nome de
+    coluna, consulta e valor de outra pessoa. Vai para o log, que é onde se
+    investiga.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        try:
+            return await call_next(request)
+        except Exception:  # noqa: BLE001
+            logger.exception("erro não tratado em %s %s", request.method, request.url.path)
+            return JSONResponse(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                content={"detail": "Algo quebrou do nosso lado. Já registramos o erro."},
+            )
+
+
+# A ORDEM importa e é contraintuitiva: o último `add_middleware` é o mais
+# EXTERNO. O CORS precisa ficar por fora do tratador acima, para poder
+# carimbar o cabeçalho na resposta que ele devolve.
+app.add_middleware(ErroInterno)
 
 app.add_middleware(
     CORSMiddleware,
