@@ -405,3 +405,42 @@ def test_comecar_um_novo_encerra_o_anterior(monkeypatch):
     abertas = [l for l in tentativas if l["status"] == "in_progress"]
     assert len(abertas) == 1
     assert str(abertas[0]["id"]) != "aaaa"
+
+
+# O limiar por comprimento reprovava dialogo curto e legitimo: "Ana: I'll push
+# it after lunch.\nMarc: Thanks." tem duas falas e 43 caracteres. O sinal certo
+# e a marcacao de quem fala.
+
+
+def test_dialogo_curto_com_duas_falas_e_transcricao():
+    assert router._tem_transcricao("Ana: I'll push it after lunch.\nMarc: Thanks.")
+
+
+def test_descricao_de_cena_nao_e_transcricao():
+    assert not router._tem_transcricao(
+        "Daily stand-up meeting on Zoom. The team lead announces the next steps."
+    )
+
+
+def test_descricao_longa_com_dois_pontos_nao_engana():
+    """O antigo limiar aprovava qualquer texto longo com um dois-pontos."""
+    assert not router._tem_transcricao(
+        "Context: a long description of a stand-up meeting that happens every "
+        "morning on Zoom, where the team lead announces the next steps."
+    )
+
+
+def test_uma_fala_so_nao_basta():
+    """Uma linha "Assunto: prazo" e cabecalho de e-mail, nao dialogo."""
+    assert not router._tem_transcricao("Subject: Deadline moved\nHi team, the date changed.")
+
+
+def test_listening_com_dialogo_curto_chega_a_tela():
+    linhas = _linhas(
+        _item(
+            habilidade="listening",
+            contexto="Ana: I'll push it after lunch.\nMarc: Thanks.",
+            enunciado="Who is going to push the feature?",
+        )
+    )
+    assert len(linhas) == 1

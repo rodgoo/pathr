@@ -99,14 +99,24 @@ _REMETE_A_MIDIA = re.compile(
     re.IGNORECASE,
 )
 
-# Uma transcrição traz quem fala em cada linha; uma descrição de cena não traz
-# nada disso. É a diferença entre "Ana: I'll push it after lunch." e "Daily
-# stand-up meeting on Zoom." — só a primeira deixa a pergunta respondível.
-_MIN_TRANSCRICAO = 60
+# Uma fala transcrita começa por quem fala: "Ana: I'll push it after lunch."
+# Duas ou mais dessas linhas são um diálogo; nenhuma é a descrição de cena que
+# deixou a pergunta sem resposta ("Daily stand-up meeting on Zoom.").
+#
+# O sinal é a marcação de quem fala, e não o tamanho do texto. Medir por
+# comprimento reprovava diálogo curto e legítimo — "Ana: I'll push it after
+# lunch.\nMarc: Thanks." tem duas falas e menos de 60 caracteres — enquanto
+# deixava passar qualquer descrição longa que tivesse dois-pontos no meio.
+#
+# O casamento é por linha porque o prompt pede uma fala por linha. Um diálogo
+# escrito todo numa linha só é reprovado, e o lote é gerado de novo: é o erro
+# barato dos dois, já que o outro lado é cobrar uma resposta que não está no
+# item.
+_FALA = re.compile(r"^[^\n:]{1,40}:\s*\S", re.MULTILINE)
 
 
 def _tem_transcricao(contexto: str) -> bool:
-    return len(contexto) >= _MIN_TRANSCRICAO and ":" in contexto
+    return len(_FALA.findall(contexto)) >= 2
 
 
 def _respondivel(prompt: str, skill: str, contexto: str) -> bool:
