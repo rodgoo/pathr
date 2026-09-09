@@ -41,6 +41,7 @@ class ProfileUpdate(BaseModel):
     bio: Optional[str] = Field(default=None, max_length=2000)
     linkedin_url: Optional[str] = Field(default=None, max_length=300)
     github_url: Optional[str] = Field(default=None, max_length=300)
+    notifications: Optional[dict[str, bool]] = None
 
     _idade = field_validator("birth_date")(
         lambda cls, valor: valor if valor is None else SignupRequest._idade_plausivel(valor)
@@ -64,12 +65,42 @@ def _one(supabase: Client, table: str, user_id: str) -> dict[str, Any]:
     return rows[0] if rows else {}
 
 
+# Os avisos por e-mail, com o padrão de cada um. Mora no código e não no banco
+# porque o padrão é decisão de produto: mudá-lo aqui vale para todo mundo que
+# nunca abriu a aba, sem uma linha de UPDATE.
+#
+# Ligados por padrão os que a pessoa pediu implicitamente ao criar um plano de
+# estudos (o lembrete e o resumo); desligados os que interrompem sem ela ter
+# pedido (novidades do produto e o aviso noturno de sequência em risco).
+AVISOS: dict[str, bool] = {
+    "lembrete_diario": True,
+    "resumo_semanal": True,
+    "novidades": False,
+    "correcao_pronta": True,
+    "sequencia_em_risco": False,
+}
+
+
+def _com_avisos(perfil: dict[str, Any]) -> dict[str, Any]:
+    """O perfil com os avisos completos.
+
+    O banco guarda só o que a pessoa mexeu; a resposta entrega as cinco chaves
+    sempre. Sem isso o frontend teria que conhecer os padrões também, e os dois
+    lados sairiam de sincronia no primeiro aviso novo.
+    """
+    guardado = perfil.get("notifications") or {}
+    perfil["notifications"] = {
+        chave: bool(guardado.get(chave, padrao)) for chave, padrao in AVISOS.items()
+    }
+    return perfil
+
+
 @router.get("")
 def get_profile(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
 ):
-    return _one(supabase, "pathr_profile", str(current_user["id"]))
+    return _com_avisos(_one(supabase, "pathr_profile", str(current_user["id"])))
 
 
 @router.patch("")
@@ -82,7 +113,21 @@ def update_profile(
     mandei este campo" de "quero apagar este campo"."""
     update = payload.model_dump(exclude_unset=True)
     if not update:
-        return _one(supabase, "pathr_profile", str(current_user["id"]))
+        return _com_avisos(_one(supabase, "pathr_profile", str(current_user["id"])))
+
+    if "notifications" in update:
+        # Só as chaves conhecidas entram, e o que veio é MESCLADO ao que já
+        # existe: a tela manda um interruptor por vez, e substituir o objeto
+        # inteiro apagaria os outros quatro a cada clique.
+        atual = (_one(supabase, "pathr_profile", str(current_user["id"])) or {}).get(
+            "notifications"
+        ) or {}
+        recebido = update["notifications"] or {}
+        update["notifications"] = {
+            **atual,
+            **{k: bool(v) for k, v in recebido.items() if k in AVISOS},
+        }
+
     update["updated_at"] = _now().isoformat()
     rows = (
         supabase.table("pathr_profile")
@@ -91,7 +136,7 @@ def update_profile(
         .execute()
         .data
     )
-    return rows[0] if rows else {}
+    return _com_avisos(rows[0]) if rows else {}
 
 
 @router.patch("/account")
@@ -252,3 +297,94 @@ def activity_feed(
         .data
         or []
     )
+
+
+# ---------------------------------------------------------------------------
+# Privacidade: levar os dados embora, ou apagar tudo
+# ---------------------------------------------------------------------------
+
+# As tabelas que guardam algo DA pessoa. `pathr_tag` e `pathr_resource` ficam
+# de fora: são catálogos globais, iguais para todo mundo, e exportá-los daria
+# a impressão de que o app coletou 91 tecnologias sobre quem pediu o arquivo.
+_TABELAS_DO_USUARIO = (
+    "pathr_profile",
+    "pathr_user_tag",
+    "pathr_resume",
+    "pathr_roadmap",
+    "pathr_quiz",
+    "pathr_attempt",
+    "pathr_review_item",
+    "pathr_activity",
+    "pathr_streak",
+    "pathr_user_resource",
+    "pathr_english_profile",
+    "pathr_english_assessment",
+    "pathr_english_session",
+    "pathr_english_vocab",
+)
+
+
+@router.get("/export")
+def export_data(
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """Tudo o que este app guarda sobre a pessoa, em JSON.
+
+    Devolve o conteúdo e não um link de download: o volume é de kilobytes, e
+    gerar arquivo em storage criaria uma URL com os dados de alguém esperando
+    ser esquecida lá. O navegador monta o arquivo no cliente.
+
+    Sem `password_hash`, sem `mfa_secret`, sem token de sessão — exportar
+    credencial não é transparência, é vazamento com consentimento aparente.
+    """
+    user_id = str(current_user["id"])
+    dados: dict[str, Any] = {
+        "exportado_em": _now().isoformat(),
+        "conta": {
+            campo: current_user.get(campo)
+            for campo in ("id", "email", "name", "locale", "timezone_name", "created_at")
+        },
+    }
+    for tabela in _TABELAS_DO_USUARIO:
+        try:
+            dados[tabela] = (
+                supabase.table(tabela).select("*").eq("user_id", user_id).execute().data or []
+            )
+        except Exception:  # noqa: BLE001
+            # Uma tabela que falha não pode levar a exportação inteira junto:
+            # quem pede os dados costuma estar de saída, e um erro aqui
+            # devolveria nada em vez de quase tudo.
+            dados[tabela] = []
+
+    # O currículo sai sem o texto extraído: são páginas de dado pessoal que a
+    # pessoa já tem no arquivo original, e que inchariam o JSON sem acrescentar.
+    for curriculo in dados.get("pathr_resume") or []:
+        curriculo.pop("raw_text", None)
+    return dados
+
+
+@router.delete("/account", status_code=status.HTTP_204_NO_CONTENT)
+def delete_account(
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """Apaga a conta e tudo que pende dela.
+
+    Apagar `pathr_user` bastaria — as chaves estrangeiras são ON DELETE
+    CASCADE. O laço explícito existe para o caso em que uma tabela nova entre
+    sem a cascata declarada: aqui ela aparece na lista e é apagada; sem o laço,
+    ficaria órfã no banco em silêncio.
+
+    Sem confirmação por e-mail nem carência: a tela já confirma, e um app que
+    guarda o que a pessoa mandou apagar por mais alguns dias está guardando o
+    que ela mandou apagar.
+    """
+    user_id = str(current_user["id"])
+    for tabela in _TABELAS_DO_USUARIO:
+        try:
+            supabase.table(tabela).delete().eq("user_id", user_id).execute()
+        except Exception:  # noqa: BLE001
+            continue
+    supabase.table("pathr_user").delete().eq("id", user_id).execute()
+    return None

@@ -62,6 +62,13 @@ const OUTLINE_PATHS = {
     "m4 4 16 16",
   ],
   check: ["m5 12.5 4.5 4.5L19 7.5"],
+  // Sair: o batente da porta a esquerda e a seta saindo por ele — o mesmo
+  // desenho do sign-out do Phosphor, redesenhado na grade de 24.
+  signOut: [
+    "M9.6 20H6.4A2.4 2.4 0 0 1 4 17.6V6.4A2.4 2.4 0 0 1 6.4 4h3.2",
+    "m15.2 16 4-4-4-4",
+    "M19.2 12H9.6",
+  ],
 } as const;
 
 /** Icons whose shape needs primitives an array of paths cannot express. */

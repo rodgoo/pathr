@@ -190,6 +190,12 @@ class PathrProfile(SQLModel, table=True):
     bio: Optional[str] = Field(default=None)
     linkedin_url: Optional[str] = Field(default=None)
     github_url: Optional[str] = Field(default=None)
+    # Quais e-mails a pessoa aceita receber. JSONB e não cinco colunas
+    # booleanas porque a lista de avisos muda com o produto, e cada aviso novo
+    # custaria uma migration mais um deploy coordenado com o frontend. As
+    # chaves válidas vivem em routers/profile.py (AVISOS); o que não estiver lá
+    # é ignorado na escrita, então remover um aviso não deixa lixo para trás.
+    notifications: dict[str, Any] = Field(default_factory=dict, sa_column=_jsonb())
     updated_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
 

@@ -39,6 +39,9 @@ export interface Profile {
   bio: string | null;
   linkedin_url: string | null;
   github_url: string | null;
+  /** Avisos por e-mail. O servidor sempre devolve as cinco chaves, ja com
+   * o padrao aplicado — o front nao guarda padrao nenhum. */
+  notifications?: Record<string, boolean>;
 }
 
 export interface Streak {

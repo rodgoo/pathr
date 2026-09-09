@@ -64,6 +64,10 @@ export const profile = {
   updateAccount: (body: Partial<Pick<User, "name" | "locale" | "timezone_name" | "theme" | "onboarding_completed">>) =>
     api.patch<User>("/profile/account", body),
   activity: (limit = 30) => api.get(`/profile/activity?limit=${limit}`),
+  /** Tudo que o app guarda sobre a pessoa. O navegador monta o arquivo. */
+  exportData: () => api.get<Record<string, unknown>>("/profile/export"),
+  /** Apaga a conta e tudo que pende dela. Sem carencia. */
+  deleteAccount: () => api.del<void>("/profile/account"),
 };
 
 export const resumes = {

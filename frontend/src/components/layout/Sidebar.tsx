@@ -26,7 +26,7 @@ interface NavEntry {
 
 export function Sidebar() {
   const { state, dispatch } = useAppState();
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
 
   const roadmap = useQuery(() => roadmapApi.current(), []);
   const english = useQuery(() => englishApi.profile(), []);
@@ -149,10 +149,11 @@ export function Sidebar() {
         <button
           type="button"
           className="btn btn-ghost"
-          style={{ fontSize: 12, justifyContent: "flex-start" }}
+          style={{ fontSize: 12, justifyContent: "flex-start", gap: 9, paddingInline: 8.4 }}
           onClick={() => void logout()}
         >
-          Sair{user ? ` · ${user.name.split(" ")[0]}` : ""}
+          <Icon name="signOut" size={15} />
+          Sair
         </button>
       </div>
     </aside>

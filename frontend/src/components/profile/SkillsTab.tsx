@@ -22,7 +22,11 @@ export function SkillsTab() {
   const { state, dispatch } = useAppState();
   const mine = useQuery(() => tagsApi.mine(), []);
   const term = state.skillSearch.trim();
-  const catalog = useQuery(() => tagsApi.catalog(term), [term], { enabled: term.length >= 2 });
+  // Sem `enabled`: o catalogo carrega ja na abertura. Exigir dois caracteres
+  // antes de mostrar qualquer coisa deixava a tela em branco para quem nao
+  // sabe o que procurar -- e "o que eu deveria estudar?" e justamente a
+  // pergunta de quem chega aqui. Sem termo, a rota devolve por popularidade.
+  const catalog = useQuery(() => tagsApi.catalog(term), [term]);
   const [busy, setBusy] = useState<string | null>(null);
 
   if (mine.loading) return <Loading />;
@@ -82,14 +86,19 @@ export function SkillsTab() {
           />
         </div>
 
-        {term.length >= 2 ? (
-          <div style={{ marginTop: 11.2, display: "flex", flexWrap: "wrap", gap: 5.6 }}>
+        <div style={{ marginTop: 14 }}>
+          <div style={{ fontSize: 11.5, color: TEXT.faint, marginBottom: 8.4 }}>
+            {term
+              ? `Resultados para “${term}”`
+              : "Sugestões pelas tecnologias mais usadas — clique para adicionar, e ajuste o nível na lista abaixo."}
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 5.6 }}>
             {catalog.loading ? (
               <span style={{ fontSize: 12, color: TEXT.faint }}>Buscando…</span>
             ) : null}
             {(catalog.data ?? [])
               .filter((tag) => !owned.has(tag.id))
-              .slice(0, 12)
+              .slice(0, term ? 12 : 30)
               .map((tag) => (
                 <button
                   key={tag.id}
@@ -112,11 +121,13 @@ export function SkillsTab() {
               ))}
             {catalog.data && catalog.data.filter((tag) => !owned.has(tag.id)).length === 0 ? (
               <span style={{ fontSize: 12, color: TEXT.faint }}>
-                Nada novo com esse termo — ou você já tem todas.
+                {term
+                  ? "Nada novo com esse termo — ou você já tem todas."
+                  : "Você já adicionou todas as tecnologias do catálogo."}
               </span>
             ) : null}
           </div>
-        ) : null}
+        </div>
       </Panel>
 
       <Panel pad={16.8}>

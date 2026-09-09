@@ -13,22 +13,26 @@ import { Chip } from "@/components/ui/Chip";
 import { SCREEN_IN } from "@/components/ui/primitives";
 import { LanguageSettings } from "@/components/english/LanguageSettings";
 import { AccountTab } from "@/components/profile/AccountTab";
+import { NoticesTab } from "@/components/profile/NoticesTab";
+import { ObjectiveTab } from "@/components/profile/ObjectiveTab";
 import { SkillsTab } from "@/components/profile/SkillsTab";
 
 const TABS: readonly { value: SettingsTab; label: string }[] = [
   { value: "conta", label: "Conta" },
+  { value: "objetivo", label: "Objetivo" },
   { value: "skills", label: "Skills" },
-  { value: "idiomas", label: "Idioma" },
+  { value: "idiomas", label: "Idiomas" },
+  { value: "avisos", label: "Avisos e privacidade" },
 ];
 
 export function SettingsPage() {
   const { state, dispatch } = useAppState();
-  // "objetivo" e "avisos" existiam no protótipo e não têm mais tela; qualquer
-  // navegação antiga cai na conta em vez de renderizar vazio.
-  const tab: SettingsTab =
-    state.settingsTab === "skills" || state.settingsTab === "idiomas"
-      ? state.settingsTab
-      : "conta";
+  // As cinco abas do desenho têm tela. "objetivo" e "avisos" ficaram meses
+  // caindo aqui em "conta" por não terem uma — era por isso que a pessoa
+  // clicava e nada mudava.
+  const tab: SettingsTab = TABS.some((entrada) => entrada.value === state.settingsTab)
+    ? state.settingsTab
+    : "conta";
 
   return (
     <div style={{ maxWidth: 900, ...SCREEN_IN }}>
@@ -41,7 +45,7 @@ export function SettingsPage() {
           maxWidth: "62ch",
         }}
       >
-        Conta, competências e idioma. O que muda aqui vale para a próxima geração do plano.
+        Conta, objetivo de estudo, competências, idiomas e avisos. Tudo o que muda aqui recalcula o plano na próxima geração.
       </p>
 
       <div
@@ -62,8 +66,10 @@ export function SettingsPage() {
       </div>
 
       {tab === "conta" ? <AccountTab /> : null}
+      {tab === "objetivo" ? <ObjectiveTab /> : null}
       {tab === "skills" ? <SkillsTab /> : null}
       {tab === "idiomas" ? <LanguageSettings /> : null}
+      {tab === "avisos" ? <NoticesTab /> : null}
     </div>
   );
 }
