@@ -36,6 +36,43 @@ def um_prompt(**extra):
     return roadmap_builder.build_prompt(**base)
 
 
+def test_n3_entra_como_revisao_e_nao_como_exclusao():
+    prompt = um_prompt(known=[{"name": "Docker", "proficiency": 4}])
+
+    linha = next(l for l in prompt.splitlines() if l.startswith("JA DOMINA"))
+    # N3+ não sai do plano: entra com OUTRA forma. O bloco precisa dizer isso,
+    # senão o gerador volta a tratá-lo como lista de exclusão.
+    assert "Docker" in linha
+    assert "REVISAO" in linha
+    assert "nunca do zero" in linha
+
+
+def test_a_revisao_tem_forma_e_teto_definidos():
+    regras = " ".join(roadmap_builder.SYSTEM_PROMPT.split())
+
+    # Sem forma, "revisar" vira um módulo de ensino com outro nome — e quem
+    # está em N4 lendo "o que é um container" fecha o app.
+    assert "no máximo 2h" in regras
+    assert "checkpoint" in regras
+    assert "avancado" in regras
+
+    # Sem teto, quinze tecnologias em N4 viram quinze módulos e comem o plano
+    # inteiro. Reforço é bom; gastar metade do prazo repassando o conhecido,
+    # não.
+    assert "no máximo UM módulo de revisão por fase" in regras
+    assert "10% do orçamento" in regras
+
+
+def test_revisao_e_cortada_antes_do_aprofundamento():
+    regras = " ".join(roadmap_builder.SYSTEM_PROMPT.split())
+
+    # A ordem importa: revisar o que já se sabe rende menos por hora do que
+    # levar um N1 até autônomo.
+    assert regras.index("as revisões de nível 3+") < regras.index(
+        "o aprofundamento que o objetivo não exige"
+    )
+
+
 def test_corte_e_em_n3_nao_em_n1():
     prompt = um_prompt(
         known=[
@@ -46,7 +83,7 @@ def test_corte_e_em_n3_nao_em_n1():
         ],
     )
 
-    # N3+ fica de fora do plano.
+    # N3+ vai para o bloco de revisão; N1 e N2 vão para o de aprofundamento.
     linha_dominio = next(l for l in prompt.splitlines() if l.startswith("JA DOMINA"))
     assert "Docker" in linha_dominio
     assert "Postgres" not in linha_dominio

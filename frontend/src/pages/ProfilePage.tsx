@@ -36,8 +36,11 @@ export function ProfilePage() {
   // Os três grupos são os MESMOS do gerador de roadmap (ver
   // backend/app/services/roadmap_builder.py: build_prompt). Antes a tela
   // dividia em "tem nível" e "não tem", o que juntava N1 com N5 e sugeria que
-  // só o N0 entrava no plano — duas afirmações falsas. O corte de verdade é
-  // em N3, e a ordem abaixo é a ordem em que o plano ataca os assuntos.
+  // só o N0 entrava no plano — duas afirmações falsas.
+  //
+  // Nenhum nível fica de fora: o que muda é a FORMA do módulo. Até N2 é
+  // ensino; de N3 para cima é revisão curta. A ordem abaixo é a ordem em que
+  // o plano ataca os assuntos.
   const dominadas = tags.data.filter((tag) => tag.proficiency >= 3);
   const parciais = tags.data.filter((tag) => tag.proficiency > 0 && tag.proficiency < 3);
   const doZero = tags.data.filter((tag) => tag.proficiency === 0);
@@ -93,7 +96,7 @@ export function ProfilePage() {
         <Panel pad={16.8}>
           <TagGroup
             title={`Você domina · ${dominadas.length}`}
-            hint="N3 ou mais — o roadmap NÃO gasta tempo com isto"
+            hint="N3 ou mais — entram como revisão curta: o caso difícil, a armadilha de produção e exercícios de nível avançado. Nunca do zero"
             tags={dominadas}
             onToggle={toggle}
           />

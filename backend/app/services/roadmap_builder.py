@@ -6,10 +6,15 @@ fase com módulos que apontam para tags do catálogo.
 
 Três decisões que moldam o prompt:
 
-1. **Só cobre lacuna.** Um módulo sobre algo que a pessoa já faz em nível 3 ou
-   mais é tempo que ela não tem. O prompt recebe explicitamente o que NÃO deve
-   ensinar, e é a lista mais importante que ele recebe. O corte é em N3: o que
-   está em N1 ou N2 ENTRA no plano, para ser aprofundado.
+1. **O nível decide a FORMA do módulo, não se ele existe.** Até N2, módulo de
+   ensino. De N3 para cima, revisão curta: um checkpoint de no máximo 2h com o
+   caso difícil, a armadilha de produção e a decisão de arquitetura — o que
+   vem DEPOIS do que a pessoa já faz. Nunca do zero: quem está em N4 lendo "o
+   que é um container" fecha o app.
+
+   A revisão é limitada a uma por fase e a 10% do orçamento, e é a segunda
+   coisa a ser cortada quando as horas não fecham. Reforço é bom; um plano que
+   gasta metade do prazo repassando o que a pessoa já sabe não é.
 
 2. **Horas antes de escopo.** O plano é dimensionado pelas horas semanais
    declaradas, não pelo ideal do assunto. Um plano de 26 semanas que exige 20h
@@ -84,18 +89,30 @@ SYSTEM_PROMPT = """Você monta planos de estudo para profissionais de tecnologia
 
 Regras:
 
-1. O plano cobre APENAS a distância entre o que a pessoa já sabe e o objetivo
-   declarado. Nunca inclua módulo sobre tecnologia que ela já domina em nível
-   3 ou mais, a não ser que o objetivo exija explicitamente aprofundá-la.
+1. O plano cobre a distância entre o que a pessoa já sabe e o objetivo — e o
+   NÍVEL dela decide a FORMA do módulo, não se ele existe.
+
+   - Nível 0, 1 ou 2: módulo de ensino, do tamanho que a distância pedir.
+   - Nível 3 ou mais: NUNCA ensine do zero. Entra como REVISÃO: um módulo
+     curto (no máximo 2h), tipo "checkpoint", nivel "avancado", cujo conteúdo
+     é resumo do que ela já sabe mais o que vem DEPOIS — o caso difícil, a
+     armadilha de produção, a decisão de arquitetura. Os objetivos precisam
+     ser exercícios de nível avançado, não recapitulação de básico. Quem está
+     em nível 4 lendo "o que é um container" fecha o app.
+
+   Limite: no máximo UM módulo de revisão por fase, e a soma de todos eles
+   nunca passa de 10% do orçamento de horas. Revisão é reforço; o plano existe
+   para cobrir o que falta.
 2. Dimensione pelo tempo disponível informado. Some as horas de todos os
    módulos: o total precisa caber em (horas por semana x número de semanas),
    com folga de 15% para imprevisto. É melhor entregar um plano menor e
    inteiro do que um plano grande e abandonado.
 
    Quando não couber tudo, corte NESTA ordem: primeiro o que está em ZERO e o
-   objetivo não exige; depois o aprofundamento que o objetivo não exige. Nunca
-   corte o que o objetivo exige — se nem isso couber, reduza a profundidade
-   dos módulos e diga no resumo o que ficou de fora.
+   objetivo não exige; depois as revisões de nível 3+; por último o
+   aprofundamento que o objetivo não exige. Nunca corte o que o objetivo
+   exige — se nem isso couber, reduza a profundidade dos módulos e diga no
+   resumo o que ficou de fora.
 
 3. PRIORIDADE ENTRE ASSUNTOS. Entre dois assuntos que não dependem um do
    outro, comece pelo que a pessoa JÁ SABE PARCIALMENTE: sair de parcial para
@@ -179,7 +196,9 @@ def build_prompt(
         # Os blocos vão na ordem em que devem ser considerados. O modelo lê de
         # cima para baixo, e o que aparece primeiro pesa mais — então a ordem
         # do texto repete a regra 3 em vez de contrariá-la.
-        "JA DOMINA (NAO ensine isto): " + (", ".join(dominated) or "nada declarado"),
+        "JA DOMINA — SO REVISAO CURTA (nunca do zero; checkpoint de ate 2h com "
+        "o caso dificil e a armadilha de producao, nivel avancado): "
+        + (", ".join(dominated) or "nada declarado"),
         "SABE PARCIALMENTE — COMECE POR AQUI (distancia curta, resultado "
         "rapido; aprofundar ate autonomo): " + (", ".join(partial) or "nada declarado"),
         "DO ZERO E EXIGIDO PELO OBJETIVO (o mais caro do plano; agende CEDO, "
