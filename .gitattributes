@@ -1,0 +1,11 @@
+# O container roda Linux. Um arquivo com CRLF que o `sh` precisa interpretar
+# quebra de um jeito que não parece o que é: `set -e` vira `set -e\r`, e o
+# erro que aparece é "Illegal option -". Aconteceu de verdade e derrubou a
+# API em produção.
+#
+# Estas regras valem no checkout, então não dependem de quem clonou nem de
+# qual editor salvou o arquivo.
+*.sh text eol=lf
+Dockerfile text eol=lf
+*.toml text eol=lf
+start.sh text eol=lf
