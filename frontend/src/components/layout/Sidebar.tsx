@@ -11,9 +11,10 @@ import { english as englishApi, roadmap as roadmapApi } from "@/api/endpoints";
 import { useAppState } from "@/hooks/useAppState";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@/hooks/useApi";
-import { ACC, ACC4, PANEL, SURF, TEXT } from "@/lib/tokens";
+import { ACC4, PANEL, SURF, TEXT } from "@/lib/tokens";
 import type { Screen } from "@/types";
 import { Icon, type IconName } from "@/components/ui/icons";
+import { Logo } from "@/components/ui/Logo";
 import { Kicker, Meter } from "@/components/ui/primitives";
 
 interface NavEntry {
@@ -84,20 +85,7 @@ export function Sidebar() {
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8.4 }}>
-        <div
-          style={{
-            width: 28,
-            height: 28,
-            flex: "none",
-            borderRadius: 8,
-            border: `1px solid ${ACC}`,
-            display: "grid",
-            placeItems: "center",
-            color: ACC,
-          }}
-        >
-          <Icon name="brand" size={14} />
-        </div>
+        <Logo size={28} />
         <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.15, minWidth: 0 }}>
           <span style={{ fontSize: 15, fontWeight: 500 }}>PathR</span>
           <span style={{ fontSize: 10, letterSpacing: ".06em", color: TEXT.faint }}>

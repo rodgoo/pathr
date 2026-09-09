@@ -7,8 +7,8 @@
  */
 
 import type { ReactNode } from "react";
-import { ACC, BG, PANEL, TEXT } from "@/lib/tokens";
-import { Icon } from "@/components/ui/icons";
+import { BG, PANEL, TEXT } from "@/lib/tokens";
+import { Logo } from "@/components/ui/Logo";
 
 export function AuthShell({
   title,
@@ -35,20 +35,7 @@ export function AuthShell({
     >
       <div style={{ width: "min(420px, 100%)" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 8.4, marginBottom: 22.4 }}>
-          <div
-            style={{
-              width: 32,
-              height: 32,
-              flex: "none",
-              borderRadius: 8,
-              border: `1px solid ${ACC}`,
-              display: "grid",
-              placeItems: "center",
-              color: ACC,
-            }}
-          >
-            <Icon name="brand" size={16} />
-          </div>
+          <Logo size={32} />
           <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.15 }}>
             <span style={{ fontSize: 16, fontWeight: 500 }}>PathR</span>
             <span style={{ fontSize: 10, letterSpacing: ".06em", color: TEXT.faint }}>
