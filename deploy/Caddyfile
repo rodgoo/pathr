@@ -46,6 +46,13 @@
 	@index path /index.html /
 	header @index Cache-Control "no-cache"
 
+	# O service worker e o manifest também não. O sw.js é o que sabe quais
+	# arquivos existem nesta versão; se o navegador servir uma cópia velha
+	# dele, o deploy simplesmente não chega a quem já instalou o app — e não
+	# há como forçar, porque a pessoa não recarrega um app de tela de início.
+	@pwa path /sw.js /manifest.webmanifest
+	header @pwa Cache-Control "no-cache"
+
 	# SPA: qualquer rota desconhecida devolve o index e o roteamento acontece
 	# no navegador.
 	try_files {path} /index.html

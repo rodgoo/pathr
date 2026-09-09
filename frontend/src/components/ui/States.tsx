@@ -7,23 +7,27 @@
  */
 
 import type { ReactNode } from "react";
-import { TEXT } from "@/lib/tokens";
+import { SIZE, TEXT } from "@/lib/tokens";
+import { Icon } from "./icons";
+import { MarcaCarregando } from "./MarcaCarregando";
 import { Panel } from "./primitives";
 
 const BOX: React.CSSProperties = {
   padding: "44px 22.4px",
   borderRadius: 14,
   textAlign: "center",
-  fontSize: 13.5,
+  fontSize: SIZE.corpo,
 };
 
-/** Enquanto carrega. `aria-busy` para o leitor de tela não anunciar vazio. */
+/**
+ * Enquanto carrega.
+ *
+ * A marca animada, e não a palavra "Carregando…" parada: um texto imóvel não
+ * distingue "está vindo" de "travou", e é essa dúvida que faz alguém
+ * recarregar a página no meio de uma requisição que ia dar certo.
+ */
 export function Loading({ label = "Carregando…" }: { label?: string }) {
-  return (
-    <div aria-busy="true" aria-live="polite" style={{ ...BOX, color: TEXT.faint }}>
-      {label}
-    </div>
-  );
+  return <MarcaCarregando label={label} />;
 }
 
 /**
@@ -47,6 +51,7 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
       <p style={{ margin: "0 0 14px" }}>{message}</p>
       {onRetry ? (
         <button type="button" className="btn btn-secondary" onClick={onRetry}>
+          <Icon name="refresh" size={15} />
           Tentar de novo
         </button>
       ) : null}

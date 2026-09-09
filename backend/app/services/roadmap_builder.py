@@ -4,16 +4,34 @@ A entrada é o retrato do usuário — o que ele já sabe (com nível), onde que
 chegar, quantas horas tem por semana — e a saída é um plano em fases, cada
 fase com módulos que apontam para tags do catálogo.
 
-Duas decisões que moldam o prompt:
+Três decisões que moldam o prompt:
 
-1. **Só cobre lacuna.** Um módulo sobre algo que a pessoa já faz em nível 4 é
-   tempo que ela não tem. O prompt recebe explicitamente o que NÃO deve
-   ensinar, e é a lista mais importante que ele recebe.
+1. **Só cobre lacuna.** Um módulo sobre algo que a pessoa já faz em nível 3 ou
+   mais é tempo que ela não tem. O prompt recebe explicitamente o que NÃO deve
+   ensinar, e é a lista mais importante que ele recebe. O corte é em N3: o que
+   está em N1 ou N2 ENTRA no plano, para ser aprofundado.
 
 2. **Horas antes de escopo.** O plano é dimensionado pelas horas semanais
    declaradas, não pelo ideal do assunto. Um plano de 26 semanas que exige 20h
    de quem tem 6h não é ambicioso, é um plano que será abandonado na terceira
    semana.
+
+3. **Distância curta primeiro, salvo dependência.** Levar alguém de N1 a N3
+   custa uma fração do que custa levá-lo de N0 a N3, e entrega resultado
+   visível antes — o que sustenta a pessoa nas primeiras semanas, que é quando
+   os planos morrem. Então, entre dois assuntos que não bloqueiam um ao outro,
+   ganha o que já tem chão.
+
+   Com duas exceções que a regra sozinha erraria, e que estão no prompt:
+
+   - **Dependência manda.** Se o N0 é pré-requisito do N1, ele vem antes.
+     Inverter isso desmancha a escada e o plano deixa de ser trilha.
+   - **O N0 essencial vai CEDO, não por último.** Se o objetivo exige uma
+     tecnologia em que a pessoa está no zero, ela é ao mesmo tempo a mais cara
+     e a mais importante; empurrá-la para o fim de um prazo fechado é a forma
+     mais confiável de ela não acontecer. O que vai para o fim — e é o
+     primeiro a ser cortado quando as horas não fecham — é o N0 que o objetivo
+     NÃO exige.
 """
 
 from typing import Any
@@ -73,23 +91,43 @@ Regras:
    módulos: o total precisa caber em (horas por semana x número de semanas),
    com folga de 15% para imprevisto. É melhor entregar um plano menor e
    inteiro do que um plano grande e abandonado.
-3. De 3 a 5 fases, em ordem de dependência. Quando o pedido trouxer o bloco
+
+   Quando não couber tudo, corte NESTA ordem: primeiro o que está em ZERO e o
+   objetivo não exige; depois o aprofundamento que o objetivo não exige. Nunca
+   corte o que o objetivo exige — se nem isso couber, reduza a profundidade
+   dos módulos e diga no resumo o que ficou de fora.
+
+3. PRIORIDADE ENTRE ASSUNTOS. Entre dois assuntos que não dependem um do
+   outro, comece pelo que a pessoa JÁ SABE PARCIALMENTE: sair de parcial para
+   autônomo custa uma fração do que custa sair do zero, e o resultado aparece
+   nas primeiras semanas, que é quando um plano é abandonado.
+
+   Duas exceções, e elas mandam mais que a regra acima:
+
+   a) Dependência vence sempre. Se algo em ZERO é pré-requisito de algo
+      parcial, o que está em zero vem ANTES. Ver ORDEM OBRIGATORIA.
+   b) O que está em ZERO e o OBJETIVO EXIGE vai CEDO — na primeira ou segunda
+      fase — e não no fim. É o assunto mais longo do plano; deixá-lo para as
+      últimas semanas é garantir que não seja concluído. É o resto do zero (o
+      que a pessoa quer aprender mas o objetivo não exige) que vai para o fim.
+
+4. De 3 a 5 fases, em ordem de dependência. Quando o pedido trouxer o bloco
    ORDEM OBRIGATORIA, ele NÃO é sugestão: é a ordem em que as tecnologias
    podem ser estudadas, e um módulo nunca pode vir antes daquilo de que
    depende. Onde o bloco não disser nada, use o bom senso da área — nada de
    arquitetura antes de a pessoa escrever o suficiente para ter o que
    arquitetar.
-4. O campo tipo de cada módulo: skill, project, checkpoint ou reading.
+5. O campo tipo de cada módulo: skill, project, checkpoint ou reading.
    Toda fase termina com um project ou checkpoint — leitura sem entrega
    não comprova nada.
-5. O campo nivel: iniciante, intermediario ou avancado.
-6. O campo tags usa os nomes EXATOS da lista de tecnologias conhecidas que
+6. O campo nivel: iniciante, intermediario ou avancado.
+7. O campo tags usa os nomes EXATOS da lista de tecnologias conhecidas que
    você recebeu. Só invente nome novo se o assunto realmente não estiver lá.
-7. O campo objetivos traz de 2 a 4 frases começando com verbo no infinitivo,
+8. O campo objetivos traz de 2 a 4 frases começando com verbo no infinitivo,
    cada uma verificável (por exemplo: Escrever uma query com JOIN FETCH que
    elimina o N+1), nunca vaga (por exemplo: Entender JPA).
-8. Não repita módulo entre fases. Não use jargão de marketing.
-9. Responda apenas o JSON."""
+9. Não repita módulo entre fases. Não use jargão de marketing.
+10. Responda apenas o JSON."""
 
 
 def build_prompt(
@@ -106,6 +144,7 @@ def build_prompt(
 ) -> str:
     """O retrato do usuário como texto. Cada bloco existe para responder uma
     pergunta que o modelo faria se pudesse perguntar."""
+    alvos = {nome.casefold() for nome in targets}
     dominated = [
         f"{item['name']} (nivel {item['proficiency']}/5)"
         for item in known
@@ -116,7 +155,20 @@ def build_prompt(
         for item in known
         if 0 < item["proficiency"] < 3
     ]
-    to_learn = [item["name"] for item in known if item["proficiency"] == 0]
+    # O que está no zero se divide em dois, e a diferença decide a ORDEM do
+    # plano: o zero que o objetivo exige é o assunto mais longo e mais
+    # importante — vai cedo. O zero que a pessoa só gostaria de aprender vai
+    # por último, e é o primeiro a sair quando as horas não fecham.
+    zero_essencial = [
+        item["name"]
+        for item in known
+        if item["proficiency"] == 0 and item["name"].casefold() in alvos
+    ]
+    zero_desejado = [
+        item["name"]
+        for item in known
+        if item["proficiency"] == 0 and item["name"].casefold() not in alvos
+    ]
 
     budget = weeks * weekly_hours
     lines = [
@@ -124,12 +176,19 @@ def build_prompt(
         f"PRAZO: {weeks} semanas, {weekly_hours}h por semana (orcamento total ~{budget}h)",
         f"MOMENTO ATUAL: {current_role or 'nao informado'}, {years or 0} anos de experiencia",
         "",
+        # Os blocos vão na ordem em que devem ser considerados. O modelo lê de
+        # cima para baixo, e o que aparece primeiro pesa mais — então a ordem
+        # do texto repete a regra 3 em vez de contrariá-la.
         "JA DOMINA (NAO ensine isto): " + (", ".join(dominated) or "nada declarado"),
-        "SABE PARCIALMENTE (pode aprofundar): " + (", ".join(partial) or "nada declarado"),
-        "QUER APRENDER: " + (", ".join(to_learn) or "nao declarado"),
+        "SABE PARCIALMENTE — COMECE POR AQUI (distancia curta, resultado "
+        "rapido; aprofundar ate autonomo): " + (", ".join(partial) or "nada declarado"),
+        "DO ZERO E EXIGIDO PELO OBJETIVO (o mais caro do plano; agende CEDO, "
+        "primeira ou segunda fase): " + (", ".join(zero_essencial) or "nada declarado"),
+        "DO ZERO, APENAS DESEJADO (deixe para o fim; corte isto primeiro se "
+        "as horas nao fecharem): " + (", ".join(zero_desejado) or "nada declarado"),
     ]
     if targets:
-        lines.append("PRIORIDADE EXPLICITA: " + ", ".join(targets))
+        lines.append("MARCADO COMO ALVO PELA PESSOA: " + ", ".join(targets))
     if extra.strip():
         lines += ["", "CONTEXTO ADICIONAL ESCRITO PELA PESSOA:", extra.strip()[:2000]]
     lines += [

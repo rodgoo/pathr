@@ -9,7 +9,8 @@ import { useState } from "react";
 import { roadmap as roadmapApi, tags as tagsApi } from "@/api/endpoints";
 import { useAppState } from "@/hooks/useAppState";
 import { useQuery } from "@/hooks/useApi";
-import { TEXT } from "@/lib/tokens";
+import { SIZE, TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
 import type { RoadmapView } from "@/types";
 import { Segmented } from "@/components/ui/Segmented";
 import { ErrorState, Loading } from "@/components/ui/States";
@@ -84,10 +85,10 @@ export function RoadmapPage() {
         />
       </header>
 
-      <p style={{ margin: "0 0 5.6px", fontSize: 12, color: TEXT.faint }}>{NOTES[view]}</p>
+      <p style={{ margin: "0 0 5.6px", fontSize: SIZE.apoio, color: TEXT.faint }}>{NOTES[view]}</p>
 
       {plan.data.summary ? (
-        <p style={{ margin: "0 0 22.4px", fontSize: 13, color: "rgba(233,233,237,.7)", maxWidth: "70ch" }}>
+        <p style={{ margin: "0 0 22.4px", fontSize: SIZE.corpo, color: "rgba(233,233,237,.7)", maxWidth: "70ch" }}>
           {plan.data.summary}
         </p>
       ) : (
@@ -98,11 +99,31 @@ export function RoadmapPage() {
       {view === "b" ? <PhaseColumns roadmap={plan.data} /> : null}
       {view === "c" ? <CompetenceMatrix roadmap={plan.data} tags={tags.data ?? []} /> : null}
 
-      <div style={{ marginTop: 22.4, paddingTop: 14, borderTop: "1px solid rgba(233,233,237,.12)" }}>
-        <button type="button" className="btn btn-secondary" onClick={() => setRegenerating(true)}>
+      {/* Botão e explicação como IRMÃOS numa flex, não texto correndo ao lado
+          de um botão inline: no celular o parágrafo se enrolava em volta do
+          botão e as duas coisas terminavam desalinhadas. Aqui a nota desce
+          inteira para a própria linha quando não cabe. */}
+      <div
+        style={{
+          marginTop: 22.4,
+          paddingTop: 14,
+          borderTop: "1px solid rgba(233,233,237,.12)",
+          display: "flex",
+          flexWrap: "wrap",
+          alignItems: "center",
+          gap: 11.2,
+        }}
+      >
+        <button
+          type="button"
+          className="btn btn-secondary"
+          style={{ flex: "none" }}
+          onClick={() => setRegenerating(true)}
+        >
+          <Icon name="plus" size={15} />
           Gerar um novo plano
         </button>
-        <span style={{ marginLeft: 11.2, fontSize: 11.5, color: TEXT.faint }}>
+        <span style={{ flex: "1 1 240px", fontSize: SIZE.apoio, color: TEXT.faint }}>
           O plano atual fica no histórico — gerar outro não apaga este.
         </span>
       </div>

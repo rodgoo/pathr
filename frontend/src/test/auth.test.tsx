@@ -11,6 +11,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "@/App";
 import { AppStateProvider } from "@/hooks/useAppState";
 import { AuthProvider } from "@/hooks/useAuth";
+import { OfflineProvider } from "@/hooks/useOffline";
 import { aUser, anOverview, mockServer, type MockServer } from "./server";
 
 function renderApp(server: MockServer, path = "/") {
@@ -20,9 +21,11 @@ function renderApp(server: MockServer, path = "/") {
     user: userEvent.setup(),
     ...render(
       <AuthProvider>
-        <AppStateProvider>
-          <App />
-        </AppStateProvider>
+        <OfflineProvider>
+          <AppStateProvider>
+            <App />
+          </AppStateProvider>
+        </OfflineProvider>
       </AuthProvider>,
     ),
   };

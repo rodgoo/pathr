@@ -155,12 +155,16 @@ export function PasswordField({
           id={id}
           className="input"
           type={visible ? "text" : "password"}
-          // Espaço para o botão: sem isso o texto passa por baixo dele.
-          style={{ paddingRight: 42 }}
+          // Espaço para o botão: sem isso o texto passa por baixo dele. Cabe
+          // a versão de 44px que o toque exige, não só a de 30 do mouse.
+          style={{ paddingRight: 52 }}
           {...input}
         />
         <button
           type="button"
+          // O tamanho vem do CSS porque depende do ponteiro: 30px bastam para
+          // o mouse, o dedo precisa de 44. Estilo inline não sabe disso.
+          className="olho"
           onClick={() => setVisible((atual) => !atual)}
           aria-pressed={visible}
           aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
@@ -173,8 +177,6 @@ export function PasswordField({
             transform: "translateY(-50%)",
             display: "grid",
             placeItems: "center",
-            width: 30,
-            height: 30,
             padding: 0,
             border: 0,
             borderRadius: 6,

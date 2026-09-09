@@ -117,6 +117,10 @@ def get_current_user_allow_unverified(
 
 
 def _resolve_user(request: Request, supabase: Client) -> dict[str, Any]:
+    # O id resolvido fica em `request.state` porque o middleware que avisa as
+    # outras telas roda DEPOIS da rota, quando as dependências já saíram de
+    # cena. É a única forma de ele saber de quem foi a escrita sem repetir a
+    # verificação de sessão inteira.
     token = request.cookies.get(ACCESS_COOKIE) or _bearer_token(request)
     if not token:
         raise _unauthorized("Não autenticado.")
@@ -149,4 +153,5 @@ def _resolve_user(request: Request, supabase: Client) -> dict[str, Any]:
 
     user = rows[0]
     user["session_id"] = session_id
+    request.state.pathr_user_id = str(user["id"])
     return user

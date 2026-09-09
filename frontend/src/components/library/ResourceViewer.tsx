@@ -7,6 +7,11 @@
  * está; decidir o que gravar, quando gravar e quando marcar como concluído é
  * uma regra só, e mora aqui em vez de duplicada nos dois.
  *
+ * Só o CONTEÚDO. Título, progresso e o botão de voltar são da tela que o
+ * envolve (`pages/ResourcePage`). Antes ele desenhava a própria moldura e
+ * abria dentro da lista: no celular virava uma caixa dentro de outra caixa,
+ * e o vídeo terminava do tamanho de um selo.
+ *
  * A gravação é preguiçosa de propósito: só sai quando o progresso AVANÇOU o
  * bastante para valer uma requisição. Sem isso, um vídeo de uma hora renderia
  * dezenas de escritas idênticas para dizer a mesma coisa.
@@ -16,7 +21,7 @@ import { useRef, useState } from "react";
 import { library as libraryApi } from "@/api/endpoints";
 import type { Resource, ResourceState } from "@/api/types";
 import { useQuery } from "@/hooks/useApi";
-import { ACC, HAIRLINE, TEXT } from "@/lib/tokens";
+import { TEXT } from "@/lib/tokens";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { ArticleReader } from "@/components/library/ArticleReader";
 import {
@@ -31,11 +36,9 @@ const PASSO_MINIMO = 0.03;
 
 export function ResourceViewer({
   resource,
-  onFechar,
   onProgresso,
 }: {
   resource: Resource;
-  onFechar: () => void;
   /** Avisa a lista para repintar sem ir ao servidor de novo. */
   onProgresso: (mudanca: {
     status: ResourceState;
@@ -47,10 +50,13 @@ export function ResourceViewer({
   const ultimoGravado = useRef(resource.user_progress_pct / 100);
   const [concluido, setConcluido] = useState(resource.user_status === "done");
 
-  // Só busca o artigo quando é artigo: para vídeo, a rota de leitura não tem
-  // o que fazer e a chamada seria desperdício.
+  // Só busca o artigo quando NÃO é vídeo. A condição era `!videoId`, e por
+  // isso um vídeo fora do YouTube — que não tem player nosso — caía nos dois
+  // caminhos: o leitor dizia "ainda não busquei o texto" e o bloco de vídeo
+  // dizia "não consigo tocar aqui", uma embaixo da outra, com dois botões
+  // iguais para o mesmo lugar.
   const leitura = useQuery(() => libraryApi.reader(resource.id), [resource.id], {
-    enabled: !videoId,
+    enabled: resource.kind !== "video",
   });
 
   async function gravar(fracao: number, segundos: number | null) {
@@ -81,46 +87,7 @@ export function ResourceViewer({
   }
 
   return (
-    <div
-      style={{
-        marginTop: 8.4,
-        padding: 16.8,
-        borderRadius: 10,
-        border: `1px solid ${HAIRLINE}`,
-        background: "#1b1d2b",
-      }}
-    >
-      <div
-        style={{
-          display: "flex",
-          alignItems: "flex-start",
-          gap: 11.2,
-          marginBottom: 14,
-        }}
-      >
-        <h3 style={{ flex: 1, fontSize: 15, fontWeight: 500, margin: 0, lineHeight: 1.35 }}>
-          {resource.title}
-        </h3>
-        {concluido ? (
-          <span style={{ fontSize: 11.5, color: ACC, whiteSpace: "nowrap" }}>concluído</span>
-        ) : null}
-        <button
-          type="button"
-          onClick={onFechar}
-          style={{
-            border: "none",
-            background: "transparent",
-            padding: 0,
-            font: "inherit",
-            fontSize: 11.5,
-            color: TEXT.muted,
-            cursor: "pointer",
-          }}
-        >
-          fechar
-        </button>
-      </div>
-
+    <div>
       {videoId ? (
         <VideoPlayer
           videoId={videoId}

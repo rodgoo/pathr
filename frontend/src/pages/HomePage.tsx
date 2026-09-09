@@ -14,7 +14,9 @@ import { profile as profileApi, roadmap as roadmapApi } from "@/api/endpoints";
 import { useAppState } from "@/hooks/useAppState";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@/hooks/useApi";
+import { useIsCompact } from "@/hooks/useMediaQuery";
 import { TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { SCREEN_IN } from "@/components/ui/primitives";
 import { ConsistencyPanel } from "@/components/dashboard/ConsistencyPanel";
@@ -31,6 +33,7 @@ const TODAY = new Intl.DateTimeFormat("pt-BR", {
 });
 
 export function HomePage() {
+  const compacto = useIsCompact();
   const { user } = useAuth();
   const { dispatch } = useAppState();
   const overview = useQuery((signal) => profileApi.overview(signal), []);
@@ -61,11 +64,16 @@ export function HomePage() {
           <button
             type="button"
             className="btn btn-primary"
-            style={{ marginLeft: "auto" }}
+            // `auto` só quando há espaço na mesma linha. Ao quebrar para a
+            // linha de baixo — que é o que acontece no celular — a margem
+            // automática empurrava o botão para a direita e ele ficava
+            // sozinho, desalinhado de todo o resto da tela.
+            style={compacto ? undefined : { marginLeft: "auto" }}
             onClick={() =>
               dispatch({ type: "navigate", screen: "modulo", nodeId: roadmap.current_node!.id })
             }
           >
+            <Icon name="play" size={15} />
             Retomar estudo
           </button>
         ) : null}
@@ -81,6 +89,7 @@ export function HomePage() {
               className="btn btn-primary"
               onClick={() => dispatch({ type: "navigate", screen: "cv" })}
             >
+              <Icon name="upload" size={15} />
               Enviar currículo
             </button>
           }
@@ -88,6 +97,24 @@ export function HomePage() {
       ) : (
         <>
           <KpiCards overview={overview.data} />
+
+          {/* "Continue" e "A seguir" vêm ANTES da constância. Os dois dizem o
+              que fazer agora; a constância diz como foi até aqui. Num celular
+              a rolagem é o custo — e obrigar a passar por um ano de histórico
+              para chegar ao botão de retomar o estudo inverte a prioridade da
+              tela. */}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
+              gap: 11.2,
+              alignItems: "stretch",
+            }}
+          >
+            <ContinueCard roadmap={roadmap} />
+            {plan.data ? <TodayPlan roadmap={plan.data} /> : null}
+          </div>
+
           <ConsistencyPanel activity={activity} />
 
           <div
@@ -100,18 +127,6 @@ export function HomePage() {
           >
             <StreakCard streak={streak} activity={activity} />
             {plan.data ? <TrackProgress roadmap={plan.data} /> : null}
-          </div>
-
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "repeat(auto-fit,minmax(280px,1fr))",
-              gap: 11.2,
-              alignItems: "stretch",
-            }}
-          >
-            <ContinueCard roadmap={roadmap} />
-            {plan.data ? <TodayPlan roadmap={plan.data} /> : null}
           </div>
         </>
       )}

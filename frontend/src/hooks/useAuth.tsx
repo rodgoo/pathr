@@ -21,6 +21,7 @@ import {
 } from "react";
 import { auth as authApi } from "@/api/endpoints";
 import { ApiError } from "@/api/client";
+import { clearReads } from "@/offline/cache";
 import type { User } from "@/api/types";
 
 type Status = "checking" | "authenticated" | "anonymous";
@@ -101,6 +102,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // é pior que um logout local sem confirmação do servidor.
       setUser(null);
       setStatus("anonymous");
+      // O conteúdo guardado para uso offline sai do aparelho junto. A FILA de
+      // escritas fica: ela é do usuário que a criou e só é enviada quando ele
+      // voltar — quem marcou módulos sem rede e emprestou o telefone não deve
+      // perder o que fez.
+      void clearReads();
     }
   }, []);
 

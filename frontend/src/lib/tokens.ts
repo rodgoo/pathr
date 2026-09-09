@@ -36,6 +36,31 @@ export const C = {
   teal: "#5cb0b0",
 } as const;
 
+/**
+ * A escala de texto. Três degraus, e é de propósito que sejam poucos.
+ *
+ * Antes disto os controles do app usavam oito combinações de tamanho e peso
+ * — 11, 12.5, 13, 13.5, 14, 15, 16 — e o resultado é o que se vê num
+ * celular: dois botões lado a lado com corpos diferentes, um rótulo maior que
+ * o título que ele descreve, uma pílula que grita mais alto que a ação.
+ *
+ * A regra: toda AÇÃO usa `corpo`, o mesmo 14px do `.btn` do Nocturne. Uma
+ * ação secundária, que acompanha outra maior na mesma linha, usa `apoio`.
+ * `rotulo` é só para metadado — nunca para algo em que se toca.
+ */
+export const SIZE = {
+  /** Metadado, kicker, badge. Não é alvo de toque. */
+  rotulo: 11,
+  /** Ação secundária e texto de apoio. */
+  apoio: 12.5,
+  /** Corpo do texto e TODA ação principal. O mesmo tamanho do `.btn`. */
+  corpo: 14,
+  /** Título de painel. */
+  titulo: 18,
+  /** O número grande de um cartão de KPI. */
+  destaque: 26,
+} as const;
+
 /** Text at the four opacities the design uses over the dark ground. */
 export const TEXT = {
   /** Body copy. */

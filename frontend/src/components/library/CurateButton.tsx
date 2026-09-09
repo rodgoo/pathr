@@ -15,7 +15,8 @@
 
 import { useState } from "react";
 import { library as libraryApi } from "@/api/endpoints";
-import { C, TEXT } from "@/lib/tokens";
+import { C, SIZE, TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
 
 interface CurateButtonProps {
   /** Sem isto, busca pelas tags do perfil inteiro. */
@@ -61,12 +62,13 @@ export function CurateButton({ nodeId, onFound, label = "Procurar material" }: C
         {/* A espera é de segundos (duas APIs mais a verificação de cada link),
             então o rótulo precisa dizer que algo está acontecendo — um botão
             só desabilitado parece travado. */}
+        <Icon name="search" size={15} />
         {pending ? "Procurando…" : label}
       </button>
       {message ? (
         <span
           role="status"
-          style={{ fontSize: 12, color: failed ? C.ambar : TEXT.muted, textAlign: "center" }}
+          style={{ fontSize: SIZE.apoio, color: failed ? C.ambar : TEXT.muted, textAlign: "center" }}
         >
           {message}
         </span>

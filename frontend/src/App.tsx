@@ -7,6 +7,7 @@
  */
 
 import { AppShell } from "@/components/layout/AppShell";
+import { MarcaCarregando } from "@/components/ui/MarcaCarregando";
 import { useAppState } from "@/hooks/useAppState";
 import { useAuth } from "@/hooks/useAuth";
 import { useLocation } from "@/hooks/useLocation";
@@ -22,6 +23,7 @@ import { HomePage } from "@/pages/HomePage";
 import { LibraryPage } from "@/pages/LibraryPage";
 import { ModulePage } from "@/pages/ModulePage";
 import { ProfilePage } from "@/pages/ProfilePage";
+import { ResourcePage } from "@/pages/ResourcePage";
 import { RoadmapPage } from "@/pages/RoadmapPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 
@@ -36,6 +38,7 @@ const SCREENS: Record<Screen, () => JSX.Element | null> = {
   ingles: EnglishPage,
   perfil: ProfilePage,
   biblioteca: LibraryPage,
+  material: ResourcePage,
   config: SettingsPage,
 };
 
@@ -75,23 +78,25 @@ function AuthenticatedApp() {
 /**
  * Enquanto a sessão é verificada.
  *
- * Sem spinner: a checagem é uma requisição, quase sempre instantânea, e um
- * spinner que pisca por 80ms incomoda mais do que informa.
+ * É a PRIMEIRA coisa que se vê ao abrir o app instalado, e quase sempre dura
+ * menos de um segundo. Por isso é a marca, e não um spinner genérico: numa
+ * abertura rápida ela lê como a identidade do produto aparecendo; numa lenta
+ * (rede ruim, servidor acordando), o movimento é o que separa "está vindo" de
+ * "travou".
  */
 function Booting() {
   return (
     <div
       style={{
-        minHeight: "100vh",
+        minHeight: "100dvh",
         background: BG,
         color: TEXT.faint,
         display: "grid",
         placeItems: "center",
         fontFamily: "Inter, system-ui, sans-serif",
-        fontSize: 13,
       }}
     >
-      <span aria-live="polite">Carregando…</span>
+      <MarcaCarregando size={72} label="Abrindo seu plano…" />
     </div>
   );
 }

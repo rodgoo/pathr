@@ -12,8 +12,9 @@
  * `reload` para depois de uma escrita.
  */
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { ApiError } from "@/api/client";
+import { dataRevision } from "@/offline/status";
 
 export interface Query<T> {
   data: T | null;
@@ -50,6 +51,12 @@ export function useQuery<T>(
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<number | null>(null);
   const [tick, setTick] = useState(0);
+
+  // Depois que a fila offline esvazia, o servidor tem a palavra final sobre o
+  // que foi gravado. Sem observar isto, a tela ficaria mostrando a projecao
+  // local ate o proximo F5 — e a primeira divergencia com o servidor so
+  // apareceria tarde demais para ser entendida.
+  const revisao = useSyncExternalStore(dataRevision.subscribe, dataRevision.get, dataRevision.get);
 
   // A função muda de identidade a cada render das telas (é uma seta inline);
   // guardá-la numa ref evita que isso sozinho dispare o efeito de novo.
@@ -88,7 +95,7 @@ export function useQuery<T>(
       controller.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, tick, ...deps]);
+  }, [enabled, tick, revisao, ...deps]);
 
   const reload = useCallback(() => setTick((value) => value + 1), []);
   const set = useCallback(

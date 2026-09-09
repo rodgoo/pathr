@@ -46,6 +46,16 @@ export interface AppState {
   activeQuizId: string | null;
   /** O currículo em revisão, entre o upload e a importação. */
   activeResumeId: string | null;
+  /** O material aberto na tela dele. */
+  activeResourceId: string | null;
+  /**
+   * Para onde o "voltar" da tela de material leva.
+   *
+   * O material é alcançado de dois lugares — a biblioteca e a aba de material
+   * do módulo — e voltar sempre para a biblioteca tiraria do lugar quem veio
+   * da trilha.
+   */
+  resourceReturn: Screen;
 }
 
 export const INITIAL_STATE: AppState = {
@@ -62,6 +72,8 @@ export const INITIAL_STATE: AppState = {
   activeNodeId: null,
   activeQuizId: null,
   activeResumeId: null,
+  activeResourceId: null,
+  resourceReturn: "biblioteca",
 };
 
 export type Action =
@@ -83,7 +95,8 @@ export type Action =
   | { type: "setSkillSearch"; value: string }
   | { type: "openNode"; nodeId: string | null }
   | { type: "openQuiz"; quizId: string | null }
-  | { type: "openResume"; resumeId: string | null };
+  | { type: "openResume"; resumeId: string | null }
+  | { type: "openResource"; resourceId: string };
 
 export function reducer(state: AppState, action: Action): AppState {
   switch (action.type) {
@@ -123,6 +136,16 @@ export function reducer(state: AppState, action: Action): AppState {
       return { ...state, activeQuizId: action.quizId };
     case "openResume":
       return { ...state, activeResumeId: action.resumeId };
+
+    case "openResource":
+      // Guarda de onde veio no mesmo passo em que abre: depois de trocar de
+      // tela essa informação já se perdeu.
+      return {
+        ...state,
+        screen: "material",
+        activeResourceId: action.resourceId,
+        resourceReturn: state.screen === "material" ? state.resourceReturn : state.screen,
+      };
 
     default: {
       // Exaustividade: uma ação nova sem case falha a compilação aqui.

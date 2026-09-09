@@ -6,7 +6,7 @@
  */
 
 import { useAppState } from "@/hooks/useAppState";
-import { ACC, ACC4, C, TEXT, tint } from "@/lib/tokens";
+import { ACC, ACC4, C, SIZE, TEXT, tint } from "@/lib/tokens";
 import type { Roadmap, RoadmapNode } from "@/api/types";
 import { Icon, type IconName } from "@/components/ui/icons";
 import { EmptyState } from "@/components/ui/States";
@@ -74,6 +74,7 @@ export function TodayPlan({ roadmap }: { roadmap: Roadmap }) {
                   }`,
                   color: "inherit",
                   font: "inherit",
+                  fontSize: SIZE.corpo,
                   cursor: "pointer",
                 }}
               >

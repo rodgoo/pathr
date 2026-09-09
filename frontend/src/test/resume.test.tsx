@@ -13,6 +13,7 @@ import { App } from "@/App";
 import { INITIAL_STATE } from "@/hooks/appState";
 import { AppStateProvider } from "@/hooks/useAppState";
 import { AuthProvider } from "@/hooks/useAuth";
+import { OfflineProvider } from "@/hooks/useOffline";
 import { aUser, mockServer, type Handler } from "./server";
 
 const shell: Record<string, Handler> = {
@@ -59,9 +60,11 @@ function renderCv(routes: Record<string, Handler>) {
     user: userEvent.setup(),
     ...render(
       <AuthProvider>
-        <AppStateProvider initialState={{ ...INITIAL_STATE, screen: "cv" }}>
-          <App />
-        </AppStateProvider>
+        <OfflineProvider>
+          <AppStateProvider initialState={{ ...INITIAL_STATE, screen: "cv" }}>
+            <App />
+          </AppStateProvider>
+        </OfflineProvider>
       </AuthProvider>,
     ),
   };

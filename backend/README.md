@@ -50,6 +50,27 @@ O refresh **rotaciona**: cada uso queima o token e emite outro, guardando de
 qual veio. Se um token já usado reaparecer, isso é cookie copiado, e a
 resposta é derrubar todas as sessões daquele usuário.
 
+### Avisos entre aparelhos
+
+`GET /events` é um canal SSE por usuário: quando uma escrita passa, todas as
+telas abertas daquela conta recebem um empurrão para reconsultar. O aviso não
+carrega dado — carregar criaria uma segunda forma de o cliente aprender a
+verdade, e duas formas divergem.
+
+Quem publica é um middleware (`AvisaOutrasTelas` em `app/main.py`), não cada
+rota. São mais de vinte endpoints de escrita e o produto ganha outros toda
+semana; uma chamada por rota é uma lista que envelhece calada — a rota nova
+nasce sem o aviso, os outros aparelhos param de ver aquela mudança, e nada
+quebra para denunciar.
+
+`services/eventos.py` tem duas camadas. A fila em memória entrega a quem está
+ouvindo NESTE processo; o `LISTEN/NOTIFY` do Postgres leva o aviso às outras
+máquinas — a Fly pode ter mais de uma no ar. A segunda exige conexão DIRETA
+com o banco: o pooler em modo transação do Supabase (porta 6543) não suporta
+`LISTEN`, e nesse caso o listener registra o motivo e o app segue com avisos
+restritos à própria máquina. É degradação por desenho, não falha: o cliente
+reconfere ao voltar ao foco, então nada aqui precisa de garantia de entrega.
+
 ### Rotação de IA
 
 `app/ai_providers.py`, portado do Notter pelo mesmo motivo que o levou a

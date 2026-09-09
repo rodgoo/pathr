@@ -106,14 +106,25 @@ export const roadmap = {
   list: () => api.get<{ id: string; title: string; is_primary: boolean }[]>("/roadmap"),
   generate: (body: { objective: string; horizon_weeks: number; weekly_hours: number; context?: string }) =>
     api.post<Roadmap>("/roadmap/generate", body),
+  /**
+   * Concluir ou reabrir um modulo. Vai para a fila quando nao ha rede: marcar
+   * um modulo no metro e o uso offline mais comum do app, e o PATCH e
+   * idempotente — mandar duas vezes tem o mesmo efeito de mandar uma.
+   */
   patchNode: (nodeId: string, body: { status?: string; progress_pct?: number; minutes?: number }) =>
-    api.patch(`/roadmap/nodes/${nodeId}`, body),
+    api.patch(`/roadmap/nodes/${nodeId}`, body, {}),
   /** O rascunho da atividade pratica. Mora no servidor: preso a um navegador,
    * a solucao escrita do zero se perdia ao trocar de maquina. */
   draft: (nodeId: string) =>
     api.get<{ content: string; updated_at: string | null }>(`/roadmap/nodes/${nodeId}/draft`),
+  /** Sem rede o rascunho fica na fila. Perder a solucao escrita do zero por
+   * causa de um tunel e o pior desfecho possivel desta tela. */
   saveDraft: (nodeId: string, content: string) =>
-    api.put<{ content: string; updated_at: string }>(`/roadmap/nodes/${nodeId}/draft`, { content }),
+    api.put<{ content: string; updated_at: string }>(
+      `/roadmap/nodes/${nodeId}/draft`,
+      { content },
+      { optimistic: () => ({ content, updated_at: new Date().toISOString() }) },
+    ),
 };
 
 export const library = {
@@ -154,7 +165,9 @@ export const library = {
       /** A posicao do video em segundos, mandada pelo player. */
       position_seconds?: number | null;
     },
-  ) => api.put(`/library/${resourceId}/progress`, body),
+    /** Enfileiravel: marcar onde parou num video e anotar progresso sao as
+     * duas acoes que mais acontecem longe de uma rede boa. */
+  ) => api.put(`/library/${resourceId}/progress`, body, {}),
 };
 
 export const quizzes = {

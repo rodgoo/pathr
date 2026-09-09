@@ -13,6 +13,7 @@ import { App } from "@/App";
 import { INITIAL_STATE, type AppState } from "@/hooks/appState";
 import { AppStateProvider } from "@/hooks/useAppState";
 import { AuthProvider } from "@/hooks/useAuth";
+import { OfflineProvider } from "@/hooks/useOffline";
 import { aUser, anOverview, mockServer, type Handler } from "./server";
 
 /** As rotas que a barra lateral pede em qualquer tela. */
@@ -29,9 +30,11 @@ function renderApp(routes: Record<string, Handler>, state: Partial<AppState> = {
     user: userEvent.setup(),
     ...render(
       <AuthProvider>
-        <AppStateProvider initialState={{ ...INITIAL_STATE, ...state }}>
-          <App />
-        </AppStateProvider>
+        <OfflineProvider>
+          <AppStateProvider initialState={{ ...INITIAL_STATE, ...state }}>
+            <App />
+          </AppStateProvider>
+        </OfflineProvider>
       </AuthProvider>,
     ),
   };
