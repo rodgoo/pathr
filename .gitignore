@@ -13,6 +13,10 @@ __pycache__/
 *.tsbuildinfo
 
 # Ferramentas
+# O flyctl fica dentro do projeto (backend/.fly), e nao instalado na maquina:
+# a versao do CLI que faz o deploy passa a ser uma escolha deste repositorio,
+# nao do que estava no PATH de quem rodou.
+.fly/
 .pytest_cache/
 coverage/
 .DS_Store
