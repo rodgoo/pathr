@@ -35,6 +35,9 @@ class ResourceProgress(BaseModel):
     rating: Optional[int] = Field(default=None, ge=1, le=5)
     minutes_spent: int = Field(default=0, ge=0, le=600)
     notes: Optional[str] = Field(default=None, max_length=2000)
+    # Onde parou: "23:10", "capítulo 4", "seção sobre índices". Texto livre
+    # porque metade da biblioteca é artigo e PDF, onde segundo não diz nada.
+    position_note: Optional[str] = Field(default=None, max_length=200)
 
 
 def _now() -> datetime:
@@ -108,6 +111,11 @@ def list_resources(
             "user_status": (by_resource.get(str(resource["id"])) or {}).get("status"),
             "user_progress_pct": (by_resource.get(str(resource["id"])) or {}).get("progress_pct", 0),
             "user_rating": (by_resource.get(str(resource["id"])) or {}).get("rating"),
+            # É o que permite continuar de onde parou em vez de procurar de
+            # novo — e por isso vem na listagem, não só no detalhe.
+            "user_position_note": (by_resource.get(str(resource["id"])) or {}).get(
+                "position_note"
+            ),
         }
         for resource in resources
     ]
@@ -138,6 +146,9 @@ def set_progress(
     if payload.status == "done":
         fields["progress_pct"] = 100
         fields["completed_at"] = _now().isoformat()
+        # Concluído não tem "onde parei": manter a marca faria a tela oferecer
+        # retomar um material que a pessoa já terminou.
+        fields["position_note"] = None
 
     existing = (
         supabase.table("pathr_user_resource")

@@ -6,42 +6,71 @@
  * codar. O que fica registrado é o texto dela, e a correção compara — não
  * completa.
  *
- * O envio ainda não tem endpoint: `POST /activities` não existe no backend, e
- * a tela diz isso em vez de fingir que enviou. O rascunho fica no navegador
- * para não se perder enquanto isso.
+ * A correção automática ainda não tem endpoint. O rascunho, sim: ele mora no
+ * SERVIDOR (`PUT /roadmap/nodes/{id}/draft`), e não mais no `localStorage`.
+ * Preso a um navegador, a solução escrita do zero — o trabalho mais caro
+ * desta tela — se perdia ao trocar de máquina, que é justamente quando alguém
+ * mais precisa dela de volta.
+ *
+ * Grava sozinho, com uma pausa depois da última tecla: um botão "salvar" num
+ * campo desses é uma chance a mais de sair da página sem apertar.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { roadmap as roadmapApi } from "@/api/endpoints";
 import type { RoadmapNode } from "@/api/types";
 import { ACC3, C, TEXT } from "@/lib/tokens";
 import { Kicker, Panel } from "@/components/ui/primitives";
 
-/** Chave do rascunho no navegador, por módulo. */
-const draftKey = (nodeId: string) => `pathr:atividade:${nodeId}`;
+/** Quanto tempo sem digitar antes de gravar. Curto o bastante para não perder
+ * trabalho, longo o bastante para não mandar uma requisição por tecla. */
+const PAUSA_MS = 900;
 
-function readDraft(nodeId: string): string {
-  try {
-    return window.localStorage.getItem(draftKey(nodeId)) ?? "";
-  } catch {
-    // Navegador com armazenamento bloqueado. O campo simplesmente começa
-    // vazio — perder o rascunho é ruim, quebrar a tela é pior.
-    return "";
-  }
-}
+type Estado = "carregando" | "ocioso" | "gravando" | "salvo" | "erro";
 
 export function ActivityPanel({ node }: { node: RoadmapNode }) {
-  const [answer, setAnswer] = useState(() => readDraft(node.id));
-
-  useEffect(() => setAnswer(readDraft(node.id)), [node.id]);
+  const [answer, setAnswer] = useState("");
+  const [estado, setEstado] = useState<Estado>("carregando");
+  // O que o servidor já tem. Sem isto, a gravação automática dispararia uma
+  // vez logo após a carga, gravando exatamente o que acabou de ser lido.
+  const gravado = useRef<string | null>(null);
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
+    let vivo = true;
+    setEstado("carregando");
+    gravado.current = null;
+    void roadmapApi
+      .draft(node.id)
+      .then((resposta) => {
+        if (!vivo) return;
+        setAnswer(resposta.content);
+        gravado.current = resposta.content;
+        setEstado("ocioso");
+      })
+      .catch(() => {
+        if (!vivo) return;
+        // Campo vazio e editável é melhor que uma tela de erro: o que a
+        // pessoa escrever a partir daqui ainda será gravado.
+        gravado.current = "";
+        setEstado("erro");
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [node.id]);
+
+  useEffect(() => {
+    if (gravado.current === null || answer === gravado.current) return;
+    const timer = window.setTimeout(async () => {
+      setEstado("gravando");
       try {
-        window.localStorage.setItem(draftKey(node.id), answer);
+        await roadmapApi.saveDraft(node.id, answer);
+        gravado.current = answer;
+        setEstado("salvo");
       } catch {
-        // idem: sem armazenamento, o rascunho só não persiste.
+        setEstado("erro");
       }
-    }, 400);
+    }, PAUSA_MS);
     return () => window.clearTimeout(timer);
   }, [node.id, answer]);
 
@@ -98,12 +127,26 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
           color: "rgba(233,233,237,.75)",
         }}
       >
-        A correção automática ainda não está no ar. Seu rascunho fica salvo neste navegador; quando
-        o endpoint existir, o envio aparece aqui.
+        A correção automática ainda não está no ar. Seu rascunho fica salvo na sua conta e
+        acompanha você em qualquer dispositivo; quando o endpoint existir, o envio aparece aqui.
       </div>
 
-      <div style={{ marginTop: 11.2, fontSize: 11.5, color: TEXT.faint }}>
-        {answer.trim().length} caracteres escritos
+      <div
+        style={{
+          marginTop: 11.2,
+          display: "flex",
+          gap: 8.4,
+          fontSize: 11.5,
+          color: TEXT.faint,
+        }}
+      >
+        <span>{answer.trim().length} caracteres escritos</span>
+        <span role="status" style={{ color: estado === "erro" ? C.ambar : TEXT.faint }}>
+          {estado === "carregando" ? "carregando o rascunho…" : null}
+          {estado === "gravando" ? "gravando…" : null}
+          {estado === "salvo" ? "gravado na sua conta" : null}
+          {estado === "erro" ? "não consegui gravar — o texto continua aqui" : null}
+        </span>
       </div>
     </Panel>
   );

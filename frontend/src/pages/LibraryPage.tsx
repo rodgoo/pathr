@@ -155,6 +155,19 @@ export function LibraryPage() {
                   minutes_spent: next === "done" ? resource.duration_min ?? 0 : 0,
                 });
               }}
+              onPosition={async (nota) => {
+                resources.set((current) =>
+                  current.map((item) =>
+                    item.id === resource.id ? { ...item, user_position_note: nota } : item,
+                  ),
+                );
+                // O status vai junto porque a rota o exige, e ele NÃO muda
+                // aqui: anotar onde parou não conclui nem reabre nada.
+                await libraryApi.setProgress(resource.id, {
+                  status: resource.user_status ?? "in_progress",
+                  position_note: nota,
+                });
+              }}
             />
           ))}
         </div>

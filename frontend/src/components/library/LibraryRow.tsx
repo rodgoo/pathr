@@ -6,6 +6,7 @@
  * marcar "concluído" não depender de sair da página.
  */
 
+import { useEffect, useState } from "react";
 import type { Resource, ResourceState } from "@/api/types";
 import { ACC, ACC4, C, TEXT, tint } from "@/lib/tokens";
 import { Icon, type IconName } from "@/components/ui/icons";
@@ -47,10 +48,13 @@ export function LibraryRow({
   resource,
   kindLabel,
   onProgress,
+  onPosition,
 }: {
   resource: Resource;
   kindLabel: string;
   onProgress: (next: ResourceState) => void;
+  /** Grava onde a pessoa parou. Ver o campo abaixo do título. */
+  onPosition: (nota: string) => void;
 }) {
   const chipColor = resource.kind === "video" ? ACC : resource.kind === "exercise" ? C.verde : C.azul;
 
@@ -102,6 +106,9 @@ export function LibraryRow({
             .filter(Boolean)
             .join(" · ")}
         </span>
+        {resource.user_status === "in_progress" ? (
+          <ParouEm nota={resource.user_position_note} onSalvar={onPosition} />
+        ) : null}
       </span>
 
       <button
@@ -122,5 +129,49 @@ export function LibraryRow({
         {resource.user_status ? STATE_LABEL[resource.user_status] : "marcar"}
       </button>
     </div>
+  );
+}
+
+
+/**
+ * Onde a pessoa parou neste material.
+ *
+ * Só aparece com o item em curso: num material salvo ainda não há posição, e
+ * num concluído a marca atrapalharia em vez de ajudar.
+ *
+ * Texto livre, e escrito à mão, porque o material abre em OUTRA aba — o app
+ * não tem como observar o player do YouTube nem o scroll de um artigo de
+ * terceiro. Um campo de segundos serviria só a vídeo, e metade da biblioteca
+ * é artigo e PDF.
+ */
+function ParouEm({
+  nota,
+  onSalvar,
+}: {
+  nota: string | null;
+  onSalvar: (valor: string) => void;
+}) {
+  const [texto, setTexto] = useState(nota ?? "");
+
+  // A linha vem do servidor e pode mudar por fora (outro dispositivo, uma
+  // recarga). Sem isto o campo ficaria preso ao primeiro valor visto.
+  useEffect(() => setTexto(nota ?? ""), [nota]);
+
+  return (
+    <span style={{ display: "flex", alignItems: "center", gap: 5.6, marginTop: 5.6 }}>
+      <label htmlFor={`parei-${nota ?? ""}`} style={{ fontSize: 11, color: TEXT.faint }}>
+        parei em
+      </label>
+      <input
+        className="input"
+        value={texto}
+        placeholder="23:10, capítulo 4…"
+        onChange={(event) => setTexto(event.target.value)}
+        onBlur={() => {
+          if ((nota ?? "") !== texto) onSalvar(texto);
+        }}
+        style={{ fontSize: 11.5, padding: "2px 7px", width: 150, height: "auto" }}
+      />
+    </span>
   );
 }

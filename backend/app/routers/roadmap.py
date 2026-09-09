@@ -31,6 +31,12 @@ class GenerateRequest(BaseModel):
     context: str = Field(default="", max_length=2000)
 
 
+class DraftIn(BaseModel):
+    # Sem `min_length`: apagar tudo é uma edição legítima, e recusá-la faria o
+    # servidor guardar um texto que a pessoa já removeu da tela.
+    content: str = Field(default="", max_length=100_000)
+
+
 class NodePatch(BaseModel):
     status: Optional[str] = Field(default=None, pattern="^(locked|todo|doing|done|skipped)$")
     progress_pct: Optional[int] = Field(default=None, ge=0, le=100)
@@ -369,6 +375,76 @@ def patch_node(
         _advance_next(supabase, node)
 
     return updated
+
+
+@router.get("/nodes/{node_id}/draft")
+def get_draft(
+    node_id: str,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """O rascunho da atividade prática deste módulo.
+
+    Devolve string vazia quando não há nada escrito, e não 404: "ainda não
+    escrevi" é um estado normal do campo, não um erro que a tela precise
+    tratar.
+    """
+    user_id = str(current_user["id"])
+    _owned_node(supabase, node_id, user_id)
+    rows = (
+        supabase.table("pathr_activity_draft")
+        .select("content,updated_at")
+        .eq("user_id", user_id)
+        .eq("node_id", node_id)
+        .limit(1)
+        .execute()
+        .data
+    )
+    if not rows:
+        return {"content": "", "updated_at": None}
+    return {"content": rows[0].get("content") or "", "updated_at": rows[0].get("updated_at")}
+
+
+@router.put("/nodes/{node_id}/draft")
+def save_draft(
+    node_id: str,
+    payload: DraftIn,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """Grava o rascunho. Substitui no lugar.
+
+    O texto ficava no `localStorage`, preso a um navegador — e escrever a
+    solução do zero é o trabalho mais caro de perder ao trocar de máquina. Um
+    por (usuário, módulo): o que importa é o texto atual, não o histórico de
+    cada tecla.
+    """
+    user_id = str(current_user["id"])
+    _owned_node(supabase, node_id, user_id)
+    agora = _now().isoformat()
+    existente = (
+        supabase.table("pathr_activity_draft")
+        .select("id")
+        .eq("user_id", user_id)
+        .eq("node_id", node_id)
+        .limit(1)
+        .execute()
+        .data
+    )
+    if existente:
+        supabase.table("pathr_activity_draft").update(
+            {"content": payload.content, "updated_at": agora}
+        ).eq("id", existente[0]["id"]).execute()
+    else:
+        supabase.table("pathr_activity_draft").insert(
+            {
+                "user_id": user_id,
+                "node_id": node_id,
+                "content": payload.content,
+                "updated_at": agora,
+            }
+        ).execute()
+    return {"content": payload.content, "updated_at": agora}
 
 
 def _owned_node(supabase: Client, node_id: str, user_id: str) -> dict[str, Any]:

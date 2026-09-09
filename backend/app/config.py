@@ -113,11 +113,16 @@ class Settings(BaseSettings):
     groq_api_key: str = ""  # https://console.groq.com/keys
     groq_model: str = "openai/gpt-oss-120b"
     openrouter_api_key: str = ""  # https://openrouter.ai/keys
-    # Sem o sufixo ":free": a OpenRouter retirou essa variante do catalogo e o
-    # slug antigo respondia 404 a cada tentativa. Este modelo cobra, e barato --
-    # e o proprio OpenRouter e um roteador pago, entao manter um slug morto so
-    # para "parecer gratuito" era gastar um candidato da rotacao a toa.
-    openrouter_model: str = "openai/gpt-oss-20b"
+    # Escolhido por medicao, com o pedido real do roadmap em producao: ~30s e
+    # 2/2 respostas validas, contra 63s do gpt-oss-20b que estava aqui antes
+    # (e contra o slug ":free" anterior, que a OpenRouter tirou do catalogo e
+    # respondia 404 a cada tentativa).
+    #
+    # O mistral-small-2603 media ~28s, um pouco melhor -- mas e do MESMO
+    # fornecedor do Mistral direto que ja esta na rotacao, e a rotacao existe
+    # para sobreviver a queda de um fornecedor. Um segundo e meio nao paga
+    # perder um fornecedor independente.
+    openrouter_model: str = "qwen/qwen3.8-flash"
     mistral_api_key: str = ""  # https://console.mistral.ai/api-keys
     mistral_model: str = "open-mistral-nemo"
     cerebras_api_key: str = ""  # https://cloud.cerebras.ai

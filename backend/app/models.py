@@ -335,6 +335,26 @@ class PathrRoadmapNode(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
 
+class PathrActivityDraft(SQLModel, table=True):
+    """O que a pessoa escreveu na atividade prática de um módulo.
+
+    Uma linha por (usuário, módulo) — a atividade é uma só e o que importa é o
+    texto atual, não o histórico de cada tecla. O rascunho morava no
+    `localStorage` do navegador porque não havia onde guardá-lo; isso o
+    prendia a UM navegador, e escrever a solução do zero é justamente o
+    trabalho mais caro de perder ao trocar de máquina.
+    """
+
+    __tablename__ = "pathr_activity_draft"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id"))
+    node_id: uuid.UUID = Field(sa_column=_fk("pathr_roadmap_node.id"))
+    content: str = Field(default="")
+    updated_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+
+
 # ---------------------------------------------------------------------------
 # Biblioteca de conteúdo
 # ---------------------------------------------------------------------------
@@ -376,6 +396,12 @@ class PathrUserResource(SQLModel, table=True):
     resource_id: uuid.UUID = Field(sa_column=_fk("pathr_resource.id"))
     status: str = Field(default="saved")  # saved|in_progress|done|dismissed
     progress_pct: int = Field(default=0)
+    # Onde a pessoa parou, em texto livre: "23:10", "capítulo 4", "seção sobre
+    # índices". Texto e não um número de segundos porque metade da biblioteca
+    # é artigo e PDF, onde segundo não quer dizer nada. Quem preenche é a
+    # pessoa: o material abre em outra aba, e o app não observa um player que
+    # não é dele.
+    position_note: Optional[str] = Field(default=None)
     rating: Optional[int] = Field(default=None)  # 1..5
     notes: Optional[str] = Field(default=None)
     minutes_spent: int = Field(default=0)

@@ -212,6 +212,8 @@ export interface Resource {
   user_status: ResourceState | null;
   user_progress_pct: number;
   user_rating: number | null;
+  /** Onde a pessoa parou. Nulo quando nunca foi marcado. */
+  user_position_note: string | null;
 }
 
 export interface QuizQuestion {

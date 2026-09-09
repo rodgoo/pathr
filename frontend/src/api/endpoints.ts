@@ -107,6 +107,12 @@ export const roadmap = {
     api.post<Roadmap>("/roadmap/generate", body),
   patchNode: (nodeId: string, body: { status?: string; progress_pct?: number; minutes?: number }) =>
     api.patch(`/roadmap/nodes/${nodeId}`, body),
+  /** O rascunho da atividade pratica. Mora no servidor: preso a um navegador,
+   * a solucao escrita do zero se perdia ao trocar de maquina. */
+  draft: (nodeId: string) =>
+    api.get<{ content: string; updated_at: string | null }>(`/roadmap/nodes/${nodeId}/draft`),
+  saveDraft: (nodeId: string, content: string) =>
+    api.put<{ content: string; updated_at: string }>(`/roadmap/nodes/${nodeId}/draft`, { content }),
 };
 
 export const library = {
@@ -134,7 +140,14 @@ export const library = {
     ),
   setProgress: (
     resourceId: string,
-    body: { status: string; progress_pct?: number; rating?: number; minutes_spent?: number },
+    body: {
+      status: string;
+      progress_pct?: number;
+      rating?: number;
+      minutes_spent?: number;
+      /** Onde parou: "23:10", "capitulo 4". E o que permite retomar. */
+      position_note?: string | null;
+    },
   ) => api.put(`/library/${resourceId}/progress`, body),
 };
 
