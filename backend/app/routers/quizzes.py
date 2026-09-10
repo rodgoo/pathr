@@ -522,6 +522,48 @@ def _recycle(
     volta: list[str] = []
     aprendido: list[str] = []
 
+    # As duas leituras que o laço precisava, feitas UMA vez.
+    #
+    # Antes eram duas consultas por questão: uma para carregar o item de
+    # revisão e outra, dentro de `_ja_pendente`, para conferir se o conceito já
+    # estava na fila. Num quiz de dez questões isso somava vinte idas ao
+    # PostgREST enquanto a pessoa olhava para "Corrigindo…" — e o trabalho é o
+    # mesmo com duas.
+    ids_reciclados = [
+        str(q["review_item_id"]) for q in questions if q.get("review_item_id")
+    ]
+    itens_reciclados: dict[str, dict] = {}
+    if ids_reciclados:
+        itens_reciclados = {
+            str(linha["id"]): linha
+            for linha in (
+                supabase.table("pathr_review_item")
+                .select("id,ease,repetitions,interval_days,lapses")
+                .in_("id", ids_reciclados)
+                .execute()
+                .data
+                or []
+            )
+        }
+
+    tags_em_jogo = sorted(
+        {str((q.get("tag_ids") or [None])[0]) for q in questions if (q.get("tag_ids") or [None])[0]}
+    )
+    pendentes: set[str] = set()
+    if tags_em_jogo:
+        pendentes = {
+            review.concept_key(linha.get("front"))
+            for linha in (
+                supabase.table("pathr_review_item")
+                .select("front")
+                .eq("user_id", user_id)
+                .in_("tag_id", tags_em_jogo)
+                .execute()
+                .data
+                or []
+            )
+        }
+
     for resultado in results:
         questao = por_id.get(resultado["question_id"])
         if not questao:
@@ -532,18 +574,11 @@ def _recycle(
 
         try:
             if item_id:
-                atuais = (
-                    supabase.table("pathr_review_item")
-                    .select("ease,repetitions,interval_days,lapses")
-                    .eq("id", str(item_id))
-                    .limit(1)
-                    .execute()
-                    .data
-                )
-                if not atuais:
+                atual = itens_reciclados.get(str(item_id))
+                if not atual:
                     continue
                 proximo = review.schedule(
-                    atuais[0], review.QUALITY_HIT if acertou else review.QUALITY_MISS
+                    atual, review.QUALITY_HIT if acertou else review.QUALITY_MISS
                 )
                 supabase.table("pathr_review_item").update(proximo).eq(
                     "id", str(item_id)
@@ -556,8 +591,14 @@ def _recycle(
             # a pessoa já sabe.
             if acertou or not conceito:
                 continue
-            if _ja_pendente(supabase, user_id, questao, conceito):
+            chave = review.concept_key(conceito)
+            # Errar duas questões sobre a mesma ideia no mesmo quiz criaria dois
+            # itens, e a pessoa responderia a mesma lacuna duas vezes em
+            # paralelo. O conjunto acumula dentro do laço, então o segundo erro
+            # já encontra o primeiro.
+            if chave in pendentes:
                 continue
+            pendentes.add(chave)
 
             correta = int((questao.get("correct") or {}).get("index", -1))
             alternativas = questao.get("options") or []
@@ -582,32 +623,6 @@ def _recycle(
             continue
 
     return {"volta": volta, "aprendido": aprendido}
-
-
-def _ja_pendente(supabase: Client, user_id: str, questao: dict, conceito: str) -> bool:
-    """Este conceito já está na fila?
-
-    Sem esta checagem, errar duas questões sobre a mesma ideia no mesmo quiz
-    criaria dois itens, e a pessoa responderia a mesma lacuna duas vezes em
-    paralelo — o que o docstring de `PathrReviewItem` pede para evitar.
-
-    A comparação é pela chave normalizada e acontece em Python, e não no banco:
-    são poucas linhas por tag, e um `ilike` no PostgREST não daria a
-    equivalência sem acento que `concept_key` dá.
-    """
-    chave = review.concept_key(conceito)
-    tag_id = (questao.get("tag_ids") or [None])[0]
-    existentes = (
-        supabase.table("pathr_review_item")
-        .select("front")
-        .eq("user_id", user_id)
-        .eq("tag_id", tag_id)
-        .limit(200)
-        .execute()
-        .data
-        or []
-    )
-    return any(review.concept_key(row.get("front")) == chave for row in existentes)
 
 
 def _apply_result_to_tags(

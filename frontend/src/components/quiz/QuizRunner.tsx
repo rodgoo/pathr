@@ -13,7 +13,7 @@
  * registro da tentativa.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { quizzes as quizzesApi } from "@/api/endpoints";
 import type { Quiz, QuizResult } from "@/api/types";
 import { useMutation } from "@/hooks/useApi";
@@ -23,11 +23,52 @@ import { ErrorState } from "@/components/ui/States";
 import { Panel } from "@/components/ui/primitives";
 import { CodeBlock } from "./CodeBlock";
 
+/**
+ * Onde a pessoa parou neste quiz.
+ *
+ * Por quiz, e nao global: dois quizzes abertos em abas diferentes sao duas
+ * posicoes independentes, e uma chave so faria um sobrescrever o outro.
+ */
+const chaveDoProgresso = (quizId: string) => `pathr:quiz:${quizId}`;
+
+interface Progresso {
+  index: number;
+  answers: Record<string, number>;
+}
+
+function lerProgresso(quizId: string): Progresso {
+  try {
+    const bruto = window.localStorage.getItem(chaveDoProgresso(quizId));
+    if (!bruto) return { index: 0, answers: {} };
+    const guardado = JSON.parse(bruto) as Partial<Progresso>;
+    return { index: guardado.index ?? 0, answers: guardado.answers ?? {} };
+  } catch {
+    return { index: 0, answers: {} };
+  }
+}
+
 export function QuizRunner({ quiz, onFinished }: { quiz: Quiz; onFinished?: () => void }) {
-  const [index, setIndex] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, number>>({});
+  // Inicializador preguicoso: le o storage uma vez, na montagem.
+  const [progresso] = useState(() => lerProgresso(quiz.id));
+  const [index, setIndex] = useState(progresso.index);
+  const [answers, setAnswers] = useState<Record<string, number>>(progresso.answers);
   const [startedAt] = useState(() => Date.now());
   const [result, setResult] = useState<QuizResult | null>(null);
+
+  // Grava a cada resposta e a cada avanco. Sair da tela no meio de um quiz de
+  // dez questoes e comum -- consultar o material e o objetivo do produto -- e
+  // voltar para a questao 1 com tudo em branco faz a pessoa desistir.
+  useEffect(() => {
+    if (result) return;
+    try {
+      window.localStorage.setItem(
+        chaveDoProgresso(quiz.id),
+        JSON.stringify({ index, answers }),
+      );
+    } catch {
+      // Armazenamento bloqueado: o quiz continua, so nao lembra.
+    }
+  }, [quiz.id, index, answers, result]);
 
   const submit = useMutation(() =>
     quizzesApi.submit(quiz.id, answers, Math.round((Date.now() - startedAt) / 1000)),
@@ -49,7 +90,16 @@ export function QuizRunner({ quiz, onFinished }: { quiz: Quiz; onFinished?: () =
       return;
     }
     const finished = await submit.run();
-    if (finished) setResult(finished);
+    if (finished) {
+      setResult(finished);
+      // Quiz enviado: o progresso guardado so atrapalharia se a pessoa
+      // reabrisse este mesmo quiz, que agora tem tentativa fechada.
+      try {
+        window.localStorage.removeItem(chaveDoProgresso(quiz.id));
+      } catch {
+        // Ignorado pelo mesmo motivo da escrita.
+      }
+    }
   }
 
   return (

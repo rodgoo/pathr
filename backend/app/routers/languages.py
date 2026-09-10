@@ -14,7 +14,7 @@ import re
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from supabase import Client
 
@@ -563,10 +563,22 @@ def get_assessment(
 async def answer_assessment(
     assessment_id: str,
     payload: AnswerItem,
+    background: BackgroundTasks,
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
 ):
-    """Responde um item, devolve o gabarito e adapta o próximo lote."""
+    """Responde um item e devolve o gabarito NA HORA.
+
+    A geração do próximo lote sai da requisição. Antes ela acontecia aqui
+    dentro, e a cada cinco respostas a pessoa esperava uma chamada de LLM
+    inteira — 2 a 15 segundos de "Carregando…" para saber se acertou uma
+    alternativa que o servidor já tinha conferido em milissegundos.
+
+    O lote é encomendado quando ainda restam DOIS itens, e não um: gerar com
+    um item de folga dá tempo de a chamada terminar enquanto a pessoa lê o
+    penúltimo. Só quando não sobra item nenhum a geração volta a ser síncrona,
+    porque aí não há o que mostrar enquanto se espera.
+    """
     user_id = str(current_user["id"])
     items = (
         supabase.table("pathr_english_item")
@@ -641,19 +653,28 @@ async def answer_assessment(
 
     # Acertou -> sobe a banda; errou -> desce. É isto que faz o teste
     # convergir: cada resposta move o alvo em direção ao nível real.
-    if pending <= 1:
+    if pending <= 2:
         band = _next_band(item.get("cefr_band") or "B1", is_correct)
-        # O idioma vem da tentativa, nao de um parametro: trocar de idioma no
+        # O idioma vem da tentativa, e nao de um parametro: trocar de idioma no
         # meio de um nivelamento invalidaria as respostas ja dadas.
-        await _generate_items(
-            supabase,
-            user_id,
-            assessment_id,
-            band,
-            count=5,
-            offset=answered,
-            language=assessment.get("language") or "en",
-        )
+        idioma_da_tentativa = assessment.get("language") or "en"
+        if pending == 0:
+            # Nao ha proximo item para mostrar. Aqui esperar e o unico caminho
+            # honesto -- devolver antes deixaria a tela sem pergunta nenhuma.
+            await _generate_items(
+                supabase, user_id, assessment_id, band, 5, answered, idioma_da_tentativa
+            )
+        else:
+            background.add_task(
+                _generate_items,
+                supabase,
+                user_id,
+                assessment_id,
+                band,
+                5,
+                answered,
+                idioma_da_tentativa,
+            )
 
     return {
         "is_correct": is_correct,

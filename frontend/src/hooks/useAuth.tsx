@@ -23,6 +23,7 @@ import { auth as authApi } from "@/api/endpoints";
 import { ApiError } from "@/api/client";
 import { clearReads } from "@/offline/cache";
 import type { User } from "@/api/types";
+import { limparEstadoGuardado } from "./useAppState";
 
 type Status = "checking" | "authenticated" | "anonymous";
 
@@ -100,6 +101,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Mesmo se a chamada falhar, o estado local vira anônimo: o cookie pode
       // já ter expirado, e deixar a pessoa presa numa tela logada sem sessão
       // é pior que um logout local sem confirmação do servidor.
+      //
+      // A posição guardada sai junto. Num computador compartilhado, abrir o
+      // app no módulo de quem saiu já é informação demais — e o proximo login
+      // deve começar na tela inicial, não no meio do estudo de outra pessoa.
+      limparEstadoGuardado();
       setUser(null);
       setStatus("anonymous");
       // O conteúdo guardado para uso offline sai do aparelho junto. A FILA de
