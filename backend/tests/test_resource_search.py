@@ -326,3 +326,11 @@ async def test_ia_nao_devolve_mais_curso(monkeypatch):
     monkeypatch.setattr(rs, "generate_json", falso)
     achados = await rs._ai_fallback("docker", "devops")
     assert [item.kind for item in achados] == ["doc"]
+
+
+def test_docs_do_github_e_documentacao_nao_repositorio():
+    """`docs.github.com` termina em "github.com". A regra de repositorio
+    precisa casar o host EXATO -- medido em producao, onde duas paginas do
+    GitHub Docs tinham entrado como repo."""
+    assert rs._classifica("https://docs.github.com/en/actions/quickstart") == "doc"
+    assert rs._classifica("https://github.com/docker/compose") == "repo"

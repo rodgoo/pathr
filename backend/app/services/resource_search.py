@@ -573,7 +573,10 @@ def _classifica(url: str) -> str:
 
     if host in _EXERCICIO_HOSTS:
         return "exercise"
-    if host.endswith("github.com") and "/tree/" not in caminho:
+    # Host EXATO, e nao sufixo: `docs.github.com` termina em "github.com" e
+    # e documentacao, nao repositorio. Medido em producao -- duas paginas do
+    # GitHub Docs tinham entrado como "repo".
+    if host in {"github.com", "gitlab.com", "bitbucket.org"}:
         return "repo"
     if (
         host.startswith(_DOC_HOSTS_PREFIXOS)
