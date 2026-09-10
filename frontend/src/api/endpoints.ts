@@ -10,6 +10,10 @@ import type {
   EnglishAnswerResult,
   EnglishAssessment,
   ExplanationResult,
+  RouteAdjustmentEntry,
+  RouteChange,
+  WeeklyItem,
+  WeeklyPlan,
   LanguageCatalogEntry,
   LanguageImprovements,
   LanguageProfile,
@@ -169,6 +173,23 @@ export const library = {
     /** Enfileiravel: marcar onde parou num video e anotar progresso sao as
      * duas acoes que mais acontecem longe de uma rede boa. */
   ) => api.put(`/library/${resourceId}/progress`, body, {}),
+};
+
+export const plan = {
+  /** O checklist da semana. Na virada, o servidor ajusta a rota antes de montá-lo. */
+  week: () => api.get<WeeklyPlan>("/plan/week"),
+  mark: (itemId: string, feito: boolean) =>
+    api.patch<{ item: WeeklyItem; resumo: WeeklyPlan["resumo"] }>(
+      `/plan/week/items/${encodeURIComponent(itemId)}`,
+      { feito },
+    ),
+  /** Remonta com o nível de agora, mantendo o que já foi feito. */
+  refresh: () => api.post<WeeklyPlan>("/plan/week/refresh"),
+  adjust: (preview = false) =>
+    api.post<{ semana: number; mudancas: RouteChange[]; aplicado: boolean }>(
+      `/plan/adjust?preview=${preview}`,
+    ),
+  adjustments: () => api.get<RouteAdjustmentEntry[]>("/plan/adjustments"),
 };
 
 export const explanations = {

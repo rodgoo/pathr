@@ -328,6 +328,49 @@ export interface ExplanationResult {
   created_at?: string;
 }
 
+/** Um item do checklist da semana. A ordem da lista é a do método. */
+export interface WeeklyItem {
+  id: string;
+  tipo: "revisao" | "material" | "quiz" | "feynman" | "pratica" | "desafio";
+  pilar: string;
+  titulo: string;
+  detalhe: string;
+  minutos: number;
+  node_id: string | null;
+  modulo: string | null;
+  nivel: "iniciante" | "intermediario" | "avancado" | null;
+  feito: boolean;
+  /** Confirmado por evidência (quiz ou explicação) — não se desmarca. */
+  verificado: boolean;
+  feito_em: string | null;
+}
+
+/** Uma mudança que o ajuste de rota fez, com o motivo em texto. */
+export interface RouteChange {
+  node_id: string | null;
+  titulo: string;
+  tipo: "compactar" | "reforcar" | "reagendar";
+  motivo: string;
+  antes: Record<string, number>;
+  depois: Record<string, number>;
+}
+
+export interface WeeklyPlan {
+  semana: number;
+  inicio: string;
+  itens: WeeklyItem[];
+  resumo: { total: number; feitos: number; minutos: number; minutos_feitos: number };
+  orcamento_min: number;
+  /** Os ajustes feitos na virada desta semana. Vazio fora da virada. */
+  ajustes: RouteChange[];
+}
+
+export interface RouteAdjustmentEntry {
+  em: string;
+  semana: number;
+  mudancas: RouteChange[];
+}
+
 export interface EnglishProfile {
   user_id: string;
   enabled: boolean;

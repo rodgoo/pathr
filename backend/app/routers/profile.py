@@ -470,6 +470,12 @@ _TABELAS_DO_USUARIO = (
     "pathr_english_assessment",
     "pathr_english_session",
     "pathr_english_vocab",
+    # As tres abaixo entraram depois da lista e ficaram de fora da exportacao
+    # ate aqui: quem pedia os proprios dados recebia um arquivo sem as
+    # explicacoes, os rascunhos e os checklists que tinha escrito.
+    "pathr_explanation",
+    "pathr_activity_draft",
+    "pathr_weekly_checklist",
 )
 
 

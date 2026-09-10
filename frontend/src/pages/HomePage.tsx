@@ -23,7 +23,7 @@ import { ConsistencyPanel } from "@/components/dashboard/ConsistencyPanel";
 import { ContinueCard } from "@/components/dashboard/ContinueCard";
 import { KpiCards } from "@/components/dashboard/KpiCards";
 import { StreakCard } from "@/components/dashboard/StreakCard";
-import { TodayPlan } from "@/components/dashboard/TodayPlan";
+import { WeeklyChecklist } from "@/components/dashboard/WeeklyChecklist";
 import { TrackProgress } from "@/components/dashboard/TrackProgress";
 
 const TODAY = new Intl.DateTimeFormat("pt-BR", {
@@ -112,8 +112,11 @@ export function HomePage() {
             }}
           >
             <ContinueCard roadmap={roadmap} />
-            {plan.data ? <TodayPlan roadmap={plan.data} /> : null}
           </div>
+
+          {/* O checklist ocupa o lugar do "A seguir": ele é o mesmo "o que
+              fazer agora", só que com tamanho, método e marcação. */}
+          {plan.data ? <WeeklyChecklist /> : null}
 
           <ConsistencyPanel activity={activity} />
 

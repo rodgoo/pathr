@@ -5,6 +5,7 @@
  * de um vazio que manda a pessoa procurar o botão em outro lugar.
  */
 
+import { RouteAdjustments } from "@/components/roadmap/RouteAdjustments";
 import { useState } from "react";
 import { roadmap as roadmapApi, tags as tagsApi } from "@/api/endpoints";
 import { useAppState } from "@/hooks/useAppState";
@@ -94,6 +95,8 @@ export function RoadmapPage() {
       ) : (
         <div style={{ height: 16.8 }} />
       )}
+
+      <RouteAdjustments onAjustado={plan.reload} />
 
       {view === "a" ? <Timeline roadmap={plan.data} /> : null}
       {view === "b" ? <PhaseColumns roadmap={plan.data} /> : null}

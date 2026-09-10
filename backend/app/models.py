@@ -393,6 +393,28 @@ class PathrExplanation(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
 
+class PathrWeeklyChecklist(SQLModel, table=True):
+    """O checklist de uma semana. Itens em JSONB porque não vivem fora dela —
+    ver services/weekly_plan.py e a migration 0012."""
+
+    __tablename__ = "pathr_weekly_checklist"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id"))
+    roadmap_id: Optional[uuid.UUID] = Field(
+        default=None, sa_column=_fk("pathr_roadmap.id", nullable=True)
+    )
+    week_start: date = Field(sa_type=sa.Date())  # a segunda-feira
+    week_index: int = Field(default=1)  # semana do plano, 1-based
+    items: list[Any] = Field(default_factory=list, sa_column=_jsonb("[]"))
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+    updated_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+
+    __table_args__ = (
+        sa.UniqueConstraint("user_id", "week_start", name="uq_pathr_weekly_checklist_semana"),
+    )
+
+
 # ---------------------------------------------------------------------------
 # Biblioteca de conteúdo
 # ---------------------------------------------------------------------------
