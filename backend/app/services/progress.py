@@ -20,6 +20,10 @@ from supabase import Client
 # "farmar" o barato — o que o plano quer é constância, não pontuação.
 XP_BY_KIND = {
     "resource_done": 10,
+    # Acima do quiz: reconhecer a alternativa certa entre quatro e mais
+    # facil que produzir a explicacao do zero, e a escala de XP deve
+    # refletir o esforco real -- senao empurra para o exercicio barato.
+    "explanation_done": 35,
     "quiz_done": 25,
     "node_done": 60,
     "english_session": 20,

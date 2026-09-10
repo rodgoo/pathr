@@ -9,6 +9,7 @@ import { api } from "./client";
 import type {
   EnglishAnswerResult,
   EnglishAssessment,
+  ExplanationResult,
   LanguageCatalogEntry,
   LanguageImprovements,
   LanguageProfile,
@@ -168,6 +169,21 @@ export const library = {
     /** Enfileiravel: marcar onde parou num video e anotar progresso sao as
      * duas acoes que mais acontecem longe de uma rede boa. */
   ) => api.put(`/library/${resourceId}/progress`, body, {}),
+};
+
+export const explanations = {
+  /**
+   * Envia a explicacao pelo metodo Feynman e recebe a correcao.
+   *
+   * O retorno nao traz uma versao melhorada do texto de proposito: ler a
+   * explicacao pronta faz a pessoa concordar e voltar a achar que entendeu,
+   * que e a ilusao que o exercicio existe para quebrar. Vem a nota, o que se
+   * sustentou e as lacunas -- e cada lacuna ja entrou na fila de revisao.
+   */
+  submit: (body: { concept: string; content: string; node_id?: string }) =>
+    api.post<ExplanationResult>("/explanations", body),
+  list: (nodeId?: string) =>
+    api.get<ExplanationResult[]>(nodeId ? `/explanations?node_id=${nodeId}` : "/explanations"),
 };
 
 export const quizzes = {

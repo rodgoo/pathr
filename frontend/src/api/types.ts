@@ -308,6 +308,26 @@ export interface LanguageProfile {
   last_assessment_at: string | null;
 }
 
+/** Uma lacuna que a explicacao revelou. Vira item de revisao. */
+export interface ExplanationGap {
+  conceito: string;
+  por_que: string;
+}
+
+export interface ExplanationResult {
+  id: string;
+  concept?: string;
+  /** 0..100 — quanto da ideia a explicacao sustenta SOZINHA. */
+  score: number;
+  feedback: string | null;
+  /** O que ficou de pe. So vem na resposta do envio. */
+  sustenta?: string[];
+  gaps: ExplanationGap[];
+  /** Quantas lacunas entraram na fila de revisao (as repetidas nao entram). */
+  viraram_revisao?: number;
+  created_at?: string;
+}
+
 export interface EnglishProfile {
   user_id: string;
   enabled: boolean;

@@ -355,6 +355,44 @@ class PathrActivityDraft(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
 
+class PathrExplanation(SQLModel, table=True):
+    """Uma explicação da pessoa, no método Feynman, e o que a correção achou.
+
+    O quarto pilar, e o único que os outros três não cobrem. Quiz mede se ela
+    RECONHECE a resposta certa entre quatro; repetição espaçada garante que a
+    pergunta volte. Nenhum dos dois flagra a ilusão de competência: ler sobre
+    closures e achar que entendeu. Explicar com as próprias palavras, para
+    alguém que não sabe, é o que expõe o buraco — inclusive para quem explica.
+
+    Histórico e não upsert (ao contrário de PathrActivityDraft): explicar o
+    mesmo conceito de novo, semanas depois, e comparar as duas versões É o
+    método. Sobrescrever apagaria a evidência de que a pessoa evoluiu.
+
+    `gaps` é o que faz isto valer mais que uma nota: cada lacuna vira um item
+    em pathr_review_item vencendo hoje, e volta como questão reescrita no
+    próximo quiz da trilha. É onde os quatro pilares se encontram.
+    """
+
+    __tablename__ = "pathr_explanation"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id"))
+    node_id: Optional[uuid.UUID] = Field(default=None, sa_type=PGUUID(as_uuid=True), index=True)
+    # O que a pessoa se propôs a explicar, em uma frase.
+    concept: str
+    # O texto dela, como escreveu. Nunca reescrito pela correção.
+    content: str
+    # 0..100. Quanto da ideia a explicação sustenta sozinha.
+    score: Optional[int] = Field(default=None)
+    # O retorno em prosa: o que ficou bom, o que ficou pela metade.
+    feedback: Optional[str] = Field(default=None)
+    # [{"conceito": "...", "por_que": "..."}] — vira item de revisão.
+    gaps: list[Any] = Field(default_factory=list, sa_column=_jsonb("[]"))
+    tag_ids: list[uuid.UUID] = Field(default_factory=list, sa_column=_uuid_array())
+    graded_by: Optional[str] = Field(default=None)  # modelo que corrigiu
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+
+
 # ---------------------------------------------------------------------------
 # Biblioteca de conteúdo
 # ---------------------------------------------------------------------------

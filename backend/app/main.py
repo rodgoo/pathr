@@ -163,6 +163,7 @@ from app import health  # noqa: E402
 from app.routers import (  # noqa: E402
     auth,
     eventos as eventos_router,
+    explanations,
     languages,
     library,
     profile,
@@ -196,3 +197,4 @@ app.include_router(roadmap.router)
 app.include_router(library.router)
 app.include_router(quizzes.router)
 app.include_router(languages.router)
+app.include_router(explanations.router)
