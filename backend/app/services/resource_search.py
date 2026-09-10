@@ -67,6 +67,10 @@ _TIMEOUT = 12.0
 # sobre o mesmo assunto.
 _MAX_VIDEOS = 5
 _MAX_ARTICLES = 5
+# Exercício é para resolver, não para colecionar: três bons bastam por tag.
+_MAX_EXERCISES = 3
+# Documentação boa é uma por assunto, não cinco páginas da mesma árvore.
+_MAX_DOCS = 4
 _MAX_AI = 4
 
 # O piso de quem veio de busca real e o teto de quem veio da IA. Ficam lado a
@@ -187,6 +191,8 @@ async def search_for_tag(tag: dict[str, Any]) -> list[Candidate]:
     found = await asyncio.gather(
         _youtube(name),
         _articles(name),
+        _documentacao(name),
+        _exercicios(name),
         return_exceptions=True,
     )
 
@@ -292,7 +298,16 @@ async def _youtube(subject: str) -> list[Candidate]:
                 description=snippet.get("description"),
                 thumbnail_url=((snippet.get("thumbnails") or {}).get("high") or {}).get("url"),
                 duration_min=minutes,
-                language=(snippet.get("defaultAudioLanguage") or "pt")[:2],
+                # O idioma que o canal declarou vale mais que qualquer
+                # heurística. Quando não vem — é o caso mais comum — detecta
+                # pelo título e pela descrição. O default "pt" de antes
+                # carimbava como português todo vídeo sem declaração, e o
+                # filtro "Português" virava uma lista de vídeos em inglês.
+                language=(
+                    snippet.get("defaultAudioLanguage")
+                    or snippet.get("defaultLanguage")
+                    or _guess_language(snippet.get("title"), snippet.get("description"))
+                )[:2],
                 quality_score=_score_video(stats, published),
                 published_at=published,
                 source="youtube",
@@ -332,27 +347,101 @@ def _score_video(stats: dict[str, Any], published: Optional[date]) -> int:
 
 
 async def _articles(subject: str) -> list[Candidate]:
-    """Artigos pelo buscador configurado.
+    """Artigos pelo buscador configurado, nos DOIS idiomas.
+
+    Duas consultas, e não uma. O catálogo é global e o filtro de idioma da
+    Biblioteca corta na leitura — mas cortar só funciona se houver o que
+    mostrar dos dois lados. Uma consulta só devolvia quase sempre inglês, e
+    quem escolhia "Português" via a lista vazia: o filtro estava certo, o
+    acervo é que não tinha material em português para filtrar.
+
+    A consulta em português cita "português" de propósito. Sem isso o buscador
+    responde em inglês mesmo com termos em português, porque é onde está o
+    volume.
 
     Tavily ganha do Brave quando as duas chaves existem porque já devolve um
     resumo por resultado; com o Brave o `description` sai do trecho do índice,
     que costuma vir cortado no meio da frase.
     """
     if settings.tavily_api_key.strip():
-        return await _tavily(subject)
-    if settings.brave_api_key.strip():
-        return await _brave(subject)
-    return []
+        buscar = _tavily
+    elif settings.brave_api_key.strip():
+        buscar = _brave
+    else:
+        return []
+
+    resultados = await asyncio.gather(
+        buscar(f"{subject} tutorial guia em português", _MAX_ARTICLES),
+        buscar(f"{subject} tutorial guide", _MAX_ARTICLES),
+        return_exceptions=True,
+    )
+    saida: list[Candidate] = []
+    for resultado in resultados:
+        if isinstance(resultado, BaseException):
+            logger.warning("busca de artigo falhou para %r: %s", subject, resultado)
+            continue
+        saida.extend(resultado)
+    return saida
 
 
-async def _tavily(subject: str) -> list[Candidate]:
+async def _documentacao(subject: str) -> list[Candidate]:
+    """A documentação oficial, procurada como tal.
+
+    A consulta de artigo ("tutorial guia") traz quem ESCREVE sobre o assunto,
+    não a fonte. Numa medição com "Docker" ela devolveu quatro blogs e nenhuma
+    linha de docs.docker.com — e o filtro "Documentação" da Biblioteca ficava
+    permanentemente vazio.
+    """
+    consulta = f"{subject} documentação oficial docs reference"
+    if settings.tavily_api_key.strip():
+        bruto = await _tavily(consulta, _MAX_DOCS)
+    elif settings.brave_api_key.strip():
+        bruto = await _brave(consulta, _MAX_DOCS)
+    else:
+        return []
+    # Só o que o endereço confirma ser documentação. O resto veio como artigo e
+    # já entra pela outra consulta.
+    return [item for item in bruto if item.kind in {"doc", "repo"}]
+
+
+async def _exercicios(subject: str) -> list[Candidate]:
+    """Onde PRATICAR o assunto, e não onde ler sobre ele.
+
+    Consulta própria porque a busca de artigo ("tutorial guia") não devolve
+    exercício: quem escreve tutorial e quem publica exercício otimizam para
+    palavras diferentes. Classificar melhor não resolveria — o resultado
+    simplesmente não vinha.
+
+    O termo cita as plataformas de propósito. Uma busca por "exercícios de
+    Docker" traz listas de blog com cinco perguntas; citar os sites que existem
+    para isso traz a página onde se resolve.
+    """
+    if settings.tavily_api_key.strip():
+        bruto = await _tavily(
+            f"{subject} exercícios práticos exercism OR leetcode OR hackerrank OR codewars",
+            _MAX_EXERCISES,
+        )
+    elif settings.brave_api_key.strip():
+        bruto = await _brave(
+            f"{subject} exercícios práticos exercism leetcode hackerrank", _MAX_EXERCISES
+        )
+    else:
+        return []
+
+    # Só o que a classificação reconheceu COMO exercício. O resto da busca é
+    # artigo comum sobre o assunto, e ele já entra pela outra consulta —
+    # deixá-lo aqui duplicaria a lista.
+    return [item for item in bruto if item.kind == "exercise"]
+
+
+async def _tavily(subject: str, quantos: int = _MAX_ARTICLES) -> list[Candidate]:
     async with httpx.AsyncClient(timeout=_TIMEOUT, headers={"User-Agent": _UA}) as client:
         response = await client.post(
             _TAVILY_SEARCH,
             json={
                 "api_key": settings.tavily_api_key.strip(),
                 "query": f"{subject} tutorial guia",
-                "max_results": _MAX_ARTICLES,
+                "max_results": quantos,
                 "search_depth": "basic",
                 "include_answer": False,
             },
@@ -367,7 +456,7 @@ async def _tavily(subject: str) -> list[Candidate]:
             continue
         out.append(
             Candidate(
-                kind="article",
+                kind=_classifica(url),
                 title=item.get("title") or url,
                 url=url,
                 provider=_provider_of(url),
@@ -380,11 +469,11 @@ async def _tavily(subject: str) -> list[Candidate]:
     return out
 
 
-async def _brave(subject: str) -> list[Candidate]:
+async def _brave(subject: str, quantos: int = _MAX_ARTICLES) -> list[Candidate]:
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
         response = await client.get(
             _BRAVE_SEARCH,
-            params={"q": f"{subject} tutorial guia", "count": _MAX_ARTICLES},
+            params={"q": f"{subject} tutorial guia", "count": quantos},
             headers={
                 "X-Subscription-Token": settings.brave_api_key.strip(),
                 "Accept": "application/json",
@@ -402,7 +491,7 @@ async def _brave(subject: str) -> list[Candidate]:
             continue
         out.append(
             Candidate(
-                kind="article",
+                kind=_classifica(url),
                 title=item.get("title") or url,
                 url=url,
                 provider=_provider_of(url),
@@ -437,6 +526,62 @@ _VIDEO_HOSTS = {
 
 def _is_video_host(url: str) -> bool:
     return (urlparse(url).hostname or "").removeprefix("www.") in _VIDEO_HOSTS
+
+
+# Sites cujo propósito é EXERCITAR, não explicar. Um item daqui não é artigo:
+# a pessoa não lê, ela resolve — e misturá-lo com texto no mesmo filtro apaga a
+# única diferença que importa na hora de estudar.
+_EXERCICIO_HOSTS = {
+    "exercism.org",
+    "leetcode.com",
+    "hackerrank.com",
+    "codewars.com",
+    "beecrowd.com.br",
+    "codingame.com",
+    "adventofcode.com",
+    "hackerearth.com",
+    "edabit.com",
+    "codechef.com",
+    "sqlzoo.net",
+    "pgexercises.com",
+    "regex101.com",
+    "frontendmentor.io",
+    "codepen.io",
+}
+
+# Sinais de que a página É a documentação, e não alguém escrevendo sobre ela.
+# O host tem prioridade; o caminho (/docs/, /reference/) pega o resto.
+_DOC_HOSTS_PREFIXOS = ("docs.", "developer.", "doc.", "learn.", "devdocs.")
+_DOC_HOSTS_SUFIXOS = (".readthedocs.io", ".readthedocs.org")
+_DOC_CAMINHOS = ("/docs/", "/doc/", "/documentation/", "/reference/", "/api/", "/manual/")
+
+
+def _classifica(url: str) -> str:
+    """Que TIPO de material é este endereço.
+
+    Existe porque a busca web devolvia tudo como `article`. Os filtros
+    "Documentação" e "Exercícios" da Biblioteca nunca tinham o que mostrar —
+    não porque a busca não achasse essas páginas, mas porque elas entravam
+    rotuladas como artigo.
+
+    Classifica pelo endereço e não pelo texto: `docs.python.org/3/library/` diz
+    o que é sem precisar ler a página, e o título ("Tutorial") mentiria.
+    """
+    endereco = urlparse(url)
+    host = (endereco.hostname or "").removeprefix("www.")
+    caminho = (endereco.path or "").lower()
+
+    if host in _EXERCICIO_HOSTS:
+        return "exercise"
+    if host.endswith("github.com") and "/tree/" not in caminho:
+        return "repo"
+    if (
+        host.startswith(_DOC_HOSTS_PREFIXOS)
+        or host.endswith(_DOC_HOSTS_SUFIXOS)
+        or any(marca in caminho for marca in _DOC_CAMINHOS)
+    ):
+        return "doc"
+    return "article"
 
 
 _TRUSTED = {
@@ -512,7 +657,7 @@ Regras, nesta ordem de importância:
 2. Nada de post individual de blog, vídeo de YouTube ou artigo de Medium — as
    URLs deles são instáveis e você não tem como confirmá-las. Fique na raiz da
    documentação e em páginas de referência.
-3. `tipo` é um de: doc, course, repo, book, article.
+3. `tipo` é um de: doc, repo, book, article.
 4. Português quando existir material bom; inglês quando for a única opção
    séria. Marque em `idioma` com "pt" ou "en".
 """
@@ -541,7 +686,13 @@ async def _ai_fallback(subject: str, category: Optional[str]) -> list[Candidate]
         if not url.startswith(("http://", "https://")) or _is_video_host(url):
             continue
         kind = str(item.get("tipo") or "doc").lower()
-        if kind not in {"doc", "course", "repo", "book", "article"}:
+        # "course" saiu do vocabulário: a Biblioteca deixou de ter esse filtro
+        # porque um link para uma plataforma de curso não é material que o app
+        # consiga acompanhar — ele não sabe se a pessoa assistiu, nem o que ela
+        # aprendeu. Um curso indicado assim vira documentação ou artigo.
+        if kind == "course":
+            kind = "doc"
+        if kind not in {"doc", "repo", "book", "article", "exercise"}:
             kind = "doc"
         out.append(
             Candidate(
@@ -641,7 +792,30 @@ _TAGS = re.compile(r"<[^>]+>")
 # Palavras curtas que só aparecem em português. Não é detecção de idioma de
 # verdade — é o suficiente para separar "pt" de "en" num título técnico, onde
 # os nomes próprios (Docker, React) são iguais nos dois.
-_PT_HINTS = {"como", "para", "com", "uma", "por", "que", "não", "guia", "aprenda", "início"}
+# Palavras funcionais de cada idioma. A decisão é por CONTAGEM, e não pela
+# presença de uma palavra: "How to use Docker para iniciantes" tem "para" e é
+# inglês, e a regra antiga ("achou uma palavra portuguesa? é português")
+# etiquetava conteúdo inglês como pt — que é exatamente o que fazia o filtro
+# "Português" devolver artigo em inglês.
+#
+# Palavras funcionais e não vocabulário técnico de propósito: "Docker",
+# "React" e "deploy" aparecem igual nos dois idiomas e não separam nada.
+_STOP_PT = {
+    "a", "ao", "aos", "as", "até", "com", "como", "da", "das", "de", "do", "dos",
+    "e", "em", "entre", "essa", "esse", "está", "eu", "foi", "isso", "já", "mais",
+    "mas", "na", "nas", "no", "nos", "não", "o", "os", "ou", "para", "pela",
+    "pelo", "por", "porque", "quando", "que", "se", "sem", "ser", "seu", "sobre",
+    "são", "também", "tem", "ter", "um", "uma", "você", "guia", "aprenda",
+    "passo", "iniciantes", "início", "prática", "completo", "curso", "aula",
+}
+_STOP_EN = {
+    "a", "about", "an", "and", "are", "as", "at", "be", "but", "by", "can",
+    "complete", "for", "from", "get", "guide", "has", "have", "how", "in", "into",
+    "is", "it", "learn", "make", "more", "not", "of", "on", "or", "should",
+    "than", "that", "the", "then", "this", "to", "use", "using", "was", "what",
+    "when", "where", "which", "will", "with", "would", "you", "your", "beginners",
+    "tutorial", "step",
+}
 
 
 def _iso8601_minutes(duration: Optional[str]) -> Optional[int]:
@@ -683,6 +857,21 @@ def _strip_tags(text: Optional[str]) -> Optional[str]:
 
 
 def _guess_language(*parts: Optional[str]) -> str:
+    """"pt" ou "en", por contagem de palavras funcionais.
+
+    Conta OCORRÊNCIAS e não palavras distintas: um texto inglês com um "para"
+    solto perde para os seus dez "the". As palavras comuns aos dois conjuntos
+    ("a") se anulam sozinhas, porque somam dos dois lados.
+
+    Empate cai em "en", e a assimetria é deliberada: quase todo conteúdo
+    técnico é inglês, e o erro que a pessoa relata é o inverso — inglês
+    aparecendo no filtro "Português". Na dúvida, o item fica fora do filtro
+    mais restrito, e não dentro dele.
+    """
     blob = " ".join(part for part in parts if part).lower()
-    words = set(re.findall(r"[a-zà-ú]+", blob))
-    return "pt" if words & _PT_HINTS else "en"
+    palavras = re.findall(r"[a-zà-ú]+", blob)
+    if not palavras:
+        return "en"
+    pt = sum(1 for palavra in palavras if palavra in _STOP_PT)
+    en = sum(1 for palavra in palavras if palavra in _STOP_EN)
+    return "pt" if pt > en else "en"

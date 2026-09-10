@@ -244,4 +244,85 @@ async def test_tavily_descarta_resultado_que_e_video(monkeypatch):
     monkeypatch.setattr(rs.httpx, "AsyncClient", lambda **_: ClienteFalso())
 
     achados = await rs._articles("docker")
-    assert [item.url for item in achados] == ["https://spacelift.io/blog/docker"]
+
+    # Nenhuma pagina de video sobrevive, venha ela de qual consulta vier.
+    assert all("youtube.com" not in item.url for item in achados)
+    assert {item.url for item in achados} == {"https://spacelift.io/blog/docker"}
+    # Duas consultas (uma em portugues, outra em ingles) contra um duplo que
+    # responde igual as duas: a repeticao e esperada aqui e some em
+    # `_keep_reachable`, que deduplica antes de gravar.
+    assert len(achados) == 2
+
+
+# --- idioma: o filtro "Português" so funciona se o rotulo estiver certo -----
+
+
+def test_titulo_ingles_com_uma_palavra_portuguesa_continua_ingles():
+    """A regra antiga era "achou uma palavra portuguesa? e portugues", e por
+    isso o filtro Portugues devolvia artigo em ingles."""
+    assert rs._guess_language("How to use Docker para beginners", None) == "en"
+
+
+def test_decide_por_contagem_e_nao_por_presenca():
+    assert rs._guess_language("Como criar uma API do zero na prática", None) == "pt"
+    assert rs._guess_language("How to build an API from scratch with Node", None) == "en"
+
+
+def test_sem_palavra_funcional_nenhuma_fica_em_ingles():
+    """Empate cai em ingles de proposito: quase todo conteudo tecnico e ingles,
+    e o erro relatado e o inverso -- ingles aparecendo no filtro Portugues. Na
+    duvida o item fica FORA do filtro mais restrito, nao dentro."""
+    assert rs._guess_language("Docker Kubernetes Terraform", None) == "en"
+    assert rs._guess_language("", None) == "en"
+
+
+# --- classificacao: documentacao e exercicio deixam de virar "artigo" -------
+
+
+def test_documentacao_oficial_nao_e_artigo():
+    assert rs._classifica("https://docs.docker.com/get-started/") == "doc"
+    assert rs._classifica("https://developer.mozilla.org/pt-BR/docs/Web/CSS") == "doc"
+    assert rs._classifica("https://fastapi.tiangolo.com/reference/") == "doc"
+    assert rs._classifica("https://flask.readthedocs.io/en/stable/") == "doc"
+
+
+def test_plataforma_de_exercicio_nao_e_artigo():
+    """A pessoa nao le um exercicio, ela resolve. Junta-los no mesmo filtro
+    apaga a unica diferenca que importa na hora de estudar."""
+    assert rs._classifica("https://www.codewars.com/collections/exercicios") == "exercise"
+    assert rs._classifica("https://exercism.org/tracks/python") == "exercise"
+    assert rs._classifica("https://www.hackerrank.com/skills-directory/docker_basic") == "exercise"
+    assert rs._classifica("https://www.beecrowd.com.br/judge/problems") == "exercise"
+
+
+def test_blog_continua_artigo():
+    assert rs._classifica("https://spacelift.io/blog/docker-tutorial") == "article"
+    assert rs._classifica("https://kodekloud.com/blog/docker-tutorial") == "article"
+
+
+def test_repositorio_e_repositorio():
+    assert rs._classifica("https://github.com/docker/awesome-compose") == "repo"
+
+
+# --- curso deixou de existir como tipo -------------------------------------
+
+
+async def test_ia_nao_devolve_mais_curso(monkeypatch):
+    """O filtro "Cursos" saiu da Biblioteca: o app nao sabe se a pessoa
+    assistiu, quanto viu, nem o que aprendeu. Um curso indicado vira doc."""
+
+    class ResultadoFalso:
+        model = "teste"
+        data = {
+            "recursos": [
+                {"titulo": "Curso de Docker", "url": "https://exemplo.com/curso", "tipo": "course"}
+            ]
+        }
+        content = data
+
+    async def falso(*_args, **_kwargs):
+        return ResultadoFalso()
+
+    monkeypatch.setattr(rs, "generate_json", falso)
+    achados = await rs._ai_fallback("docker", "devops")
+    assert [item.kind for item in achados] == ["doc"]
