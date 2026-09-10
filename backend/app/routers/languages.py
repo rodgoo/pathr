@@ -563,9 +563,12 @@ def get_assessment(
 async def answer_assessment(
     assessment_id: str,
     payload: AnswerItem,
-    background: BackgroundTasks,
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
+    # Por ULTIMO e com default. O FastAPI injeta BackgroundTasks pelo tipo, nao
+    # pela posicao, entao pôr no meio so quebraria quem chama esta funcao
+    # direto -- os testes, que a exercitam sem servidor.
+    background: BackgroundTasks = None,
 ):
     """Responde um item e devolve o gabarito NA HORA.
 
@@ -664,6 +667,11 @@ async def answer_assessment(
             await _generate_items(
                 supabase, user_id, assessment_id, band, 5, answered, idioma_da_tentativa
             )
+        elif background is None:
+            # Chamada direta, sem o ciclo de requisicao do FastAPI (teste). Nao
+            # ha fila de tarefas para onde mandar, e gerar aqui gastaria uma
+            # chamada de IA num caminho que nao precisa dela.
+            pass
         else:
             background.add_task(
                 _generate_items,
