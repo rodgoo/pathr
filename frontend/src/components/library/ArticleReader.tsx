@@ -11,6 +11,12 @@
  * texto, a única evidência equivalente é quanto dele passou pela tela. Mede-se
  * a MAIOR posição alcançada, e não a atual: rolar de volta para reler um
  * trecho não é desandar o progresso.
+ *
+ * E é essa mesma fração que traz a pessoa de volta. Reabrir um artigo começava
+ * no topo — o progresso estava salvo, mas era preciso rolar à mão até achar o
+ * ponto. Agora a caixa abre onde a leitura parou. Fração e não pixels: o texto
+ * reflui com a largura, e 60% do artigo no celular é o mesmo trecho que 60% no
+ * computador, enquanto 3.000px não são.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -24,17 +30,29 @@ const PALAVRAS_POR_MINUTO = 180;
 /** De quanto em quanto tempo a posição é gravada. Igual ao vídeo. */
 const INTERVALO_GRAVACAO_MS = 15_000;
 
+/** A partir daqui o artigo conta como terminado, e reabrir volta ao topo:
+ * quem abre de novo algo que já leu inteiro quer reler, e cair no último
+ * parágrafo obrigaria a rolar tudo de volta. */
+const RELER_A_PARTIR_DE = 0.97;
+
 export function ArticleReader({
   conteudo,
   onProgresso,
+  comecarEm = 0,
 }: {
   conteudo: ReaderContent;
   /** A maior fração do artigo já alcançada, de 0 a 1. */
   onProgresso: (fracao: number) => void;
+  /** Onde a leitura parou da última vez (0 a 1), vindo do servidor. */
+  comecarEm?: number;
 }) {
   const caixa = useRef<HTMLDivElement | null>(null);
-  const maiorFracao = useRef(0);
-  const [lido, setLido] = useState(0);
+  // Começa do que já foi lido, e não de zero: sem isto a barra reabria em 0%
+  // com o progresso salvo.
+  const maiorFracao = useRef(comecarEm);
+  const [lido, setLido] = useState(comecarEm);
+  const inicio = useRef(comecarEm >= RELER_A_PARTIR_DE ? 0 : comecarEm);
+  const [retomado, setRetomado] = useState(false);
 
   const reportar = useRef(onProgresso);
   reportar.current = onProgresso;
@@ -54,6 +72,27 @@ export function ArticleReader({
       }
     };
 
+    // Posiciona onde a leitura parou. Reaplica quando uma imagem termina de
+    // carregar — ela muda a altura do texto e empurraria o trecho para longe —
+    // mas só até a pessoa mexer. Depois disso a posição é dela, e a tela não
+    // pode arrancá-la de onde escolheu ficar.
+    let interagiu = false;
+    const posicionar = () => {
+      if (interagiu || inicio.current <= 0) return;
+      const rolavel = elemento.scrollHeight - elemento.clientHeight;
+      if (rolavel > 0) elemento.scrollTop = inicio.current * rolavel;
+    };
+    const marcarInteracao = () => {
+      interagiu = true;
+    };
+    const gestos = ["wheel", "touchstart", "pointerdown", "keydown"] as const;
+    posicionar();
+    if (inicio.current > 0.02) setRetomado(true);
+    elemento.addEventListener("load", posicionar, true);
+    for (const gesto of gestos) {
+      elemento.addEventListener(gesto, marcarInteracao, { passive: true });
+    }
+
     medir();
     elemento.addEventListener("scroll", medir, { passive: true });
     const timer = window.setInterval(() => {
@@ -61,6 +100,8 @@ export function ArticleReader({
     }, INTERVALO_GRAVACAO_MS);
 
     return () => {
+      elemento.removeEventListener("load", posicionar, true);
+      for (const gesto of gestos) elemento.removeEventListener(gesto, marcarInteracao);
       elemento.removeEventListener("scroll", medir);
       window.clearInterval(timer);
       // Fechar é o momento mais comum de sair: grava o alcançado antes de ir.
@@ -100,6 +141,33 @@ export function ArticleReader({
           ler no site original{conteudo.provider ? ` · ${conteudo.provider}` : ""}
         </a>
       </div>
+
+      {retomado ? (
+        <div role="status" style={{ fontSize: 12, color: TEXT.muted, marginBottom: 8.4 }}>
+          Retomado de onde você parou ({Math.round(inicio.current * 100)}%).{" "}
+          <button
+            type="button"
+            onClick={() => {
+              // Zerar o início também desliga o reposicionamento: uma imagem
+              // que carregasse depois arrastaria a pessoa de volta ao meio.
+              inicio.current = 0;
+              if (caixa.current) caixa.current.scrollTop = 0;
+              setRetomado(false);
+            }}
+            style={{
+              border: 0,
+              background: "transparent",
+              padding: 0,
+              font: "inherit",
+              color: ACC3,
+              textDecoration: "underline",
+              cursor: "pointer",
+            }}
+          >
+            Voltar ao início
+          </button>
+        </div>
+      ) : null}
 
       <div
         aria-hidden

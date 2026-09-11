@@ -101,6 +101,7 @@ export function ResourceViewer({
       ) : leitura.data ? (
         <ArticleReader
           conteudo={leitura.data}
+          comecarEm={resource.user_progress_pct / 100}
           onProgresso={(fracao) => void gravar(fracao, null)}
         />
       ) : null}
