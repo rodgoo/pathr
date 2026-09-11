@@ -127,6 +127,52 @@ class PathrMfaBackupCode(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
 
+class PathrPasskey(SQLModel, table=True):
+    """Uma chave de acesso (WebAuthn) de uma conta.
+
+    Guarda só o lado PÚBLICO: a chave privada nunca sai do aparelho — é o que
+    torna a chave de acesso imune a vazamento de banco e a página falsa. Os
+    bytes viajam como base64url em texto porque o PostgREST lida mal com bytea.
+    """
+
+    __tablename__ = "pathr_passkey"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id"))
+    credential_id: str = Field(unique=True, index=True)  # base64url
+    public_key: str  # COSE, base64url
+    # Chave sincronizada (iCloud, Google) manda 0 sempre; chave física
+    # incrementa, e um valor que volta para trás denuncia clone.
+    sign_count: int = Field(default=0)
+    transports: list[Any] = Field(default_factory=list, sa_column=_jsonb("[]"))
+    name: str = Field(default="Chave de acesso")
+    backed_up: bool = Field(default=False)  # sincronizada entre aparelhos
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+    last_used_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
+
+
+class PathrWebauthnChallenge(SQLModel, table=True):
+    """O desafio de uma cerimônia WebAuthn: uso único, cinco minutos de vida.
+
+    Guardado no servidor, e não assinado e devolvido pelo cliente: um desafio
+    sem estado poderia ser reapresentado dentro da validade, e chave
+    sincronizada não tem contador que denuncie a repetição. `user_id` é nulo
+    na entrada — a pessoa ainda não se identificou; é a chave que diz quem é.
+    """
+
+    __tablename__ = "pathr_webauthn_challenge"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: Optional[uuid.UUID] = Field(
+        default=None, sa_column=_fk("pathr_user.id", nullable=True)
+    )
+    purpose: str  # register | login
+    challenge: str  # base64url
+    expires_at: datetime = Field(sa_type=sa.DateTime(timezone=True))
+    used_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+
+
 class PathrEmailToken(SQLModel, table=True):
     """Verificação de e-mail e reset de senha na mesma tabela, separados por
     `purpose` — os dois têm exatamente o mesmo ciclo de vida (token de uso

@@ -52,3 +52,4 @@ python-docx==1.2.0
 # ao alcance de quem controlasse a pagina de origem.
 trafilatura==2.2.0
 nh3==0.3.7
+webauthn==3.0.0  # chave de acesso — app/routers/passkeys.py

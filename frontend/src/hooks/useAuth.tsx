@@ -19,11 +19,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { auth as authApi } from "@/api/endpoints";
+import { startAuthentication } from "@simplewebauthn/browser";
+import { auth as authApi, passkeys as passkeysApi } from "@/api/endpoints";
 import { ApiError } from "@/api/client";
 import { clearReads } from "@/offline/cache";
 import type { User } from "@/api/types";
 import { limparEstadoGuardado } from "./useAppState";
+import { lembrarChave } from "@/lib/passkeys";
 
 type Status = "checking" | "authenticated" | "anonymous";
 
@@ -39,6 +41,8 @@ interface AuthContextValue {
     city: string;
     state: string;
   }) => Promise<string>;
+  /** Entra pela chave de acesso do aparelho. Não pede e-mail: a chave diz quem é. */
+  loginWithPasskey: () => Promise<void>;
   logout: () => Promise<void>;
   /** Recarrega o usuário depois de uma mudança (nome, e-mail confirmado). */
   refresh: () => Promise<void>;
@@ -72,6 +76,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = useCallback(async (email: string, password: string, mfaCode?: string) => {
     const session = await authApi.login({ email, password, mfa_code: mfaCode });
+    setUser(session.user);
+    setStatus("authenticated");
+  }, []);
+
+  const loginWithPasskey = useCallback(async () => {
+    const pedido = await passkeysApi.loginOptions();
+    const credencial = await startAuthentication({
+      optionsJSON: pedido.options as unknown as Parameters<typeof startAuthentication>[0]["optionsJSON"],
+    });
+    const session = await passkeysApi.loginVerify(pedido.challenge_id, credencial);
+    // Deu certo aqui: na próxima vez, a tela de entrada oferece a chave primeiro.
+    lembrarChave();
     setUser(session.user);
     setStatus("authenticated");
   }, []);
@@ -117,8 +133,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo(
-    () => ({ status, user, login, signup, logout, refresh: load }),
-    [status, user, login, signup, logout, load],
+    () => ({ status, user, login, loginWithPasskey, signup, logout, refresh: load }),
+    [status, user, login, loginWithPasskey, signup, logout, load],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

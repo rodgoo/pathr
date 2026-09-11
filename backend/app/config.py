@@ -149,6 +149,14 @@ class Settings(BaseSettings):
     tavily_api_key: str = ""  # https://app.tavily.com
     brave_api_key: str = ""  # https://brave.com/search/api
 
+    # --- Chave de acesso (WebAuthn) ---
+    # O domínio a que as chaves ficam presas. Vazio = o host de FRONTEND_URL
+    # (pathr.notter.com.br), e é de propósito que NÃO seja notter.com.br: no
+    # domínio de cima a chave valeria também para o Notter e o FinanceR, e o
+    # PathR tem contas próprias. Só se preenche para desenvolvimento local.
+    webauthn_rp_id: str = ""
+    webauthn_rp_name: str = "PathR"
+
     # --- Limites de upload ---
     max_resume_mb: int = 10
     # A foto é exibida num quadrado de 64px. 5 MB é folga larga para qualquer

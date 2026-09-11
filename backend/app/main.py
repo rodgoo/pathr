@@ -166,6 +166,7 @@ from app.routers import (  # noqa: E402
     explanations,
     languages,
     library,
+    passkeys,
     plan,
     profile,
     quizzes,
@@ -200,3 +201,4 @@ app.include_router(quizzes.router)
 app.include_router(languages.router)
 app.include_router(explanations.router)
 app.include_router(plan.router)
+app.include_router(passkeys.router)

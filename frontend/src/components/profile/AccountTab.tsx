@@ -14,6 +14,7 @@ import { C, TEXT } from "@/lib/tokens";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { PasswordField } from "@/components/auth/AuthShell";
 import { Kicker, Panel } from "@/components/ui/primitives";
+import { PasskeysPanel } from "./PasskeysPanel";
 
 export function AccountTab() {
   const { user, refresh } = useAuth();
@@ -108,6 +109,7 @@ export function AccountTab() {
       </Panel>
 
       <ChangePassword />
+      <PasskeysPanel />
       <Sessions />
     </form>
   );

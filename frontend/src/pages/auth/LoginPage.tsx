@@ -15,9 +15,10 @@ import { useState, type FormEvent } from "react";
 import { auth as authApi } from "@/api/endpoints";
 import { errorMessage, isEmailUnverified, isMfaRequired, useAuth } from "@/hooks/useAuth";
 import { AuthShell, Field, PasswordField, FormError } from "@/components/auth/AuthShell";
+import { chaveSuportada, mensagemDeErroDaChave, temChaveNesteAparelho } from "@/lib/passkeys";
 
 export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }) {
-  const { login } = useAuth();
+  const { login, loginWithPasskey } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [mfaCode, setMfaCode] = useState("");
@@ -26,12 +27,43 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
   const [pending, setPending] = useState(false);
   const [unverified, setUnverified] = useState(false);
   const [resent, setResent] = useState<string | null>(null);
+  const [passkeyPending, setPasskeyPending] = useState(false);
+  // Quem já usou a chave neste aparelho vê a chave primeiro; quem nunca usou
+  // vê a senha primeiro e a chave como alternativa. Decidido no aparelho
+  // porque, antes do login, o servidor não pode dizer de quem é a conta.
+  const suportada = chaveSuportada();
+  const lembrada = suportada && temChaveNesteAparelho();
 
   async function resendVerification() {
     setResent(null);
     const { detail } = await authApi.resendVerificationPublic(email.trim());
     setResent(detail);
   }
+
+  async function entrarComChave() {
+    setPasskeyPending(true);
+    setError(null);
+    try {
+      await loginWithPasskey();
+    } catch (caught) {
+      // Cancelar o pedido do Face ID ou da digital não é erro: fica quieto.
+      setError(mensagemDeErroDaChave(caught));
+    } finally {
+      setPasskeyPending(false);
+    }
+  }
+
+  const botaoDeChave = (principal: boolean) => (
+    <button
+      type="button"
+      className={principal ? "btn btn-primary btn-block" : "btn btn-secondary btn-block"}
+      style={principal ? undefined : { marginTop: 11.2 }}
+      disabled={passkeyPending || pending}
+      onClick={() => void entrarComChave()}
+    >
+      {passkeyPending ? "Aguardando o aparelho…" : "Entrar com chave de acesso"}
+    </button>
+  );
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -70,6 +102,25 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
         </>
       }
     >
+      {lembrada ? (
+        <>
+          {botaoDeChave(true)}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: 8.4,
+              margin: "14px 0",
+              fontSize: 12,
+              color: "rgba(233,233,237,.45)",
+            }}
+          >
+            <span style={{ flex: 1, height: 1, background: "rgba(233,233,237,.14)" }} />
+            ou entre com a senha
+            <span style={{ flex: 1, height: 1, background: "rgba(233,233,237,.14)" }} />
+          </div>
+        </>
+      ) : null}
       <form onSubmit={submit} noValidate>
         <FormError>{error}</FormError>
 
@@ -151,6 +202,7 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
           </a>
         </div>
       </form>
+      {suportada && !lembrada ? botaoDeChave(false) : null}
     </AuthShell>
   );
 }

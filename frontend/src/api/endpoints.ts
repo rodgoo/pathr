@@ -18,6 +18,8 @@ import type {
   LanguageImprovements,
   LanguageProfile,
   Overview,
+  Passkey,
+  PasskeyOptions,
   Profile,
   Quiz,
   ReaderContent,
@@ -63,6 +65,22 @@ export const auth = {
   mfaActivate: (code: string) => api.post<{ backup_codes: string[] }>("/auth/mfa/activate", { code }),
   mfaDisable: (current_password: string) =>
     api.post<{ detail: string }>("/auth/mfa/disable", { current_password, new_password: "" }),
+};
+
+/**
+ * Chave de acesso. As opções vêm do servidor com um `challenge_id`, o
+ * navegador faz a cerimônia com o aparelho, e a resposta volta para conferir.
+ * A entrada devolve a MESMA sessão do login por senha.
+ */
+export const passkeys = {
+  list: () => api.get<Passkey[]>("/auth/passkeys"),
+  registerOptions: () => api.post<PasskeyOptions>("/auth/passkeys/register/options"),
+  registerVerify: (challenge_id: string, credential: unknown, name?: string) =>
+    api.post<Passkey>("/auth/passkeys/register/verify", { challenge_id, credential, name }),
+  remove: (id: string) => api.del<void>(`/auth/passkeys/${id}`),
+  loginOptions: () => api.post<PasskeyOptions>("/auth/passkeys/login/options"),
+  loginVerify: (challenge_id: string, credential: unknown) =>
+    api.post<Session>("/auth/passkeys/login/verify", { challenge_id, credential }),
 };
 
 export const profile = {

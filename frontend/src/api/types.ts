@@ -371,6 +371,22 @@ export interface RouteAdjustmentEntry {
   mudancas: RouteChange[];
 }
 
+/** Uma chave de acesso cadastrada. Só metadados: a chave em si nunca sai do aparelho. */
+export interface Passkey {
+  id: string;
+  name: string;
+  created_at: string;
+  last_used_at: string | null;
+  /** Sincronizada entre aparelhos (iCloud, Google) — sobrevive à troca de celular. */
+  backed_up: boolean;
+}
+
+/** As opções de uma cerimônia WebAuthn, no JSON padrão do @simplewebauthn/browser. */
+export interface PasskeyOptions {
+  challenge_id: string;
+  options: Record<string, unknown>;
+}
+
 export interface EnglishProfile {
   user_id: string;
   enabled: boolean;
