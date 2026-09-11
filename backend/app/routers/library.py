@@ -506,7 +506,21 @@ def _absorve(supabase: Client, candidatos: list, tag_id: str) -> int:
             ).eq("id", atual["id"]).execute()
 
     if inserir:
-        supabase.table("pathr_resource").insert(inserir).execute()
+        try:
+            supabase.table("pathr_resource").insert(inserir).execute()
+        except Exception:  # noqa: BLE001
+            # O lote falha inteiro se UMA url já existir — e isso acontece
+            # quando duas buscas da mesma tag correm juntas (o botão da tela e
+            # a busca em segundo plano do checklist). Um por um, o repetido
+            # falha sozinho e o resto entra.
+            entraram = 0
+            for linha in inserir:
+                try:
+                    supabase.table("pathr_resource").insert(linha).execute()
+                    entraram += 1
+                except Exception:  # noqa: BLE001
+                    continue
+            return entraram
     return len(inserir)
 
 

@@ -38,13 +38,28 @@ export function LibraryPage() {
     [state.librarySearch, state.libraryFilter, state.contentLang],
   );
 
-  // Há um filtro estreitando a lista? O idioma entra na conta: quem deixou em
-  // "Português" e não vê nada pode ter material em inglês esperando, e mandar
-  // buscar de novo não resolveria isso.
-  const filtrando =
-    Boolean(state.librarySearch.trim()) ||
-    state.libraryFilter !== "todos" ||
-    state.contentLang !== "both";
+  // Com "Português" e nada encontrado, quanto existe nos outros idiomas. É o
+  // que deixa a tela dizer "há 3 em inglês" em vez de "nada encontrado" —
+  // documentação e exercício quase sempre só existem em inglês, e esconder
+  // isso fazia parecer que a busca não tinha achado nada.
+  const vazio = resources.data !== null && resources.data.length === 0;
+  const alternativas = useQuery(
+    () =>
+      libraryApi.list({
+        q: state.librarySearch.trim() || undefined,
+        kind: state.libraryFilter === "todos" ? undefined : state.libraryFilter,
+        only_mine: true,
+      }),
+    [state.librarySearch, state.libraryFilter],
+    { enabled: vazio && state.contentLang === "pt" },
+  );
+  const emOutroIdioma = vazio
+    ? (alternativas.data ?? []).filter((item) => item.language !== "pt").length
+    : 0;
+  const nomeDoFiltro =
+    state.libraryFilter === "todos"
+      ? "material"
+      : (LIBRARY_FILTERS.find((f) => f.key === state.libraryFilter)?.label ?? "material").toLowerCase();
 
   return (
     <div style={SCREEN_IN}>
@@ -61,6 +76,9 @@ export function LibraryPage() {
           <div style={{ fontSize: 12.5, color: TEXT.muted }}>Curadoria ligada às suas tags</div>
           <h1 style={{ fontSize: 28, margin: 0 }}>Biblioteca</h1>
         </div>
+        {/* Sempre à mão. Ficava só na lista vazia e sem filtro, e como o
+            idioma contava como filtro, quem usava "Português" nunca o via. */}
+        <CurateButton onFound={resources.reload} />
         <span style={{ display: "flex", alignItems: "center", gap: 8.4 }}>
           <span style={{ fontSize: 11, color: TEXT.faint }}>idioma</span>
           <Segmented
@@ -126,15 +144,25 @@ export function LibraryPage() {
         <EmptyState
           title="Nada encontrado"
           description={
-            filtrando
-              ? "Tente outro termo ou tire os filtros."
-              : "A busca cobre as suas tags: vídeo no YouTube, artigo num buscador e documentação oficial."
+            emOutroIdioma > 0
+              ? `Não há ${nomeDoFiltro} em português para as suas tecnologias — há ${emOutroIdioma} em inglês.`
+              : state.librarySearch.trim()
+                ? "Tente outro termo."
+                : "A busca procura vídeo no YouTube, artigo, documentação e exercício para as suas tecnologias."
           }
-          // Só oferece a busca quando a lista está vazia de verdade. Com um
-          // filtro ligado, o catálogo pode estar cheio e a tela vazia — aí o
-          // botão gastaria cota para "consertar" algo que se resolve tirando
-          // o filtro.
-          action={filtrando ? undefined : <CurateButton onFound={resources.reload} />}
+          action={
+            emOutroIdioma > 0 ? (
+              <button
+                type="button"
+                className="btn btn-secondary"
+                onClick={() => dispatch({ type: "setContentLang", lang: "both" })}
+              >
+                Mostrar também em inglês
+              </button>
+            ) : (
+              <CurateButton onFound={resources.reload} />
+            )
+          }
         />
       ) : null}
 

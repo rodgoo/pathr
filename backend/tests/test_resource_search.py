@@ -334,3 +334,44 @@ def test_docs_do_github_e_documentacao_nao_repositorio():
     GitHub Docs tinham entrado como repo."""
     assert rs._classifica("https://docs.github.com/en/actions/quickstart") == "doc"
     assert rs._classifica("https://github.com/docker/compose") == "repo"
+
+
+# --- consultas em dois idiomas -------------------------------------------
+
+
+async def test_uma_consulta_falhando_nao_apaga_a_outra(monkeypatch):
+    chamadas = []
+
+    async def falso(consulta, quantos):
+        chamadas.append(consulta)
+        if "português" in consulta:
+            raise RuntimeError("fora do ar")
+        return [rs.Candidate(kind="doc", title="d", url="https://docs.exemplo.com/")]
+
+    monkeypatch.setattr(rs.settings, "tavily_api_key", "k")
+    monkeypatch.setattr(rs, "_tavily", falso)
+    achados = await rs._buscar_varias(["x em português", "x docs"], 3)
+    assert len(chamadas) == 2
+    assert [a.url for a in achados] == ["https://docs.exemplo.com/"]
+
+
+async def test_documentacao_e_exercicio_procuram_tambem_em_portugues(monkeypatch):
+    """So a consulta inglesa deixava o filtro Portugues sem documentacao e
+    sem exercicio nenhum, mesmo onde existe traducao ou plataforma brasileira."""
+    consultas = []
+
+    async def falso(consulta, quantos):
+        consultas.append(consulta)
+        return []
+
+    monkeypatch.setattr(rs.settings, "tavily_api_key", "k")
+    monkeypatch.setattr(rs, "_tavily", falso)
+    await rs._documentacao("Docker")
+    await rs._exercicios("Docker")
+    assert sum("português" in c for c in consultas) == 2
+    assert any("official" in c for c in consultas) and any("practice" in c for c in consultas)
+
+
+def test_plataforma_brasileira_e_exercicio():
+    assert rs._classifica("https://judge.beecrowd.com/pt/problems/view/1001") == "exercise"
+    assert rs._classifica("https://neps.academy/br/exercise/1") == "exercise"

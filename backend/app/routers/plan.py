@@ -14,19 +14,22 @@ O GET da semana grava (cria a linha na primeira abertura, marca evidências).
 por isso não precisa de rota POST separada nem de aviso a outros aparelhos.
 """
 
+import logging
 from datetime import date, datetime, timezone
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from pydantic import BaseModel
 from supabase import Client
 
 from app.database import get_supabase
 from app.deps import get_current_user
-from app.services import route_adjust, weekly_plan
+from app.routers import library as library_router
+from app.services import resource_search, route_adjust, weekly_plan
 from app.services.progress import local_today
 
 router = APIRouter(prefix="/plan", tags=["plano"])
+logger = logging.getLogger("pathr.plan")
 
 
 class MarcarItem(BaseModel):
@@ -344,10 +347,51 @@ def _payload(
     }
 
 
+def _modulos_sem_material(supabase: Client, roadmap_id: str, itens: list[dict]) -> list[str]:
+    """Os módulos da semana que ainda não tiveram busca de material."""
+    ids: list[str] = []
+    for item in itens:
+        node_id = item.get("node_id")
+        if node_id and node_id not in ids:
+            ids.append(node_id)
+    if not ids:
+        return []
+    nodes = {str(n["id"]): n for n in _nodes(supabase, roadmap_id)}
+    tags_de = {nid: {str(t) for t in (nodes.get(nid, {}).get("tag_ids") or [])} for nid in ids}
+    todas = sorted(set().union(*tags_de.values()))
+    if not todas:
+        return []
+    linhas = (
+        supabase.table("pathr_tag").select("id,curated_at").in_("id", todas).execute().data or []
+    )
+    carentes = {str(t["id"]) for t in linhas if resource_search.needs_curation(t)}
+    return [nid for nid in ids if tags_de[nid] & carentes]
+
+
+async def _curar_semana(supabase: Client, user: dict, node_ids: list[str]) -> None:
+    """Busca o material dos módulos da semana, depois da resposta.
+
+    O checklist promete "Estudar o material de X", e a promessa era falsa
+    enquanto a busca dependesse de alguém achar o botão. Aqui ela sai sozinha,
+    em segundo plano para não atrasar a tela inicial, e pela mesma rota do
+    botão — a carência de 14 dias por tag segura a cota do YouTube.
+    """
+    for node_id in node_ids:
+        try:
+            await library_router.curate_library(
+                node_id=node_id, current_user=user, supabase=supabase
+            )
+        except Exception:  # noqa: BLE001
+            logger.warning("busca de material da semana falhou em %s", node_id, exc_info=True)
+
+
 @router.get("/week")
 def semana_atual(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
+    # Por último e com default: o FastAPI injeta pelo tipo, e chamar a função
+    # direto (teste) não pode deslocar os outros parâmetros.
+    background: BackgroundTasks = None,
 ):
     """O checklist da semana. Na virada, ajusta a rota e monta a lista nova."""
     user_id = str(current_user["id"])
@@ -379,6 +423,10 @@ def semana_atual(
         _gravar(
             supabase, user_id, inicio, {"items": itens, "updated_at": _agora().isoformat()}, True
         )
+    if background is not None:
+        sem_material = _modulos_sem_material(supabase, str(roadmap["id"]), itens)
+        if sem_material:
+            background.add_task(_curar_semana, supabase, current_user, sem_material)
     return _payload(semana, inicio, itens, _orcamento(supabase, user_id, roadmap), ajustes)
 
 

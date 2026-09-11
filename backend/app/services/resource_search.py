@@ -384,6 +384,30 @@ async def _articles(subject: str) -> list[Candidate]:
     return saida
 
 
+async def _buscar_varias(consultas: list[str], quantos: int) -> list[Candidate]:
+    """Várias consultas no buscador configurado, em paralelo, somadas.
+
+    Uma falha não derruba as outras: cada consulta é um idioma, e perder a
+    inglesa não pode apagar o que a portuguesa trouxe.
+    """
+    if settings.tavily_api_key.strip():
+        buscar = _tavily
+    elif settings.brave_api_key.strip():
+        buscar = _brave
+    else:
+        return []
+    resultados = await asyncio.gather(
+        *(buscar(consulta, quantos) for consulta in consultas), return_exceptions=True
+    )
+    saida: list[Candidate] = []
+    for resultado in resultados:
+        if isinstance(resultado, BaseException):
+            logger.warning("consulta de busca falhou: %s", resultado)
+            continue
+        saida.extend(resultado)
+    return saida
+
+
 async def _documentacao(subject: str) -> list[Candidate]:
     """A documentação oficial, procurada como tal.
 
@@ -392,13 +416,17 @@ async def _documentacao(subject: str) -> list[Candidate]:
     linha de docs.docker.com — e o filtro "Documentação" da Biblioteca ficava
     permanentemente vazio.
     """
-    consulta = f"{subject} documentação oficial docs reference"
-    if settings.tavily_api_key.strip():
-        bruto = await _tavily(consulta, _MAX_DOCS)
-    elif settings.brave_api_key.strip():
-        bruto = await _brave(consulta, _MAX_DOCS)
-    else:
-        return []
+    # Duas consultas: a portuguesa acha a documentação traduzida onde ela
+    # existe (MDN, docs.python.org/pt-br, React em pt-BR) e a inglesa garante a
+    # fonte canônica. Só a inglesa deixava o filtro "Português" sem
+    # documentação nenhuma, mesmo para projeto com tradução oficial.
+    bruto = await _buscar_varias(
+        [
+            f"{subject} documentação oficial em português",
+            f"{subject} official documentation reference",
+        ],
+        _MAX_DOCS,
+    )
     # Só o que o endereço confirma ser documentação. O resto veio como artigo e
     # já entra pela outra consulta.
     return [item for item in bruto if item.kind in {"doc", "repo"}]
@@ -416,17 +444,16 @@ async def _exercicios(subject: str) -> list[Candidate]:
     Docker" traz listas de blog com cinco perguntas; citar os sites que existem
     para isso traz a página onde se resolve.
     """
-    if settings.tavily_api_key.strip():
-        bruto = await _tavily(
-            f"{subject} exercícios práticos exercism OR leetcode OR hackerrank OR codewars",
-            _MAX_EXERCISES,
-        )
-    elif settings.brave_api_key.strip():
-        bruto = await _brave(
-            f"{subject} exercícios práticos exercism leetcode hackerrank", _MAX_EXERCISES
-        )
-    else:
-        return []
+    # Em português primeiro: Beecrowd e Neps são brasileiros e têm enunciado em
+    # português, que é o que o filtro "Português" pede. A inglesa cobre as
+    # plataformas grandes, que só existem em inglês.
+    bruto = await _buscar_varias(
+        [
+            f"{subject} exercícios em português beecrowd lista de exercícios",
+            f"{subject} practice exercises exercism leetcode hackerrank codewars",
+        ],
+        _MAX_EXERCISES,
+    )
 
     # Só o que a classificação reconheceu COMO exercício. O resto da busca é
     # artigo comum sobre o assunto, e ele já entra pela outra consulta —
@@ -537,6 +564,8 @@ _EXERCICIO_HOSTS = {
     "hackerrank.com",
     "codewars.com",
     "beecrowd.com.br",
+    "judge.beecrowd.com",
+    "neps.academy",
     "codingame.com",
     "adventofcode.com",
     "hackerearth.com",
