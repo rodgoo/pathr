@@ -35,6 +35,23 @@ export function messageFor(error: unknown): string {
 }
 
 /**
+ * Identidade do alvo de uma consulta.
+ *
+ * `deps` são ids e filtros — valores simples. Serializar é o suficiente para
+ * responder "é a mesma tela ou outra?", e é o que separa recarregar de
+ * revalidar. Se algum dia entrar aqui algo que não serializa, o `catch`
+ * devolve uma assinatura sempre diferente: o comportamento volta a ser o
+ * conservador de antes, não um erro.
+ */
+function assinaturaDe(deps: unknown[]): string {
+  try {
+    return JSON.stringify(deps);
+  } catch {
+    return String(Math.random());
+  }
+}
+
+/**
  * Executa `fetcher` na montagem e sempre que `deps` mudar.
  *
  * `enabled: false` mantém a consulta parada — usado quando a tela depende de
@@ -63,6 +80,26 @@ export function useQuery<T>(
   const fetcherRef = useRef(fetcher);
   fetcherRef.current = fetcher;
 
+  // Espelho do dado atual para o efeito consultar sem se declarar dependente
+  // dele — depender levaria o efeito a se disparar a cada resposta.
+  const dataRef = useRef<T | null>(null);
+  dataRef.current = data;
+
+  /**
+   * Trocar de aba não é trocar de tela.
+   *
+   * Duas coisas fazem esta consulta rodar de novo: mudar de ALVO (outro
+   * módulo, outro recurso) e revalidar o mesmo alvo (a fila offline esvaziou,
+   * o app voltou ao primeiro plano). Só a primeira é uma tela nova, e só ela
+   * justifica apagar o que está no ar e mostrar o esqueleto de carregamento.
+   *
+   * Sem esta distinção, voltar de outra janela devolvia a pessoa ao estado
+   * "carregando" em toda tela aberta — e qualquer coisa em andamento em cima
+   * desses dados, um quiz na sétima questão, era desmontada junto.
+   */
+  const assinatura = assinaturaDe(deps);
+  const assinaturaRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (!enabled) {
       setLoading(false);
@@ -71,23 +108,37 @@ export function useQuery<T>(
     const controller = new AbortController();
     let alive = true;
 
-    setLoading(true);
-    setError(null);
-    setStatus(null);
+    const mudouDeAlvo = assinaturaRef.current !== assinatura;
+    assinaturaRef.current = assinatura;
+    // Revalidação em silêncio: há dado na tela e o alvo é o mesmo.
+    const silenciosa = !mudouDeAlvo && dataRef.current !== null;
+
+    if (!silenciosa) {
+      setLoading(true);
+      setError(null);
+      setStatus(null);
+    }
 
     fetcherRef
       .current(controller.signal)
       .then((result) => {
-        if (alive) setData(result);
+        if (!alive) return;
+        setData(result);
+        setError(null);
+        setStatus(null);
       })
       .catch((caught) => {
         // Requisição cancelada no desmonte não é erro para mostrar.
         if (!alive || controller.signal.aborted) return;
+        // Numa revalidação, o que já está na tela continua sendo a melhor
+        // informação disponível: trocá-la por uma mensagem de erro faria a
+        // pessoa perder conteúdo bom por causa de uma falha de rede passageira.
+        if (silenciosa) return;
         setError(messageFor(caught));
         setStatus(caught instanceof ApiError ? caught.status : null);
       })
       .finally(() => {
-        if (alive) setLoading(false);
+        if (alive && !silenciosa) setLoading(false);
       });
 
     return () => {
@@ -95,7 +146,7 @@ export function useQuery<T>(
       controller.abort();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, tick, revisao, ...deps]);
+  }, [enabled, tick, revisao, assinatura]);
 
   const reload = useCallback(() => setTick((value) => value + 1), []);
   const set = useCallback(

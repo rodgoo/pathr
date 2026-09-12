@@ -6,7 +6,7 @@
  * um campo que não salva seria pior que mostrá-lo bloqueado.
  */
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 import { auth as authApi, profile as profileApi } from "@/api/endpoints";
 import { useAuth } from "@/hooks/useAuth";
 import { useMutation, useQuery } from "@/hooks/useApi";
@@ -16,11 +16,34 @@ import { PasswordField } from "@/components/auth/AuthShell";
 import { Kicker, Panel } from "@/components/ui/primitives";
 import { PasskeysPanel } from "./PasskeysPanel";
 
+/**
+ * Os degraus de senioridade que o app entende.
+ *
+ * Uma lista fechada, e não texto livre: a senioridade entra no cálculo do
+ * plano e é comparada com o que o objetivo exige. "pleno", "Pleno" e "PL"
+ * digitados à mão seriam três valores diferentes para a mesma coisa, e o
+ * roadmap sairia calibrado errado sem ninguém entender por quê.
+ */
+// O vocabulário é o de `pathr_profile.seniority` (ver backend/app/models.py).
+/** O que se lê na tela. O valor gravado continua sendo o do vocabulário. */
+const ROTULO_SENIORIDADE: Record<(typeof SENIORIDADES)[number], string> = {
+  estagio: "Estágio",
+  junior: "Júnior",
+  pleno: "Pleno",
+  senior: "Sênior",
+  especialista: "Especialista",
+  lideranca: "Liderança",
+};
+
+const SENIORIDADES = ["estagio", "junior", "pleno", "senior", "especialista", "lideranca"] as const;
+
 export function AccountTab() {
   const { user, refresh } = useAuth();
   const profile = useQuery(() => profileApi.get(), []);
   const [name, setName] = useState(user?.name ?? "");
   const [role, setRole] = useState("");
+  const [seniority, setSeniority] = useState("");
+  const [years, setYears] = useState("");
   const [hours, setHours] = useState("8");
   const [saved, setSaved] = useState(false);
 
@@ -29,19 +52,37 @@ export function AccountTab() {
     await profileApi.updateAccount({ name: name.trim() });
     await profileApi.update({
       current_role: role.trim() || null,
+      seniority: seniority.trim() || null,
+      // Vazio é "não quero dizer", e é diferente de zero — que é a resposta
+      // legítima de quem está começando agora.
+      years_experience: years.trim() === "" ? null : Number(years),
       weekly_hours: Number(hours) || 8,
     });
     await refresh();
   });
 
+  /**
+   * O formulário recebe o que está gravado UMA vez.
+   *
+   * Antes a condição era "ainda não tem cargo preenchido", o que errava dos
+   * dois lados: quem nunca preencheu o cargo nunca via as próprias horas
+   * (ficavam em 8, o padrão), e quem apagava o campo para digitar outro tinha
+   * o valor antigo escrito de volta por cima na renderização seguinte.
+   */
+  const hidratado = useRef(false);
+  useEffect(() => {
+    if (hidratado.current || !profile.data) return;
+    hidratado.current = true;
+    setRole(profile.data.current_role ?? "");
+    setSeniority(profile.data.seniority ?? "");
+    setYears(
+      profile.data.years_experience === null ? "" : String(profile.data.years_experience),
+    );
+    setHours(String(profile.data.weekly_hours));
+  }, [profile.data]);
+
   if (profile.loading) return <Loading />;
   if (profile.error) return <ErrorState message={profile.error} onRetry={profile.reload} />;
-
-  // Sincroniza os campos com o servidor na primeira renderização com dados.
-  if (profile.data && role === "" && profile.data.current_role) {
-    setRole(profile.data.current_role);
-    setHours(String(profile.data.weekly_hours));
-  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -82,6 +123,36 @@ export function AccountTab() {
               placeholder="ex: Desenvolvedor frontend"
               value={role}
               onChange={(event) => setRole(event.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label htmlFor="account-seniority">Senioridade</label>
+            <select
+              id="account-seniority"
+              className="input"
+              value={seniority}
+              onChange={(event) => setSeniority(event.target.value)}
+            >
+              <option value="">Não informar</option>
+              {SENIORIDADES.map((nivel) => (
+                <option key={nivel} value={nivel}>
+                  {ROTULO_SENIORIDADE[nivel]}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label htmlFor="account-years">Tempo de experiência (anos)</label>
+            <input
+              id="account-years"
+              className="input"
+              type="number"
+              min={0}
+              max={60}
+              step={0.5}
+              placeholder="ex: 3"
+              value={years}
+              onChange={(event) => setYears(event.target.value)}
             />
           </div>
           <div className="field">

@@ -47,7 +47,15 @@ const RETENTATIVA_MS = 30_000;
  * um tempo, e a rede voltar. Abaixo disso o que está na tela é recente o
  * bastante, e refazer tudo a cada troca rápida de app só gastaria bateria.
  */
-const RECONFERIR_APOS_MS = 20_000;
+// Cinco minutos, e não vinte segundos como antes.
+//
+// A reconferência em si ficou invisível — `useQuery` mantém na tela o que já
+// está lá enquanto repergunta (ver hooks/useApi.ts), então voltar ao app não
+// devolve mais ninguém ao esqueleto de carregamento. O que sobra é o custo de
+// rede, e aí vinte segundos é curto demais: quem alterna entre o PathR e o
+// editor a cada meio minuto pagava uma rodada de requisições por alternância
+// sem que nada pudesse ter mudado do outro lado.
+const RECONFERIR_APOS_MS = 300_000;
 
 interface OfflineContextValue extends OfflineStatus {
   /** Uma versão nova do app está instalada e esperando. */
@@ -155,7 +163,6 @@ export function OfflineProvider({ children }: { children: ReactNode }) {
       void sync();
       reconferir();
     };
-
     window.addEventListener("online", aoVoltar);
     window.addEventListener("offline", aoCair);
     document.addEventListener("visibilitychange", aoPrimeiroPlano);

@@ -1,0 +1,30 @@
+# Disparo dos avisos por e-mail do PathR.
+#
+# Por que aqui e nao dentro do app: a maquina na Fly suspende quando ninguem
+# usa (min_machines_running = 0), e agendador em processo dormindo nao dispara
+# nada. Esta chamada acorda a maquina e devolve o que foi enviado.
+#
+# De hora em hora porque a decisao e por PESSOA, no fuso dela: as 8h de quem
+# vive em Sao Paulo nao sao as 8h de quem vive em Lisboa. Quem decide o que sai
+# e backend/app/services/notifications.py; a trava contra e-mail repetido e a
+# tabela pathr_email_log, nao o horario do cron.
+name: avisos por e-mail
+
+on:
+  schedule:
+    # O GitHub roda em UTC e atrasa alguns minutos em horario de pico. A janela
+    # de duas horas do servidor absorve esse atraso.
+    - cron: "5 * * * *"
+  # Para testar sem esperar a proxima hora.
+  workflow_dispatch:
+
+jobs:
+  disparar:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Chamar o disparo
+        run: |
+          resposta=$(curl --silent --show-error --fail-with-body --max-time 120 \
+            -X POST "https://api.pathr.notter.com.br/jobs/emails" \
+            -H "X-Pathr-Jobs-Secret: ${{ secrets.PATHR_JOBS_SECRET }}")
+          echo "$resposta"

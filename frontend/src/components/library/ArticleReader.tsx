@@ -109,6 +109,30 @@ export function ArticleReader({
     };
   }, [conteudo.status, conteudo.id]);
 
+  /**
+   * Um link do artigo não pode levar o app embora.
+   *
+   * O HTML é de terceiro e os links vêm como vieram: sem `target`, clicar em
+   * "configure-pages action" trocava o PathR pela página do GitHub NA MESMA
+   * aba. Instalado na tela de início, onde não há barra de endereço nem botão
+   * de voltar, isso é o app sumir — e com ele o módulo aberto, o quiz em
+   * andamento e a posição da leitura.
+   *
+   * O carimbo é feito depois de cada renderização, e não no servidor, porque é
+   * decisão de apresentação: o mesmo HTML guardado serve para qualquer lugar
+   * que venha a mostrá-lo.
+   */
+  useEffect(() => {
+    const elemento = caixa.current;
+    if (!elemento || conteudo.status !== "ok") return;
+    for (const link of elemento.querySelectorAll("a[href]")) {
+      link.setAttribute("target", "_blank");
+      // `noopener` é o que impede a página aberta de mexer na nossa pela
+      // referência `window.opener` — vale para qualquer link de fora.
+      link.setAttribute("rel", "noreferrer noopener");
+    }
+  }, [conteudo.status, conteudo.html]);
+
   if (conteudo.status !== "ok" || !conteudo.html) {
     return <LeituraIndisponivel conteudo={conteudo} />;
   }

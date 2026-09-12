@@ -39,6 +39,7 @@ SEGREDOS = (
     "YOUTUBE_API_KEY",
     "TAVILY_API_KEY",
     "BRAVE_API_KEY",
+    "JOBS_SECRET",
 )
 
 # Segredos que podem faltar sem o app ficar quebrado — a ausência desliga uma

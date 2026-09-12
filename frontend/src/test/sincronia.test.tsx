@@ -57,10 +57,43 @@ describe("reconferência entre dispositivos", () => {
     // pena reconferir.
     cargo = "Backend sênior";
     const agora = Date.now();
-    vi.spyOn(Date, "now").mockReturnValue(agora + 60_000);
+    vi.spyOn(Date, "now").mockReturnValue(agora + 6 * 60_000);
     window.dispatchEvent(new Event("focus"));
 
     expect(await screen.findByText("cargo: Backend sênior")).toBeInTheDocument();
+  });
+
+  /**
+   * O limite da reconferência: ela não pode APAGAR a tela.
+   *
+   * Quem volta de outra janela precisa encontrar o app como deixou. Antes, a
+   * reconferência zerava o dado de toda consulta aberta e a tela inteira
+   * voltava ao esqueleto de carregamento — e o que estivesse montado em cima
+   * desses dados, um quiz na sétima questão, era desmontado junto.
+   */
+  it("não apaga o que está na tela enquanto repergunta", async () => {
+    let responder: ((valor: { body: unknown }) => void) | null = null;
+    const servidor = mockServer({
+      "GET /auth/me": () => ({ body: aUser() }),
+      "GET /profile": () => {
+        if (!responder) return { body: { current_role: "Desenvolvedor pleno" } };
+        return new Promise<{ body: unknown }>((resolve) => {
+          responder = resolve as (valor: { body: unknown }) => void;
+        });
+      },
+    });
+    montar(servidor);
+    expect(await screen.findByText("cargo: Desenvolvedor pleno")).toBeInTheDocument();
+
+    // A partir daqui o servidor demora a responder: é a janela em que a tela
+    // antiga precisa continuar de pé.
+    responder = () => undefined;
+    const agora = Date.now();
+    vi.spyOn(Date, "now").mockReturnValue(agora + 6 * 60_000);
+    window.dispatchEvent(new Event("focus"));
+
+    await waitFor(() => expect(contaPerfil(servidor)).toBeGreaterThan(1));
+    expect(screen.getByText("cargo: Desenvolvedor pleno")).toBeInTheDocument();
   });
 
   it("não repergunta numa troca rápida de janela", async () => {
@@ -72,7 +105,7 @@ describe("reconferência entre dispositivos", () => {
     await screen.findByText("cargo: Desenvolvedor pleno");
     const antes = contaPerfil(servidor);
 
-    // Sem avançar o relógio: a resposta na tela tem segundos de vida. Refazer
+    // Sem avançar o relógio: a resposta na tela acabou de chegar. Refazer
     // tudo a cada alt-tab só gastaria bateria.
     window.dispatchEvent(new Event("focus"));
     window.dispatchEvent(new Event("focus"));

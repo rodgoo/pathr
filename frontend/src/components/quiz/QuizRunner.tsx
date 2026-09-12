@@ -47,7 +47,20 @@ function lerProgresso(quizId: string): Progresso {
   }
 }
 
-export function QuizRunner({ quiz, onFinished }: { quiz: Quiz; onFinished?: () => void }) {
+export function QuizRunner({
+  quiz,
+  onFinished,
+  onSubmitted,
+}: {
+  quiz: Quiz;
+  onFinished?: () => void;
+  /**
+   * A tentativa fechou no servidor. Quem guardou o enunciado usa isto para
+   * esquecê-lo: recarregar a página depois da correção deve levar ao botão de
+   * gerar outro quiz, não a refazer um quiz que já tem nota.
+   */
+  onSubmitted?: () => void;
+}) {
   // Inicializador preguicoso: le o storage uma vez, na montagem.
   const [progresso] = useState(() => lerProgresso(quiz.id));
   const [index, setIndex] = useState(progresso.index);
@@ -92,6 +105,7 @@ export function QuizRunner({ quiz, onFinished }: { quiz: Quiz; onFinished?: () =
     const finished = await submit.run();
     if (finished) {
       setResult(finished);
+      onSubmitted?.();
       // Quiz enviado: o progresso guardado so atrapalharia se a pessoa
       // reabrisse este mesmo quiz, que agora tem tentativa fechada.
       try {

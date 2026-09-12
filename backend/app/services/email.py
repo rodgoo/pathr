@@ -15,6 +15,8 @@ from urllib.parse import quote
 
 import httpx
 
+from html import escape
+
 from app.config import settings
 
 logger = logging.getLogger("pathr.email")
@@ -101,4 +103,70 @@ def send_password_reset(to_email: str, to_name: str, token: str) -> bool:
             "Criar nova senha",
             url,
         ),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Avisos do plano de estudo
+#
+# Os três saem do disparo horário (routers/jobs.py) e respeitam as preferências
+# da aba "Avisos e privacidade". Cada um só é enviado quando tem o que dizer:
+# um lembrete de uma lista vazia, ou um resumo de uma semana sem nada, treina a
+# pessoa a ignorar o remetente.
+# ---------------------------------------------------------------------------
+
+
+def _lista(itens: list[str]) -> str:
+    linhas = "".join(
+        f'<li style="margin-bottom:6px">{escape(item)}</li>' for item in itens[:6]
+    )
+    return f'<ul style="padding-left:18px;margin:12px 0">{linhas}</ul>'
+
+
+def send_daily_plan(to_email: str, to_name: str, pendentes: list[str], minutos: int) -> bool:
+    """O que falta hoje, com o tempo que isso leva."""
+    quantos = len(pendentes)
+    corpo = (
+        f"Faltam {quantos} {'item' if quantos == 1 else 'itens'} no seu plano desta semana — "
+        f"cerca de {minutos} minutos:{_lista(pendentes)}"
+        "Começar pelo primeiro já mantém a sequência de pé."
+    )
+    return _send(
+        to_email,
+        to_name,
+        "Seu plano de estudo de hoje",
+        _layout("Bom dia!", corpo, "Abrir o plano", settings.frontend_url),
+    )
+
+
+def send_weekly_summary(
+    to_email: str, to_name: str, feitos: int, total: int, minutos: int, streak: int
+) -> bool:
+    """A semana que passou, em números que a pessoa reconhece."""
+    horas = round(minutos / 60, 1)
+    corpo = (
+        f"Na semana passada você concluiu <strong>{feitos} de {total}</strong> itens do plano "
+        f"e estudou <strong>{horas}h</strong>."
+        + (f" Sua sequência está em <strong>{streak} dias</strong>." if streak else "")
+        + "<br><br>A semana nova já está montada, no seu nível atual."
+    )
+    return _send(
+        to_email,
+        to_name,
+        "Como foi a sua semana de estudo",
+        _layout("Resumo da semana", corpo, "Ver a semana nova", settings.frontend_url),
+    )
+
+
+def send_streak_at_risk(to_email: str, to_name: str, streak: int) -> bool:
+    """O aviso da noite. Só vai para quem tem sequência viva e não estudou hoje."""
+    corpo = (
+        f"Você está há <strong>{streak} {'dia' if streak == 1 else 'dias'}</strong> seguidos "
+        "estudando e ainda não marcou nada hoje. Quinze minutos bastam para manter a sequência."
+    )
+    return _send(
+        to_email,
+        to_name,
+        "Sua sequência de estudo está em risco",
+        _layout("Ainda dá tempo", corpo, "Estudar agora", settings.frontend_url),
     )

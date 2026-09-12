@@ -149,6 +149,12 @@ class Settings(BaseSettings):
     tavily_api_key: str = ""  # https://app.tavily.com
     brave_api_key: str = ""  # https://brave.com/search/api
 
+    # --- Disparo de avisos por e-mail ---
+    # O segredo que o cron externo apresenta em X-Pathr-Jobs-Secret. Vazio
+    # desliga o disparo inteiro: melhor não mandar nada do que deixar a rota
+    # aberta para qualquer um acionar e-mail em nome do app.
+    jobs_secret: str = ""
+
     # --- Chave de acesso (WebAuthn) ---
     # O domínio a que as chaves ficam presas. Vazio = o host de FRONTEND_URL
     # (pathr.notter.com.br), e é de propósito que NÃO seja notter.com.br: no

@@ -164,6 +164,7 @@ from app.routers import (  # noqa: E402
     auth,
     eventos as eventos_router,
     explanations,
+    jobs,
     languages,
     library,
     passkeys,
@@ -202,3 +203,4 @@ app.include_router(languages.router)
 app.include_router(explanations.router)
 app.include_router(plan.router)
 app.include_router(passkeys.router)
+app.include_router(jobs.router)

@@ -189,6 +189,27 @@ class PathrEmailToken(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
 
+class PathrEmailLog(SQLModel, table=True):
+    """Um aviso por pessoa, por tipo, por dia local.
+
+    A unicidade É a regra: o disparo roda de hora em hora, com janela de duas
+    horas para sobreviver a atraso, e é esta linha que impede o mesmo e-mail
+    de sair duas vezes.
+    """
+
+    __tablename__ = "pathr_email_log"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id"))
+    kind: str  # lembrete_diario | resumo_semanal | sequencia_em_risco
+    sent_on: date = Field(sa_type=sa.Date())
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+
+    __table_args__ = (
+        sa.UniqueConstraint("user_id", "kind", "sent_on", name="uq_pathr_email_log"),
+    )
+
+
 class PathrSecurityEvent(SQLModel, table=True):
     """Trilha de auditoria. NUNCA grava senha, código TOTP ou token em texto."""
 

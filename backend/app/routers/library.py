@@ -65,6 +65,32 @@ def _user_tag_ids(supabase: Client, user_id: str) -> list[str]:
     return [str(row["tag_id"]) for row in rows]
 
 
+# A ordem em que o material aparece.
+#
+# Qualidade sozinha não é a ordem certa de uma lista de estudo: o que está
+# COMEÇADO é o único item com custo de retomada — a pessoa já leu metade, já
+# sabe onde parou, e enterrá-lo na sexta posição atrás de coisas que ela nunca
+# abriu é pedir que ela procure o próprio progresso toda vez que entra.
+#
+# Depois vem o que foi salvo de propósito, depois o que nunca foi tocado, e
+# por último o que já acabou — concluído não some da lista, porque reler é
+# legítimo, mas não disputa o topo com o que está em curso.
+#
+# Dentro de cada faixa a ordem que vale continua sendo a de qualidade: a
+# ordenação é estável e o que chega aqui já vem `quality_score` decrescente.
+_ORDEM_POR_STATUS = {
+    "in_progress": 0,
+    "saved": 1,
+    None: 2,
+    "done": 3,
+    "dismissed": 4,
+}
+
+
+def _peso_do_status(item: dict[str, Any]) -> int:
+    return _ORDEM_POR_STATUS.get(item.get("user_status"), 2)
+
+
 @router.get("")
 def list_resources(
     q: str = "",
@@ -114,7 +140,7 @@ def list_resources(
     )
     by_resource = {str(row["resource_id"]): row for row in progress}
 
-    return [
+    listados = [
         {
             **resource,
             "user_status": (by_resource.get(str(resource["id"])) or {}).get("status"),
@@ -131,6 +157,10 @@ def list_resources(
         }
         for resource in resources
     ]
+
+    # Estável: dentro de cada faixa a ordem por qualidade se mantém.
+    listados.sort(key=_peso_do_status)
+    return listados
 
 
 # Quanto tempo o artigo extraído vale antes de ser buscado de novo. Artigo é
@@ -192,8 +222,26 @@ def read_resource(
     return _leitura_publica({**recurso, **campos})
 
 
+def _formato_antigo(html: str) -> bool:
+    """O texto guardado veio do extrator de antes da correção do código inline?
+
+    O que está no banco foi extraído por uma versão que devolvia TODO trecho
+    de código como `<pre>` — inclusive o que era uma palavra no meio da frase,
+    o que partia o parágrafo em pedaços na tela (ver services/reader.py).
+    Corrigir o extrator não conserta sozinho o que já foi gravado: sem isto, a
+    pessoa continuaria vendo o texto quebrado por até sete dias, e num artigo
+    lido uma vez por semana, para sempre.
+
+    A marca é exata: no formato de hoje todo `<pre>` abre com `<code>`. Um que
+    não abra é do formato anterior, e vale buscar de novo.
+    """
+    return "<pre>" in html and html.count("<pre>") != html.count("<pre><code>")
+
+
 def _leitura_vencida(recurso: dict[str, Any]) -> bool:
     if recurso.get("reader_status") != "ok" or not recurso.get("reader_html"):
+        return True
+    if _formato_antigo(str(recurso["reader_html"])):
         return True
     buscado = recurso.get("reader_fetched_at")
     if not buscado:

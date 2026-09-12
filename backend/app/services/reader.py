@@ -38,6 +38,7 @@ Duas coisas que um "baixe esta URL no servidor" precisa ter:
 from __future__ import annotations
 
 import ipaddress
+import re
 import socket
 from dataclasses import dataclass
 from typing import Optional
@@ -75,6 +76,58 @@ _ATRIBUTOS = {
     "pre": {"class"},
     "span": {"class"},
 }
+
+
+# --------------------------------------------------------------------------
+# O código no meio da frase
+#
+# trafilatura devolve TODO trecho de código como `<pre>`, sem distinguir o
+# bloco da linha solta no meio de um parágrafo. Isso quebra o texto de um
+# jeito que parece defeito nosso: `<pre>` é elemento de bloco, e o navegador
+# FECHA o parágrafo ao encontrá-lo. Uma frase como
+#
+#     <p>The <pre>push</pre>, <pre>release</pre>, and <pre>pull_request</pre>
+#     events are the most common.</p>
+#
+# chega à tela como cinco pedaços empilhados — "The", uma caixa larga, uma
+# vírgula sozinha, outra caixa, ", and" — que foi exatamente o que se viu nos
+# artigos do freeCodeCamp.
+#
+# O que separa um caso do outro está na própria saída: o bloco de código vem
+# ANINHADO (`<pre><pre>…</pre></pre>`) e o código inline vem simples. Medido
+# no artigo "Learn to Use GitHub Actions": 11 aninhados, todos blocos de
+# verdade, e 58 simples, nenhum com quebra de linha e o maior com 37
+# caracteres.
+#
+# A quebra de linha entra como segunda opinião: um `<pre>` simples com mais de
+# uma linha é bloco de qualquer jeito, venha aninhado ou não. Errar para o
+# lado do bloco preserva o alinhamento, que num trecho de YAML é o conteúdo.
+
+_PRE_ANINHADO = re.compile(r"<pre>\s*<pre>(.*?)</pre>\s*</pre>", re.DOTALL)
+_PRE_SIMPLES = re.compile(r"<pre>(.*?)</pre>", re.DOTALL)
+
+# Marca os blocos já resolvidos enquanto os inline são trocados. Sem isso, a
+# segunda passada reabriria o que a primeira acabou de fechar. O texto é
+# improvável o bastante em artigo de verdade para não colidir, e some antes
+# de sair desta função.
+_MARCA = "\ue000pathr-bloco\ue000"
+_MARCADO = re.compile(re.escape(_MARCA) + r"(.*?)" + re.escape(_MARCA), re.DOTALL)
+
+
+def _bloco(trecho: str) -> str:
+    return f"<pre><code>{trecho}</code></pre>"
+
+
+def _arruma_codigo(html: str) -> str:
+    """Bloco vira `<pre><code>`; código de uma linha volta a ser inline."""
+
+    def inline(achado: re.Match[str]) -> str:
+        trecho = achado.group(1)
+        return _bloco(trecho) if "\n" in trecho.strip() else f"<code>{trecho}</code>"
+
+    marcado = _PRE_ANINHADO.sub(lambda achado: _MARCA + achado.group(1) + _MARCA, html)
+    trocado = _PRE_SIMPLES.sub(inline, marcado)
+    return _MARCADO.sub(lambda achado: _bloco(achado.group(1)), trocado)
 
 
 class LeituraIndisponivel(Exception):
@@ -177,4 +230,5 @@ def ler(url: str) -> Leitura:
         raise LeituraIndisponivel("Não consegui extrair o texto desta página.")
 
     texto = trafilatura.extract(pagina, url=url) or ""
-    return Leitura(html=nh3.clean(bruto, tags=_TAGS, attributes=_ATRIBUTOS), palavras=len(texto.split()))
+    limpo = nh3.clean(_arruma_codigo(bruto), tags=_TAGS, attributes=_ATRIBUTOS)
+    return Leitura(html=limpo, palavras=len(texto.split()))
