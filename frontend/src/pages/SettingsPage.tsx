@@ -72,6 +72,30 @@ export function SettingsPage() {
       {tab === "skills" ? <SkillsTab /> : null}
       {tab === "idiomas" ? <LanguageSettings /> : null}
       {tab === "avisos" ? <NoticesTab /> : null}
+
+      {/* A licença dos ícones (CC BY 4.0) pede crédito visível — um
+          comentário no código não conta, porque quem usa o app nunca o lê. */}
+      <p style={{ margin: "28px 0 0", fontSize: 11.5, color: "rgba(233,233,237,.4)" }}>
+        Ícones:{" "}
+        <a
+          href="https://github.com/krystonschwarze/coolicons"
+          target="_blank"
+          rel="noreferrer noopener"
+          style={{ color: "inherit" }}
+        >
+          coolicons
+        </a>
+        , de Kryston Schwarze, sob{" "}
+        <a
+          href="https://creativecommons.org/licenses/by/4.0/deed.pt-br"
+          target="_blank"
+          rel="noreferrer noopener"
+          style={{ color: "inherit" }}
+        >
+          CC BY 4.0
+        </a>
+        .
+      </p>
     </div>
   );
 }
