@@ -80,16 +80,9 @@ export function ModulePage() {
 
   return (
     <div style={SCREEN_IN}>
-      <button
-        type="button"
-        className="btn btn-ghost"
-        style={{ marginBottom: 11.2, fontSize: SIZE.apoio, alignSelf: "flex-start" }}
-        onClick={() => dispatch({ type: "navigate", screen: "roadmap" })}
-      >
-        <Icon name="arrowLeft" size={14} />
-        Roadmap
-      </button>
-
+      {/* Sem botão "‹ Roadmap" aqui. Trilha e Roadmap são telas irmãs, cada
+          uma com a própria entrada no menu — um "voltar" sugeria que a Trilha
+          mora dentro do Roadmap, e duplicava o que o menu já faz. */}
       <div style={{ fontSize: 12.5, color: TEXT.muted }}>
         {phase?.title ?? "Trilha"} · {node.kind}
         {node.level ? ` · ${node.level}` : ""}
