@@ -58,17 +58,26 @@ _TIMEOUT = 10
 # ---------------------------------------------------------------------------
 # Paleta
 #
-# Repetida do frontend (src/lib/tokens.ts) de propósito: e-mail não importa CSS
-# do app, e atravessar os dois projetos por cinco cores custaria mais que a
-# duplicação. Os nomes são os mesmos dos tokens de lá, para quem mudar a marca
-# achar os dois lugares.
+# O e-mail é PRETO, e não o azul-noite do app. Na caixa de entrada ele divide a
+# tela com o cliente de e-mail em modo escuro, que é preto ou quase: o azul do
+# app lia ali como um cartão acinzentado e desbotado. Os acentos (roxo, verde,
+# âmbar) continuam os do app — são eles que dizem que a mensagem é do PathR.
+#
+# Sem diferença de tom entre fundo e cartão, a estrutura passa a ser desenhada
+# por LINHA: o cartão, o placar e o logotipo ganham um contorno fino. Os cinzas
+# do texto são neutros, recalibrados para o preto puro — os de antes eram
+# azulados para conversar com o fundo antigo, e sobre preto puxavam para o
+# lilás. O mais fraco ainda passa de 6:1 de contraste, o bastante para os 12px
+# do rodapé.
 # ---------------------------------------------------------------------------
-_FUNDO = "#161826"  # BG
-_PAINEL = "#1b1d2b"  # PANEL
-_TINTA = "#e9e9ed"
-_TINTA_SUAVE = "#b9b9c4"
-_TINTA_FRACA = "#84848f"
-_LINHA = "#2a2d3f"
+_FUNDO = "#000000"
+_PAINEL = "#000000"
+# Um degrau acima do preto, para o placar ser caixa e não buraco.
+_SUPERFICIE = "#0e0e11"
+_TINTA = "#f4f4f6"
+_TINTA_SUAVE = "#c4c4cc"
+_TINTA_FRACA = "#8d8d97"
+_LINHA = "#26262c"
 
 _ROXO = "#9184d9"  # ACC
 _ROXO_CLARO = "#b5abfc"  # ACC4
@@ -149,8 +158,12 @@ def _cabecalho(cor: str) -> str:
                  duas vezes, e com a imagem bloqueada o texto alternativo
                  aparece na cor padrão do cliente — preto sobre este painel
                  escuro, ilegível e ao lado do nome repetido. -->
-            <img src="{logo}" width="40" height="40" alt=""
-                 style="display:block;width:40px;height:40px;border:0;border-radius:10px" />
+            <!-- O logotipo é um quadrado preto: sobre o fundo preto ele
+                 sumiria e sobraria o símbolo solto. O contorno devolve a
+                 forma do ladrilho; 38px + 1px de cada lado mantêm os 40. -->
+            <img src="{logo}" width="38" height="38" alt=""
+                 style="display:block;width:38px;height:38px;border:1px solid {_LINHA};
+                        border-radius:10px" />
           </td>
           <td valign="middle">
             <span style="font-family:{_FONTE};font-size:19px;font-weight:600;
@@ -253,7 +266,9 @@ def _placar(colunas: list[tuple[str, str, str]]) -> str:
     )
     return f"""
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-       bgcolor="{_FUNDO}" style="margin:22px 0 0;background-color:{_FUNDO};border-radius:10px">
+       bgcolor="{_SUPERFICIE}"
+       style="margin:22px 0 0;background-color:{_SUPERFICIE};border:1px solid {_LINHA};
+              border-radius:10px">
   <tr><td style="padding:18px 10px">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
       <tr>{celulas}
@@ -333,7 +348,7 @@ def _pagina(preheader: str, miolo: str) -> str:
     <td align="center" style="padding:32px 16px">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
              bgcolor="{_PAINEL}" style="max-width:560px;background-color:{_PAINEL};
-             border-radius:16px">
+             border:1px solid {_LINHA};border-radius:16px">
         <tr>
           <td bgcolor="{_PAINEL}"
               style="background-color:{_PAINEL};border-radius:16px;padding:28px 28px 26px">
