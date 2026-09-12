@@ -416,8 +416,19 @@ def semana_atual(
             existe=linha is not None,
         )
     else:
-        itens = list(linha.get("items") or [])
+        guardados = list(linha.get("items") or [])
         semana = int(linha.get("week_index") or 1)
+        # A lista se remonta sozinha quando o que a gerou mudou: o nível subiu
+        # num quiz, uma revisão entrou na fila, ou a semana acabou cedo e há
+        # módulos seguintes a puxar. O que já foi feito continua feito — ver
+        # `weekly_plan.preservar`. Não ajusta a rota: isso é da virada.
+        itens = weekly_plan.preservar(_montar(supabase, user_id, roadmap, semana), guardados)
+        if weekly_plan.mudou(itens, guardados):
+            _gravar(
+                supabase, user_id, inicio, {"items": itens, "updated_at": _agora().isoformat()}, True
+            )
+        else:
+            itens = guardados
 
     if _evidencias(supabase, user_id, inicio, itens):
         _gravar(

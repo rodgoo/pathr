@@ -159,3 +159,43 @@ def test_resumo():
     r = wp.resumo(itens)
     assert r["feitos"] == 1 and r["total"] == len(itens)
     assert r["minutos_feitos"] == itens[0]["minutos"]
+
+
+# ---------------------------------------------------------------------------
+# A semana que se remonta sozinha
+#
+# Era um botao, "atualizar com meu nivel atual". Quem subia de nivel num quiz e
+# nao lembrava de aperta-lo seguia a semana com a lista de um nivel que ja nao
+# era o dele. Agora a tela inicial remonta a lista quando o que a gerou mudou.
+# ---------------------------------------------------------------------------
+
+
+def test_feito_que_nao_cabe_mais_na_lista_nova_continua_na_semana():
+    """Subir de nivel tira itens do plano; o que ja foi marcado nao pode sumir."""
+    antigos = wp.montar([_node("a", ["t"])], {"t": 0}, 0, 600)
+    material = next(i for i in antigos if i["tipo"] == "material")
+    wp.marcar(antigos, material["id"], True, "ontem")
+
+    novos = wp.preservar(wp.montar([_node("a", ["t"])], {"t": 4}, 0, 600), antigos)
+
+    assert any(i["id"] == material["id"] and i["feito"] for i in novos)
+
+
+def test_nivel_novo_muda_a_semana():
+    guardada = wp.montar([_node("a", ["t"])], {"t": 0}, 0, 600)
+    remontada = wp.preservar(wp.montar([_node("a", ["t"])], {"t": 4}, 0, 600), guardada)
+    assert wp.mudou(remontada, guardada)
+
+
+def test_mesma_situacao_nao_muda_a_semana():
+    guardada = wp.montar([_node("a", ["t"])], {"t": 2}, 0, 600)
+    remontada = wp.preservar(wp.montar([_node("a", ["t"])], {"t": 2}, 0, 600), guardada)
+    assert not wp.mudou(remontada, guardada)
+
+
+def test_marcar_um_item_nao_conta_como_mudanca_de_plano():
+    """Senao cada caixa marcada regravaria a semana inteira."""
+    guardada = wp.montar([_node("a", ["t"])], {"t": 2}, 0, 600)
+    wp.marcar(guardada, guardada[0]["id"], True, "agora")
+    remontada = wp.preservar(wp.montar([_node("a", ["t"])], {"t": 2}, 0, 600), guardada)
+    assert not wp.mudou(remontada, guardada)

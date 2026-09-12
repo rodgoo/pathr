@@ -293,17 +293,48 @@ def marcar(itens: list[dict], item_id: str, feito: bool, agora: str) -> dict:
 def preservar(novos: list[dict], antigos: list[dict]) -> list[dict]:
     """Ao refazer a lista, o que já estava feito continua feito.
 
-    Casa pelo id, que é estável (`quiz:<módulo>`). Sem isto, pedir para
-    atualizar a semana apagaria as marcações de quem já tinha avançado nela.
+    Casa pelo id, que é estável (`quiz:<módulo>`). Sem isto, remontar a semana
+    apagaria as marcações de quem já tinha avançado nela.
+
+    E o que foi feito mas não cabe mais na lista nova FICA, no fim. A lista se
+    remonta sozinha quando o nível muda (ver `mudou`): subir de iniciante para
+    intermediário tira o "estudar o material" do plano — e sumir com um item
+    que a pessoa já marcou seria o app apagando o trabalho dela da semana, e o
+    "3 de 5 feitos" de ontem virando "2 de 4" sem explicação.
     """
     por_id = {a.get("id"): a for a in antigos}
+    ids_novos = {novo["id"] for novo in novos}
     for novo in novos:
         antigo = por_id.get(novo["id"])
         if antigo and antigo.get("feito"):
             novo["feito"] = True
             novo["verificado"] = bool(antigo.get("verificado"))
             novo["feito_em"] = antigo.get("feito_em")
-    return novos
+    feitos_que_sairam = [a for a in antigos if a.get("feito") and a.get("id") not in ids_novos]
+    return novos + feitos_que_sairam
+
+
+def _forma(itens: list[dict]) -> list[tuple]:
+    """O que define a lista, sem o que a pessoa marcou nela."""
+    return [
+        (i.get("id"), i.get("tipo"), i.get("nivel"), i.get("minutos"))
+        for i in itens
+        if not i.get("feito")
+    ]
+
+
+def mudou(remontada: list[dict], guardada: list[dict]) -> bool:
+    """A semana montada agora é outra que a guardada?
+
+    É o que substitui o botão "atualizar com meu nível atual". Pedir à pessoa
+    que lembre de apertar um botão depois de subir de nível é pedir que ela
+    faça o trabalho do app — e quem não aperta segue a semana com a lista de
+    um nível que já não é o dela.
+
+    Compara só o que está POR FAZER: marcar um item não é mudança de plano, e
+    contar isso regravaria a semana a cada caixa marcada.
+    """
+    return _forma(remontada) != _forma(guardada)
 
 
 def resumo(itens: list[dict]) -> dict[str, Any]:

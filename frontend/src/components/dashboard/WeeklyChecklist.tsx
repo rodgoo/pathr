@@ -9,6 +9,11 @@
  * alternados, extras no fim. É a ordem que o método pede, e deixá-la ao gosto
  * da tela desfaria a intercalação.
  *
+ * A lista também se REMONTA sozinha: quando o nível sobe num quiz, ou a
+ * semana acaba cedo, o servidor refaz o que está por fazer ao abrir a tela
+ * (ver `plan.semana_atual`). Havia um botão "atualizar com meu nível atual"
+ * para isso — que só servia a quem lembrasse de apertá-lo.
+ *
  * Quiz e explicação se marcam sozinhos quando acontecem — o servidor confere o
  * rastro. Por isso a caixa deles fica travada depois de confirmada: desmarcar
  * algo que o banco comprova seria a tela mentindo para quem olha.
@@ -50,7 +55,6 @@ export function WeeklyChecklist() {
   const semana = useQuery(() => planApi.week(), []);
   const [plano, setPlano] = useState<WeeklyPlan | null>(null);
   const [erro, setErro] = useState<string | null>(null);
-  const [atualizando, setAtualizando] = useState(false);
 
   useEffect(() => {
     if (semana.data) setPlano(semana.data);
@@ -74,18 +78,6 @@ export function WeeklyChecklist() {
     }
   }
 
-  async function atualizar() {
-    setAtualizando(true);
-    setErro(null);
-    try {
-      setPlano(await planApi.refresh());
-    } catch (caught) {
-      setErro(caught instanceof Error ? caught.message : "Não consegui atualizar a semana.");
-    } finally {
-      setAtualizando(false);
-    }
-  }
-
   const { resumo } = plano;
 
   return (
@@ -96,15 +88,6 @@ export function WeeklyChecklist() {
           {resumo.feitos} de {resumo.total} feitos · {horas(resumo.minutos_feitos)} de{" "}
           {horas(resumo.minutos)}
         </span>
-        <button
-          type="button"
-          className="btn btn-ghost"
-          style={{ marginLeft: "auto", fontSize: 12 }}
-          onClick={() => void atualizar()}
-          disabled={atualizando}
-        >
-          {atualizando ? "Atualizando…" : "Atualizar com meu nível atual"}
-        </button>
       </div>
 
       <p style={{ fontSize: 12, color: TEXT.faint, margin: "5.6px 0 11.2px", maxWidth: "76ch" }}>
@@ -147,7 +130,8 @@ export function WeeklyChecklist() {
 
       {plano.itens.length === 0 ? (
         <p style={{ fontSize: 13, color: TEXT.muted, margin: 0 }}>
-          Nada pendente nesta semana. Use "Atualizar" para puxar os próximos módulos.
+          Nada pendente nesta semana. Os próximos módulos entram aqui assim que houver o que
+          puxar.
         </p>
       ) : (
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>

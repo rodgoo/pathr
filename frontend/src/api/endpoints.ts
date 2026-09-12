@@ -212,7 +212,6 @@ export const plan = {
       { feito },
     ),
   /** Remonta com o nível de agora, mantendo o que já foi feito. */
-  refresh: () => api.post<WeeklyPlan>("/plan/week/refresh"),
   adjust: (preview = false) =>
     api.post<{ semana: number; mudancas: RouteChange[]; aplicado: boolean }>(
       `/plan/adjust?preview=${preview}`,
