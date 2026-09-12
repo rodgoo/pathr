@@ -44,7 +44,7 @@ logger = logging.getLogger("pathr.language_practice")
 HABILIDADES = tuple(treino.FORMATOS)
 _PRIMEIRO_LOTE = 4
 _LOTE = 6
-_TEMPO_POR_PROVEDOR = 25
+_TEMPO_POR_PROVEDOR = 12
 
 PRACTICE_SCHEMA: dict[str, Any] = {
     "type": "OBJECT",
@@ -354,8 +354,10 @@ async def _gerar(supabase: Client, sessao: dict[str, Any], indices: list[int]) -
             f"Escreva estes {len(faltam)} exercícios:\n" + "\n".join(pedidos)
         )
         try:
-            # 25s por provedor: um lento não gasta o orçamento inteiro, e sobra
-            # tempo para o seguinte. Medido: um lote de quatro sai em 5 a 17s.
+            # 12s por provedor. Medido na Fly: sem teto, o Gemini ficou 50s
+            # calado e ninguém mais foi tentado; com 25s, a abertura levou 28s
+            # (o teto dele mais a resposta do seguinte). Groq e Mistral
+            # entregam um lote de quatro em 4 a 7s, então 12s ainda é folga.
             resultado = await generate_json(
                 PRACTICE_PROMPT, pedido, PRACTICE_SCHEMA, per_attempt_timeout=_TEMPO_POR_PROVEDOR
             )

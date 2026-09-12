@@ -159,11 +159,26 @@ def test_revisao_que_reaproveita_as_alternativas_do_erro_e_recusada():
     assert not T.repete_o_erro(nova, lembrete)
 
 
+def test_pergunta_longa_identica_a_do_erro_e_copia():
+    """Caso de produção: a pergunta voltou palavra por palavra, com as
+    alternativas mal disfarçadas."""
+    lembrete = (
+        "Choose the most natural way to say that the requested feature is out of scope.\n"
+        "→ That feature is out of scope. A expressão idiomática é out of scope."
+    )
+    copia = {
+        "enunciado": "Choose the most natural way to say that the requested feature is out of scope.",
+        "alternativas": ["The feature you asked for is out of scope.", "The feature you asked for is out of the scope.",
+                         "The feature you asked for is beyond the scope.", "The feature you asked for is out of scope's."],
+    }
+    assert T.repete_o_erro(copia, lembrete)
+
+
 def test_enunciado_repetido_nao_e_copia():
     """"Choose the best option" se repete entre exercícios diferentes: compará-lo
     recusava revisões boas."""
-    lembrete = "Choose the most appropriate sentence to ask for clarification.\n→ Could you clarify?"
-    item = {"enunciado": "Choose the most appropriate sentence to ask for clarification.",
+    lembrete = "Choose the best option.\n→ Could you clarify?"
+    item = {"enunciado": "Choose the best option.",
             "alternativas": ["Can you walk me through the rollback plan?", "Can you walk me the rollback plan?",
                              "Can you explain me the rollback plan?", "Can you pass me through the rollback?"]}
     assert not T.repete_o_erro(item, lembrete)

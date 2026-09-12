@@ -609,6 +609,10 @@ LIMIAR_REPETICAO = 0.75
 # Trecho mais curto que isto não conta: "in", "on", "at" aparecem em qualquer
 # frase, e acusá-los de cópia recusaria toda revisão de preposição.
 _PALAVRAS_MINIMAS = 4
+# "Choose the best option" tem quatro palavras e se repete entre exercícios
+# diferentes. A partir de oito, a pergunta já descreve UMA situação.
+_PALAVRAS_DE_PERGUNTA_ESPECIFICA = 8
+LIMIAR_PERGUNTA_IGUAL = 0.85
 
 
 def _contido(trecho: str, referencia: str) -> float:
@@ -642,6 +646,18 @@ def repete_o_erro(item: dict[str, Any], lembrete: Optional[str]) -> bool:
     """
     if not lembrete:
         return False
+    # A exceção ao "enunciado não conta": pergunta LONGA e específica idêntica
+    # à do erro. Em produção, "Choose the most natural way to say that the
+    # requested feature is out of scope" voltou palavra por palavra, com as
+    # alternativas mal disfarçadas ("That feature" virou "The feature you asked
+    # for"). Instrução curta e genérica pode repetir; pergunta inteira, não.
+    enunciado = str(item.get("enunciado") or "")
+    pergunta_do_erro = lembrete.split("\n→", 1)[0]
+    if (
+        len(normalizar(enunciado).split()) >= _PALAVRAS_DE_PERGUNTA_ESPECIFICA
+        and semelhanca(pergunta_do_erro, enunciado) >= LIMIAR_PERGUNTA_IGUAL
+    ):
+        return True
     candidatos = [str(item.get(campo) or "") for campo in ("frase", "texto")]
     candidatos += [str(a) for a in (item.get("alternativas") or [])]
     for par in item.get("pares") or []:
