@@ -26,7 +26,7 @@ from app.database import get_supabase
 from app.deps import get_current_user
 from app.services import resource_search
 from app.services import reader
-from app.services.progress import log_activity
+from app.services.progress import log_activity, minutos_de_leitura
 
 router = APIRouter(prefix="/library", tags=["biblioteca"])
 
@@ -256,19 +256,20 @@ def read_resource(
 
 
 def _formato_antigo(html: str) -> bool:
-    """O texto guardado veio do extrator de antes da correção do código inline?
+    """O texto guardado veio de uma versão anterior do extrator?
 
-    O que está no banco foi extraído por uma versão que devolvia TODO trecho
-    de código como `<pre>` — inclusive o que era uma palavra no meio da frase,
-    o que partia o parágrafo em pedaços na tela (ver services/reader.py).
     Corrigir o extrator não conserta sozinho o que já foi gravado: sem isto, a
-    pessoa continuaria vendo o texto quebrado por até sete dias, e num artigo
-    lido uma vez por semana, para sempre.
+    pessoa continuaria vendo o texto quebrado por até sete dias — e num artigo
+    lido uma vez por semana, para sempre. Foi o que aconteceu com a
+    documentação do git, que seguia com o menu do site e 688 imagens quebradas
+    mesmo depois da correção.
 
-    A marca é exata: no formato de hoje todo `<pre>` abre com `<code>`. Um que
-    não abra é do formato anterior, e vale buscar de novo.
+    A marca é explícita (services/reader.MARCA_DA_VERSAO) em vez de adivinhada
+    pelo formato: a versão anterior reconhecia o texto velho procurando `<pre>`
+    sem `<code>`, o que só servia para o defeito daquela vez e não diria nada
+    sobre o próximo.
     """
-    return "<pre>" in html and html.count("<pre>") != html.count("<pre><code>")
+    return not html.startswith(reader.MARCA_DA_VERSAO)
 
 
 def _leitura_vencida(recurso: dict[str, Any]) -> bool:
@@ -312,7 +313,7 @@ def set_progress(
     user_id = str(current_user["id"])
     resource = (
         supabase.table("pathr_resource")
-        .select("id,title,tag_ids,duration_min")
+        .select("id,title,tag_ids,duration_min,kind,reader_words")
         .eq("id", resource_id)
         .limit(1)
         .execute()
@@ -368,11 +369,30 @@ def set_progress(
             kind="resource_done",
             title=resource.get("title") or "",
             ref_id=resource_id,
-            minutes=payload.minutes_spent or int(resource.get("duration_min") or 0),
+            minutes=_minutos_do_material(payload.minutes_spent, resource),
             tag_ids=[str(tag) for tag in (resource.get("tag_ids") or [])],
+            # O tipo vai junto para o painel dizer "Artigo: …" ou "Vídeo: …" ao
+            # passar o mouse sobre o dia, sem uma consulta a mais por linha.
+            detail={"resource_kind": resource.get("kind")},
         )
 
     return row
+
+
+def _minutos_do_material(informados: int, recurso: dict[str, Any]) -> int:
+    """O tempo de estudo que um material concluído vale.
+
+    Artigo e documentação não têm duração cadastrada — só vídeo tem. O tempo
+    ia como ZERO: quem lia quatro artigos inteiros via "12 min de estudo" no
+    painel, e a média, o melhor dia e o heatmap mentiam junto. O texto
+    extraído pelo leitor tem a contagem de palavras, e é dela que sai a
+    estimativa — a mesma que a tela mostra como "14 min de leitura".
+    """
+    return (
+        informados
+        or int(recurso.get("duration_min") or 0)
+        or minutos_de_leitura(recurso.get("reader_words"))
+    )
 
 
 def _aprendeu_com_o_material(

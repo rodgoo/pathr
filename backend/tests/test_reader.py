@@ -15,6 +15,8 @@ dia em que alguem tenta.
 Offline: nada aqui vai a rede. A extracao roda sobre HTML escrito no teste.
 """
 
+import pathlib
+
 import pytest
 
 from app.services import reader
@@ -102,7 +104,7 @@ jobs:
 
 @pytest.fixture
 def leitura(monkeypatch):
-    monkeypatch.setattr(reader, "_baixar", lambda _url: PAGINA)
+    monkeypatch.setattr(reader, "_baixar", lambda url: (PAGINA, url))
     return reader.ler("https://exemplo.com/artigo")
 
 
@@ -150,7 +152,7 @@ def test_conta_as_palavras_do_texto(leitura):
 
 
 def test_pagina_sem_artigo_extraivel_avisa(monkeypatch):
-    monkeypatch.setattr(reader, "_baixar", lambda _url: "<html><body></body></html>")
+    monkeypatch.setattr(reader, "_baixar", lambda url: ("<html><body></body></html>", url))
     with pytest.raises(reader.LeituraIndisponivel) as erro:
         reader.ler("https://exemplo.com/vazio")
     assert "extrair" in erro.value.motivo
@@ -198,3 +200,160 @@ def test_o_marcador_interno_nao_vaza_para_a_tela():
     saida = reader._arruma_codigo("<pre><pre>bloco</pre></pre><p>x <pre>inline</pre></p>")
     assert "pathr-bloco" not in saida
     assert saida == "<pre><code>bloco</code></pre><p>x <code>inline</code></p>"
+
+
+# ---------------------------------------------------------------------------
+# A moldura do site
+#
+# Reproduz, sem rede, a pagina de documentacao do git-scm.com que chegou a tela
+# com o menu de idiomas, o menu "Topics", o historico de versoes com 688
+# imagens quebradas, o texto inteiro sublinhado e as opcoes partidas em
+# marcadores alternados. Cada teste abaixo e um desses defeitos.
+# ---------------------------------------------------------------------------
+
+_PARAGRAFO = (
+    "O Git e um sistema de controle de revisao distribuido, rapido e escalavel, com um "
+    "conjunto de comandos incomumente rico que oferece operacoes de alto nivel e acesso "
+    "completo aos seus recursos internos para quem precisa ir alem do basico. "
+)
+
+# O recorte da pagina REAL, e nao um HTML escrito a mao. Escrito a mao, o menu
+# ficava pequeno demais e o proprio trafilatura o descartava: tres destes testes
+# passavam mesmo com a limpeza desligada -- conferido -- e teste que nao falha
+# sem a correcao nao protege nada. Na pagina real, o menu mora dentro do mesmo
+# #main que o manual, e e isso que reproduz o defeito.
+DOC_GIT = (
+    pathlib.Path(__file__).parent / "fixtures" / "git-scm-docs-git-pt_BR.html"
+).read_text(encoding="utf-8")
+
+URL_DOC = "https://git-scm.com/docs/git/pt_BR"
+
+
+@pytest.fixture
+def doc_git(monkeypatch):
+    monkeypatch.setattr(reader, "_baixar", lambda url: (DOC_GIT, url))
+    return reader.ler(URL_DOC).html
+
+
+def test_menus_do_site_nao_viram_conteudo(doc_git):
+    for menu in ("Topics", "Setup and Config", "Plumbing Commands", "Latest version",
+                 "2.55.0", "Português (Brasil) ▾"):
+        assert menu not in doc_git, menu
+
+
+def test_o_manual_continua_inteiro(doc_git):
+    """Tirar a moldura nao pode levar o texto junto."""
+    for trecho in ("RESUMO", "DESCRIÇÃO", "git [-v | --version]", "gittutorial[7]",
+                   "GIT_TRACE_PACKFILE", "Permite o monitoramento"):
+        assert trecho in doc_git, trecho
+
+
+def test_nenhuma_imagem_aponta_para_o_pathr(doc_git):
+    """Relativa, "/images/x.png" carregaria de pathr.notter.com.br e quebraria."""
+    from lxml import html as H
+
+    imagens = [i.get("src") or "" for i in H.fragment_fromstring(doc_git, create_parent="div").iter("img")]
+    assert all(src.startswith("https://") for src in imagens), imagens
+
+
+def test_bolinhas_de_icone_nao_aparecem(doc_git):
+    assert "green-dot" not in doc_git and "red-dot" not in doc_git
+
+
+def test_ancora_de_secao_nao_sobrevive(doc_git):
+    """Resolvida contra a raiz do site, "#_resumo" levava o clique para fora
+    do artigo. E embrulhava o paragrafo seguinte, sublinhando tudo."""
+    assert "#_resumo" not in doc_git
+    assert "https://git-scm.com#" not in doc_git
+
+
+def test_nenhum_link_embrulha_bloco(doc_git):
+    """Link com paragrafo, codigo ou lista dentro e aninhamento quebrado, e e
+    exatamente o que deixava a documentacao sublinhada de ponta a ponta."""
+    from lxml import html as H
+
+    raiz = H.fragment_fromstring(doc_git, create_parent="div")
+    blocos = {"p", "pre", "ul", "ol", "li", "div", "h2", "h4", "table", "blockquote"}
+    for link in raiz.iter("a"):
+        assert not any(d.tag in blocos for d in link.iterdescendants()), H.tostring(link)
+
+
+def test_link_relativo_do_texto_vira_absoluto(doc_git):
+    assert 'href="https://git-scm.com/docs/gittutorial/pt_BR"' in doc_git
+
+
+def test_opcao_e_explicacao_ficam_juntas(doc_git):
+    """<dl> achatado virava marcadores alternados: o nome da opcao num item e
+    a explicacao no seguinte. O termo vira subtitulo, a explicacao logo abaixo."""
+    from lxml import html as H
+
+    raiz = H.fragment_fromstring(doc_git, create_parent="div")
+    titulo = next(
+        h for h in raiz.iter("h4") if " ".join(h.itertext()).strip() == "GIT_TRACE_PACKFILE"
+    )
+    seguinte = titulo.getnext()
+    assert seguinte is not None and seguinte.tag != "li"
+    assert "Permite o monitoramento" in " ".join(seguinte.itertext())
+
+
+def test_sinopse_continua_bloco_de_codigo(doc_git):
+    """Com include_formatting ligado, a sinopse (que tem <em> dentro) virava
+    citacao em italico e perdia o alinhamento. Pego por este teste."""
+    resumo = doc_git.split("RESUMO", 1)[1].split("DESCRI", 1)[0]
+    assert "<pre><code>" in resumo
+    assert "<blockquote>" not in resumo
+
+
+def test_leitura_carrega_a_versao_do_extrator(doc_git):
+    """library.py busca de novo tudo que nao comeca com esta marca -- e o que
+    faz a correcao chegar ao que ja estava gravado."""
+    assert doc_git.startswith(reader.MARCA_DA_VERSAO)
+
+
+def test_classe_com_nome_de_menu_nao_leva_o_artigo_inteiro(monkeypatch):
+    """Um site que embrulha o ARTIGO numa classe com "sidebar" no nome perderia
+    tudo por uma palavra. A protecao do conteudo impede."""
+    pagina = f"""<html><body>
+      <nav>menu</nav>
+      <div class="layout-with-sidebar"><article><h1>Titulo</h1>
+        <p>{_PARAGRAFO * 6}</p><p>{_PARAGRAFO * 6}</p></article></div>
+    </body></html>"""
+    monkeypatch.setattr(reader, "_baixar", lambda url: (pagina, url))
+    assert "controle de revisao" in reader.ler("https://exemplo.com/a").html
+
+
+def test_pagina_que_e_so_indice_de_links_avisa(monkeypatch):
+    """Melhor oferecer o original do que mostrar uma lista de links como se
+    fosse um artigo."""
+    itens = "".join(
+        f'<p><a href="/tutorial-{n}">Tutorial completo numero {n} sobre git e github actions</a></p>'
+        for n in range(40)
+    )
+    pagina = f"<html><body><article><h1>Tutoriais</h1>{itens}</article></body></html>"
+    monkeypatch.setattr(reader, "_baixar", lambda url: (pagina, url))
+    with pytest.raises(reader.LeituraIndisponivel) as erro:
+        reader.ler("https://exemplo.com/indice")
+    assert "índice" in erro.value.motivo
+
+
+def test_imagem_preguicosa_usa_o_endereco_de_verdade(monkeypatch):
+    pagina = f"""<html><body><article><h1>T</h1><p>{_PARAGRAFO * 5}</p>
+      <p><img src="data:image/gif;base64,R0lGOD" data-src="/img/diagrama.png" alt="d"> {_PARAGRAFO}</p>
+      <p>{_PARAGRAFO * 5}</p></article></body></html>"""
+    monkeypatch.setattr(reader, "_baixar", lambda url: (pagina, url))
+    html = reader.ler("https://exemplo.com/post/1").html
+    assert "https://exemplo.com/img/diagrama.png" in html
+    assert "data:image" not in html
+
+
+def test_sinonimos_da_mesma_opcao_viram_um_subtitulo(doc_git):
+    """`-v` e `--version` sao a mesma opcao. Separados, o primeiro aparecia
+    como titulo sem nada embaixo."""
+    from lxml import html as H
+
+    titulos = [
+        " ".join(" ".join(h.itertext()).split())
+        for h in H.fragment_fromstring(doc_git, create_parent="div").iter("h4")
+    ]
+    assert "-v, --version" in titulos, titulos[:6]
+    assert "-v" not in titulos

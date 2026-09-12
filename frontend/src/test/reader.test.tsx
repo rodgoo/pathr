@@ -113,3 +113,26 @@ it("o artigo não cria uma segunda rolagem dentro da página", () => {
   expect(elemento.style.overflowY).toBe("");
   expect(elemento.style.maxHeight).toBe("");
 });
+
+/**
+ * Imagem que não carrega some.
+ *
+ * O servidor não tem como saber, ao extrair, se o site vai recusar a imagem
+ * para quem pede de outro domínio. Uma coluna de ícones quebrados foi o que
+ * fez a documentação do git parecer defeito do PathR.
+ */
+it("esconde a imagem que falha ao carregar e mantém o texto", () => {
+  const comImagem = {
+    ...conteudo,
+    html: '<p>antes</p><p><img src="https://site.com/quebrada.png" alt="x"></p><p>depois</p>',
+  } as ReaderContent;
+  const { container } = render(<ArticleReader conteudo={comImagem} onProgresso={() => {}} />);
+  const imagem = container.querySelector("img") as HTMLImageElement;
+
+  imagem.hidden = false;
+  fireEvent.error(imagem);
+
+  expect(imagem.hidden).toBe(true);
+  expect(screen.getByText("antes")).toBeTruthy();
+  expect(screen.getByText("depois")).toBeTruthy();
+});

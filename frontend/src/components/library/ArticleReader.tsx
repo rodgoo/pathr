@@ -147,6 +147,39 @@ export function ArticleReader({
     }
   }, [conteudo.status, conteudo.html]);
 
+  /**
+   * Imagem que não carrega some, em vez de virar o ícone de imagem quebrada.
+   *
+   * O servidor já descarta endereço relativo e ícone minúsculo, mas não tem
+   * como saber, ao extrair, se o site vai recusar a imagem para quem a pede de
+   * outro domínio, se ela saiu do ar ou se exige login. Uma coluna de ícones
+   * quebrados foi o que fez a documentação do git parecer defeito do PathR —
+   * e sem a imagem o texto continua inteiro.
+   *
+   * Na fase de captura porque `error` de imagem não sobe pela árvore: só um
+   * ouvinte no ancestral em captura o vê, e as imagens aqui entram por
+   * `dangerouslySetInnerHTML`, fora do alcance dos eventos do React.
+   */
+  useEffect(() => {
+    const elemento = caixa.current;
+    if (!elemento || conteudo.status !== "ok") return;
+    const esconder = (imagem: HTMLImageElement) => {
+      imagem.hidden = true;
+    };
+    const aoFalhar = (evento: Event) => {
+      if (evento.target instanceof HTMLImageElement) esconder(evento.target);
+    };
+    elemento.addEventListener("error", aoFalhar, true);
+    // A que falhou ANTES de o ouvinte existir (resposta 404 em cache chega
+    // rápido) não dispara de novo: varre as que já terminaram sem pixel.
+    for (const imagem of elemento.querySelectorAll("img")) {
+      if (imagem.complete && imagem.naturalWidth === 0 && imagem.getAttribute("src")) {
+        esconder(imagem);
+      }
+    }
+    return () => elemento.removeEventListener("error", aoFalhar, true);
+  }, [conteudo.status, conteudo.html]);
+
   if (conteudo.status !== "ok" || !conteudo.html) {
     return <LeituraIndisponivel conteudo={conteudo} />;
   }
