@@ -221,6 +221,7 @@ function Gerador({
 
         <div style={{ display: "flex", gap: 11.2, flexWrap: "wrap", alignItems: "center" }}>
           <Segmented
+            name="codelab-nivel"
             label="Nível"
             options={NIVEIS}
             value={level}
@@ -656,7 +657,7 @@ function Biblioteca({
     return (
       <EmptyState
         title="Nenhum exemplo ainda"
-        message="Escolha a linguagem e o assunto acima. O exemplo fica guardado aqui para você voltar quantas vezes quiser."
+        description="Escolha a linguagem e o assunto acima. O exemplo fica guardado aqui para você voltar quantas vezes quiser."
       />
     );
   }
