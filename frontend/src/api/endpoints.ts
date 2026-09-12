@@ -29,6 +29,7 @@ import type {
   Roadmap,
   Session,
   Tag,
+  TagSuggestions,
   User,
   UserTag,
   CodeLanguage,
@@ -123,6 +124,12 @@ export const tags = {
     api.post<UserTag>("/tags/mine", body),
   update: (id: string, body: { proficiency?: number; is_target?: boolean }) =>
     api.patch<UserTag>(`/tags/mine/${id}`, body),
+  /** O que aprender a seguir, a partir do objetivo — com o motivo de cada um.
+   *
+   * `refresh` refaz a lista mesmo dentro da validade: é o botão de quem
+   * acabou de mudar o objetivo e não quer esperar o prazo. */
+  suggestions: (refresh = false) =>
+    api.get<TagSuggestions>(`/tags/suggestions?refresh=${refresh}`),
   remove: (id: string) => api.del<void>(`/tags/mine/${id}`),
 };
 

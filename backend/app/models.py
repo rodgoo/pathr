@@ -286,6 +286,16 @@ class PathrProfile(SQLModel, table=True):
     weekly_hours: int = Field(default=8)  # alimenta o dimensionamento do roadmap
     learning_style: Optional[str] = Field(default=None)  # video|texto|pratica|misto
     goals: list[Any] = Field(default_factory=list, sa_column=_jsonb("[]"))
+
+    # O que aprender a seguir, sugerido a partir do objetivo — ver
+    # routers/tags.py. Guardado porque a resposta custa uma chamada de IA e
+    # não muda enquanto o objetivo não muda; `tech_suggestions_for` grava
+    # QUAL objetivo gerou a lista, e é o que faz a troca de meta refazê-la.
+    tech_suggestions: list[Any] = Field(default_factory=list, sa_column=_jsonb("[]"))
+    tech_suggestions_at: Optional[datetime] = Field(
+        default=None, sa_type=sa.DateTime(timezone=True)
+    )
+    tech_suggestions_for: Optional[str] = Field(default=None)
     bio: Optional[str] = Field(default=None)
     linkedin_url: Optional[str] = Field(default=None)
     github_url: Optional[str] = Field(default=None)

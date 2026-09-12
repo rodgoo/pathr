@@ -25,6 +25,7 @@ import { ACC, ACC4, C, TEXT } from "@/lib/tokens";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel } from "@/components/ui/primitives";
 import { MASTERY_LABELS } from "./TechnologyRow";
+import { SuggestedTags } from "./SuggestedTags";
 
 /**
  * A ordem das categorias na tela, e o nome que cada uma mostra.
@@ -165,6 +166,11 @@ export function SkillsTab() {
           />
         </div>
       </Panel>
+
+      {/* Antes do catálogo, e não depois: o catálogo é a lista de tudo, e quem
+          chega aqui sem saber o que estudar precisa da resposta curta antes de
+          encarar as 91 linhas. */}
+      <SuggestedTags onAdicionada={(nova) => minhas.set((atual) => [...(atual ?? []), nova])} />
 
       {erro ? <ErrorState message={erro} /> : null}
 

@@ -522,3 +522,25 @@ export interface WordMeaning {
   cefr_band: string;
   card: { id: string; due_at: string } | null;
 }
+
+/**
+ * Uma tecnologia sugerida a partir do objetivo.
+ *
+ * `demand` é o quanto o mercado usa aquilo — `consolidada` (está em vaga há
+ * anos), `em alta` (crescendo agora) ou `aposta` (vale conhecer, ainda não é
+ * exigida). São três respostas e não uma nota porque "76% de relevância" seria
+ * um número inventado com cara de medido.
+ */
+export interface TagSuggestion {
+  name: string;
+  category: string;
+  reason: string;
+  demand: string;
+}
+
+export interface TagSuggestions {
+  /** O objetivo que gerou a lista. `null` quando ainda não há objetivo. */
+  objetivo: string | null;
+  sugestoes: TagSuggestion[];
+  geradas_em: string | null;
+}

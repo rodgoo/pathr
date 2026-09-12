@@ -7,16 +7,17 @@ marca o que é seu — e é por isso que `GET /tags/mine` devolve as duas juntas
 em vez de obrigar o frontend a cruzar dois arrays por id.
 """
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from supabase import Client
 
+from app.ai_providers import AiProviderError, generate_json
 from app.database import get_supabase
 from app.deps import get_current_user
-from app.services.tag_catalog import TagCatalog, normalize_category
+from app.services.tag_catalog import TagCatalog, normalize_category, slugify
 
 router = APIRouter(prefix="/tags", tags=["competências"])
 
@@ -222,3 +223,230 @@ def delete_mine(
     supabase.table("pathr_user_tag").delete().eq("id", user_tag_id).eq(
         "user_id", str(current_user["id"])
     ).execute()
+
+# ---------------------------------------------------------------------------
+# O que aprender a seguir
+# ---------------------------------------------------------------------------
+
+# Quanto tempo a lista vale antes de ser refeita. Trinta dias porque o que
+# muda aqui e o mercado, nao a pessoa: a resposta para "o que um fullstack
+# Java precisa saber" e praticamente a mesma daqui a uma semana.
+_VALIDADE_SUGESTOES = timedelta(days=30)
+
+_SUGESTOES_SCHEMA = {
+    "type": "OBJECT",
+    "properties": {
+        "sugestoes": {
+            "type": "ARRAY",
+            "items": {
+                "type": "OBJECT",
+                "properties": {
+                    "nome": {"type": "STRING"},
+                    "categoria": {"type": "STRING"},
+                    "motivo": {"type": "STRING"},
+                    "demanda": {"type": "STRING"},
+                },
+                "required": ["nome", "categoria", "motivo", "demanda"],
+            },
+        }
+    },
+    "required": ["sugestoes"],
+}
+
+_SISTEMA_SUGESTOES = (
+    "Voce orienta a carreira de pessoas de tecnologia no Brasil. Responde em "
+    "portugues do Brasil, com franqueza e sem entusiasmo de folheto. Recomenda "
+    "o que o mercado de fato pede para o objetivo declarado, nao o que esta na "
+    "moda esta semana."
+)
+
+# Quanto o mercado usa aquilo. Sao tres respostas possiveis e nao uma nota,
+# porque "76% de relevancia" seria um numero inventado com cara de medido.
+_DEMANDAS = {"consolidada", "em alta", "aposta"}
+
+
+@router.get("/suggestions")
+async def suggest_tags(
+    refresh: bool = False,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """O que estudar a seguir, a partir do objetivo — e por quê.
+
+    A biblioteca já cura MATERIAL para as tags que a pessoa tem. O que faltava
+    é o passo anterior: descobrir quais tags deveria ter. Quem escreve "quero
+    ser fullstack Java" sabe o destino e não necessariamente o caminho — e a
+    lacuna entre os dois é onde alguém gasta meses estudando o que não era o
+    mais importante.
+
+    Cada sugestão vem com o motivo e com o quanto o mercado usa aquilo:
+    consolidada (está em toda vaga há anos), em alta (crescendo de verdade) ou
+    aposta (vale conhecer, ainda não é exigido). A distinção importa porque a
+    resposta honesta para quem quer empregabilidade quase nunca é a tecnologia
+    mais nova.
+
+    O que a pessoa JÁ TEM é excluído — sugerir Java a quem declarou Java é o
+    tipo de conselho que faz desconfiar de todo o resto.
+    """
+    user_id = str(current_user["id"])
+    perfil = (
+        supabase.table("pathr_profile")
+        .select("*")
+        .eq("user_id", user_id)
+        .limit(1)
+        .execute()
+        .data
+        or [{}]
+    )[0]
+
+    objetivo = _objetivo_de(perfil)
+    if not objetivo:
+        # Sem objetivo não há o que sugerir, e um palpite genérico ("aprenda
+        # Docker") seria pior que a lista vazia: a tela pede o objetivo.
+        return {"objetivo": None, "sugestoes": [], "geradas_em": None}
+
+    guardadas = _sugestoes_guardadas(perfil, objetivo)
+    if guardadas is not None and not refresh:
+        return {
+            "objetivo": objetivo,
+            "sugestoes": _sem_as_que_ja_tem(supabase, user_id, guardadas),
+            "geradas_em": perfil.get("tech_suggestions_at"),
+        }
+
+    try:
+        resultado = await generate_json(
+            _SISTEMA_SUGESTOES, _pedido_de_sugestoes(perfil, objetivo), _SUGESTOES_SCHEMA
+        )
+    except AiProviderError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(exc)
+        ) from exc
+
+    sugestoes = _linhas_de_sugestao(resultado.content.get("sugestoes") or [])
+    agora = _now().isoformat()
+    supabase.table("pathr_profile").update(
+        {
+            "tech_suggestions": sugestoes,
+            "tech_suggestions_at": agora,
+            "tech_suggestions_for": objetivo,
+        }
+    ).eq("user_id", user_id).execute()
+
+    return {
+        "objetivo": objetivo,
+        "sugestoes": _sem_as_que_ja_tem(supabase, user_id, sugestoes),
+        "geradas_em": agora,
+    }
+
+
+def _objetivo_de(perfil: dict[str, Any]) -> str:
+    """A frase que descreve para onde a pessoa quer ir."""
+    for campo in ("target_role", "headline", "current_role"):
+        valor = str(perfil.get(campo) or "").strip()
+        if valor:
+            return valor
+    metas = perfil.get("goals") or []
+    return str(metas[0]).strip() if metas else ""
+
+
+def _sugestoes_guardadas(perfil: dict[str, Any], objetivo: str) -> Optional[list[dict[str, Any]]]:
+    """A lista gravada, se ainda vale para ESTE objetivo.
+
+    O objetivo entra na conta junto com o prazo: trocar "quero ser fullstack
+    Java" por "quero ser SRE" e continuar vendo as sugestoes do plano antigo
+    por mais 29 dias seria pior do que nao sugerir nada.
+    """
+    guardadas = perfil.get("tech_suggestions") or []
+    if not guardadas:
+        return None
+    if str(perfil.get("tech_suggestions_for") or "") != objetivo:
+        return None
+    quando = perfil.get("tech_suggestions_at")
+    if not quando:
+        return None
+    try:
+        gerada_em = datetime.fromisoformat(str(quando).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return guardadas if _now() - gerada_em <= _VALIDADE_SUGESTOES else None
+
+
+def _pedido_de_sugestoes(perfil: dict[str, Any], objetivo: str) -> str:
+    senioridade = str(perfil.get("seniority") or "").strip()
+    anos = perfil.get("years_experience")
+    quem = f"Senioridade declarada: {senioridade}." if senioridade else ""
+    if anos:
+        quem += f" Tempo de experiencia: {anos} anos."
+    return (
+        f"OBJETIVO DECLARADO: {objetivo}.\n{quem}\n\n"
+        "Liste de 6 a 8 tecnologias que essa pessoa precisa dominar para chegar "
+        "la, da mais importante para a menos.\n"
+        "- nome: o nome da tecnologia como o mercado a chama.\n"
+        "- categoria: uma de linguagem, framework, banco, cloud, devops, dados, "
+        "ia, arquitetura, testes, seguranca, mobile, frontend, backend, "
+        "ferramenta, metodologia.\n"
+        "- motivo: UMA frase dizendo por que ela importa para ESTE objetivo. "
+        "Concreta: o que a pessoa consegue fazer com ela, ou onde ela aparece.\n"
+        "- demanda: consolidada se esta em vaga ha anos, em alta se cresce de "
+        "verdade agora, aposta se ainda nao e exigida mas vale conhecer.\n"
+        "Prefira o que e amplamente usado e bem visto ao que e novidade."
+    )
+
+
+def _linhas_de_sugestao(brutas: list[Any]) -> list[dict[str, Any]]:
+    """Limpa o que veio do modelo. O que nao tem nome nao entra."""
+    saida: list[dict[str, Any]] = []
+    vistos: set[str] = set()
+    for item in brutas:
+        if not isinstance(item, dict):
+            continue
+        nome = str(item.get("nome") or "").strip()[:60]
+        if not nome or slugify(nome) in vistos:
+            continue
+        vistos.add(slugify(nome))
+        demanda = str(item.get("demanda") or "").strip().lower()
+        saida.append(
+            {
+                "name": nome,
+                "category": normalize_category(item.get("categoria")),
+                "reason": str(item.get("motivo") or "").strip()[:240],
+                # Fora das tres respostas possiveis vira "consolidada": e a
+                # leitura conservadora, e a que menos empurra alguem para uma
+                # tecnologia que o mercado ainda nao pede.
+                "demand": demanda if demanda in _DEMANDAS else "consolidada",
+            }
+        )
+    return saida[:8]
+
+
+def _sem_as_que_ja_tem(
+    supabase: Client, user_id: str, sugestoes: list[dict[str, Any]]
+) -> list[dict[str, Any]]:
+    """Tira da lista o que a pessoa já declarou.
+
+    Filtrado na LEITURA e não na gravação: a pessoa adiciona uma sugestão e
+    ela some da lista na hora seguinte, sem precisar refazer a chamada de IA.
+    """
+    if not sugestoes:
+        return []
+    minhas = (
+        supabase.table("pathr_user_tag")
+        .select("tag_id")
+        .eq("user_id", user_id)
+        .execute()
+        .data
+        or []
+    )
+    if not minhas:
+        return sugestoes
+    linhas = (
+        supabase.table("pathr_tag")
+        .select("slug")
+        .in_("id", [str(item["tag_id"]) for item in minhas])
+        .execute()
+        .data
+        or []
+    )
+    tenho = {str(linha["slug"]) for linha in linhas}
+    return [item for item in sugestoes if slugify(item["name"]) not in tenho]
+
