@@ -22,6 +22,7 @@ from app.ai_providers import AiProviderError, generate_json
 from app.database import get_supabase
 from app.deps import get_current_user
 from app.services import languages, review
+from app.services import treino_idioma as treino
 from app.services.progress import log_activity
 
 router = APIRouter(prefix="/languages", tags=["idioma"])
@@ -49,6 +50,7 @@ ITEMS_SCHEMA: dict[str, Any] = {
                 "type": "OBJECT",
                 "properties": {
                     "habilidade": {"type": "STRING"},
+                    "topico": {"type": "STRING"},
                     "banda": {"type": "STRING"},
                     "contexto": {"type": "STRING"},
                     "enunciado": {"type": "STRING"},
@@ -89,7 +91,9 @@ Regras:
 7. O campo banda: A1, A2, B1, B2, C1 ou C2 — a dificuldade real do item.
 8. A explicação diz por que a certa soa natural e por que a mais tentadora
    das erradas soa estranha para um falante nativo.
-9. Responda apenas o JSON."""
+9. O campo topico: EXATAMENTE um dos tópicos listados no pedido para aquela
+   habilidade. É com ele que a tela mostra como a pessoa foi em cada tópico.
+10. Responda apenas o JSON."""
 
 
 # Um item que manda ouvir alguma coisa é um item sem resposta: o app não
@@ -354,7 +358,11 @@ async def _generate_items(
         f"IDIOMA AVALIADO: {nome} ({nativo}). O enunciado, o contexto e as "
         f"alternativas sao em {nome}; so a explicacao e em portugues do Brasil.\n"
         f"Gere {count} itens de nivel {band} para um profissional de tecnologia "
-        "brasileiro. Varie a habilidade entre eles."
+        "brasileiro. Varie a habilidade entre eles.\n"
+        # O catalogo vai no pedido para o topico nao sair escrito livre: cada
+        # grafia diferente abriria uma linha nova no placar por topico.
+        "TOPICOS POR HABILIDADE:\n"
+        + "\n".join(f"- {h}: {', '.join(t)}" for h, t in treino.TOPICOS.items())
     )
 
     rows: list[dict[str, Any]] = []
@@ -364,7 +372,7 @@ async def _generate_items(
     for tentativa in range(2):
         result = await generate_json(SYSTEM_PROMPT, pedido, ITEMS_SCHEMA)
         rows = _linhas_de_itens(
-            result.content.get("itens") or [], assessment_id, user_id, band, offset
+            result.content.get("itens") or [], assessment_id, user_id, band, offset, language
         )
         if rows or tentativa:
             break
@@ -379,6 +387,7 @@ def _linhas_de_itens(
     user_id: str,
     band: str,
     offset: int,
+    language: Optional[str] = None,
 ) -> list[dict[str, Any]]:
     """Os itens do modelo virados em linhas da tabela, sem os que nao servem.
 
@@ -421,6 +430,11 @@ def _linhas_de_itens(
                 # descartado no meio, o indice cru abriria buracos e, na
                 # segunda tentativa, repetiria ordem ja usada.
                 "order_index": offset + len(rows),
+                # Sem topico o nivelamento nao somava no placar por topico, e
+                # sem idioma a resposta nao entrava no nivel por habilidade.
+                "topic": treino.canonico(item.get("topico"), skill, "geral"),
+                "language": language,
+                "origin": "nivelamento",
             }
         )
     return rows
@@ -488,6 +502,8 @@ def _sem_impossiveis(supabase: Client, pendentes: list[dict[str, Any]]) -> list[
 def improvements(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
+    # Por último: os testes chamam esta função por posição.
+    language: str = "en",
 ):
     """O que a pessoa errou e ainda não recuperou, do mais atrasado ao mais
     recente.
@@ -495,12 +511,16 @@ def improvements(
     É a contrapartida do nivelamento: a nota diz onde ela está, isto diz o que
     fazer a respeito. Ordena por vencimento porque o que venceu há mais tempo
     é o que corre mais risco de virar lacuna permanente.
+
+    Filtrada por idioma: sem o filtro, a lista de quem estuda inglês e
+    espanhol misturava os dois, e o treino de espanhol cobraria erro de inglês.
     """
     linhas = (
         supabase.table("pathr_review_item")
-        .select("id,front,back,due_at,lapses,repetitions")
+        .select("id,front,back,due_at,lapses,repetitions,skill,topic")
         .eq("user_id", str(current_user["id"]))
         .eq("kind", "language")
+        .eq("language", _idioma_valido(language))
         .order("due_at")
         .limit(50)
         .execute()
@@ -720,6 +740,12 @@ def _guarda_ponto_de_melhora(supabase: Client, user_id: str, item: dict[str, Any
             {
                 "user_id": user_id,
                 "kind": "language",
+                # Idioma, habilidade, tópico e banda: é o que deixa o treino
+                # diário devolver este ponto no idioma certo e no formato certo.
+                "language": item.get("language"),
+                "skill": item.get("skill"),
+                "topic": item.get("topic"),
+                "band": item.get("cefr_band"),
                 "front": enunciado[:2000],
                 "back": " ".join(
                     parte for parte in [certa, str(item.get("feedback") or "")] if parte

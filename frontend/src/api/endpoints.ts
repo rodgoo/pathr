@@ -17,6 +17,10 @@ import type {
   LanguageCatalogEntry,
   LanguageImprovements,
   LanguageProfile,
+  PracticeAnswer,
+  PracticeAnswerResult,
+  PracticeSession,
+  SkillBoard,
   Overview,
   Passkey,
   PasskeyOptions,
@@ -269,8 +273,24 @@ export const languages = {
    * um F5 ou de uma ida a outra tela. */
   activeAssessment: (language = "en") =>
     api.get<EnglishAssessment | null>(`/languages/assessment/active?language=${language}`),
-  /** O que a pessoa errou e ainda não recuperou. */
-  improvements: () => api.get<LanguageImprovements>("/languages/improvements"),
+  /** O que a pessoa errou e ainda não recuperou, SÓ deste idioma. */
+  improvements: (language = "en") =>
+    api.get<LanguageImprovements>(`/languages/improvements?language=${language}`),
+  /** O nível de cada habilidade, com a incerteza, e como foi em cada tópico. */
+  skills: (language = "en") => api.get<SkillBoard>(`/languages/skills?language=${language}`),
+  /** O treino de hoje, se já começou. Não cria nada. */
+  practiceToday: (language = "en") =>
+    api.get<PracticeSession | null>(`/languages/practice/today?language=${language}`),
+  /** Abre ou retoma o treino de hoje. A primeira abertura gera exercícios. */
+  startPractice: (language = "en") =>
+    api.post<PracticeSession>(`/languages/practice?language=${language}`),
+  /** O treino com os pendentes; prepara os próximos se nenhum estiver pronto. */
+  practice: (sessionId: string) => api.get<PracticeSession>(`/languages/practice/${sessionId}`),
+  answerPractice: (sessionId: string, itemId: string, answer: PracticeAnswer) =>
+    api.post<PracticeAnswerResult>(`/languages/practice/${sessionId}/answer`, {
+      item_id: itemId,
+      answer,
+    }),
   answer: (assessmentId: string, itemId: string, answer: number) =>
     api.post<EnglishAnswerResult>(`/languages/assessment/${assessmentId}/answer`, {
       item_id: itemId,

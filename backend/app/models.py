@@ -697,6 +697,13 @@ class PathrReviewItem(SQLModel, table=True):
     due_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True), index=True)
     last_reviewed_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+    # Só nos pontos de melhora de idioma (kind="language"). Sem `language` a
+    # lista misturava os idiomas; sem `skill` e `topic` não havia como devolver
+    # o ponto no formato certo nem somar no placar do tópico. Ver 0017.
+    language: Optional[str] = Field(default=None)
+    skill: Optional[str] = Field(default=None)
+    topic: Optional[str] = Field(default=None)
+    band: Optional[str] = Field(default=None)
 
 
 # ---------------------------------------------------------------------------
@@ -787,6 +794,33 @@ class PathrEnglishItem(SQLModel, table=True):
     answered_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
+    # -- Treino diário (0017). O mesmo item serve nivelamento e treino: é isso
+    # que deixa o nível por habilidade somar as duas fontes numa consulta.
+    language: Optional[str] = Field(default=None)
+    topic: Optional[str] = Field(default=None)
+    session_id: Optional[uuid.UUID] = Field(
+        default=None,
+        sa_column=Column(
+            PGUUID(as_uuid=True),
+            sa.ForeignKey("pathr_english_session.id", ondelete="CASCADE"),
+            nullable=True,
+            index=True,
+        ),
+    )
+    # O que a tela mostra de cada formato. O gabarito fica em `correct`.
+    payload: dict[str, Any] = Field(default_factory=dict, sa_column=_jsonb())
+    origin: Optional[str] = Field(default=None)  # revisao|reforco|novo|nivelamento
+    review_item_id: Optional[uuid.UUID] = Field(
+        default=None,
+        sa_column=Column(
+            PGUUID(as_uuid=True),
+            sa.ForeignKey("pathr_review_item.id", ondelete="SET NULL"),
+            nullable=True,
+        ),
+    )
+    # Fala sem microfone: não é erro e não entra na estimativa de nível.
+    skipped: bool = Field(default=False)
+
 
 class PathrEnglishSession(SQLModel, table=True):
     """Treino conversacional em cenário corporativo (daily, 1:1, entrevista,
@@ -814,6 +848,9 @@ class PathrEnglishSession(SQLModel, table=True):
     duration_s: int = Field(default=0)
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
     finished_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
+    # mode="treino": o treino diário. Um por idioma por dia (índice único
+    # parcial na 0017), para duas abas abertas não gerarem dois treinos.
+    practice_day: Optional[date] = Field(default=None, sa_type=sa.Date())
 
 
 class PathrEnglishVocab(SQLModel, table=True):

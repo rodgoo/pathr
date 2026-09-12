@@ -35,6 +35,21 @@ class _Consulta:
         self._operacao = "select"
         self._payload: Any = None
         self._limite: Optional[int] = None
+        # Filtros que não são igualdade: `lte` e as negações de `not_`.
+        self._predicados: list[Any] = []
+        self._ordem: list[tuple[str, bool]] = []
+
+    @property
+    def not_(self) -> "_Negacao":
+        """`not_.is_("x", "null")` — usado pelo treino de idioma."""
+        return _Negacao(self)
+
+    def lte(self, coluna: str, valor: Any) -> "_Consulta":
+        # Comparação de texto: datas ISO-8601 com o mesmo fuso ordenam igual.
+        self._predicados.append(
+            lambda linha: linha.get(coluna) is not None and str(linha.get(coluna)) <= str(valor)
+        )
+        return self
 
     # -- construção da consulta -------------------------------------------
     def select(self, *_args: Any, **_kwargs: Any) -> "_Consulta":
@@ -80,7 +95,11 @@ class _Consulta:
         self._limite = quantidade
         return self
 
-    def order(self, *_args: Any, **_kwargs: Any) -> "_Consulta":
+    def order(self, coluna: Optional[str] = None, *_args: Any, desc: bool = False, **_kwargs: Any) -> "_Consulta":
+        # Ordena de verdade: o treino mostra os exercícios pela posição, e um
+        # duplo que ignorasse a ordem passaria num teste que o banco reprova.
+        if coluna:
+            self._ordem.append((coluna, desc))
         return self
 
     # -- execução ----------------------------------------------------------
@@ -97,13 +116,19 @@ class _Consulta:
         for coluna, valores in self._filtros_in:
             if str(linha.get(coluna)) not in valores:
                 return False
-        return True
+        return all(predicado(linha) for predicado in self._predicados)
 
     def execute(self) -> _Resultado:
         linhas = self._banco.tabelas.setdefault(self._tabela, [])
 
         if self._operacao == "select":
             achadas = [l for l in linhas if self._casa(l)]
+            for coluna, desc in reversed(self._ordem):
+                achadas.sort(
+                    key=lambda l: (l.get(coluna) is None, str(l.get(coluna) or "").zfill(12)
+                                   if isinstance(l.get(coluna), int) else str(l.get(coluna) or "")),
+                    reverse=desc,
+                )
             if self._limite is not None:
                 achadas = achadas[: self._limite]
             return _Resultado([dict(l) for l in achadas], count=len(achadas))
@@ -139,6 +164,19 @@ class _Consulta:
             return _Resultado([])
 
         raise AssertionError(f"operação não suportada pelo duplo: {self._operacao}")
+
+
+class _Negacao:
+    def __init__(self, consulta: _Consulta):
+        self._consulta = consulta
+
+    def is_(self, coluna: str, valor: Any) -> _Consulta:
+        alvo = None if valor in ("null", None) else valor
+        if alvo is None:
+            self._consulta._predicados.append(lambda linha: linha.get(coluna) is not None)
+        else:
+            self._consulta._predicados.append(lambda linha: str(linha.get(coluna)) != str(alvo))
+        return self._consulta
 
 
 class FakeSupabase:

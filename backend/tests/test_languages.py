@@ -365,6 +365,7 @@ def test_pontos_de_melhora_contam_so_os_vencidos():
                 "id": "1",
                 "user_id": USUARIO["id"],
                 "kind": "language",
+                "language": "en",
                 "front": "a",
                 "back": "b",
                 "due_at": "2020-01-01T00:00:00+00:00",
@@ -373,6 +374,7 @@ def test_pontos_de_melhora_contam_so_os_vencidos():
                 "id": "2",
                 "user_id": USUARIO["id"],
                 "kind": "language",
+                "language": "en",
                 "front": "c",
                 "back": "d",
                 "due_at": "2999-01-01T00:00:00+00:00",
@@ -384,6 +386,19 @@ def test_pontos_de_melhora_contam_so_os_vencidos():
 
     assert len(resposta["items"]) == 2
     assert resposta["due_count"] == 1
+
+
+def test_pontos_de_melhora_nao_misturam_idiomas():
+    """Sem o filtro, o treino de espanhol cobraria erro de inglês."""
+    duplo = FakeSupabase(
+        pathr_review_item=[
+            {"id": "1", "user_id": USUARIO["id"], "kind": "language", "language": "en",
+             "front": "in the meeting", "back": "", "due_at": "2020-01-01T00:00:00+00:00"},
+            {"id": "2", "user_id": USUARIO["id"], "kind": "language", "language": "es",
+             "front": "en la reunión", "back": "", "due_at": "2020-01-01T00:00:00+00:00"},
+        ]
+    )
+    assert [i["front"] for i in router.improvements(USUARIO, duplo, "es")["items"]] == ["en la reunión"]
 
 
 def test_comecar_um_novo_encerra_o_anterior(monkeypatch):

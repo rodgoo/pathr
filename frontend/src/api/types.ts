@@ -458,6 +458,8 @@ export interface LanguageImprovement {
   due_at: string;
   lapses: number;
   repetitions: number;
+  skill?: string | null;
+  topic?: string | null;
 }
 
 export interface LanguageImprovements {
@@ -556,4 +558,123 @@ export interface TagSuggestions {
   objetivo: string | null;
   sugestoes: TagSuggestion[];
   geradas_em: string | null;
+}
+
+/* ------------------------------------------------------------------------
+ * Nivel por habilidade e treino diario de idioma
+ * --------------------------------------------------------------------- */
+
+/** Como a pessoa foi num topico dentro de uma habilidade. */
+export interface SkillTopic {
+  topic: string;
+  answered: number;
+  correct: number;
+  /** De 0 a 100, suavizada: 1 de 1 nao vira 100. */
+  score: number;
+  status: "reforcar" | "progredindo" | "dominado" | "poucos_dados";
+  last_seen: string | null;
+}
+
+export type SkillConfidence = "alta" | "media" | "inicial" | "sem_dados";
+
+export interface SkillLevel {
+  skill: string;
+  /** Nivel CEFR estimado, ou null sem nenhuma resposta naquela habilidade. */
+  level: string | null;
+  theta: number;
+  /** Quanto ja andou dentro da banda, de 0 a 1. */
+  progress_in_band: number;
+  uncertainty: number;
+  confidence: SkillConfidence;
+  answered: number;
+  topics: SkillTopic[];
+}
+
+export interface SkillBoard {
+  overall: {
+    level: string | null;
+    theta: number;
+    progress_in_band: number;
+    uncertainty: number;
+    confidence: SkillConfidence;
+    answered: number;
+  };
+  skills: SkillLevel[];
+}
+
+export type PracticeType =
+  | "mcq"
+  | "gap"
+  | "reorder"
+  | "match"
+  | "listening"
+  | "dictation"
+  | "image"
+  | "speaking";
+
+/** O que a tela mostra de um exercicio. O gabarito nunca vem junto. */
+export interface PracticePayload {
+  enunciado?: string;
+  alternativas?: string[];
+  frase?: string;
+  emoji?: string;
+  audio?: string;
+  dialogo?: boolean;
+  pecas?: string[];
+  traducao?: string;
+  esquerda?: string[];
+  direita?: string[];
+  texto?: string;
+}
+
+export interface PracticeItem {
+  id: string;
+  type: PracticeType;
+  skill: string;
+  topic: string | null;
+  band: string | null;
+  origin: "revisao" | "reforco" | "novo";
+  payload: PracticePayload;
+}
+
+export interface PracticeSummary {
+  correct: number;
+  answered: number;
+  reviewed: number;
+  recovered: number;
+  levels: { skill: string; before: string | null; after: string; delta: number | null }[];
+  topics: { skill: string; topic: string; answered: number; correct: number }[];
+}
+
+export interface PracticeSession {
+  id: string;
+  language: string;
+  practice_day: string;
+  status: "active" | "done";
+  total: number;
+  answered: number;
+  correct: number;
+  /** Ainda ha exercicios sendo preparados. */
+  generating: boolean;
+  /** So os pendentes, na ordem do treino. */
+  items: PracticeItem[];
+  summary: PracticeSummary | null;
+}
+
+export type PracticeAnswer =
+  | { indice: number }
+  | { tokens: string[] }
+  | { pares: Record<string, number> }
+  | { texto: string };
+
+export interface PracticeAnswerResult {
+  is_correct: boolean;
+  /** Fala sem microfone: nao conta como erro. */
+  skipped: boolean;
+  correct_answer: string | Record<string, number> | null;
+  detail: { semelhanca?: number; faltaram?: string[]; acentos?: boolean; certos?: number; total?: number } | null;
+  explanation: string | null;
+  /** O que aconteceu com o ponto de melhora. */
+  improvement: "novo_ponto" | "subiu" | "volta_hoje" | null;
+  session: PracticeSession;
 }

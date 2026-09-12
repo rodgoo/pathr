@@ -11,12 +11,14 @@
 
 import { useState } from "react";
 import { english as englishApi } from "@/api/endpoints";
-import type { EnglishAssessment, LanguageImprovements } from "@/api/types";
+import type { EnglishAssessment, LanguageImprovements, PracticeSession } from "@/api/types";
 import { useMutation, useQuery } from "@/hooks/useApi";
 import { ACC, ACC4, C, HAIRLINE, RING, TEXT } from "@/lib/tokens";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
 import { Placement } from "@/components/english/Placement";
+import { QuadroDeHabilidades } from "@/components/english/QuadroDeHabilidades";
+import { CartaoDoTreino, TreinoDoDia } from "@/components/english/treino/TreinoDoDia";
 
 const BANDS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 
@@ -35,7 +37,17 @@ export function EnglishPage() {
   // ida ao Roadmap apagavam o caminho de volta e o progresso ficava gravado
   // no banco sem nada que soubesse alcançá-lo.
   const aberto = useQuery(() => englishApi.activeAssessment(idioma), [idioma]);
-  const melhoras = useQuery(() => englishApi.improvements(), []);
+  // Os pontos de melhora DESTE idioma: sem o filtro, quem estuda dois
+  // idiomas via os erros de um na tela do outro.
+  const melhoras = useQuery(() => englishApi.improvements(idioma), [idioma]);
+  // O nível por habilidade é calculado a cada abertura, a partir de todas as
+  // respostas (nivelamento e treino): um número gravado ficaria velho no
+  // primeiro exercício seguinte.
+  const quadro = useQuery(() => englishApi.skills(idioma), [idioma]);
+  // O treino de hoje, se já começou. Não cria nada: abrir a tela não gasta IA.
+  const hoje = useQuery(() => englishApi.practiceToday(idioma), [idioma]);
+  const [treino, setTreino] = useState<PracticeSession | null>(null);
+  const comecar = useMutation(() => englishApi.startPractice(idioma));
   const [assessment, setAssessment] = useState<EnglishAssessment | null>(null);
   const start = useMutation(() => englishApi.startAssessment(idioma));
   const toggle = useMutation((enabled: boolean) => englishApi.update(idioma, { enabled }));
@@ -45,10 +57,34 @@ export function EnglishPage() {
   if (!profile.data) return null;
 
   const data = profile.data;
-  const reached = data.cefr_level ? BANDS.indexOf(data.cefr_level as (typeof BANDS)[number]) + 1 : 0;
+  // O nível de agora sai de todas as respostas, e não só do último
+  // nivelamento: é assim que o treino diário aparece no número grande. O do
+  // nivelamento continua dito embaixo, como referência.
+  const nivelAtual = quadro.data?.overall.answered ? quadro.data.overall.level : data.cefr_level;
+  const reached = nivelAtual ? BANDS.indexOf(nivelAtual as (typeof BANDS)[number]) + 1 : 0;
   // Um nivelamento aberto só vale como retomada se ainda faltar responder.
   const emAndamento =
     aberto.data && aberto.data.answered_count < aberto.data.item_count ? aberto.data : null;
+
+  function recarregarProgresso() {
+    profile.reload();
+    quadro.reload();
+    melhoras.reload();
+    hoje.reload();
+  }
+
+  if (treino) {
+    return (
+      <TreinoDoDia
+        inicial={treino}
+        idioma={idioma}
+        onSair={() => {
+          setTreino(null);
+          recarregarProgresso();
+        }}
+      />
+    );
+  }
 
   if (assessment) {
     return (
@@ -56,9 +92,8 @@ export function EnglishPage() {
         assessment={assessment}
         onFinished={() => {
           setAssessment(null);
-          profile.reload();
           aberto.reload();
-          melhoras.reload();
+          recarregarProgresso();
         }}
       />
     );
@@ -164,12 +199,23 @@ export function EnglishPage() {
             gap: 11.2,
           }}
         >
+          <CartaoDoTreino
+            hoje={hoje.data}
+            carregando={hoje.loading}
+            comecando={comecar.pending}
+            erro={comecar.error}
+            onComecar={async () => {
+              const sessao = await comecar.run();
+              if (sessao) setTreino(sessao);
+            }}
+          />
+
           <Panel tone="section">
             <Kicker tone="section" style={{ display: "block", marginBottom: 8.4 }}>
               Seu nível
             </Kicker>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8.4 }}>
-              <span style={{ fontSize: 34, lineHeight: 1 }}>{data.cefr_level ?? "—"}</span>
+              <span style={{ fontSize: 34, lineHeight: 1 }}>{nivelAtual ?? "—"}</span>
               <span style={{ fontSize: 13, color: "rgba(233,233,237,.75)" }}>
                 meta {data.target_level}
               </span>
@@ -189,8 +235,8 @@ export function EnglishPage() {
             </div>
             <p style={{ fontSize: 11.5, color: "rgba(233,233,237,.65)", margin: "8.4px 0 14px" }}>
               {data.cefr_level
-                ? "Nivelamento feito. Refaça quando sentir que evoluiu."
-                : "Sem nivelamento ainda. O teste leva cerca de 12 minutos e destrava a prática."}
+                ? `Estimado com o nivelamento (${data.cefr_level}) e os treinos. Refaça o nivelamento quando quiser uma medida nova.`
+                : "Sem nivelamento ainda. O teste leva cerca de 12 minutos — dá para treinar antes, e o nível se ajusta com as respostas."}
             </p>
             {emAndamento ? (
               <Retomar
@@ -224,71 +270,12 @@ export function EnglishPage() {
             ) : null}
           </Panel>
 
-          <SubScores scores={data.sub_scores} />
+          <QuadroDeHabilidades quadro={quadro.data} />
 
           <Melhoras dados={melhoras.data} />
         </div>
       )}
     </div>
-  );
-}
-
-
-/**
- * O detalhamento por habilidade do último nivelamento.
- *
- * Mostra o número por habilidade porque é ele que diz onde praticar — um
- * "B1" único esconde que a leitura vai bem e a escrita não.
- */
-function SubScores({ scores }: { scores: Record<string, number> }) {
-  const LABEL: Record<string, string> = {
-    grammar: "Gramática",
-    vocabulary: "Vocabulário",
-    reading: "Leitura",
-    listening: "Escuta",
-    writing: "Escrita",
-    speaking: "Fala",
-    business: "Corporativo",
-  };
-  const entries = Object.entries(scores);
-
-  return (
-    <Panel>
-      <Kicker style={{ display: "block", marginBottom: 11.2 }}>Por habilidade</Kicker>
-      {entries.length === 0 ? (
-        <p style={{ fontSize: 12.5, color: TEXT.muted, margin: 0 }}>
-          Faça o nivelamento para ver onde está mais forte e onde praticar.
-        </p>
-      ) : (
-        <div style={{ display: "flex", flexDirection: "column", gap: 8.4 }}>
-          {entries.map(([skill, score]) => (
-            <div key={skill}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  fontSize: 12,
-                  marginBottom: 4,
-                }}
-              >
-                <span>{LABEL[skill] ?? skill}</span>
-                <span style={{ color: TEXT.faint }}>{score}%</span>
-              </div>
-              <div
-                style={{
-                  height: 3,
-                  borderRadius: 2,
-                  background: "rgba(233,233,237,.12)",
-                  overflow: "hidden",
-                }}
-              >
-                <div style={{ height: "100%", width: `${score}%`, background: ACC4 }} />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </Panel>
   );
 }
 
@@ -378,7 +365,8 @@ function Melhoras({ dados }: { dados: LanguageImprovements | null }) {
       </div>
       {itens.length === 0 ? (
         <p style={{ fontSize: 12.5, color: TEXT.muted, margin: 0 }}>
-          Nada pendente. O que você errar no nivelamento aparece aqui para voltar depois.
+          Nada pendente. O que você errar no nivelamento ou no treino aparece aqui e volta no
+          treino diário, com outras palavras.
         </p>
       ) : (
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
