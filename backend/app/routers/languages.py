@@ -1049,8 +1049,9 @@ async def lookup_word(
         "- exemplo: uma frase no idioma original usando a palavra.\n"
         "- fonetica: a pronuncia em AFI, se souber.\n"
         "- cefr: a faixa CEFR da palavra (A1 a C2).\n"
-        "- termos de programacao ficam em ingles na traducao (\"branch\", e nao "
-        f"\"ramo\"): {', '.join(traducao.TERMOS_UNIVERSAIS)}.\n"
+        "- termos de programacao ficam em ingles na traducao quando usados no "
+        "sentido tecnico (\"branch\" do git, e nao \"ramo\"); no sentido comum, "
+        f"traduza: {', '.join(traducao.TERMOS_UNIVERSAIS)}.\n"
         + (f"\nEla apareceu nesta frase, use a acepcao QUE CABE AQUI:\n{contexto}\n" if contexto else "")
     )
 

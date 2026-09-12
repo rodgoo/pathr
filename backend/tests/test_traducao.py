@@ -124,7 +124,7 @@ def test_glossario_atual_e_reaproveitado_sem_criar_outro(deepl):
 
 def test_mudar_a_lista_muda_o_nome_do_glossario(monkeypatch):
     antes = traducao.nome_do_glossario()
-    monkeypatch.setattr(traducao, "TERMOS_UNIVERSAIS", traducao.TERMOS_UNIVERSAIS + ("monorepo",))
+    monkeypatch.setattr(traducao, "TERMOS_DO_GLOSSARIO", traducao.TERMOS_DO_GLOSSARIO + ("monorepo",))
     assert traducao.nome_do_glossario() != antes
 
 
@@ -163,6 +163,57 @@ def test_portugues_com_termos_em_ingles_e_aceito(saida):
     """Os termos técnicos ficam em inglês de propósito e não podem fazer uma
     frase portuguesa parecer inglesa."""
     assert traducao.parece_portugues(saida)
+
+
+@pytest.mark.parametrize(
+    "original,traduzida,preserva",
+    [
+        # Caso de produção: o glossário não pegou "branches" numa frase
+        # reestruturada.
+        ("We deleted the old branches after the merge.", "Após o merge, excluímos os ramos antigos.", False),
+        ("We deleted the old branches after the merge.", "Apagamos os branches antigos após o merge.", True),
+        # Grafias trocadas pelo DeepL contam como o mesmo termo.
+        ("I work on the front end and my colleague handles the back end.",
+         "Eu trabalho com front-end e meu colega cuida do back-end.", True),
+        # Plural que vira singular não é tradução do termo.
+        ("Create worktrees for the branches.", "Crie uma worktree para cada branch.", True),
+        ("Create a new worktree for each branch.", "Crie uma nova árvore de trabalho para cada ramo.", False),
+        # "merge request" é um termo só; "merge" dentro dele não é cobrado à parte.
+        ("Open a merge request today.", "Abra uma merge request hoje.", True),
+        ("Could you send me the report by Friday?", "Você poderia me enviar o relatório até sexta?", True),
+    ],
+)
+def test_termo_de_programacao_nao_pode_sumir_da_traducao(original, traduzida, preserva):
+    assert traducao.preserva_termos(original, traduzida) is preserva
+
+
+def test_palavra_com_sentido_comum_fica_fora_do_glossario():
+    """Medido com o glossário real: "release a new phone" virou "realizará uma
+    release de um novo celular", e "books on the stack" virou "na stack"."""
+    for ambiguo in ("build", "release", "daily", "stack", "script", "commit", "query", "log"):
+        assert ambiguo not in traducao.TERMOS_DO_GLOSSARIO
+        assert ambiguo in traducao.TERMOS_UNIVERSAIS  # mas vai para o prompt do modelo
+    for tecnico in ("front end", "back end", "worktree", "branches", "merge", "deploy", "pull request"):
+        assert tecnico in traducao.TERMOS_DO_GLOSSARIO
+
+
+def test_sentido_comum_traduzido_nao_e_cobrado():
+    assert traducao.preserva_termos(
+        "The company will release a new phone next month.", "A empresa vai lançar um novo celular no mês que vem."
+    )
+
+
+def test_prompt_do_modelo_distingue_sentido_tecnico_do_comum():
+    from app.routers import language_practice as router
+
+    assert "SENTIDO TÉCNICO" in router.PRACTICE_PROMPT
+    assert "release" in router.PRACTICE_PROMPT
+
+
+def test_traducao_que_perdeu_um_termo_fica_com_a_do_modelo(deepl):
+    original = "We deleted the old branches after the merge."
+    deepl.traducoes = {original: "Após o merge, excluímos os ramos antigos."}
+    assert _rodar(traducao.traduzir([original], "en")) == [None]
 
 
 def test_item_que_voltou_em_ingles_fica_none_e_o_resto_passa(deepl):

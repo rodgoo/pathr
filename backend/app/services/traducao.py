@@ -93,6 +93,23 @@ TERMOS_UNIVERSAIS: tuple[str, ...] = (
     "stack", "sandbox", "repo", "repos", "Docker", "Kubernetes", "Git", "GitHub",
 )
 
+# Os que também são palavras comuns do inglês ficam FORA do glossário. O
+# glossário não sabe o sentido: medido com o glossário real, "The company will
+# release a new phone" virou "realizará uma release de um novo celular", "Put
+# the books on the stack" virou "na stack", e "We build great products" voltou
+# sem tradução. Esses termos vão só para o prompt do modelo, que distingue o
+# sentido técnico do comum — e ficam fora da conferência de `preserva_termos`,
+# que não teria como saber se "release" era a do deploy ou a do celular.
+AMBIGUOS: frozenset[str] = frozenset(
+    {
+        "build", "builds", "release", "releases", "daily", "stack", "script", "scripts",
+        "container", "containers", "log", "logs", "token", "tokens", "query", "queries",
+        "checkout", "commit", "commits", "pipeline", "pipelines", "sprint", "sprints",
+        "stash", "payload",
+    }
+)
+TERMOS_DO_GLOSSARIO: tuple[str, ...] = tuple(t for t in TERMOS_UNIVERSAIS if t not in AMBIGUOS)
+
 _CACHE_MAXIMO = 500
 _cache: "OrderedDict[tuple[str, str, str], str]" = OrderedDict()
 # None = ainda não procurado; "" = procurado e indisponível (não tentar de novo
@@ -114,7 +131,7 @@ def _cabecalhos() -> dict[str, str]:
 
 
 def _entradas() -> str:
-    return "\n".join(f"{termo}\t{termo}" for termo in TERMOS_UNIVERSAIS)
+    return "\n".join(f"{termo}\t{termo}" for termo in TERMOS_DO_GLOSSARIO)
 
 
 def nome_do_glossario() -> str:
@@ -214,6 +231,44 @@ def parece_portugues(texto: str) -> bool:
     return pt >= outros
 
 
+def _compacto(texto: str) -> str:
+    """Sem espaço, hífen e maiúscula: "front end", "front-end" e "Frontend"
+    são o mesmo termo, e o DeepL troca entre as grafias à vontade."""
+    return re.sub(r"[\s\-]+", "", texto.lower())
+
+
+# Do mais longo ao mais curto: "merge request" precisa ser achado antes de
+# "merge", senão o termo curto seria cobrado sozinho dentro do longo.
+_TERMOS_POR_TAMANHO = sorted(TERMOS_DO_GLOSSARIO, key=len, reverse=True)
+
+
+def preserva_termos(original: str, traduzida: str) -> bool:
+    """Todo termo de programação do original continua na tradução?
+
+    O glossário não basta. Medido em produção: "We deleted the old branches
+    after the merge." voltou "Após o merge, excluímos os ramos antigos." — o
+    DeepL reestruturou a frase e "branches" escapou do glossário. Termo
+    traduzido é justamente o que não pode acontecer, então a regra é conferida
+    aqui, e não confiada.
+
+    Singular e plural valem pelo mesmo termo ("branches" no original,
+    "branch" na tradução): o português às vezes muda o número, e isso não é
+    traduzir o termo.
+    """
+    restante = " " + original.lower() + " "
+    destino = _compacto(traduzida)
+    for termo in _TERMOS_POR_TAMANHO:
+        padrao = re.compile(r"(?<![\w-])" + re.escape(termo.lower()) + r"(?![\w-])")
+        if not padrao.search(restante):
+            continue
+        restante = padrao.sub(" ", restante)
+        raiz = _compacto(termo)
+        variantes = {raiz, raiz.removesuffix("es"), raiz.removesuffix("s")}
+        if not any(variante and variante in destino for variante in variantes):
+            return False
+    return True
+
+
 async def traduzir(
     textos: list[str], idioma: str, *, contexto: Optional[str] = None
 ) -> Optional[list[Optional[str]]]:
@@ -263,7 +318,11 @@ async def traduzir(
 
     for posicao, i in enumerate(faltam):
         traduzida = traducoes[posicao].strip()
-        if not traduzida or not parece_portugues(traduzida):
+        if (
+            not traduzida
+            or not parece_portugues(traduzida)
+            or not preserva_termos(limpos[i], traduzida)
+        ):
             continue
         saida[i] = traduzida
         _cache[(origem, limpos[i], chave_contexto)] = traduzida

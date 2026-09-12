@@ -103,9 +103,11 @@ REGRAS GERAIS
    escreva outra situação cujas alternativas testem a mesma regra.
 5. As alternativas erradas são erros que brasileiros realmente cometem (falso
    cognato, tradução literal, preposição, tempo verbal) — não absurdos.
-6. Na tradução e na explicação, termos de programação ficam em inglês, como
-   se fala num time brasileiro: "fiz o merge da branch", nunca "fiz a fusão
-   do ramo". Os termos: {termos}.
+6. Na tradução e na explicação, termos de programação ficam em inglês quando
+   usados no SENTIDO TÉCNICO, como se fala num time brasileiro: "fiz o merge da
+   branch", nunca "fiz a fusão do ramo". No sentido comum, traduza: "release a
+   new phone" é "lançar um celular", "put it on the stack" é "pôr na pilha".
+   Os termos: {termos}.
 
 POR TIPO (use SÓ os campos do tipo)
 - mcq: enunciado com todo o contexto necessário; alternativas (4); correta (0 a 3).
