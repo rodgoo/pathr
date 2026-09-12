@@ -189,6 +189,30 @@ class PathrEmailToken(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
 
+class PathrWalkthrough(SQLModel, table=True):
+    """Um exemplo de código com o traço de execução linha a linha.
+
+    `steps` é jsonb e não tabela filha: o traço só faz sentido inteiro e junto
+    com o código dele — um passo isolado nunca é consultado sozinho. Pode vir
+    VAZIO de propósito: services/code_lab.conferir() recusa traço incoerente
+    com o código, e o exemplo continua valendo como código comentado.
+    """
+
+    __tablename__ = "pathr_walkthrough"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id"))
+    language: str  # python | javascript | ... (services/code_lab.LINGUAGENS)
+    topic: str
+    level: str = Field(default="iniciante")
+    title: str
+    summary: str = Field(default="")
+    code: str = Field(sa_type=sa.Text())
+    steps: list[Any] = Field(default_factory=list, sa_column=_jsonb("[]"))
+    concepts: list[Any] = Field(default_factory=list, sa_column=_jsonb("[]"))
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+
+
 class PathrEmailLog(SQLModel, table=True):
     """Um aviso por pessoa, por tipo, por dia local.
 

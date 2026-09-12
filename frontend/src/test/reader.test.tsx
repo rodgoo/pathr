@@ -1,14 +1,18 @@
 /**
  * O artigo reabre onde a leitura parou.
  *
- * O jsdom não calcula layout: scrollHeight e clientHeight são zero e o
- * scrollTop não guarda valor. Os três são simulados aqui — o mínimo para a
- * regra poder ser conferida. O que se testa é a conta de rolagem, não o motor
- * do navegador.
+ * O artigo FLUI na página: não tem caixa de rolagem própria, e quem rola é a
+ * janela. Então a régua do progresso é quanto do texto já passou pela borda
+ * de baixo da tela, e retomar é levar a janela ao ponto em que essa conta dá
+ * a fração guardada.
+ *
+ * O jsdom não calcula layout nem rola nada: altura, posição e rolagem são
+ * simuladas aqui, o mínimo para a conta poder ser conferida. O que se testa é
+ * a conta, não o motor do navegador.
  */
 
 import { fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, beforeEach, expect, it } from "vitest";
+import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import type { ReaderContent } from "@/api/types";
 import { ArticleReader } from "@/components/library/ArticleReader";
 
@@ -22,57 +26,55 @@ const conteudo = {
   error: null,
 } as unknown as ReaderContent;
 
-type ComTopo = HTMLElement & { _topo?: number };
-const originais: Record<string, PropertyDescriptor | undefined> = {};
+/** 2000px de texto numa janela de 500px, começando no topo da página. */
+const ALTURA = 2000;
+const JANELA = 500;
+
+let rolagem = 0;
+const original = Object.getOwnPropertyDescriptor(HTMLElement.prototype, "offsetHeight");
 
 beforeEach(() => {
-  for (const nome of ["scrollHeight", "clientHeight", "scrollTop"]) {
-    originais[nome] = Object.getOwnPropertyDescriptor(HTMLElement.prototype, nome);
-  }
-  // 2000px de texto numa caixa de 500px: 1500px roláveis.
-  Object.defineProperty(HTMLElement.prototype, "scrollHeight", { configurable: true, get: () => 2000 });
-  Object.defineProperty(HTMLElement.prototype, "clientHeight", { configurable: true, get: () => 500 });
-  Object.defineProperty(HTMLElement.prototype, "scrollTop", {
+  rolagem = 0;
+  Object.defineProperty(HTMLElement.prototype, "offsetHeight", {
     configurable: true,
-    get(this: ComTopo) {
-      return this._topo ?? 0;
-    },
-    set(this: ComTopo, valor: number) {
-      this._topo = valor;
-    },
+    get: () => ALTURA,
   });
+  // O artigo começa em y=0 da página, então o topo visível é o negativo da
+  // rolagem — é assim que o navegador reporta.
+  HTMLElement.prototype.getBoundingClientRect = function () {
+    return { top: -rolagem, bottom: ALTURA - rolagem, height: ALTURA } as DOMRect;
+  };
+  window.innerHeight = JANELA;
+  vi.stubGlobal("scrollTo", (opcoes: { top: number }) => {
+    rolagem = opcoes.top;
+    window.dispatchEvent(new Event("scroll"));
+  });
+  Object.defineProperty(window, "scrollY", { configurable: true, get: () => rolagem });
 });
 
 afterEach(() => {
-  for (const [nome, descritor] of Object.entries(originais)) {
-    if (descritor) Object.defineProperty(HTMLElement.prototype, nome, descritor);
-    else delete (HTMLElement.prototype as unknown as Record<string, unknown>)[nome];
-  }
+  if (original) Object.defineProperty(HTMLElement.prototype, "offsetHeight", original);
+  vi.unstubAllGlobals();
 });
 
-const caixa = (container: HTMLElement) => container.querySelector(".leitura") as HTMLElement;
-
 it("reabre no ponto onde a leitura parou", () => {
-  const { container } = render(
-    <ArticleReader conteudo={conteudo} comecarEm={0.6} onProgresso={() => {}} />,
-  );
-  expect(caixa(container).scrollTop).toBe(900); // 60% de 1500px
+  render(<ArticleReader conteudo={conteudo} comecarEm={0.6} onProgresso={() => {}} />);
+  // 60% de 2000px já passaram pela borda de baixo: 1200 - 500 de janela.
+  expect(rolagem).toBe(700);
   expect(screen.getByText("60% lido")).toBeInTheDocument();
   expect(screen.getByRole("status")).toHaveTextContent("Retomado de onde você parou (60%)");
 });
 
 it("artigo terminado reabre no topo, para reler", () => {
-  const { container } = render(
-    <ArticleReader conteudo={conteudo} comecarEm={1} onProgresso={() => {}} />,
-  );
-  expect(caixa(container).scrollTop).toBe(0);
+  render(<ArticleReader conteudo={conteudo} comecarEm={1} onProgresso={() => {}} />);
+  expect(rolagem).toBe(0);
   expect(screen.getByText("100% lido")).toBeInTheDocument();
   expect(screen.queryByText(/Retomado/)).not.toBeInTheDocument();
 });
 
 it("artigo nunca aberto começa do início, sem aviso", () => {
-  const { container } = render(<ArticleReader conteudo={conteudo} onProgresso={() => {}} />);
-  expect(caixa(container).scrollTop).toBe(0);
+  render(<ArticleReader conteudo={conteudo} onProgresso={() => {}} />);
+  expect(rolagem).toBe(0);
   expect(screen.queryByText(/Retomado/)).not.toBeInTheDocument();
 });
 
@@ -81,19 +83,33 @@ it("voltar ao início leva ao topo e desliga o reposicionamento", () => {
     <ArticleReader conteudo={conteudo} comecarEm={0.6} onProgresso={() => {}} />,
   );
   fireEvent.click(screen.getByRole("button", { name: "Voltar ao início" }));
-  expect(caixa(container).scrollTop).toBe(0);
+  expect(rolagem).toBe(0);
   // Uma imagem que termina de carregar depois não pode arrastar de volta.
-  fireEvent.load(caixa(container));
-  expect(caixa(container).scrollTop).toBe(0);
+  fireEvent.load(container.querySelector(".leitura") as HTMLElement);
+  expect(rolagem).toBe(0);
 });
 
 it("depois que a pessoa mexe, imagem carregando não arrasta a posição", () => {
   const { container } = render(
     <ArticleReader conteudo={conteudo} comecarEm={0.6} onProgresso={() => {}} />,
   );
-  const elemento = caixa(container);
+  const elemento = container.querySelector(".leitura") as HTMLElement;
   fireEvent.wheel(elemento);
-  elemento.scrollTop = 100;
+  rolagem = 100;
   fireEvent.load(elemento);
-  expect(elemento.scrollTop).toBe(100);
+  expect(rolagem).toBe(100);
+});
+
+/**
+ * O texto não fica preso numa janelinha.
+ *
+ * Rolagem dentro de rolagem cortava a última linha visível pela metade — o
+ * que se lê como conteúdo colidindo com o que vem depois — e no computador
+ * desperdiçava a tela para ler num visor estreito.
+ */
+it("o artigo não cria uma segunda rolagem dentro da página", () => {
+  const { container } = render(<ArticleReader conteudo={conteudo} onProgresso={() => {}} />);
+  const elemento = container.querySelector(".leitura") as HTMLElement;
+  expect(elemento.style.overflowY).toBe("");
+  expect(elemento.style.maxHeight).toBe("");
 });

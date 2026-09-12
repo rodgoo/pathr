@@ -16,6 +16,7 @@ import type { EnglishAnswerResult, EnglishAssessment } from "@/api/types";
 import { useMutation } from "@/hooks/useApi";
 import { ACC, ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
 import { ListeningPlayer } from "@/components/english/ListeningPlayer";
+import { TextoConsultavel } from "@/components/english/TextoConsultavel";
 import { ChoiceList } from "@/components/ui/ChoiceList";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Panel, SCREEN_IN } from "@/components/ui/primitives";
@@ -106,7 +107,9 @@ export function Placement({
           /* Nas outras habilidades o contexto É para ler: o e-mail ou o
              trecho de reunião que enquadra a pergunta. Corpo de texto e não
              de legenda, e `pre-wrap` para as quebras sobreviverem. */
-          <div
+          <TextoConsultavel
+            texto={item.context}
+            idioma={current.language ?? "en"}
             style={{
               fontSize: 14,
               lineHeight: 1.6,
@@ -118,12 +121,17 @@ export function Placement({
               padding: "11.2px 14px",
               marginBottom: 16.8,
             }}
-          >
-            {item.context}
-          </div>
+          />
         ) : null}
-        <h2 style={{ fontSize: 17, lineHeight: 1.4, marginBottom: 16.8, fontWeight: 500 }}>
-          {item.prompt}
+        {/* O enunciado também é consultável: é nele que mora a palavra que
+            decide a pergunta, e mandar a pessoa adivinhar justo ali é o pior
+            lugar para fazê-lo. */}
+        <h2 style={{ marginBottom: 16.8 }}>
+          <TextoConsultavel
+            texto={item.prompt}
+            idioma={current.language ?? "en"}
+            style={{ fontSize: 17, lineHeight: 1.4, fontWeight: 500, color: TEXT.strong }}
+          />
         </h2>
 
         <ChoiceList

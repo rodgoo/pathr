@@ -375,3 +375,41 @@ async def test_documentacao_e_exercicio_procuram_tambem_em_portugues(monkeypatch
 def test_plataforma_brasileira_e_exercicio():
     assert rs._classifica("https://judge.beecrowd.com/pt/problems/view/1001") == "exercise"
     assert rs._classifica("https://neps.academy/br/exercise/1") == "exercise"
+
+
+# ---------------------------------------------------------------------------
+# A mesma pagina listada duas vezes
+#
+# O catalogo tem `url` como identidade, e endereços que diferem so na barra
+# final, no `www.` ou no esquema entravam como linhas separadas: a mesma
+# pagina aparecendo duas vezes na biblioteca, cada uma com o seu progresso, e
+# quem terminasse uma continuaria vendo a outra por fazer.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "outra",
+    [
+        "https://exemplo.com/guia/",
+        "http://exemplo.com/guia",
+        "https://www.exemplo.com/guia",
+        "https://exemplo.com/guia#instalacao",
+        "https://EXEMPLO.com/Guia",
+    ],
+)
+def test_enderecos_da_mesma_pagina_tem_a_mesma_identidade(outra):
+    assert rs.canonica("https://exemplo.com/guia") == rs.canonica(outra)
+
+
+@pytest.mark.parametrize(
+    "outra",
+    [
+        # A query separa um video do outro -- ignora-la juntaria o YouTube
+        # inteiro num material so.
+        "https://exemplo.com/guia?v=2",
+        "https://exemplo.com/guia/avancado",
+        "https://outro.com/guia",
+    ],
+)
+def test_paginas_diferentes_continuam_diferentes(outra):
+    assert rs.canonica("https://exemplo.com/guia") != rs.canonica(outra)

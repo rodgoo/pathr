@@ -154,3 +154,47 @@ def test_pagina_sem_artigo_extraivel_avisa(monkeypatch):
     with pytest.raises(reader.LeituraIndisponivel) as erro:
         reader.ler("https://exemplo.com/vazio")
     assert "extrair" in erro.value.motivo
+
+
+# ---------------------------------------------------------------------------
+# Codigo inline x bloco de codigo
+#
+# trafilatura devolve TODO trecho de codigo como `<pre>`, sem distinguir os
+# dois casos. Como `<pre>` e elemento de bloco, o navegador FECHA o paragrafo
+# ao encontra-lo: uma frase com tres nomes de evento no meio chegava a tela
+# como cinco pedacos empilhados -- texto, caixa larga, virgula sozinha, caixa,
+# ", and". Foi o que se viu nos artigos do freeCodeCamp.
+# ---------------------------------------------------------------------------
+
+
+def test_codigo_no_meio_da_frase_nao_quebra_o_paragrafo():
+    bruto = "<p>The <pre>push</pre>, <pre>release</pre>, and <pre>pull_request</pre> events.</p>"
+    assert reader._arruma_codigo(bruto) == (
+        "<p>The <code>push</code>, <code>release</code>, and "
+        "<code>pull_request</code> events.</p>"
+    )
+
+
+def test_bloco_de_codigo_continua_bloco():
+    # O bloco de verdade chega ANINHADO, e e assim que se distingue um do outro.
+    bruto = "<pre><pre>name: CI\non:\n  push:\n</pre></pre>"
+    assert reader._arruma_codigo(bruto) == "<pre><code>name: CI\non:\n  push:\n</code></pre>"
+
+
+def test_pre_simples_com_varias_linhas_vale_como_bloco():
+    """A quebra de linha e a segunda opiniao.
+
+    Errar para o lado do bloco preserva o alinhamento, que num trecho de YAML
+    e o conteudo -- transformar isso em codigo inline juntaria tudo numa linha.
+    """
+    assert reader._arruma_codigo("<pre>uma\nduas</pre>") == "<pre><code>uma\nduas</code></pre>"
+
+
+def test_texto_sem_codigo_passa_intacto():
+    assert reader._arruma_codigo("<p>sem codigo nenhum</p>") == "<p>sem codigo nenhum</p>"
+
+
+def test_o_marcador_interno_nao_vaza_para_a_tela():
+    saida = reader._arruma_codigo("<pre><pre>bloco</pre></pre><p>x <pre>inline</pre></p>")
+    assert "pathr-bloco" not in saida
+    assert saida == "<pre><code>bloco</code></pre><p>x <code>inline</code></p>"

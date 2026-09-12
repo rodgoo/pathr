@@ -67,27 +67,29 @@ describe("reconferência entre dispositivos", () => {
    * O limite da reconferência: ela não pode APAGAR a tela.
    *
    * Quem volta de outra janela precisa encontrar o app como deixou. Antes, a
-   * reconferência zerava o dado de toda consulta aberta e a tela inteira
-   * voltava ao esqueleto de carregamento — e o que estivesse montado em cima
-   * desses dados, um quiz na sétima questão, era desmontado junto.
+   * reconferência descartava o que estava na tela em toda consulta aberta e a
+   * pessoa voltava ao esqueleto de carregamento — e o que estivesse montado
+   * em cima desses dados, um quiz na sétima questão, era desmontado junto.
+   *
+   * O caso exercitado aqui é o pior deles: a repergunta FALHOU. Mesmo assim o
+   * que já estava na tela continua sendo a melhor informação disponível — e
+   * trocá-la por uma mensagem de erro faria a pessoa perder conteúdo bom por
+   * causa de uma rede que oscilou ao voltar do segundo plano, que é
+   * exatamente quando ela oscila.
    */
-  it("não apaga o que está na tela enquanto repergunta", async () => {
-    let responder: ((valor: { body: unknown }) => void) | null = null;
+  it("mantém o que está na tela quando a reconferência falha", async () => {
+    let deveFalhar = false;
     const servidor = mockServer({
       "GET /auth/me": () => ({ body: aUser() }),
-      "GET /profile": () => {
-        if (!responder) return { body: { current_role: "Desenvolvedor pleno" } };
-        return new Promise<{ body: unknown }>((resolve) => {
-          responder = resolve as (valor: { body: unknown }) => void;
-        });
-      },
+      "GET /profile": () =>
+        deveFalhar
+          ? { status: 503, body: { detail: "Servidor indisponível." } }
+          : { body: { current_role: "Desenvolvedor pleno" } },
     });
     montar(servidor);
     expect(await screen.findByText("cargo: Desenvolvedor pleno")).toBeInTheDocument();
 
-    // A partir daqui o servidor demora a responder: é a janela em que a tela
-    // antiga precisa continuar de pé.
-    responder = () => undefined;
+    deveFalhar = true;
     const agora = Date.now();
     vi.spyOn(Date, "now").mockReturnValue(agora + 6 * 60_000);
     window.dispatchEvent(new Event("focus"));

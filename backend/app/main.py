@@ -165,6 +165,7 @@ from app.routers import (  # noqa: E402
     eventos as eventos_router,
     explanations,
     jobs,
+    walkthroughs,
     languages,
     library,
     passkeys,
@@ -204,3 +205,4 @@ app.include_router(explanations.router)
 app.include_router(plan.router)
 app.include_router(passkeys.router)
 app.include_router(jobs.router)
+app.include_router(walkthroughs.router)

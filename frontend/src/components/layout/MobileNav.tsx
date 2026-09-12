@@ -43,6 +43,7 @@ const BARRA: Destino[] = [
 ];
 
 const FOLHA: Destino[] = [
+  { label: "Código", screen: "codigo", icon: "code" },
   { label: "Idiomas", screen: "ingles", icon: "flag" },
   { label: "Perfil e tags", screen: "perfil", icon: "user" },
   { label: "Currículo", screen: "cv", icon: "file" },

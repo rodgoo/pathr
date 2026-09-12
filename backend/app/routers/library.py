@@ -16,6 +16,7 @@ nunca chegou.
 
 from datetime import datetime, timedelta, timezone
 from typing import Any, Optional
+from urllib.parse import urlparse
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
@@ -91,6 +92,37 @@ def _peso_do_status(item: dict[str, Any]) -> int:
     return _ORDEM_POR_STATUS.get(item.get("user_status"), 2)
 
 
+# A mesma página listada duas vezes.
+#
+# O catálogo tem `url` como identidade, e endereços que diferem só na barra
+# final, no `www.` ou no esquema entraram como linhas separadas — a mesma
+# página aparecendo duas vezes na biblioteca, cada uma com o seu progresso.
+#
+# `_absorve` passou a comparar pelo endereço canônico, o que estanca a
+# entrada. Mas o que já está gravado continua gravado, e uma migração
+# escolheria sozinha qual das linhas apagar junto com o progresso pendurado
+# nela. Aqui a escolha é feita na leitura, onde dá para preferir a linha em
+# que a pessoa MEXEU — e onde nada é perdido.
+
+
+def _colapsa_repetidos(itens: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Uma linha por página. Ganha a que tem progresso; empate, a de melhor nota."""
+    melhor: dict[str, dict[str, Any]] = {}
+    ordem: list[str] = []
+    for item in itens:
+        chave = resource_search.canonica(str(item.get("url") or item["id"]))
+        atual = melhor.get(chave)
+        if atual is None:
+            melhor[chave] = item
+            ordem.append(chave)
+            continue
+        # Menor peso = mais adiantado. A lista chega ordenada por qualidade,
+        # então o empate já está resolvido por quem veio primeiro.
+        if _peso_do_status(item) < _peso_do_status(atual):
+            melhor[chave] = item
+    return [melhor[chave] for chave in ordem]
+
+
 @router.get("")
 def list_resources(
     q: str = "",
@@ -158,9 +190,10 @@ def list_resources(
         for resource in resources
     ]
 
+    unicos = _colapsa_repetidos(listados)
     # Estável: dentro de cada faixa a ordem por qualidade se mantém.
-    listados.sort(key=_peso_do_status)
-    return listados
+    unicos.sort(key=_peso_do_status)
+    return unicos
 
 
 # Quanto tempo o artigo extraído vale antes de ser buscado de novo. Artigo é
@@ -519,6 +552,31 @@ async def curate_library(
     }
 
 
+def _variantes(url: str) -> list[str]:
+    """As escritas do mesmo endereço que podem estar gravadas.
+
+    A consulta ao catálogo é por igualdade — é o que o PostgREST oferece sem
+    inventar um índice novo — então procurar o canônico direto não acharia a
+    linha guardada como `https://www.site.com/guia/`. Em vez disso se procura
+    pelas oito escritas possíveis da mesma página, e a comparação final é
+    feita pelo canônico.
+
+    Oito é o produto do que se ignora ao canonizar: esquema, `www.` e barra
+    final. Não é uma busca cara: são valores exatos num `in_`, sobre a coluna
+    que já é única.
+    """
+    partes = urlparse(url.strip())
+    host = (partes.hostname or "").removeprefix("www.")
+    caminho = partes.path.rstrip("/")
+    cauda = f"?{partes.query}" if partes.query else ""
+    return [
+        f"{esquema}://{prefixo}{host}{caminho}{barra}{cauda}"
+        for esquema in ("https", "http")
+        for prefixo in ("", "www.")
+        for barra in ("", "/")
+    ]
+
+
 def _absorve(supabase: Client, candidatos: list, tag_id: str) -> int:
     """Grava os candidatos e devolve quantos são NOVOS.
 
@@ -531,9 +589,12 @@ def _absorve(supabase: Client, candidatos: list, tag_id: str) -> int:
     if not candidatos:
         return 0
 
-    urls = [item.url for item in candidatos]
+    # Pelas variantes, e não pela url literal: a mesma página escrita com
+    # "www." ou com barra final entrava como material NOVO, e a biblioteca
+    # passava a listar duas vezes a mesma coisa. Ver resource_search.canonica.
+    urls = sorted({escrita for item in candidatos for escrita in _variantes(item.url)})
     existentes = {
-        row["url"]: row
+        resource_search.canonica(str(row["url"])): row
         for row in (
             supabase.table("pathr_resource").select("id,url,tag_ids").in_("url", urls).execute().data
             or []
@@ -542,7 +603,7 @@ def _absorve(supabase: Client, candidatos: list, tag_id: str) -> int:
 
     inserir = []
     for candidato in candidatos:
-        atual = existentes.get(candidato.url)
+        atual = existentes.get(resource_search.canonica(candidato.url))
         if atual is None:
             inserir.append(candidato.to_row())
             continue

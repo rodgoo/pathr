@@ -61,11 +61,18 @@ export function ArticleReader({
     const elemento = caixa.current;
     if (!elemento || conteudo.status !== "ok") return;
 
+    /** Onde o artigo começa, em coordenadas da página. */
+    const topoDoArtigo = () => elemento.getBoundingClientRect().top + window.scrollY;
+
     const medir = () => {
-      const rolavel = elemento.scrollHeight - elemento.clientHeight;
-      // Artigo curto cabe inteiro na tela e nunca rola. Abrir já é ler.
-      const fracao = rolavel <= 0 ? 1 : elemento.scrollTop / rolavel;
-      const limitada = Math.max(0, Math.min(1, fracao));
+      const altura = elemento.offsetHeight;
+      if (altura <= 0) return;
+      // Quanto do artigo já passou pela borda de baixo da janela. Vira 1
+      // quando o fim do texto alcança essa borda — que é o momento em que ele
+      // acabou de ser lido, e não quando a página chega ao fim (embaixo ainda
+      // há o link da fonte, e chegar até ele não é ler mais nada).
+      const passou = window.innerHeight - elemento.getBoundingClientRect().top;
+      const limitada = Math.max(0, Math.min(1, passou / altura));
       if (limitada > maiorFracao.current) {
         maiorFracao.current = limitada;
         setLido(limitada);
@@ -79,8 +86,11 @@ export function ArticleReader({
     let interagiu = false;
     const posicionar = () => {
       if (interagiu || inicio.current <= 0) return;
-      const rolavel = elemento.scrollHeight - elemento.clientHeight;
-      if (rolavel > 0) elemento.scrollTop = inicio.current * rolavel;
+      const altura = elemento.offsetHeight;
+      if (altura <= 0) return;
+      window.scrollTo({
+        top: Math.max(0, topoDoArtigo() - window.innerHeight + inicio.current * altura),
+      });
     };
     const marcarInteracao = () => {
       interagiu = true;
@@ -90,19 +100,23 @@ export function ArticleReader({
     if (inicio.current > 0.02) setRetomado(true);
     elemento.addEventListener("load", posicionar, true);
     for (const gesto of gestos) {
-      elemento.addEventListener(gesto, marcarInteracao, { passive: true });
+      window.addEventListener(gesto, marcarInteracao, { passive: true });
     }
 
     medir();
-    elemento.addEventListener("scroll", medir, { passive: true });
+    window.addEventListener("scroll", medir, { passive: true });
+    // O texto reflui quando a janela muda de largura, e com ele a altura que
+    // serve de régua para o progresso.
+    window.addEventListener("resize", medir, { passive: true });
     const timer = window.setInterval(() => {
       if (maiorFracao.current > 0) reportar.current(maiorFracao.current);
     }, INTERVALO_GRAVACAO_MS);
 
     return () => {
       elemento.removeEventListener("load", posicionar, true);
-      for (const gesto of gestos) elemento.removeEventListener(gesto, marcarInteracao);
-      elemento.removeEventListener("scroll", medir);
+      for (const gesto of gestos) window.removeEventListener(gesto, marcarInteracao);
+      window.removeEventListener("scroll", medir);
+      window.removeEventListener("resize", medir);
       window.clearInterval(timer);
       // Fechar é o momento mais comum de sair: grava o alcançado antes de ir.
       if (maiorFracao.current > 0) reportar.current(maiorFracao.current);
@@ -175,7 +189,14 @@ export function ArticleReader({
               // Zerar o início também desliga o reposicionamento: uma imagem
               // que carregasse depois arrastaria a pessoa de volta ao meio.
               inicio.current = 0;
-              if (caixa.current) caixa.current.scrollTop = 0;
+              if (caixa.current) {
+                window.scrollTo({
+                  top: Math.max(
+                    0,
+                    caixa.current.getBoundingClientRect().top + window.scrollY,
+                  ),
+                });
+              }
               setRetomado(false);
             }}
             style={{
@@ -193,9 +214,20 @@ export function ArticleReader({
         </div>
       ) : null}
 
+      {/* Grudada no topo: com o texto fluindo na página, uma barra estática
+          sairia de vista no primeiro rolar, e "quanto falta" é justamente o
+          que se quer saber no meio da leitura, não antes de começar. */}
       <div
         aria-hidden
-        style={{ height: 3, borderRadius: 2, background: "rgba(233,233,237,.14)", marginBottom: 14 }}
+        style={{
+          position: "sticky",
+          top: 0,
+          zIndex: 1,
+          height: 3,
+          borderRadius: 2,
+          background: "rgba(233,233,237,.14)",
+          marginBottom: 14,
+        }}
       >
         <div
           style={{
@@ -211,10 +243,14 @@ export function ArticleReader({
       <div
         ref={caixa}
         className="leitura"
+        // Sem caixa de rolagem própria: o artigo flui na página.
+        //
+        // Antes ele vivia numa janelinha de 62vh DENTRO de uma página que já
+        // rola. Rolagem dentro de rolagem confunde o gesto (a roda do mouse
+        // move ora um, ora outro), corta a última linha visível pela metade —
+        // o que parece conteúdo colidindo com o que vem depois — e no
+        // computador desperdiça a tela inteira para ler num visor estreito.
         style={{
-          maxHeight: "62vh",
-          overflowY: "auto",
-          paddingRight: 14,
           fontSize: 14.5,
           lineHeight: 1.7,
           color: "rgba(233,233,237,.86)",

@@ -751,6 +751,39 @@ async def _ai_fallback(subject: str, category: Optional[str]) -> list[Candidate]
 # ---------------------------------------------------------------------------
 
 
+def canonica(url: str) -> str:
+    """A identidade de um endereço, para saber se dois materiais são o mesmo.
+
+    `https://rogerdudler.github.io/git-guide/` e
+    `http://www.rogerdudler.github.io/git-guide` são a MESMA página, e chegavam
+    como dois materiais na biblioteca — a mesma coisa listada duas vezes, cada
+    uma com o seu progresso, e quem terminasse uma continuaria vendo a outra
+    por fazer.
+
+    Acontecia porque havia duas contas de identidade no caminho: a busca
+    descartava repetidos ignorando barra final e caixa, mas a gravação
+    comparava a url LETRA POR LETRA com o que já estava no banco. Quem
+    passasse pela primeira ainda entrava como linha nova na segunda.
+
+    O que se descarta aqui é o que não muda a página: o esquema (um site que
+    responde nos dois serve o mesmo texto), o `www.`, a barra final, a caixa do
+    host e o fragmento — `#instalacao` é um trecho DENTRO do mesmo documento.
+
+    A caixa do caminho também some, e essa é a única escolha discutível
+    aqui: `/Guia` e `/guia` PODEM ser páginas diferentes num servidor Unix. Na
+    prática, quando as duas aparecem numa busca é o mesmo artigo escrito com
+    outra capitalização em algum link — e listar o mesmo texto duas vezes
+    incomoda mais do que a chance remota de esconder um vizinho legítimo.
+
+    O que se preserva é a query, porque é ela que separa um vídeo do outro no
+    YouTube.
+    """
+    partes = urlparse(url.strip())
+    host = (partes.hostname or "").removeprefix("www.")
+    caminho = partes.path.rstrip("/").lower()
+    return f"{host}{caminho}?{partes.query}" if partes.query else f"{host}{caminho}"
+
+
 async def _keep_reachable(candidates: list[Candidate]) -> list[Candidate]:
     """Descarta o que não responde, e o que está duplicado na própria leva.
 
@@ -761,7 +794,7 @@ async def _keep_reachable(candidates: list[Candidate]) -> list[Candidate]:
     seen: set[str] = set()
     unique: list[Candidate] = []
     for candidate in candidates:
-        key = candidate.url.rstrip("/").lower()
+        key = canonica(candidate.url)
         if key in seen:
             continue
         seen.add(key)

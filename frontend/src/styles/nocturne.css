@@ -430,3 +430,42 @@ textarea.input { min-height: 90px; resize: vertical; }
   border: none;
   border-top: 1px solid rgba(233, 233, 237, 0.12);
 }
+
+/* --------------------------------------------------------------------------
+   A palavra consultável do nivelamento.
+
+   É um `<button>` porque é acionável — e por isso precisa desmanchar toda a
+   aparência de botão e herdar a do texto em volta: um enunciado com vinte
+   caixinhas cinzentas deixaria de parecer uma frase. O que denuncia que dá
+   para tocar é o sublinhado pontilhado, discreto o bastante para não competir
+   com a leitura e presente o bastante para ser encontrado.
+   -------------------------------------------------------------------------- */
+
+.palavra {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: inherit;
+  line-height: inherit;
+  /* `baseline` mantém a palavra assentada na linha do texto; o padrão de
+     botão (`middle`) a levantaria alguns pixels e a frase ficaria trêmula. */
+  vertical-align: baseline;
+  cursor: pointer;
+  border-radius: 3px;
+  text-decoration: underline dotted rgba(233, 233, 237, 0.28);
+  text-underline-offset: 3px;
+}
+
+.palavra:hover,
+.palavra:focus-visible {
+  color: #d2cefd;
+  text-decoration-color: #9184d9;
+}
+
+.palavra[aria-expanded="true"] {
+  background: rgba(145, 132, 217, 0.18);
+  color: #d2cefd;
+  box-shadow: 0 0 0 2px rgba(145, 132, 217, 0.18);
+}

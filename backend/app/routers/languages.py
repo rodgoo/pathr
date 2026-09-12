@@ -18,7 +18,7 @@ from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from supabase import Client
 
-from app.ai_providers import generate_json
+from app.ai_providers import AiProviderError, generate_json
 from app.database import get_supabase
 from app.deps import get_current_user
 from app.services import languages, review
@@ -949,3 +949,163 @@ def review_vocab(
         .data[0]
     )
     return updated
+
+# ---------------------------------------------------------------------------
+# A palavra que a pessoa nao sabia
+# ---------------------------------------------------------------------------
+
+_TERMO_VALIDO = re.compile(r"^[^\W\d_][\w'’-]{0,59}$", re.UNICODE)
+
+_LOOKUP_SCHEMA = {
+    "type": "OBJECT",
+    "properties": {
+        "traducao": {"type": "STRING"},
+        "sinonimos": {"type": "ARRAY", "items": {"type": "STRING"}},
+        "definicao": {"type": "STRING"},
+        "exemplo": {"type": "STRING"},
+        "fonetica": {"type": "STRING"},
+        "cefr": {"type": "STRING"},
+    },
+    "required": ["traducao", "sinonimos", "definicao"],
+}
+
+
+class VocabLookup(BaseModel):
+    term: str = Field(min_length=1, max_length=60)
+    language: str = "en"
+    # A frase em que a palavra apareceu. "Book" num e-mail de reserva nao e o
+    # "book" de uma estante, e sem a frase o modelo escolhe a acepcao mais
+    # comum -- que e justamente a que a pessoa ja conhecia.
+    context: Optional[str] = Field(default=None, max_length=600)
+
+
+@router.post("/lookup")
+async def lookup_word(
+    payload: VocabLookup,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """O que a palavra quer dizer — e o registro de que ela foi consultada.
+
+    Duas coisas ao mesmo tempo, e a segunda é a que importa a longo prazo.
+
+    A primeira é responder à pessoa: durante o nivelamento, travar numa
+    palavra faz o item medir vocabulário quando queria medir compreensão, e a
+    saída honesta de quem não sabe é chutar. Poder olhar troca o chute por
+    uma leitura.
+
+    A segunda é que **consultar é evidência**. É a única vez em que a pessoa
+    diz, sem ser perguntada, "esta eu não tenho". O termo entra no baralho
+    vencendo HOJE, e quem já o tinha leva o cartão de volta ao início — como
+    um erro de revisão, porque foi isso que aconteceu: a palavra estava
+    agendada como sabida e não estava. É assim que o app aprende o que ainda
+    falta sem precisar de um teste a mais.
+    """
+    termo = payload.term.strip()
+    if not _TERMO_VALIDO.match(termo):
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Selecione uma palavra para consultar.",
+        )
+
+    idioma = _idioma_valido(payload.language)
+    alvo = languages.idioma(idioma)
+    nome = alvo.nome if alvo else "Ingles"
+
+    contexto = (payload.context or "").strip()
+    pedido = (
+        f"IDIOMA: {nome}. Explique a palavra ou expressao \"{termo}\" para um "
+        "profissional de tecnologia brasileiro.\n"
+        "- traducao: a traducao em portugues do Brasil, uma a tres palavras.\n"
+        "- sinonimos: de dois a quatro sinonimos NO IDIOMA ORIGINAL.\n"
+        "- definicao: uma frase curta em portugues do Brasil.\n"
+        "- exemplo: uma frase no idioma original usando a palavra.\n"
+        "- fonetica: a pronuncia em AFI, se souber.\n"
+        "- cefr: a faixa CEFR da palavra (A1 a C2).\n"
+        + (f"\nEla apareceu nesta frase, use a acepcao QUE CABE AQUI:\n{contexto}\n" if contexto else "")
+    )
+
+    try:
+        resultado = await generate_json(SYSTEM_PROMPT, pedido, _LOOKUP_SCHEMA)
+        conteudo = resultado.content or {}
+    except AiProviderError:
+        # Sem consulta a pessoa perde a ajuda, mas nao perde o nivelamento: a
+        # tela mostra que nao deu e o item continua respondivel. Levantar aqui
+        # transformaria uma consulta opcional num erro no meio do teste.
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Não consegui consultar esta palavra agora.",
+        )
+
+    significado = {
+        "term": termo,
+        "translation": str(conteudo.get("traducao") or "").strip() or None,
+        "synonyms": [
+            str(item).strip()
+            for item in (conteudo.get("sinonimos") or [])
+            if str(item).strip()
+        ][:4],
+        "definition": str(conteudo.get("definicao") or "").strip() or None,
+        "example": str(conteudo.get("exemplo") or "").strip() or None,
+        "phonetic": str(conteudo.get("fonetica") or "").strip() or None,
+        "cefr_band": str(conteudo.get("cefr") or "B1").strip().upper()[:2] or "B1",
+    }
+
+    significado["card"] = _registra_consulta(supabase, str(current_user["id"]), idioma, significado)
+    return significado
+
+
+def _registra_consulta(
+    supabase: Client, user_id: str, idioma: str, significado: dict[str, Any]
+) -> dict[str, Any]:
+    """Põe o termo no baralho vencendo hoje. Já estava lá? Volta ao início.
+
+    `quality=0` no SM-2 é o erro que zera o intervalo. É a leitura certa do
+    que aconteceu: o cartão estava agendado para daqui a semanas porque o
+    app supunha a palavra sabida, e a consulta desmentiu a suposição.
+    """
+    existentes = (
+        supabase.table("pathr_english_vocab")
+        .select("*")
+        .eq("user_id", user_id)
+        .eq("term", significado["term"])
+        .limit(1)
+        .execute()
+        .data
+        or []
+    )
+
+    if existentes:
+        card = existentes[0]
+        proximo = review.schedule(card, 0)
+        # A tabela de vocabulário não tem estas colunas; mandá-las ao
+        # PostgREST daria erro de coluna inexistente. Mesmo motivo de
+        # `review_vocab`.
+        proximo.pop("lapses", None)
+        proximo.pop("last_reviewed_at", None)
+        atualizado = (
+            supabase.table("pathr_english_vocab")
+            .update(proximo)
+            .eq("id", card["id"])
+            .execute()
+            .data
+        )
+        return (atualizado or [card])[0]
+
+    linha = {
+        "user_id": user_id,
+        "language": idioma,
+        "term": significado["term"],
+        "translation": significado["translation"],
+        "definition": significado["definition"],
+        "example": significado["example"],
+        "phonetic": significado["phonetic"],
+        "cefr_band": significado["cefr_band"],
+        # De onde veio. Um cartão de consulta conta uma história diferente de
+        # um que nasceu de um item errado, e vale poder separá-los depois.
+        "source": "consulta",
+        "due_at": _now().isoformat(),
+    }
+    gravado = supabase.table("pathr_english_vocab").insert(linha).execute().data
+    return (gravado or [linha])[0]
+

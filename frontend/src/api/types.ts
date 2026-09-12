@@ -462,3 +462,63 @@ export interface EnglishAnswerResult {
   total?: number;
   result?: { cefr_level: string; sub_scores: Record<string, number> };
 }
+
+/**
+ * Um exemplo de codigo com o traco de execucao linha a linha.
+ *
+ * `steps` pode vir VAZIO de proposito: o servidor recusa traco que nao bate
+ * com o codigo (services/code_lab.conferir), e o exemplo continua valendo como
+ * codigo comentado. A tela precisa dizer isso em vez de mostrar um passo a
+ * passo inventado.
+ */
+export interface Walkthrough {
+  id: string;
+  language: string;
+  language_label: string;
+  /** Identificador de sintaxe para o realce. */
+  highlight: string;
+  topic: string;
+  level: string;
+  title: string;
+  summary: string;
+  code: string;
+  /** O codigo ja quebrado como a tela numera: indice 0 = linha 1. */
+  lines: string[];
+  steps: WalkthroughStep[];
+  concepts: string[];
+  created_at: string | null;
+}
+
+export interface WalkthroughStep {
+  /** 1-based, para casar com a numeracao que a pessoa ve ao lado do codigo. */
+  linha: number;
+  acao: string;
+  estado: { nome: string; valor: string }[];
+  /** So o que ESTA linha imprimiu. O painel acumula. */
+  saida: string;
+}
+
+export interface CodeLanguage {
+  id: string;
+  rotulo: string;
+  realce: string;
+}
+
+/**
+ * O que uma palavra consultada quer dizer.
+ *
+ * Consultar não é só ver a tradução: o termo entra no baralho de vocabulário
+ * vencendo hoje, e quem já o tinha leva o cartão de volta ao início. Por isso
+ * a resposta traz `card` — é a prova de que o app registrou a lacuna, e não
+ * só respondeu à pergunta.
+ */
+export interface WordMeaning {
+  term: string;
+  translation: string | null;
+  synonyms: string[];
+  definition: string | null;
+  example: string | null;
+  phonetic: string | null;
+  cefr_band: string;
+  card: { id: string; due_at: string } | null;
+}

@@ -31,6 +31,9 @@ import type {
   Tag,
   User,
   UserTag,
+  CodeLanguage,
+  Walkthrough,
+  WordMeaning,
 } from "./types";
 
 export const auth = {
@@ -267,6 +270,13 @@ export const languages = {
       item_id: itemId,
       answer,
     }),
+  /** O significado de uma palavra — e o registro de que ela foi consultada.
+   *
+   * `context` é a frase em que ela apareceu: "book" num e-mail de reserva não
+   * é o "book" de uma estante, e sem a frase volta a acepção mais comum, que
+   * é justamente a que a pessoa já conhecia. */
+  lookup: (term: string, language = "en", context?: string) =>
+    api.post<WordMeaning>("/languages/lookup", { term, language, context }),
   vocab: (language = "en", dueOnly = false) =>
     api.get(`/languages/vocab?language=${language}&due_only=${dueOnly}`),
   reviewVocab: (id: string, quality: number) =>
@@ -276,3 +286,22 @@ export const languages = {
 /** Nome antigo do modulo, de quando ele so falava ingles. Mantido para as
  * telas que ainda nao foram renomeadas apontarem para o mesmo lugar. */
 export const english = languages;
+
+export const walkthroughs = {
+  /** A lista fechada de linguagens e niveis que o gerador aceita. */
+  languages: () =>
+    api.get<{ languages: CodeLanguage[]; levels: string[] }>("/walkthroughs/languages"),
+  list: (language?: string) =>
+    api.get<Walkthrough[]>(
+      language ? `/walkthroughs?language=${encodeURIComponent(language)}` : "/walkthroughs",
+    ),
+  get: (id: string) => api.get<Walkthrough>(`/walkthroughs/${encodeURIComponent(id)}`),
+  /**
+   * Gera um exemplo novo. Leva segundos -- e uma chamada de IA -- e por isso o
+   * resultado fica guardado: quem estuda volta ao MESMO exemplo varias vezes, e
+   * regerar a cada abertura apagaria o que ela estava construindo sobre ele.
+   */
+  create: (language: string, topic: string, level: string) =>
+    api.post<Walkthrough>("/walkthroughs", { language, topic, level }),
+  remove: (id: string) => api.del<void>(`/walkthroughs/${encodeURIComponent(id)}`),
+};
