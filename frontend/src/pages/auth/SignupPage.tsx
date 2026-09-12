@@ -161,16 +161,11 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
             id="signup-state"
             label="UF"
             required
+            placeholder="—"
             value={state}
-            onChange={(event) => setState(event.target.value)}
-          >
-            <option value="">—</option>
-            {UFS.map((uf) => (
-              <option key={uf} value={uf}>
-                {uf}
-              </option>
-            ))}
-          </SelectField>
+            onChange={setState}
+            options={UFS.map((uf) => ({ value: uf, label: uf }))}
+          />
         </div>
 
         <PasswordField

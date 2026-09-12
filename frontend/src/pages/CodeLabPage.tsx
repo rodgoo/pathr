@@ -30,6 +30,8 @@ import { ACC, ACC4, C, HAIRLINE, PANEL, TEXT } from "@/lib/tokens";
 import { CodeBlock } from "@/components/quiz/CodeBlock";
 import { Icon } from "@/components/ui/icons";
 import { Segmented } from "@/components/ui/Segmented";
+import { Select } from "@/components/ui/Select";
+import { iconeDaLinguagem } from "@/lib/linguagens";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
 
@@ -189,21 +191,22 @@ function Gerador({
     <Panel pad={16.8}>
       <form onSubmit={enviar} style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
         <div style={{ display: "flex", gap: 11.2, flexWrap: "wrap", alignItems: "flex-end" }}>
-          <label style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 150 }}>
-            <span style={{ fontSize: 11.5, color: TEXT.faint }}>Linguagem</span>
-            <select
-              className="input"
+          <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 190 }}>
+            <label htmlFor="codelab-linguagem" style={{ fontSize: 11.5, color: TEXT.faint }}>
+              Linguagem
+            </label>
+            <Select
+              id="codelab-linguagem"
               value={language}
-              onChange={(evento) => setLanguage(evento.target.value)}
+              onChange={setLanguage}
               disabled={carregando || linguagens.length === 0}
-            >
-              {linguagens.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.rotulo}
-                </option>
-              ))}
-            </select>
-          </label>
+              options={linguagens.map((item) => ({
+                value: item.id,
+                label: item.rotulo,
+                icon: iconeDaLinguagem(item.id),
+              }))}
+            />
+          </div>
 
           <label
             style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 220 }}

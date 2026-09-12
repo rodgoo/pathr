@@ -91,7 +91,9 @@ describe("cadastro", () => {
 
     await user.type(screen.getByLabelText("Data de nascimento"), "1998-04-12");
     await user.type(screen.getByLabelText("Cidade onde mora"), "Vitória");
-    await user.selectOptions(screen.getByLabelText("UF"), "ES");
+    // A UF é o select do app, não o nativo: escolhe-se como uma pessoa faz.
+    await user.click(screen.getByRole("combobox", { name: "UF" }));
+    await user.click(screen.getByRole("option", { name: "ES" }));
 
     expect(screen.getByRole("button", { name: "Criar conta" })).toBeEnabled();
   });
@@ -111,7 +113,9 @@ describe("cadastro", () => {
     await user.type(screen.getByLabelText("E-mail"), "pessoa@exemplo.com");
     await user.type(screen.getByLabelText("Data de nascimento"), "1998-04-12");
     await user.type(screen.getByLabelText("Cidade onde mora"), "Vitória");
-    await user.selectOptions(screen.getByLabelText("UF"), "ES");
+    // A UF é o select do app, não o nativo: escolhe-se como uma pessoa faz.
+    await user.click(screen.getByRole("combobox", { name: "UF" }));
+    await user.click(screen.getByRole("option", { name: "ES" }));
     await user.type(screen.getByLabelText("Senha"), "Senha-Longa-9");
     await user.click(screen.getByRole("button", { name: "Criar conta" }));
 

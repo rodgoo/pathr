@@ -469,3 +469,135 @@ textarea.input { min-height: 90px; resize: vertical; }
   color: #d2cefd;
   box-shadow: 0 0 0 2px rgba(145, 132, 217, 0.18);
 }
+
+/* --------------------------------------------------------------------------
+   O select (components/ui/Select.tsx).
+
+   O gatilho herda `.input` inteiro — altura, borda, foco — para um select e
+   um campo de texto lado a lado terem a mesma moldura. A lista é um painel
+   um degrau acima da superfície, com a mesma sombra dos balões do app.
+   -------------------------------------------------------------------------- */
+
+.sel {
+  position: relative;
+  min-width: 0;
+}
+
+.sel-gatilho {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-align: left;
+  cursor: pointer;
+}
+.sel-gatilho:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+.sel-gatilho[aria-expanded="true"] {
+  border-color: var(--color-accent);
+}
+
+.sel-rotulo {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.sel-vazio {
+  color: color-mix(in srgb, var(--color-text) 45%, transparent);
+}
+
+.sel-seta {
+  flex: none;
+  color: color-mix(in srgb, var(--color-text) 55%, transparent);
+  transition: transform 0.15s ease;
+}
+.sel-gatilho[aria-expanded="true"] .sel-seta {
+  transform: rotate(180deg);
+  color: var(--color-accent);
+}
+
+.sel-icone {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  display: grid;
+  place-items: center;
+}
+.sel-icone img,
+.sel-icone svg {
+  width: 18px;
+  height: 18px;
+  display: block;
+}
+
+.sel-lista {
+  position: absolute;
+  z-index: 20;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  min-width: 180px;
+  margin: 0;
+  padding: 4px;
+  list-style: none;
+  overflow-y: auto;
+  background: #1b1d2b;
+  border-radius: var(--radius-md);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--color-divider);
+  animation: sel-entra 0.12s ease-out;
+}
+.sel-para-cima {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+@keyframes sel-entra {
+  from { opacity: 0; transform: translateY(-3px); }
+  to { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sel-lista { animation: none; }
+  .sel-seta { transition: none; }
+}
+
+.sel-opcao {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-height: 34px;
+  padding: 6px 9px;
+  border-radius: 6px;
+  font-size: 14px;
+  color: color-mix(in srgb, var(--color-text) 82%, transparent);
+  cursor: pointer;
+}
+.sel-ativa {
+  background: rgba(145, 132, 217, 0.14);
+  color: var(--color-text);
+}
+.sel-opcao[aria-selected="true"] {
+  color: #d2cefd;
+}
+.sel-marca {
+  flex: none;
+  color: var(--color-accent);
+}
+
+/* O campo que leva o valor ao <form>. Ocupa o lugar do gatilho sem aparecer,
+   para o balão de "preencha este campo" apontar para o lugar certo. */
+.sel-nativo {
+  position: absolute;
+  inset: auto 0 0 0;
+  width: 100%;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+  border: 0;
+  padding: 0;
+}
+
+@media (pointer: coarse) {
+  .sel-opcao { min-height: 44px; }
+}

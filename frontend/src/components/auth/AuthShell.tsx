@@ -11,6 +11,7 @@ import type { ReactNode } from "react";
 import { BG, PANEL, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { Logo } from "@/components/ui/Logo";
+import { Select, type SelectOption } from "@/components/ui/Select";
 
 export function AuthShell({
   title,
@@ -195,25 +196,38 @@ export function PasswordField({
   );
 }
 
-/** Campo de seleção, com a mesma moldura do `Field`. */
+/** Campo de seleção, com a mesma moldura do `Field` — e a lista do app. */
 export function SelectField({
   id,
   label,
   hint,
-  children,
-  ...select
+  options,
+  value,
+  onChange,
+  placeholder,
+  required,
 }: {
   id: string;
   label: string;
   hint?: string;
-  children: ReactNode;
-} & React.SelectHTMLAttributes<HTMLSelectElement>) {
+  options: readonly SelectOption<string>[];
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  required?: boolean;
+}) {
   return (
     <div className="field" style={{ marginBottom: 11.2 }}>
       <label htmlFor={id}>{label}</label>
-      <select id={id} className="input" {...select}>
-        {children}
-      </select>
+      <Select
+        id={id}
+        options={options}
+        value={value}
+        onChange={onChange}
+        placeholder={placeholder}
+        required={required}
+        name={id}
+      />
       {hint ? (
         <div style={{ fontSize: 11, color: TEXT.faint, marginTop: 4 }}>{hint}</div>
       ) : null}

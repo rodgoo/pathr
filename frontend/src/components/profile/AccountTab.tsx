@@ -14,6 +14,7 @@ import { C, TEXT } from "@/lib/tokens";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { PasswordField } from "@/components/auth/AuthShell";
 import { Kicker, Panel } from "@/components/ui/primitives";
+import { Select } from "@/components/ui/Select";
 import { PasskeysPanel } from "./PasskeysPanel";
 
 /**
@@ -127,19 +128,18 @@ export function AccountTab() {
           </div>
           <div className="field">
             <label htmlFor="account-seniority">Senioridade</label>
-            <select
+            <Select
               id="account-seniority"
-              className="input"
               value={seniority}
-              onChange={(event) => setSeniority(event.target.value)}
-            >
-              <option value="">Não informar</option>
-              {SENIORIDADES.map((nivel) => (
-                <option key={nivel} value={nivel}>
-                  {ROTULO_SENIORIDADE[nivel]}
-                </option>
-              ))}
-            </select>
+              onChange={setSeniority}
+              placeholder="Não informar"
+              options={[
+                // Uma opção explícita para desfazer: sem ela, quem escolheu
+                // uma senioridade não teria como voltar a não informar.
+                { value: "", label: "Não informar" },
+                ...SENIORIDADES.map((nivel) => ({ value: nivel, label: ROTULO_SENIORIDADE[nivel] })),
+              ]}
+            />
           </div>
           <div className="field">
             <label htmlFor="account-years">Tempo de experiência (anos)</label>
