@@ -20,6 +20,7 @@ import {
   type MouseEvent,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 import type { ActivityItem } from "@/api/types";
 import { longDate, type DayDetail } from "@/lib/dashboard";
 
@@ -92,7 +93,16 @@ export function useDicaDoDia() {
     onBlur: () => setAlvo(null),
   });
 
-  const dica: ReactNode = alvo ? <Balao alvo={alvo} /> : null;
+  // No `<body>`, e não onde o gráfico está. O balão é `position: fixed` para
+  // escapar das áreas com rolagem, mas `fixed` só se mede pela janela quando
+  // nenhum ancestral tem `transform` — e a tela inteira tem: a animação de
+  // entrada (`noc-in … both`) deixa o transform final aplicado. Dentro dela o
+  // balão se posicionava a partir do topo da TELA, e aparecia centenas de
+  // pixels acima do dia apontado. O portal tira o balão dessa árvore.
+  const dica: ReactNode =
+    alvo && typeof document !== "undefined"
+      ? createPortal(<Balao alvo={alvo} />, document.body)
+      : null;
   return { gatilho, dica };
 }
 
@@ -101,7 +111,10 @@ const LARGURA = 300;
 
 function Balao({ alvo }: { alvo: Alvo }) {
   const { dia } = alvo;
-  const largura = typeof window === "undefined" ? 1024 : window.innerWidth;
+  // `clientWidth` e não `innerWidth`: o segundo inclui a barra de rolagem
+  // vertical, e o balão encostado na borda direita ficava por baixo dela.
+  const largura =
+    typeof document === "undefined" ? 1024 : document.documentElement.clientWidth;
   // Centralizado sobre o dia, mas sem sair da tela: o último quadrado do mapa
   // fica colado na borda direita, e metade do balão sumiria.
   const x = Math.min(Math.max(alvo.x, LARGURA / 2 + 8), largura - LARGURA / 2 - 8);

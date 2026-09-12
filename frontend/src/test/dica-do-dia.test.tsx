@@ -93,3 +93,17 @@ it("dá nome a material pelo tipo, e a atividade desconhecida não quebra", () =
   expect(nomeDaAtividade({ kind: "resource_done", title: "", minutes: 0 })).toBe("Material");
   expect(nomeDaAtividade({ kind: "algo_novo", title: "", minutes: 0 })).toBe("Atividade");
 });
+
+/**
+ * O balão mora no `<body>`, não dentro do gráfico.
+ *
+ * A tela inteira tem `transform` (a animação de entrada deixa o final
+ * aplicado), e um `position: fixed` dentro de ancestral com transform se mede
+ * por esse ancestral, não pela janela. No app real o balão aparecia centenas
+ * de pixels acima do dia e, no último cartão do topo, saía pela direita.
+ */
+it("renderiza o balão fora da árvore do gráfico, direto no body", () => {
+  montar("ano");
+  fireEvent.mouseEnter(screen.getByLabelText(/^11 de setembro/));
+  expect(screen.getByRole("tooltip").parentElement).toBe(document.body);
+});

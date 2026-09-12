@@ -56,30 +56,59 @@ export function ConsistencyPanel({ activity }: { activity: ActivitySummary }) {
         />
       </div>
 
-      {view === "ano" ? <YearHeatmap activity={activity} /> : null}
-      {view === "mes" ? <MonthCalendar activity={activity} /> : null}
-      {view === "semana" ? <WeekChart activity={activity} /> : null}
-
-      <div
-        style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit,minmax(104px,1fr))",
-          gap: 14,
-          marginTop: 16.8,
-          paddingTop: 14,
-          borderTop: "1px solid rgba(233,233,237,.10)",
-        }}
-      >
-        {summary.stats.map((stat) => (
-          <div key={stat.label} style={{ minWidth: 0 }}>
-            <div style={{ fontSize: 20, lineHeight: 1.1 }}>{stat.value}</div>
-            <div style={{ fontSize: 11, color: TEXT.muted, marginTop: 2.8 }}>{stat.label}</div>
+      {view === "semana" ? (
+        <>
+          <WeekChart activity={activity} />
+          <Numeros stats={summary.stats} embaixo />
+        </>
+      ) : (
+        /* Ano e mês têm largura fixa — 53 colunas de quadrados, ou um
+           calendário de 320px — e embaixo deles os números deixavam um vão
+           do tamanho do resto do painel. Ao lado, o gráfico e o que ele
+           soma ficam lidos juntos. Quando não cabe (celular, painel
+           estreito), o bloco dos números desce sozinho pelo `wrap`. */
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 22.4, alignItems: "flex-start" }}>
+          <div style={{ flex: "0 1 auto", minWidth: 0, maxWidth: "100%" }}>
+            {view === "ano" ? <YearHeatmap activity={activity} /> : <MonthCalendar activity={activity} />}
+            <HeatLegend />
           </div>
-        ))}
-      </div>
-
-      {view !== "semana" ? <HeatLegend /> : null}
+          <Numeros stats={summary.stats} />
+        </div>
+      )}
     </Panel>
+  );
+}
+
+/** Os quatro números do recorte. Ao lado do gráfico, ou embaixo da semana. */
+function Numeros({
+  stats,
+  embaixo = false,
+}: {
+  stats: { value: string; label: string }[];
+  embaixo?: boolean;
+}) {
+  return (
+    <div
+      style={{
+        flex: "1 1 220px",
+        display: "grid",
+        gridTemplateColumns: embaixo
+          ? "repeat(auto-fit,minmax(104px,1fr))"
+          : "repeat(2,minmax(0,1fr))",
+        gap: embaixo ? 14 : "18px 14px",
+        alignContent: "start",
+        ...(embaixo
+          ? { marginTop: 16.8, paddingTop: 14, borderTop: "1px solid rgba(233,233,237,.10)" }
+          : { paddingLeft: 18, borderLeft: "1px solid rgba(233,233,237,.10)", paddingTop: 18 }),
+      }}
+    >
+      {stats.map((stat) => (
+        <div key={stat.label} style={{ minWidth: 0 }}>
+          <div style={{ fontSize: 24, lineHeight: 1.1 }}>{stat.value}</div>
+          <div style={{ fontSize: 11, color: TEXT.muted, marginTop: 2.8 }}>{stat.label}</div>
+        </div>
+      ))}
+    </div>
   );
 }
 
@@ -88,7 +117,7 @@ function YearHeatmap({ activity }: { activity: ActivitySummary }) {
   const { gatilho, dica } = useDicaDoDia();
   return (
     <div style={{ overflowX: "auto", paddingBottom: 5.6 }}>
-      <div style={{ minWidth: 790, display: "flex", gap: 8 }}>
+      <div style={{ width: "max-content", display: "flex", gap: 8 }}>
         <div
           aria-hidden
           style={{
