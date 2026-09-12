@@ -10,6 +10,7 @@ anterior, então o teste converge no nível em ~20 itens em vez de precisar de
 100.
 """
 
+import asyncio
 import re
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -21,7 +22,7 @@ from supabase import Client
 from app.ai_providers import AiProviderError, generate_json
 from app.database import get_supabase
 from app.deps import get_current_user
-from app.services import languages, review
+from app.services import languages, review, traducao
 from app.services import treino_idioma as treino
 from app.services.progress import log_activity
 
@@ -1048,13 +1049,24 @@ async def lookup_word(
         "- exemplo: uma frase no idioma original usando a palavra.\n"
         "- fonetica: a pronuncia em AFI, se souber.\n"
         "- cefr: a faixa CEFR da palavra (A1 a C2).\n"
+        "- termos de programacao ficam em ingles na traducao (\"branch\", e nao "
+        f"\"ramo\"): {', '.join(traducao.TERMOS_UNIVERSAIS)}.\n"
         + (f"\nEla apareceu nesta frase, use a acepcao QUE CABE AQUI:\n{contexto}\n" if contexto else "")
     )
 
+    # O DeepL traduz e o modelo explica, AO MESMO TEMPO: em sequência, a
+    # consulta somaria as duas esperas. A tradução do DeepL tem preferência
+    # (ver services/traducao.py); a do modelo é a reserva.
+    pelo_deepl = asyncio.create_task(traducao.traduzir([termo], idioma, contexto=contexto or None))
     try:
         resultado = await generate_json(SYSTEM_PROMPT, pedido, _LOOKUP_SCHEMA)
         conteudo = resultado.content or {}
     except AiProviderError:
+        conteudo = {}
+    traduzidas = await pelo_deepl
+    traducao_deepl = traduzidas[0] if traduzidas else None
+
+    if not conteudo and not traducao_deepl:
         # Sem consulta a pessoa perde a ajuda, mas nao perde o nivelamento: a
         # tela mostra que nao deu e o item continua respondivel. Levantar aqui
         # transformaria uma consulta opcional num erro no meio do teste.
@@ -1065,7 +1077,9 @@ async def lookup_word(
 
     significado = {
         "term": termo,
-        "translation": str(conteudo.get("traducao") or "").strip() or None,
+        # Com a IA fora do ar e o DeepL de pé, a pessoa ainda leva a tradução —
+        # antes, a consulta inteira caía.
+        "translation": traducao_deepl or str(conteudo.get("traducao") or "").strip() or None,
         "synonyms": [
             str(item).strip()
             for item in (conteudo.get("sinonimos") or [])

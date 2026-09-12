@@ -149,6 +149,12 @@ class Settings(BaseSettings):
     tavily_api_key: str = ""  # https://app.tavily.com
     brave_api_key: str = ""  # https://brave.com/search/api
 
+    # --- Tradução (módulo de idioma) ---
+    # Vazio desliga o DeepL e a tradução do modelo de IA vale sozinha. Chave
+    # terminada em ":fx" é do plano Free (api-free.deepl.com). Ver
+    # services/traducao.py.
+    deepl_api_key: str = ""
+
     # --- Disparo de avisos por e-mail ---
     # O segredo que o cron externo apresenta em X-Pathr-Jobs-Secret. Vazio
     # desliga o disparo inteiro: melhor não mandar nada do que deixar a rota

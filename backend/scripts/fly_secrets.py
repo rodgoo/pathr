@@ -40,6 +40,7 @@ SEGREDOS = (
     "TAVILY_API_KEY",
     "BRAVE_API_KEY",
     "JOBS_SECRET",
+    "DEEPL_API_KEY",
 )
 
 # Segredos que podem faltar sem o app ficar quebrado — a ausência desliga uma
@@ -47,7 +48,7 @@ SEGREDOS = (
 # resource_search.py usa o Tavily quando os dois existem), e sem YOUTUBE a
 # busca cai na reserva por IA. Uma lista onde tudo é obrigatório reprovaria o
 # envio inteiro por causa de uma chave que ninguém precisa ter.
-OPCIONAIS = frozenset({"YOUTUBE_API_KEY", "TAVILY_API_KEY", "BRAVE_API_KEY"})
+OPCIONAIS = frozenset({"YOUTUBE_API_KEY", "TAVILY_API_KEY", "BRAVE_API_KEY", "DEEPL_API_KEY"})
 
 RAIZ = pathlib.Path(__file__).resolve().parent.parent
 

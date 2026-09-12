@@ -35,6 +35,7 @@ from app.database import get_supabase
 from app.deps import get_current_user
 from app.services import languages, review
 from app.services import proficiencia_idioma as proficiencia
+from app.services import traducao
 from app.services import treino_idioma as treino
 from app.services.progress import log_activity
 
@@ -102,6 +103,9 @@ REGRAS GERAIS
    escreva outra situação cujas alternativas testem a mesma regra.
 5. As alternativas erradas são erros que brasileiros realmente cometem (falso
    cognato, tradução literal, preposição, tempo verbal) — não absurdos.
+6. Na tradução e na explicação, termos de programação ficam em inglês, como
+   se fala num time brasileiro: "fiz o merge da branch", nunca "fiz a fusão
+   do ramo". Os termos: {termos}.
 
 POR TIPO (use SÓ os campos do tipo)
 - mcq: enunciado com todo o contexto necessário; alternativas (4); correta (0 a 3).
@@ -126,6 +130,11 @@ POR TIPO (use SÓ os campos do tipo)
   (acima de 20 é recusada); traducao; enunciado "Leia em voz alta".
 
 Todo item leva `topico` (o tópico pedido) e `explicacao`. Responda só o JSON."""
+
+# A lista de termos vem de services/traducao.py, a mesma do glossário do DeepL:
+# a tradução do modelo (reserva) e a do DeepL preservam os mesmos termos.
+# `replace` e não `format`: o prompt tem chaves literais ({a: …, b: …}).
+PRACTICE_PROMPT = PRACTICE_PROMPT.replace("{termos}", ", ".join(traducao.TERMOS_UNIVERSAIS))
 
 
 class PracticeAnswer(BaseModel):
@@ -367,12 +376,13 @@ async def _gerar(supabase: Client, sessao: dict[str, Any], indices: list[int]) -
         respondeu = True
 
         gerados = [i for i in (resultado.content or {}).get("itens") or [] if isinstance(i, dict)]
+        aceitos: list[tuple[int, treino.Encomenda, dict[str, Any]]] = []
         for item in gerados:
             try:
                 indice = int(item.get("indice"))
             except (TypeError, ValueError):
                 continue
-            if indice not in faltam:
+            if indice not in faltam or any(indice == a[0] for a in aceitos):
                 continue
             encomenda = plano[indice]
             pronto = treino.validar(item, encomenda)
@@ -380,6 +390,11 @@ async def _gerar(supabase: Client, sessao: dict[str, Any], indices: list[int]) -
             # segunda tentativa, que recebe o mesmo pedido de outras palavras.
             if pronto is None or treino.repete_o_erro(item, encomenda.lembrete):
                 continue
+            aceitos.append((indice, encomenda, pronto))
+
+        await _traduz_pelo_deepl(sessao.get("language") or "en", [a[2] for a in aceitos])
+
+        for indice, encomenda, pronto in aceitos:
             linha = {
                 "user_id": str(sessao["user_id"]),
                 "session_id": str(sessao["id"]),
@@ -410,6 +425,31 @@ async def _gerar(supabase: Client, sessao: dict[str, Any], indices: list[int]) -
             "id", sessao["id"]
         ).execute()
     return respondeu
+
+
+async def _traduz_pelo_deepl(idioma: str, prontos: list[dict[str, Any]]) -> None:
+    """Troca a tradução escrita pelo modelo pela do DeepL, onde houver.
+
+    Uma chamada para o lote inteiro. O que o DeepL não devolver em português
+    fica com a tradução do modelo — ver services/traducao.py, que também
+    explica por que os termos de programação saem em inglês nas duas.
+    """
+    alvos: list[tuple[dict[str, Any], str]] = []
+    for pronto in prontos:
+        if "traducao" not in pronto["payload"]:
+            continue
+        gabarito = pronto["gabarito"]
+        original = gabarito.get("texto") or (gabarito.get("frases") or [""])[0]
+        if original:
+            alvos.append((pronto, original))
+    if not alvos:
+        return
+    traduzidas = await traducao.traduzir([original for _, original in alvos], idioma)
+    if not traduzidas:
+        return
+    for (pronto, _), traduzida in zip(alvos, traduzidas):
+        if traduzida:
+            pronto["payload"]["traducao"] = traduzida[:300]
 
 
 async def _com_exercicio_pronto(
