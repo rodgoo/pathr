@@ -4,19 +4,32 @@
  * O que antes gerava séries a partir de uma semente pseudoaleatória agora
  * recebe as linhas de `pathr_activity` e as organiza. As funções continuam
  * puras — é o que permite testá-las sem montar componente.
+ *
+ * Duas regras valem para todas elas:
+ *
+ * 1. **Data é a do calendário de quem usa.** `toISOString()` converte para
+ *    UTC, e às 21h de Brasília já é o dia seguinte em UTC: o estudo da noite
+ *    ia parar no quadrado de amanhã. Toda chave de dia sai de `isoLocal`.
+ * 2. **Dia ativo é dia com atividade, com ou sem minutos.** Criar o plano ou
+ *    marcar um material não tem cronômetro, e contar só minutos fazia o
+ *    heatmap dizer "1 dia ativo" ao lado de um cartão dizendo "3 dias ativos"
+ *    — dois números para a mesma pergunta, e os dois vindo da mesma tabela.
  */
 
 import { HEAT } from "@/lib/tokens";
-import type { ActivityDay, ActivitySummary } from "@/api/types";
+import type { ActivityDay, ActivityItem, ActivitySummary } from "@/api/types";
 import type { ConstancyView } from "@/types";
 
 export const WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"] as const;
 export const MONTHS_SHORT = [
   "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez",
 ] as const;
-const MONTHS_LONG = [
+export const MONTHS_LONG = [
   "janeiro", "fevereiro", "março", "abril", "maio", "junho",
   "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
+] as const;
+const WEEKDAYS_LONG = [
+  "domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado",
 ] as const;
 
 /**
@@ -28,65 +41,156 @@ const MONTHS_LONG = [
  */
 const STEPS = [1, 20, 45, 90] as const;
 
-export function heatLevel(minutes: number): number {
-  if (minutes <= 0) return 0;
+/** Dia que ainda não chegou: aparece no mapa, apagado, e não entra na conta. */
+const FUTURE = "rgba(233,233,237,.03)";
+
+/** `2026-09-11`, no calendário local. Ver a regra 1 no topo do arquivo. */
+export function isoLocal(date: Date): string {
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${date.getFullYear()}-${month}-${day}`;
+}
+
+/** O degrau do dia. Atividade sem minutos ainda acende o primeiro degrau. */
+export function heatLevel(minutes: number, count = 0): number {
+  if (minutes <= 0) return count > 0 ? 1 : 0;
   if (minutes < STEPS[1]) return 1;
   if (minutes < STEPS[2]) return 2;
   if (minutes < STEPS[3]) return 3;
   return 4;
 }
 
-export const heatColor = (minutes: number): string => HEAT[heatLevel(minutes)];
+export const heatColor = (minutes: number, count = 0): string => HEAT[heatLevel(minutes, count)];
 
 /** Índice por data, para procurar um dia em tempo constante. */
 export function byDate(activity: ActivitySummary | null): Map<string, ActivityDay> {
   return new Map((activity?.days ?? []).map((day) => [day.date, day]));
 }
 
-export interface HeatCell {
+/** Tudo o que se sabe de um dia — é o que o balão do mouse mostra. */
+export interface DayDetail {
   date: string;
   minutes: number;
-  background: string;
-  title: string;
+  count: number;
+  items: ActivityItem[];
+  /** Algum minuto do dia foi estimado pelo tamanho do texto. */
+  estimated: boolean;
+}
+
+function detail(index: Map<string, ActivityDay>, key: string): DayDetail {
+  const day = index.get(key);
+  const items = day?.items ?? [];
+  return {
+    date: key,
+    minutes: day?.minutes ?? 0,
+    count: day?.count ?? 0,
+    items,
+    estimated: items.some((item) => item.estimated),
+  };
+}
+
+/** "sexta, 11 de setembro". */
+export function longDate(iso: string): string {
+  const [year, month, day] = iso.split("-").map(Number);
+  const date = new Date(year, (month ?? 1) - 1, day);
+  return `${WEEKDAYS_LONG[date.getDay()]}, ${day} de ${MONTHS_LONG[(month ?? 1) - 1]}`;
 }
 
 function label(iso: string, minutes: number, count: number): string {
   const [, month, day] = iso.split("-").map(Number);
   const date = `${day} de ${MONTHS_LONG[(month ?? 1) - 1]}`;
-  if (minutes <= 0) return `${date} · nenhuma atividade`;
-  return `${date} · ${count} ${count === 1 ? "atividade" : "atividades"} · ${minutes} min`;
+  if (count <= 0 && minutes <= 0) return `${date} · nenhuma atividade`;
+  const atividades = `${count} ${count === 1 ? "atividade" : "atividades"}`;
+  return minutes > 0 ? `${date} · ${atividades} · ${minutes} min` : `${date} · ${atividades}`;
 }
 
-const iso = (date: Date): string => date.toISOString().slice(0, 10);
+export interface HeatCell extends DayDetail {
+  background: string;
+  title: string;
+  /** Preenchimento de semana que cai no ano vizinho. */
+  outside: boolean;
+  /** Depois de hoje. */
+  future: boolean;
+}
+
+/** Segunda-feira da semana de `date`. */
+function mondayOf(date: Date): Date {
+  const monday = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  return monday;
+}
+
+/** Dias inteiros entre duas datas locais, imune à troca de horário de verão. */
+function daysBetween(from: Date, to: Date): number {
+  const a = Date.UTC(from.getFullYear(), from.getMonth(), from.getDate());
+  const b = Date.UTC(to.getFullYear(), to.getMonth(), to.getDate());
+  return Math.round((b - a) / 86_400_000);
+}
 
 /**
- * As últimas 53 semanas terminando hoje, alinhadas na segunda-feira.
+ * O ano civil de `today`, em colunas de semana começando na segunda.
  *
- * O grid é preenchido inteiro, com dias sem estudo inclusive: é justamente o
- * buraco que mostra a quebra de constância.
+ * Era "as últimas 53 semanas terminando hoje" — mas o painel diz "Sua
+ * constância em 2026" e rotula as colunas de Jan a Dez. Com a janela móvel, a
+ * semana de hoje caía sempre na última coluna, embaixo de "Dez": o estudo de
+ * 11 de setembro aparecia em dezembro, e o total dizia "de 371 dias".
+ *
+ * As semanas das pontas são completadas com dias do ano vizinho (`outside`)
+ * para a grade fechar; eles não se desenham nem contam.
  */
 export function yearHeat(activity: ActivitySummary | null, today = new Date()): HeatCell[] {
   const index = byDate(activity);
-  const end = new Date(today);
-  // Recua até o domingo seguinte para a última coluna ficar completa.
-  end.setDate(end.getDate() + (7 - ((end.getDay() + 6) % 7) - 1));
+  const year = today.getFullYear();
+  const hoje = isoLocal(today);
+  const start = mondayOf(new Date(year, 0, 1));
+  const last = new Date(year, 11, 31);
+  const end = new Date(last);
+  end.setDate(end.getDate() + (6 - ((last.getDay() + 6) % 7)));
 
   const cells: HeatCell[] = [];
-  const cursor = new Date(end);
-  cursor.setDate(cursor.getDate() - 371 + 1);
-  for (let step = 0; step < 371; step += 1) {
-    const key = iso(cursor);
-    const day = index.get(key);
-    const minutes = day?.minutes ?? 0;
+  const total = daysBetween(start, end) + 1;
+  for (let step = 0; step < total; step += 1) {
+    const date = new Date(start.getFullYear(), start.getMonth(), start.getDate() + step);
+    const key = isoLocal(date);
+    const outside = date.getFullYear() !== year;
+    const future = !outside && key > hoje;
+    const day = detail(index, key);
     cells.push({
-      date: key,
-      minutes,
-      background: heatColor(minutes),
-      title: label(key, minutes, day?.count ?? 0),
+      ...day,
+      outside,
+      future,
+      background: outside ? "transparent" : future ? FUTURE : heatColor(day.minutes, day.count),
+      title: outside ? "" : label(key, day.minutes, day.count),
     });
-    cursor.setDate(cursor.getDate() + 1);
   }
   return cells;
+}
+
+/** Em que coluna do mapa do ano cada mês começa. */
+export function yearMonths(today = new Date()): { label: string; column: number }[] {
+  const year = today.getFullYear();
+  const start = mondayOf(new Date(year, 0, 1));
+  return MONTHS_SHORT.map((month, index) => ({
+    label: month,
+    column: Math.floor(daysBetween(start, new Date(year, index, 1)) / 7),
+  }));
+}
+
+/** Os últimos `count` dias terminando hoje — a minissérie dos cartões. */
+export function recentDays(
+  activity: ActivitySummary | null,
+  today = new Date(),
+  count = 22,
+): DayDetail[] {
+  const index = byDate(activity);
+  return Array.from({ length: count }, (_, offset) => {
+    const date = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate() - (count - 1 - offset),
+    );
+    return detail(index, isoLocal(date));
+  });
 }
 
 export interface MonthCell extends HeatCell {
@@ -95,12 +199,12 @@ export interface MonthCell extends HeatCell {
   ring: string;
   dayColor: string;
   minutesColor: string;
-  outside: boolean;
 }
 
 /** O mês corrente como calendário, alinhado na segunda-feira. */
 export function monthGrid(activity: ActivitySummary | null, today = new Date()): MonthCell[] {
   const index = byDate(activity);
+  const hoje = isoLocal(today);
   const first = new Date(today.getFullYear(), today.getMonth(), 1);
   const lead = (first.getDay() + 6) % 7;
   const daysInMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0).getDate();
@@ -110,43 +214,51 @@ export function monthGrid(activity: ActivitySummary | null, today = new Date()):
   for (let slot = 0; slot < total; slot += 1) {
     const dayNumber = slot - lead + 1;
     const outside = dayNumber < 1 || dayNumber > daysInMonth;
-    const date = new Date(today.getFullYear(), today.getMonth(), dayNumber);
-    const key = outside ? "" : iso(date);
-    const minutes = outside ? 0 : index.get(key)?.minutes ?? 0;
-    const dark = heatLevel(minutes) >= 3;
+    const key = outside
+      ? ""
+      : isoLocal(new Date(today.getFullYear(), today.getMonth(), dayNumber));
+    const future = !outside && key > hoje;
+    const day = outside ? detail(new Map(), "") : detail(index, key);
+    const dark = heatLevel(day.minutes, day.count) >= 3;
+    const idle = day.minutes === 0 && day.count === 0;
     cells.push({
-      date: key,
-      minutes,
+      ...day,
       outside,
+      future,
       day: outside ? "" : String(dayNumber),
-      minutesLabel: outside || minutes === 0 ? "" : `${minutes}m`,
-      background: outside ? "transparent" : heatColor(minutes),
-      ring: outside ? "none" : minutes === 0 ? "inset 0 0 0 1px rgba(233,233,237,.06)" : "none",
-      dayColor: outside ? "transparent" : dark ? "#161826" : "#e9e9ed",
+      minutesLabel:
+        outside || day.minutes === 0 ? "" : `${day.estimated ? "≈" : ""}${day.minutes}m`,
+      background: outside ? "transparent" : future ? FUTURE : heatColor(day.minutes, day.count),
+      ring: outside || !idle ? "none" : "inset 0 0 0 1px rgba(233,233,237,.06)",
+      dayColor: outside
+        ? "transparent"
+        : future
+          ? "rgba(233,233,237,.3)"
+          : dark
+            ? "#161826"
+            : "#e9e9ed",
       minutesColor: outside
         ? "transparent"
         : dark
           ? "#161826"
-          : minutes === 0
+          : idle
             ? "rgba(233,233,237,.6)"
             : "#e9e9ed",
-      title: outside ? "" : label(key, minutes, index.get(key)?.count ?? 0),
+      title: outside ? "" : label(key, day.minutes, day.count),
     });
   }
   return cells;
 }
 
-
-export interface WeekBar {
-  date: string;
+export interface WeekBar extends DayDetail {
   label: string;
-  minutes: number;
   height: number;
   value: string;
   valueColor: string;
   color: string;
   title: string;
   today: boolean;
+  future: boolean;
 }
 
 /**
@@ -158,28 +270,29 @@ export interface WeekBar {
  */
 export function weekBars(activity: ActivitySummary | null, today = new Date()): WeekBar[] {
   const index = byDate(activity);
-  const monday = new Date(today);
-  monday.setDate(monday.getDate() - ((monday.getDay() + 6) % 7));
+  const hoje = isoLocal(today);
+  const monday = mondayOf(today);
 
   const days = WEEKDAYS.map((label_, offset) => {
-    const date = new Date(monday);
-    date.setDate(date.getDate() + offset);
-    const key = iso(date);
-    return { key, label: label_, minutes: index.get(key)?.minutes ?? 0, today: key === iso(today) };
+    const key = isoLocal(
+      new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + offset),
+    );
+    return { ...detail(index, key), label: label_, today: key === hoje, future: key > hoje };
   });
 
   const peak = Math.max(60, ...days.map((day) => day.minutes));
-  return days.map((day) => ({
-    date: day.key,
-    label: day.label,
-    minutes: day.minutes,
-    height: Math.max(2, Math.round((day.minutes / peak) * 100)),
-    value: day.minutes ? `${day.minutes}m` : "—",
-    valueColor: day.minutes ? "rgba(233,233,237,.6)" : "rgba(233,233,237,.3)",
-    color: day.today && day.minutes ? "#63b48f" : day.minutes ? "#3f6f57" : "rgba(233,233,237,.08)",
-    title: `${day.label} · ${day.minutes ? `${day.minutes} minutos` : "sem estudo"}`,
-    today: day.today,
-  }));
+  return days.map((day) => {
+    const ativo = day.count > 0 || day.minutes > 0;
+    const tempo = day.minutes ? `${day.minutes} minutos` : ativo ? "atividade sem tempo" : "sem estudo";
+    return {
+      ...day,
+      height: Math.max(2, Math.round((day.minutes / peak) * 100)),
+      value: day.minutes ? `${day.estimated ? "≈" : ""}${day.minutes}m` : "—",
+      valueColor: day.minutes ? "rgba(233,233,237,.6)" : "rgba(233,233,237,.3)",
+      color: day.today && ativo ? "#63b48f" : ativo ? "#3f6f57" : "rgba(233,233,237,.08)",
+      title: `${day.label} · ${tempo}`,
+    };
+  });
 }
 
 export interface SummaryEntry {
@@ -201,40 +314,45 @@ export function humanMinutes(minutes: number): string {
  * Calculados a partir dos mesmos dias que o gráfico desenha, e não de um
  * agregado separado — dois caminhos para o mesmo número é como um painel
  * passa a se contradizer.
+ *
+ * Só contam os dias que já passaram: "3 de 365 dias ativos" em setembro
+ * compararia o que a pessoa fez com dias que ainda não existiram.
  */
 export function rangeSummary(
   activity: ActivitySummary | null,
   view: ConstancyView,
   today = new Date(),
 ): { title: string; headline: string; stats: SummaryEntry[] } {
-  const cells =
+  const cells: { minutes: number; count: number }[] =
     view === "ano"
-      ? yearHeat(activity, today)
+      ? yearHeat(activity, today).filter((cell) => !cell.outside && !cell.future)
       : view === "mes"
-        ? monthGrid(activity, today).filter((cell) => !cell.outside)
-        : weekBars(activity, today).map((bar) => ({ minutes: bar.minutes }));
+        ? monthGrid(activity, today).filter((cell) => !cell.outside && !cell.future)
+        : weekBars(activity, today).filter((bar) => !bar.future);
 
-  const active = cells.filter((cell) => cell.minutes > 0);
+  const active = cells.filter((cell) => cell.count > 0 || cell.minutes > 0);
   const total = cells.reduce((sum, cell) => sum + cell.minutes, 0);
-  const average = active.length ? Math.round(total / active.length) : 0;
+  const withTime = cells.filter((cell) => cell.minutes > 0);
+  const average = withTime.length ? Math.round(total / withTime.length) : 0;
   const best = cells.reduce((max, cell) => Math.max(max, cell.minutes), 0);
 
+  const month = MONTHS_LONG[today.getMonth()];
   const period =
     view === "ano"
       ? `Sua constância em ${today.getFullYear()}`
       : view === "mes"
-        ? `${MONTHS_LONG[today.getMonth()][0].toUpperCase()}${MONTHS_LONG[today.getMonth()].slice(1)} de ${today.getFullYear()}`
+        ? `${month[0].toUpperCase()}${month.slice(1)} de ${today.getFullYear()}`
         : "Esta semana";
 
   const scope = view === "ano" ? "no ano" : view === "mes" ? "no mês" : "na semana";
 
   return {
     title: period,
-    headline: `${active.length} de ${cells.length} dias ativos`,
+    headline: `${active.length} de ${cells.length} dias ativos até hoje`,
     stats: [
       { value: String(active.length), label: `dias ativos ${scope}` },
       { value: humanMinutes(total), label: "tempo total" },
-      { value: average ? `${average} min` : "—", label: "média por dia ativo" },
+      { value: average ? `${average} min` : "—", label: "média por dia com estudo" },
       { value: best ? humanMinutes(best) : "—", label: "melhor dia" },
     ],
   };
@@ -244,7 +362,7 @@ export function rangeSummary(
 export function streakDays(activity: ActivitySummary | null, today = new Date()) {
   return weekBars(activity, today).map((bar) => ({
     label: bar.label,
-    done: bar.minutes > 0,
+    done: bar.count > 0 || bar.minutes > 0,
     today: bar.today,
   }));
 }

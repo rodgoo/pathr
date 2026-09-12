@@ -34,6 +34,19 @@ XP_BY_KIND = {
 }
 
 
+# Palavras por minuto de leitura técnica. O mesmo número do leitor
+# (frontend/src/components/library/ArticleReader.tsx): a tela diz "14 min de
+# leitura", e o tempo de estudo gravado precisa dizer a mesma coisa.
+PALAVRAS_POR_MINUTO = 180
+
+
+def minutos_de_leitura(palavras: Optional[int]) -> int:
+    """Quanto tempo leva ler um texto, arredondado para cima. Zero sem texto."""
+    if not palavras or palavras <= 0:
+        return 0
+    return max(1, -(-int(palavras) // PALAVRAS_POR_MINUTO))
+
+
 def local_today(timezone_name: Optional[str]) -> date:
     try:
         zone = ZoneInfo(timezone_name or "America/Sao_Paulo")

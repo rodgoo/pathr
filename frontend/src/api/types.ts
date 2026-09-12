@@ -55,11 +55,24 @@ export interface Streak {
 }
 
 /** Um dia do heatmap. `count` são ações concluídas, não minutos. */
+/** Uma coisa feita num dia: o que o painel lista ao passar o mouse. */
+export interface ActivityItem {
+  /** `resource_done`, `quiz_done`, `english_assessment`… */
+  kind: string;
+  /** Para material: `article`, `video`, `doc`… */
+  resource_kind?: string | null;
+  title: string;
+  minutes: number;
+  /** Minutos estimados pelo tamanho do texto, não medidos. */
+  estimated?: boolean;
+}
+
 export interface ActivityDay {
   date: string;
   minutes: number;
   count: number;
   xp: number;
+  items?: ActivityItem[];
 }
 
 export interface ActivitySummary {

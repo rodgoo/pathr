@@ -32,8 +32,13 @@ export function ContinueCard({ roadmap }: { roadmap: RoadmapSummary }) {
           {node ? node.title : "Plano concluído"}
         </div>
         <div style={{ fontSize: 13, color: "rgba(233,233,237,.75)", maxWidth: "48ch" }}>
-          {node?.description ??
-            "Todos os módulos deste plano foram concluídos. Gere um novo objetivo para continuar."}
+          {/* A frase de "plano concluído" só quando NÃO há módulo. Ela era o
+              valor padrão da descrição, e todo módulo sem descrição — que é a
+              maioria dos gerados — dizia "todos os módulos foram concluídos"
+              logo acima de "0 de 19 módulos". */}
+          {node
+            ? node.description ?? "Retome de onde parou: material, quiz e atividade deste módulo."
+            : "Todos os módulos deste plano foram concluídos. Gere um novo objetivo para continuar."}
         </div>
       </div>
 

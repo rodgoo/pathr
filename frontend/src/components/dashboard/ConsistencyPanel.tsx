@@ -7,13 +7,14 @@
  */
 
 import {
-  MONTHS_SHORT,
   WEEKDAYS,
   monthGrid,
   rangeSummary,
   weekBars,
   yearHeat,
+  yearMonths,
 } from "@/lib/dashboard";
+import { useDicaDoDia } from "./DicaDoDia";
 import { useAppState } from "@/hooks/useAppState";
 import { HEAT, TEXT } from "@/lib/tokens";
 import type { ActivitySummary } from "@/api/types";
@@ -84,6 +85,7 @@ export function ConsistencyPanel({ activity }: { activity: ActivitySummary }) {
 
 function YearHeatmap({ activity }: { activity: ActivitySummary }) {
   const cells = yearHeat(activity);
+  const { gatilho, dica } = useDicaDoDia();
   return (
     <div style={{ overflowX: "auto", paddingBottom: 5.6 }}>
       <div style={{ minWidth: 790, display: "flex", gap: 8 }}>
@@ -113,19 +115,42 @@ function YearHeatmap({ activity }: { activity: ActivitySummary }) {
           ))}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div aria-hidden style={{ display: "flex", marginBottom: 6 }}>
-            {MONTHS_SHORT.map((month) => (
-              <span key={month} style={{ flex: 1, fontSize: 10, color: TEXT.faint }}>
-                {month}
+          {/* Cada mês sobre a coluna da semana em que ele começa. Antes os
+              doze rótulos dividiam a largura em partes iguais, e a posição
+              deles não tinha relação nenhuma com os quadrados embaixo. */}
+          <div
+            aria-hidden
+            style={{
+              display: "grid",
+              gridAutoColumns: "12px",
+              columnGap: 2,
+              marginBottom: 6,
+              height: 12,
+            }}
+          >
+            {yearMonths().map((month) => (
+              <span
+                key={month.label}
+                style={{
+                  gridRow: 1,
+                  gridColumn: month.column + 1,
+                  fontSize: 10,
+                  lineHeight: "12px",
+                  color: TEXT.faint,
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {month.label}
               </span>
             ))}
           </div>
           <ul
-            aria-label="Atividade diária no último ano"
+            aria-label="Atividade diária no ano"
             style={{
               display: "grid",
               gridAutoFlow: "column",
               gridTemplateRows: "repeat(7,12px)",
+              gridAutoColumns: "12px",
               gap: 2,
               lineHeight: 0,
               margin: 0,
@@ -136,24 +161,29 @@ function YearHeatmap({ activity }: { activity: ActivitySummary }) {
             {cells.map((cell) => (
               <li
                 key={cell.date}
-                title={cell.title}
+                aria-label={cell.title || undefined}
+                {...(cell.outside || cell.future ? {} : gatilho(cell))}
                 style={{
                   display: "block",
                   width: 12,
                   height: 12,
                   borderRadius: 3,
                   background: cell.background,
+                  visibility: cell.outside ? "hidden" : "visible",
+                  cursor: cell.outside || cell.future ? "default" : "pointer",
                 }}
               />
             ))}
           </ul>
         </div>
       </div>
+      {dica}
     </div>
   );
 }
 
 function MonthCalendar({ activity }: { activity: ActivitySummary }) {
+  const { gatilho, dica } = useDicaDoDia();
   return (
     <div>
       <div
@@ -183,7 +213,8 @@ function MonthCalendar({ activity }: { activity: ActivitySummary }) {
         {monthGrid(activity).map((cell, index) => (
           <div
             key={cell.date || `vazio-${index}`}
-            title={cell.title}
+            aria-label={cell.title || undefined}
+            {...(cell.outside || cell.future ? {} : gatilho(cell))}
             style={{
               height: 34,
               borderRadius: 5,
@@ -203,17 +234,21 @@ function MonthCalendar({ activity }: { activity: ActivitySummary }) {
           </div>
         ))}
       </div>
+      {dica}
     </div>
   );
 }
 
 function WeekChart({ activity }: { activity: ActivitySummary }) {
+  const { gatilho, dica } = useDicaDoDia();
   return (
     <div style={{ display: "flex", alignItems: "flex-end", gap: 8, height: 120 }}>
+      {dica}
       {weekBars(activity).map((bar) => (
         <div
           key={bar.date}
-          title={bar.title}
+          aria-label={bar.title}
+          {...(bar.future ? {} : gatilho(bar))}
           style={{
             flex: 1,
             display: "flex",

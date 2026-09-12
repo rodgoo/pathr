@@ -10,11 +10,14 @@ import { describe, expect, it } from "vitest";
 import {
   heatLevel,
   humanMinutes,
+  isoLocal,
   monthGrid,
   rangeSummary,
+  recentDays,
   streakDays,
   weekBars,
   yearHeat,
+  yearMonths,
 } from "@/lib/dashboard";
 import type { ActivitySummary } from "@/api/types";
 
@@ -46,15 +49,46 @@ describe("degraus do heatmap", () => {
 });
 
 describe("mapa do ano", () => {
-  it("cobre 53 semanas cheias", () => {
-    expect(yearHeat(activity([]), WEDNESDAY)).toHaveLength(371);
+  it("é o ano civil, em semanas inteiras começando na segunda", () => {
+    const cells = yearHeat(activity([]), WEDNESDAY);
+    expect(cells.length % 7).toBe(0);
+    const doAno = cells.filter((cell) => !cell.outside);
+    expect(doAno).toHaveLength(365);
+    expect(doAno[0].date).toBe("2026-01-01");
+    expect(doAno[doAno.length - 1].date).toBe("2026-12-31");
   });
 
   it("preenche os dias sem estudo em vez de omiti-los", () => {
     // É o buraco que mostra a quebra de constância.
-    const cells = yearHeat(activity([]), WEDNESDAY);
+    const cells = yearHeat(activity([]), WEDNESDAY).filter((cell) => !cell.outside);
     expect(cells.every((cell) => cell.minutes === 0)).toBe(true);
     expect(cells[0].title).toContain("nenhuma atividade");
+  });
+
+  /**
+   * O defeito que motivou a troca: com a janela móvel de 53 semanas, a semana
+   * de hoje caía sempre na última coluna, embaixo de "Dez" — o estudo de 11 de
+   * setembro aparecia em dezembro.
+   */
+  it("põe setembro na coluna de setembro, não na última", () => {
+    const cells = yearHeat(activity([{ date: "2026-09-11", minutes: 12 }]), new Date(2026, 8, 12));
+    const coluna = Math.floor(cells.findIndex((cell) => cell.date === "2026-09-11") / 7);
+    const meses = yearMonths(new Date(2026, 8, 12));
+    const setembro = meses.find((mes) => mes.label === "Set")!.column;
+    const outubro = meses.find((mes) => mes.label === "Out")!.column;
+    expect(coluna).toBeGreaterThanOrEqual(setembro);
+    expect(coluna).toBeLessThan(outubro);
+    expect(coluna).toBeLessThan(Math.floor(cells.length / 7) - 1);
+  });
+
+  it("marca o que ainda não chegou e não o conta", () => {
+    const cells = yearHeat(activity([]), WEDNESDAY);
+    expect(cells.find((cell) => cell.date === "2026-09-10")?.future).toBe(true);
+    expect(cells.find((cell) => cell.date === "2026-09-09")?.future).toBe(false);
+    // 1º de janeiro a 9 de setembro: 252 dias, não 371.
+    expect(rangeSummary(activity([]), "ano", WEDNESDAY).headline).toBe(
+      "0 de 252 dias ativos até hoje",
+    );
   });
 
   it("casa o dia com a atividade daquela data", () => {
@@ -102,6 +136,41 @@ describe("barras da semana", () => {
   it("dá um piso visível ao dia zerado para o eixo continuar legível", () => {
     expect(bars[6].height).toBe(2);
     expect(bars[6].value).toBe("—");
+  });
+});
+
+describe("dia ativo", () => {
+  /**
+   * Criar o plano ou marcar um material não tem cronômetro. Contar só minutos
+   * fazia o heatmap dizer "1 dia ativo" ao lado do cartão dizendo "3".
+   */
+  const semTempo = activity([
+    { date: "2026-09-07", minutes: 0, count: 3 },
+    { date: "2026-09-09", minutes: 12, count: 4 },
+  ]);
+
+  it("conta o dia com atividade mesmo sem minutos", () => {
+    expect(rangeSummary(semTempo, "ano", WEDNESDAY).stats[0].value).toBe("2");
+    expect(streakDays(semTempo, WEDNESDAY)[0].done).toBe(true);
+  });
+
+  it("acende o primeiro degrau do mapa para atividade sem tempo", () => {
+    expect(heatLevel(0, 3)).toBe(1);
+    expect(heatLevel(0, 0)).toBe(0);
+  });
+
+  it("a média divide o tempo pelos dias que TÊM tempo", () => {
+    // Um dia de "plano criado" não pode puxar a média de estudo para baixo.
+    expect(rangeSummary(semTempo, "semana", WEDNESDAY).stats[2].value).toBe("12 min");
+  });
+});
+
+describe("data local", () => {
+  /** Às 23h30 de Brasília já é o dia seguinte em UTC. */
+  it("a chave do dia é a do calendário de quem usa, não a de UTC", () => {
+    const noite = new Date(2026, 8, 11, 23, 30);
+    expect(isoLocal(noite)).toBe("2026-09-11");
+    expect(recentDays(activity([]), noite, 1)[0].date).toBe("2026-09-11");
   });
 });
 

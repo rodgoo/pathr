@@ -601,3 +601,179 @@ textarea.input { min-height: 90px; resize: vertical; }
 @media (pointer: coarse) {
   .sel-opcao { min-height: 44px; }
 }
+
+/* --------------------------------------------------------------------------
+   A caixa de seleção.
+
+   A nativa só obedece `accent-color` quando MARCADA: desmarcada, o navegador
+   pinta um quadrado branco — o elemento mais claro de uma tela escura, e
+   justamente onde está o que ainda falta fazer. Aqui ela desmarcada tem o
+   fundo dos campos do app, e marcada, o roxo da marca com o traço no fundo.
+
+   Regra global de propósito: são seis telas com caixa de seleção, e uma
+   classe a lembrar em cada uma é como a sétima nasce branca de novo.
+   -------------------------------------------------------------------------- */
+
+input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin: 0;
+  display: inline-grid;
+  place-content: center;
+  vertical-align: middle;
+  border-radius: 4px;
+  border: 1.5px solid color-mix(in srgb, var(--color-text) 32%, transparent);
+  background: var(--color-surface);
+  cursor: pointer;
+  transition: background-color 0.12s ease, border-color 0.12s ease;
+}
+
+/* O traço do "feito", recortado num quadrado — sem imagem, e na cor do fundo
+   para ler sobre o roxo em qualquer tela. */
+input[type="checkbox"]::before {
+  content: "";
+  width: 10px;
+  height: 10px;
+  background: var(--color-bg);
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  transform: scale(0);
+  transition: transform 0.12s ease;
+}
+
+input[type="checkbox"]:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+input[type="checkbox"]:checked {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+}
+input[type="checkbox"]:checked::before {
+  transform: scale(1);
+}
+
+input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+/* Travada (um item confirmado pelo servidor): continua legível como feita,
+   mas sem convidar ao clique. */
+input[type="checkbox"]:disabled {
+  cursor: default;
+  opacity: 0.6;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  input[type="checkbox"],
+  input[type="checkbox"]::before {
+    transition: none;
+  }
+}
+
+/* No toque, um pouco maior: 16px é pouco para acertar com o dedo, e a linha
+   inteira já é rotulada — isto só ajuda quem mira na caixa. */
+@media (pointer: coarse) {
+  input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+  }
+  input[type="checkbox"]::before {
+    width: 12px;
+    height: 12px;
+  }
+}
+
+/* --------------------------------------------------------------------------
+   O balão de um dia (components/dashboard/DicaDoDia.tsx).
+
+   `position: fixed` porque o gatilho mora dentro de áreas que rolam na
+   horizontal (o mapa do ano no celular) — preso ao pai, o balão seria cortado
+   pela borda dessa rolagem. `pointer-events: none` para ele nunca ficar entre
+   o mouse e o próximo dia.
+   -------------------------------------------------------------------------- */
+
+.dica {
+  position: fixed;
+  z-index: 60;
+  pointer-events: none;
+  padding: 10px 12px;
+  border-radius: var(--radius-md);
+  background: #1b1d2b;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--color-divider);
+  font-size: 12px;
+  line-height: 1.45;
+  color: color-mix(in srgb, var(--color-text) 78%, transparent);
+  animation: sel-entra 0.1s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .dica { animation: none; }
+}
+
+.dica-titulo {
+  font-size: 12.5px;
+  color: var(--color-text);
+  margin-bottom: 6px;
+}
+
+.dica-lista {
+  list-style: none;
+  margin: 0 0 7px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+.dica-lista li {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.dica-tipo {
+  font-size: 10.5px;
+  letter-spacing: 0.02em;
+  color: #b5abfc;
+}
+.dica-linha {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
+/* Até duas linhas de título: uma só cortava nomes de artigo no meio, e mais
+   que duas faria um dia de cinco materiais ocupar meia tela. */
+.dica-nome {
+  flex: 1;
+  min-width: 0;
+  color: var(--color-text);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.dica-min {
+  flex: none;
+  color: color-mix(in srgb, var(--color-text) 50%, transparent);
+}
+
+.dica-total {
+  padding-top: 6px;
+  border-top: 1px solid var(--color-divider);
+}
+.dica-total strong {
+  font-weight: 500;
+  color: var(--color-text);
+}
+
+.dica-vazio {
+  color: color-mix(in srgb, var(--color-text) 50%, transparent);
+}
+
+.dica-nota {
+  margin-top: 3px;
+  font-size: 10.5px;
+  color: color-mix(in srgb, var(--color-text) 42%, transparent);
+}

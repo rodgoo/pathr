@@ -17,6 +17,7 @@ from supabase import Client
 from app.config import settings
 from app.database import get_supabase
 from app.deps import get_current_user
+from app.services.progress import minutos_de_leitura
 from app.schemas.auth import SignupRequest
 
 router = APIRouter(prefix="/profile", tags=["perfil"])
@@ -395,28 +396,44 @@ def _activity_summary(supabase: Client, user_id: str) -> dict[str, Any]:
     linhas por usuário e uma RPC no Postgres seria mais uma coisa para manter
     em sincronia com o schema.
     """
-    since = (date.today() - timedelta(days=365)).isoformat()
+    since = (date.today() - timedelta(days=366)).isoformat()
     rows = (
         supabase.table("pathr_activity")
-        .select("activity_date,minutes,xp,kind")
+        .select("activity_date,minutes,xp,kind,title,ref_id,detail,created_at")
         .eq("user_id", user_id)
         .gte("activity_date", since)
+        .order("created_at")
         .execute()
         .data
         or []
     )
+    materiais = _materiais_das_atividades(supabase, rows)
 
-    by_day: dict[str, dict[str, int]] = {}
+    by_day: dict[str, dict[str, Any]] = {}
     total_minutes = 0
     total_xp = 0
     for row in rows:
         day = str(row["activity_date"])
-        bucket = by_day.setdefault(day, {"minutes": 0, "count": 0, "xp": 0})
-        minutes = int(row.get("minutes") or 0)
+        bucket = by_day.setdefault(day, {"minutes": 0, "count": 0, "xp": 0, "items": []})
+        minutes, estimado = _minutos_da_atividade(row, materiais)
         xp = int(row.get("xp") or 0)
         bucket["minutes"] += minutes
         bucket["xp"] += xp
         bucket["count"] += 1
+        # O que foi feito no dia, para o painel dizer ao passar o mouse:
+        # "Artigo: Learn to Use GitHub Actions · 14 min". Sem isto o quadrado
+        # verde só dizia "4 atividades", e não havia como saber quais.
+        material = materiais.get(str(row.get("ref_id") or ""), {})
+        bucket["items"].append(
+            {
+                "kind": row.get("kind"),
+                "resource_kind": (row.get("detail") or {}).get("resource_kind")
+                or material.get("kind"),
+                "title": row.get("title") or "",
+                "minutes": minutes,
+                "estimated": estimado,
+            }
+        )
         total_minutes += minutes
         total_xp += xp
 
@@ -426,6 +443,47 @@ def _activity_summary(supabase: Client, user_id: str) -> dict[str, Any]:
         "total_minutes": total_minutes,
         "total_xp": total_xp,
     }
+
+
+def _materiais_das_atividades(
+    supabase: Client, rows: list[dict[str, Any]]
+) -> dict[str, dict[str, Any]]:
+    """Tipo e tamanho dos materiais citados nas atividades, numa consulta só."""
+    ids = sorted(
+        {str(r["ref_id"]) for r in rows if r.get("kind") == "resource_done" and r.get("ref_id")}
+    )
+    if not ids:
+        return {}
+    linhas = (
+        supabase.table("pathr_resource")
+        .select("id,kind,duration_min,reader_words")
+        .in_("id", ids)
+        .execute()
+        .data
+        or []
+    )
+    return {str(linha["id"]): linha for linha in linhas}
+
+
+def _minutos_da_atividade(
+    row: dict[str, Any], materiais: dict[str, dict[str, Any]]
+) -> tuple[int, bool]:
+    """Os minutos de uma atividade — e se foram estimados.
+
+    Até a correção em `library.set_progress`, concluir um artigo gravava ZERO
+    minutos: artigo não tem duração cadastrada. As linhas antigas continuam
+    assim no banco, e reescrevê-las mudaria o histórico por baixo de quem o
+    registrou. A estimativa é feita aqui, na leitura, e marcada como tal — o
+    painel mostra "≈ 14 min" em vez de fingir que foi cronometrado.
+    """
+    minutos = int(row.get("minutes") or 0)
+    if minutos or row.get("kind") != "resource_done":
+        return minutos, False
+    material = materiais.get(str(row.get("ref_id") or ""), {})
+    estimado = int(material.get("duration_min") or 0) or minutos_de_leitura(
+        material.get("reader_words")
+    )
+    return estimado, estimado > 0
 
 
 @router.get("/activity")
