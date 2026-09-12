@@ -143,6 +143,32 @@ def test_revisao_que_repete_a_frase_do_erro_e_recusada():
     assert not T.repete_o_erro(repetida, None)
 
 
+def test_revisao_que_reaproveita_as_alternativas_do_erro_e_recusada():
+    """Caso de produção: a pergunta de fechamento de e-mail voltou com as
+    mesmas alternativas, incluindo a resposta certa do erro."""
+    lembrete = (
+        "Choose the best closing sentence for your email.\n"
+        "→ Looking forward to seeing you. Depois de 'look forward to' vem -ing."
+    )
+    copia = {"enunciado": "Choose", "alternativas": [
+        "Looking forward to see you.", "Looking forward to seeing you.", "I look forward see you.", "Looking to forward you."]}
+    nova = {"enunciado": "Choose", "alternativas": [
+        "We are looking forward to hear from the client.", "We are looking forward to hearing from the client.",
+        "We look forward hearing from the client.", "We are looking to forward the client."]}
+    assert T.repete_o_erro(copia, lembrete)
+    assert not T.repete_o_erro(nova, lembrete)
+
+
+def test_enunciado_repetido_nao_e_copia():
+    """"Choose the best option" se repete entre exercícios diferentes: compará-lo
+    recusava revisões boas."""
+    lembrete = "Choose the most appropriate sentence to ask for clarification.\n→ Could you clarify?"
+    item = {"enunciado": "Choose the most appropriate sentence to ask for clarification.",
+            "alternativas": ["Can you walk me through the rollback plan?", "Can you walk me the rollback plan?",
+                             "Can you explain me the rollback plan?", "Can you pass me through the rollback?"]}
+    assert not T.repete_o_erro(item, lembrete)
+
+
 def test_revisao_leva_o_erro_original_para_ser_reescrito():
     plano = T.montar(_quadro(), [_ponto(7)], 15, semente=6)
     revisao = next(e for e in plano if e.origem == "revisao")

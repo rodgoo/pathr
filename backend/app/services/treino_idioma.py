@@ -240,7 +240,11 @@ def montar(
                 indice=0,
                 tipo=formato_do_ponto(int(ponto.get("repetitions") or 0), habilidade, rng),
                 habilidade=habilidade,
-                topico=ponto.get("topic") or TOPICOS[habilidade][0],
+                # "geral" e não o primeiro tópico do catálogo: ponto gravado
+                # antes de existir tópico voltava rotulado "tempos do
+                # presente" sem ter nada a ver com isso, e somava no placar
+                # errado. Com "geral", o tópico sai do que o modelo reconhecer.
+                topico=ponto.get("topic") or "geral",
                 banda=ponto.get("band") or _banda_da_habilidade(quadro, habilidade),
                 origem="revisao",
                 ponto_id=str(ponto["id"]),
@@ -599,27 +603,53 @@ def corrigir(
     return Correcao(False)
 
 
-# A partir daqui de semelhança, o exercício de revisão está repetindo a frase
-# do erro em vez de cobrar a ideia com outras palavras.
-LIMIAR_REPETICAO = 0.6
+# A partir desta fração das palavras de um trecho do exercício aparecendo, em
+# sequência, no erro original, o exercício está reaproveitando o erro.
+LIMIAR_REPETICAO = 0.75
+# Trecho mais curto que isto não conta: "in", "on", "at" aparecem em qualquer
+# frase, e acusá-los de cópia recusaria toda revisão de preposição.
+_PALAVRAS_MINIMAS = 4
+
+
+def _contido(trecho: str, referencia: str) -> float:
+    """Quanto do trecho aparece, em sequência, dentro da referência (0 a 1).
+
+    Contenção e não semelhança: a resposta certa do erro ("Looking forward to
+    seeing you") some dentro da referência longa, que traz também a
+    explicação — medida por semelhança ela passaria; por contenção, não.
+    """
+    a = normalizar(trecho).split()
+    b = normalizar(referencia).split()
+    if not a or not b:
+        return 0.0
+    blocos = SequenceMatcher(None, a, b, autojunk=False).get_matching_blocks()
+    return sum(bloco.size for bloco in blocos) / len(a)
 
 
 def repete_o_erro(item: dict[str, Any], lembrete: Optional[str]) -> bool:
-    """O exercício de revisão reaproveitou a frase que a pessoa errou?
+    """O exercício de revisão reaproveitou o CONTEÚDO do que a pessoa errou?
 
-    O prompt pede outras palavras, e o modelo não obedeceu na primeira
-    geração real: o erro "We discussed ABOUT the deadline in the meeting"
-    voltou como "We discussed the deadline in the meeting" — 93% das palavras
-    iguais. Assim basta decorar a frase, e o ponto de melhora deixa de medir se
-    a ideia foi aprendida. Por isso a regra é conferida aqui, e não confiada.
+    O prompt pede situação nova, e o modelo não obedeceu em duas gerações
+    reais: o erro "We discussed ABOUT the deadline in the meeting" voltou como
+    "We discussed the deadline in the meeting"; e em produção, a pergunta
+    "Choose the best closing sentence for your email" voltou com as mesmas
+    alternativas ("Looking forward to see/seeing you"). Assim basta decorar a
+    resposta, e o ponto de melhora deixa de medir se a regra foi aprendida.
+
+    Compara só o conteúdo — frase, texto, alternativas, pares —, e NÃO o
+    enunciado: "Choose the best option" se repete legitimamente entre
+    exercícios diferentes, e compará-lo recusava revisões boas.
     """
     if not lembrete:
         return False
-    erro = lembrete.split("\n→", 1)[0]
-    candidatos = [str(item.get(campo) or "") for campo in ("frase", "texto", "enunciado")]
+    candidatos = [str(item.get(campo) or "") for campo in ("frase", "texto")]
     candidatos += [str(a) for a in (item.get("alternativas") or [])]
+    for par in item.get("pares") or []:
+        if isinstance(par, dict):
+            candidatos.append(f"{par.get('a') or ''} {par.get('b') or ''}")
     return any(
-        len(normalizar(candidato).split()) >= 3 and semelhanca(erro, candidato) >= LIMIAR_REPETICAO
+        len(normalizar(candidato).split()) >= _PALAVRAS_MINIMAS
+        and _contido(candidato, lembrete) >= LIMIAR_REPETICAO
         for candidato in candidatos
     )
 

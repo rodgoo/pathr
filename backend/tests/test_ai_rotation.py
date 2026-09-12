@@ -280,6 +280,27 @@ async def test_candidato_rapido_ainda_vence_dentro_do_orcamento(monkeypatch):
     assert result.provider == "B"
 
 
+@pytest.mark.asyncio
+async def test_teto_por_tentativa_deixa_o_proximo_ser_tentado(monkeypatch):
+    """Caso real do treino de idioma: o Gemini ficou 50s calado e os outros
+    quatro provedores nem foram tentados. Com teto por tentativa, o lento é
+    cortado e o seguinte responde dentro do mesmo orçamento."""
+    monkeypatch.setattr(ai, "_MIN_ATTEMPT", 0.05)
+    # Nomes diferentes em cada rodada: a primeira põe o lento em cooldown, e
+    # com o mesmo nome a segunda já começaria pelo rápido, sem provar o teto.
+    sem = [_Candidate("Lento A", _demora(30)), _Candidate("Rapido A", _works({"ok": 1}))]
+    com = [_Candidate("Lento B", _demora(30)), _Candidate("Rapido B", _works({"ok": 1}))]
+
+    sem_teto, falhas_sem = await ai._run_rotation(sem, lambda c: c.call("s", "u", None), budget=0.6)
+    com_teto, falhas_com = await ai._run_rotation(
+        com, lambda c: c.call("s", "u", None), budget=0.6, per_attempt=0.2
+    )
+
+    assert sem_teto is None and any("sem tempo" in f for f in falhas_sem)
+    assert com_teto is not None
+    assert falhas_com == ["Lento B: não respondeu a tempo"]
+
+
 def test_timeout_do_orcamento_e_falha_transitoria():
     """`asyncio.wait_for` levanta TimeoutError; sem reconhece-lo, a rotacao
     trataria o corte como bug nosso e levantaria em vez de tentar o proximo."""

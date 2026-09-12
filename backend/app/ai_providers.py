@@ -671,6 +671,7 @@ async def _run_rotation(
     invoke: Callable[[_Candidate], Awaitable[Any]],
     on_success: Optional[Callable[[_Candidate, Any], Awaitable[None]]] = None,
     budget: float = _BUDGET,
+    per_attempt: Optional[float] = None,
 ) -> tuple[Any, list[str]]:
     """Tenta cada candidato em ordem, registra por que cada um falhou e
     devolve o primeiro sucesso. Não levanta em falha de provedor — devolve
@@ -696,8 +697,15 @@ async def _run_rotation(
                 f"dentro de {budget}s"
             )
             break
+        # Teto por tentativa, quando quem chama pede. Sem ele cada tentativa
+        # recebe TODO o tempo que sobrou, e um provedor lento sozinho esgota o
+        # orçamento: medido em produção no treino de idioma, o Gemini ficou
+        # 50s sem responder e os outros quatro provedores nem foram tentados —
+        # a pessoa esperou 56s por dois exercícios. Opcional porque a leitura
+        # de currículo manda o PDF inteiro e pode precisar do tempo todo.
+        limite = min(restante, per_attempt) if per_attempt else restante
         try:
-            result = await asyncio.wait_for(invoke(candidate), timeout=restante)
+            result = await asyncio.wait_for(invoke(candidate), timeout=limite)
         except Exception as exc:  # noqa: BLE001 — relançado abaixo se não for falha de provedor
             failure = _as_failure(exc)
             if failure is None:
@@ -747,7 +755,8 @@ def _model_for(provider_name: str) -> str:
 
 
 async def _rotate(candidates: list[_Candidate], system_prompt: str, user_prompt: str,
-                  gemini_schema: Optional[dict], empty_message: str) -> AiResult:
+                  gemini_schema: Optional[dict], empty_message: str,
+                  per_attempt: Optional[float] = None) -> AiResult:
     if not candidates:
         raise AiProviderError(empty_message)
 
@@ -767,6 +776,7 @@ async def _rotate(candidates: list[_Candidate], system_prompt: str, user_prompt:
         candidates,
         lambda candidate: candidate.call(system_prompt, user_prompt, gemini_schema),
         on_success=record,
+        per_attempt=per_attempt,
     )
     latency_ms = int((_now() - started).total_seconds() * 1000)
 
@@ -789,15 +799,24 @@ async def _rotate(candidates: list[_Candidate], system_prompt: str, user_prompt:
 
 
 async def generate_json(
-    system_prompt: str, user_prompt: str, gemini_schema: Optional[dict] = None
+    system_prompt: str,
+    user_prompt: str,
+    gemini_schema: Optional[dict] = None,
+    per_attempt_timeout: Optional[float] = None,
 ) -> AiResult:
     """Tenta cada candidato configurado em ordem, rotacionando na falha.
 
     `gemini_schema` (o dialeto de schema do próprio Gemini) só é usado na
     chamada ao Gemini; os outros ficam com o modo JSON solto mais o texto do
     prompt, que já descreve o formato.
+
+    `per_attempt_timeout` limita cada candidato, para que um lento não gaste o
+    orçamento inteiro sozinho. Sem ele, cada tentativa usa o que sobrar.
     """
-    return await _rotate(_text_candidates(), system_prompt, user_prompt, gemini_schema, _NO_PROVIDER)
+    return await _rotate(
+        _text_candidates(), system_prompt, user_prompt, gemini_schema, _NO_PROVIDER,
+        per_attempt=per_attempt_timeout,
+    )
 
 
 async def generate_json_with_media(

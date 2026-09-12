@@ -44,6 +44,7 @@ logger = logging.getLogger("pathr.language_practice")
 HABILIDADES = tuple(treino.FORMATOS)
 _PRIMEIRO_LOTE = 4
 _LOTE = 6
+_TEMPO_POR_PROVEDOR = 25
 
 PRACTICE_SCHEMA: dict[str, Any] = {
     "type": "OBJECT",
@@ -96,7 +97,9 @@ REGRAS GERAIS
    a frase do erro, mesmo corrigida — "We discussed about the deadline" não
    pode voltar como "We discussed the deadline"; volta como "Let's discuss
    the budget tomorrow". Se decorar a frase bastasse, o exercício não mediria
-   se a regra foi aprendida.
+   se a regra foi aprendida. Vale também para pergunta de múltipla escolha:
+   não reaproveite a pergunta, as alternativas NEM a resposta certa do erro —
+   escreva outra situação cujas alternativas testem a mesma regra.
 5. As alternativas erradas são erros que brasileiros realmente cometem (falso
    cognato, tradução literal, preposição, tempo verbal) — não absurdos.
 
@@ -351,7 +354,11 @@ async def _gerar(supabase: Client, sessao: dict[str, Any], indices: list[int]) -
             f"Escreva estes {len(faltam)} exercícios:\n" + "\n".join(pedidos)
         )
         try:
-            resultado = await generate_json(PRACTICE_PROMPT, pedido, PRACTICE_SCHEMA)
+            # 25s por provedor: um lento não gasta o orçamento inteiro, e sobra
+            # tempo para o seguinte. Medido: um lote de quatro sai em 5 a 17s.
+            resultado = await generate_json(
+                PRACTICE_PROMPT, pedido, PRACTICE_SCHEMA, per_attempt_timeout=_TEMPO_POR_PROVEDOR
+            )
         except AiProviderError:
             logger.warning("geração do treino falhou (tentativa %s)", tentativa + 1, exc_info=True)
             continue

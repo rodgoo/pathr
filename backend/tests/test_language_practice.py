@@ -49,7 +49,7 @@ def _exercicio(pedido_linha: str) -> dict:
 def ia(monkeypatch):
     chamadas = []
 
-    async def falso(_sistema, pedido, _schema):
+    async def falso(_sistema, pedido, _schema, **_kwargs):
         chamadas.append(pedido)
         linhas = [linha for linha in pedido.splitlines() if linha.startswith("- indice ")]
         return SimpleNamespace(content={"itens": [_exercicio(linha) for linha in linhas]})
@@ -130,7 +130,7 @@ def test_o_dia_e_o_da_pessoa_e_nao_o_do_servidor(monkeypatch):
 def test_treino_que_a_ia_nao_consegue_montar_e_apagado_para_poder_tentar_de_novo(monkeypatch):
     """Tudo descartado deixaria um treino vazio travando o dia inteiro: o
     índice único impediria criar outro até amanhã."""
-    async def quebrada(_s, _p, _schema):
+    async def quebrada(_s, _p, _schema, **_kwargs):
         return SimpleNamespace(content={"itens": []})
 
     monkeypatch.setattr(router, "generate_json", quebrada)
@@ -143,7 +143,7 @@ def test_treino_que_a_ia_nao_consegue_montar_e_apagado_para_poder_tentar_de_novo
 
 def test_provedor_fora_do_ar_nao_descarta_o_treino(monkeypatch):
     """Queda passageira não pode apagar exercícios: o treino fica salvo."""
-    async def fora(_s, _p, _schema):
+    async def fora(_s, _p, _schema, **_kwargs):
         raise router.AiProviderError("fora do ar")
 
     monkeypatch.setattr(router, "generate_json", fora)
