@@ -6,8 +6,8 @@
  * sobravam uns 300px de largura para um player.
  *
  * O que estes testes seguram: abrir leva a uma tela, a tela mostra o
- * progresso, e o voltar devolve para onde a pessoa estava — que é a
- * biblioteca ou a trilha, dependendo de por onde ela entrou.
+ * progresso, e o voltar devolve para a trilha — a aba de material do módulo,
+ * que é de onde o material é alcançado desde que ela absorveu a Biblioteca.
  */
 
 import { render, screen, within } from "@testing-library/react";
@@ -40,9 +40,45 @@ const artigo = {
   user_position_seconds: null,
 };
 
+/** Um plano com um módulo aberto: é por ele que se chega ao material. */
+const plano = {
+  id: "p-1",
+  title: "Plano",
+  horizon_weeks: 12,
+  weekly_hours: 8,
+  progress_pct: 0,
+  phases: [
+    {
+      id: "f-1",
+      title: "Fundamentos",
+      description: null,
+      week_start: 1,
+      week_end: 4,
+      order_index: 0,
+      modules: [
+        {
+          id: "n-1",
+          title: "Processamento assíncrono",
+          description: null,
+          kind: "skill",
+          status: "doing",
+          progress_pct: 0,
+          level: null,
+          estimated_hours: 10,
+          week_start: 1,
+          week_end: 2,
+          tag_ids: ["t-1"],
+          objectives: [],
+          order_index: 0,
+        },
+      ],
+    },
+  ],
+};
+
 const shell: Record<string, Handler> = {
   "GET /auth/me": () => ({ body: aUser() }),
-  "GET /roadmap/current": () => ({ status: 404, body: { detail: "sem plano" } }),
+  "GET /roadmap/current": () => ({ body: plano }),
   "GET /languages/profile": () => ({
     body: { enabled: false, cefr_level: null, target_level: "B2", sub_scores: {}, daily_goal_min: 15 },
   }),
@@ -69,7 +105,7 @@ function abrirApp(estado: Partial<AppState> = {}) {
 afterEach(() => vi.unstubAllGlobals());
 
 it("abre o material numa tela, com o progresso no topo", async () => {
-  const { user } = abrirApp({ screen: "biblioteca" });
+  const { user } = abrirApp({ screen: "modulo" });
 
   await user.click(await screen.findByRole("button", { name: /Idempotência/ }));
 
@@ -82,18 +118,20 @@ it("abre o material numa tela, com o progresso no topo", async () => {
   expect(screen.getByText("40% consumido")).toBeInTheDocument();
 });
 
-it("o voltar devolve para a biblioteca", async () => {
-  const { user } = abrirApp({ screen: "biblioteca" });
+it("o voltar devolve para a trilha", async () => {
+  const { user } = abrirApp({ screen: "modulo" });
 
   await user.click(await screen.findByRole("button", { name: /Idempotência/ }));
   await screen.findByRole("heading", { level: 1, name: /Idempotência/ });
-  await user.click(screen.getByRole("button", { name: "Voltar para Biblioteca" }));
+  await user.click(screen.getByRole("button", { name: "Voltar para Trilha" }));
 
-  expect(await screen.findByRole("heading", { level: 1, name: "Biblioteca" })).toBeInTheDocument();
+  expect(
+    await screen.findByRole("heading", { level: 1, name: "Processamento assíncrono" }),
+  ).toBeInTheDocument();
 });
 
 it("mantém acesa a aba de onde o material foi aberto", async () => {
-  const { user } = abrirApp({ screen: "biblioteca" });
+  const { user } = abrirApp({ screen: "modulo" });
 
   await user.click(await screen.findByRole("button", { name: /Idempotência/ }));
   await screen.findByRole("heading", { level: 1, name: /Idempotência/ });
@@ -101,7 +139,7 @@ it("mantém acesa a aba de onde o material foi aberto", async () => {
   // A tela de material não tem aba própria. Apagar a barra inteira enquanto
   // se lê um artigo tiraria a referência de onde a pessoa está.
   const navegacao = screen.getByRole("navigation", { name: "Navegação principal" });
-  expect(within(navegacao).getByRole("button", { name: "Biblioteca" })).toHaveAttribute(
+  expect(within(navegacao).getByRole("button", { name: "Trilha atual" })).toHaveAttribute(
     "aria-current",
     "page",
   );

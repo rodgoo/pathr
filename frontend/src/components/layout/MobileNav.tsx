@@ -39,7 +39,6 @@ const BARRA: Destino[] = [
   { label: "Início", screen: "home", icon: "home" },
   { label: "Roadmap", screen: "roadmap", icon: "road" },
   { label: "Trilha", screen: "modulo", icon: "book" },
-  { label: "Biblioteca", screen: "biblioteca", icon: "library" },
 ];
 
 const FOLHA: Destino[] = [

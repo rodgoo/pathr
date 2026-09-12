@@ -15,7 +15,6 @@ export type Screen =
   | "modulo"
   | "ingles"
   | "perfil"
-  | "biblioteca"
   | "codigo"
   | "material"
   | "config";

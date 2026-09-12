@@ -98,10 +98,10 @@ describe("barra lateral", () => {
   it("navega entre telas", async () => {
     const { user } = renderApp({
       "GET /profile/overview": () => ({ body: anOverview() }),
-      "GET /library": () => ({ body: [] }),
+      "GET /roadmap/current": () => ({ status: 404, body: { detail: "sem plano" } }),
     });
     const nav = within(await screen.findByRole("navigation", { name: "Navegação principal" }));
-    await user.click(nav.getByRole("button", { name: /Biblioteca/ }));
-    expect(await screen.findByRole("heading", { level: 1, name: "Biblioteca" })).toBeInTheDocument();
+    await user.click(nav.getByRole("button", { name: /Trilha atual/ }));
+    expect(await screen.findByText("Você ainda não tem um plano")).toBeInTheDocument();
   });
 });

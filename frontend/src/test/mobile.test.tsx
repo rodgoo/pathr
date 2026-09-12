@@ -70,7 +70,7 @@ describe("moldura do celular", () => {
     montaMoldura();
 
     const navegacao = await screen.findByRole("navigation", { name: "Navegação principal" });
-    for (const destino of ["Início", "Roadmap", "Trilha", "Biblioteca", "Mais"]) {
+    for (const destino of ["Início", "Roadmap", "Trilha", "Mais"]) {
       expect(within(navegacao).getByRole("button", { name: destino })).toBeInTheDocument();
     }
     // A lateral traz o mesmo rótulo de navegação; duas seria ambíguo para

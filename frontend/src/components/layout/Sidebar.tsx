@@ -57,7 +57,6 @@ export function Sidebar() {
     {
       label: "Ferramentas",
       items: [
-        { label: "Biblioteca", screen: "biblioteca", icon: "library" },
         { label: "Laboratório de código", screen: "codigo", icon: "code" },
         { label: "Idiomas", screen: "ingles", icon: "flag", badge: languageBadge },
       ],

@@ -34,6 +34,7 @@ import {
   type ReactNode,
 } from "react";
 import { INITIAL_STATE, reducer, type Action, type AppState } from "./appState";
+import type { Screen } from "@/types";
 
 const _VERSAO = 1;
 const CHAVE = `pathr:ui:v${_VERSAO}`;
@@ -45,13 +46,35 @@ interface AppContextValue {
 
 const AppContext = createContext<AppContextValue | null>(null);
 
+/**
+ * Destinos que não existem mais, e para onde o que estava neles vai.
+ *
+ * A Biblioteca era uma tela do menu e virou a aba de material do módulo. Quem
+ * fechou o app nela tem `screen: "biblioteca"` gravado — um destino que o
+ * roteador não conhece mais, e que abriria o app numa tela em branco.
+ *
+ * Mapear é melhor do que subir a versão da chave e descartar tudo: o que se
+ * perderia junto seria o módulo aberto, os filtros e a posição de quem não
+ * tem nada a ver com esta mudança.
+ */
+const APOSENTADOS: Record<string, Screen> = { biblioteca: "modulo" };
+
+function destinoValido(screen: unknown): Screen | null {
+  return typeof screen === "string" && screen in APOSENTADOS ? APOSENTADOS[screen] : null;
+}
+
 /** O que está gravado, mesclado ao padrão. O padrão sozinho se não der. */
 function hidratar(padrao: AppState): AppState {
   try {
     const bruto = window.localStorage.getItem(CHAVE);
     if (!bruto) return padrao;
     const guardado = JSON.parse(bruto) as Partial<AppState>;
-    return { ...padrao, ...guardado };
+    const estado = { ...padrao, ...guardado };
+    return {
+      ...estado,
+      screen: destinoValido(estado.screen) ?? estado.screen,
+      resourceReturn: destinoValido(estado.resourceReturn) ?? estado.resourceReturn,
+    };
   } catch {
     return padrao;
   }

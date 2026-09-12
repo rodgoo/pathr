@@ -40,7 +40,6 @@ const ICON_BY_KIND: Record<string, IconName> = {
 };
 
 const VOLTAR: Partial<Record<string, string>> = {
-  biblioteca: "Biblioteca",
   modulo: "Trilha",
 };
 
@@ -62,7 +61,7 @@ export function ResourcePage() {
     return (
       <EmptyState
         title="Nenhum material aberto"
-        description="Escolha um item na biblioteca para abrir aqui."
+        description="Escolha um item no material de um módulo para abrir aqui."
         action={
           <button type="button" className="btn btn-primary" onClick={voltar}>
             <Icon name="arrowLeft" size={15} />
@@ -80,7 +79,7 @@ export function ResourcePage() {
     return (
       <EmptyState
         title="Material não encontrado"
-        description="Ele pode ter saído da sua biblioteca desde que esta tela foi aberta."
+        description="Ele pode ter saído do seu plano desde que esta tela foi aberta."
         action={
           <button type="button" className="btn btn-primary" onClick={voltar}>
             <Icon name="arrowLeft" size={15} />

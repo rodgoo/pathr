@@ -21,7 +21,6 @@ import { CodeLabPage } from "@/pages/CodeLabPage";
 import { CvPage } from "@/pages/CvPage";
 import { EnglishPage } from "@/pages/EnglishPage";
 import { HomePage } from "@/pages/HomePage";
-import { LibraryPage } from "@/pages/LibraryPage";
 import { ModulePage } from "@/pages/ModulePage";
 import { ProfilePage } from "@/pages/ProfilePage";
 import { ResourcePage } from "@/pages/ResourcePage";
@@ -38,7 +37,6 @@ const SCREENS: Record<Screen, () => JSX.Element | null> = {
   modulo: ModulePage,
   ingles: EnglishPage,
   perfil: ProfilePage,
-  biblioteca: LibraryPage,
   codigo: CodeLabPage,
   material: ResourcePage,
   config: SettingsPage,

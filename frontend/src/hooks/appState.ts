@@ -51,9 +51,10 @@ export interface AppState {
   /**
    * Para onde o "voltar" da tela de material leva.
    *
-   * O material é alcançado de dois lugares — a biblioteca e a aba de material
-   * do módulo — e voltar sempre para a biblioteca tiraria do lugar quem veio
-   * da trilha.
+   * Hoje o material é alcançado de um lugar só — a aba de material do módulo,
+   * que absorveu a Biblioteca. O campo fica porque o destino continua sendo
+   * uma decisão de quem abre: uma segunda porta para o mesmo material
+   * (a busca do painel, um link de aviso) vai querer voltar para a porta dela.
    */
   resourceReturn: Screen;
 }
@@ -73,7 +74,7 @@ export const INITIAL_STATE: AppState = {
   activeQuizId: null,
   activeResumeId: null,
   activeResourceId: null,
-  resourceReturn: "biblioteca",
+  resourceReturn: "modulo",
 };
 
 export type Action =

@@ -41,7 +41,7 @@ describe("navegação", () => {
     const state = run([
       { type: "navigate", screen: "modulo" },
       { type: "openQuiz", quizId: "quiz-1" },
-      { type: "navigate", screen: "biblioteca" },
+      { type: "navigate", screen: "perfil" },
     ]);
     expect(state.activeQuizId).toBeNull();
   });
@@ -62,7 +62,7 @@ describe("filtros e buscas", () => {
       { type: "setLibrarySearch", value: "docker" },
       { type: "setLibraryFilter", filter: "video" },
       { type: "navigate", screen: "home" },
-      { type: "navigate", screen: "biblioteca" },
+      { type: "navigate", screen: "perfil" },
     ]);
     expect(state.librarySearch).toBe("docker");
     expect(state.libraryFilter).toBe("video");
