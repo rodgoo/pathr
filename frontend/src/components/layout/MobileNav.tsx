@@ -5,9 +5,9 @@
  * largura, e o conteúdo — que é texto de estudo — ficaria numa coluna estreita
  * demais para ler. Embaixo, ela some do caminho e cai onde o polegar alcança.
  *
- * Cabem quatro destinos e um "Mais". Os quatro são os que se visita várias
- * vezes por sessão; conta, currículo e ajustes são visitas raras e ficam na
- * folha que o "Mais" abre. A alternativa — oito ícones de 40px — daria uma
+ * São três destinos e um "Mais". Os três são os que se visita várias vezes
+ * por sessão; código, idiomas, conta, currículo e ajustes ficam na folha que
+ * o "Mais" abre. A alternativa — oito ícones de 40px — daria uma
  * barra em que ninguém acerta o que quer.
  *
  * Cada alvo tem 58px de altura de propósito: a diretriz da Apple põe o piso
@@ -144,7 +144,9 @@ export function MobileNav() {
           bottom: 0,
           zIndex: 42,
           display: "grid",
-          gridTemplateColumns: "repeat(5,1fr)",
+          // Uma coluna por destino, mais a do "Mais". Fixar o número deixava
+          // uma coluna vazia sempre que um destino mudava para a folha.
+          gridTemplateColumns: `repeat(${BARRA.length + 1},1fr)`,
           background: PANEL,
           boxShadow: "0 -1px 0 0 #2b2e3d",
           // O indicador de gestos do iPhone mora aqui embaixo; em paisagem, a

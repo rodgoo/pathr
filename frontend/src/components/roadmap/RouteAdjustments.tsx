@@ -60,7 +60,7 @@ export function RouteAdjustments({ onAjustado }: { onAjustado?: () => void }) {
   const ultimo = historico.data?.[0];
 
   return (
-    <Panel pad={16.8}>
+    <Panel pad={16.8} style={{ marginBottom: 33.6 }}>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: 11.2 }}>
         <Kicker>Ajustes de rota</Kicker>
         <button
