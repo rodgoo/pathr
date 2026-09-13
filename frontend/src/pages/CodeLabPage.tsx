@@ -298,16 +298,25 @@ function Sugestoes({
                 {sugestao.language_label} · {NOME_DO_NIVEL[sugestao.level] ?? sugestao.level}
               </span>
               <span style={{ fontSize: 13.5, lineHeight: 1.35 }}>{sugestao.topic}</span>
+              {/* O motivo sempre no pé do cartão (`marginTop: auto`): com
+                  títulos de duas ou três linhas lado a lado, ele ficava em
+                  alturas diferentes em cada cartão da mesma fileira. */}
               <span
                 style={{
                   fontSize: 11.5,
                   color: sugestao.origem === "roadmap" ? ACC4 : TEXT.faint,
                   display: "flex",
-                  alignItems: "center",
+                  alignItems: "flex-start",
                   gap: 5,
+                  marginTop: "auto",
+                  paddingTop: 4,
                 }}
               >
-                <Icon name={sugestao.origem === "roadmap" ? "road" : sugestao.origem === "proximo_nivel" ? "trend" : "flag"} size={13} />
+                <Icon
+                  name={sugestao.origem === "roadmap" ? "road" : sugestao.origem === "proximo_nivel" ? "trend" : "flag"}
+                  size={13}
+                  style={{ flex: "none", marginTop: 2 }}
+                />
                 {esta ? "Escrevendo o exemplo…" : sugestao.motivo}
               </span>
             </button>
