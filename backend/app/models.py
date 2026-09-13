@@ -937,6 +937,26 @@ class PathrActivity(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
 
+class PathrStudyDay(SQLModel, table=True):
+    """Um dia em que a pessoa estudou — uma linha por pessoa e dia.
+
+    Preenchida por trigger em `pathr_activity` (migração 0023), não pelo
+    código. É a base da sequência em dupla dos amigos
+    (services/sequencia_dupla.py).
+    """
+
+    __tablename__ = "pathr_study_day"
+
+    user_id: uuid.UUID = Field(
+        sa_column=Column(
+            PGUUID(as_uuid=True),
+            sa.ForeignKey("pathr_user.id", ondelete="CASCADE"),
+            primary_key=True,
+        )
+    )
+    day: date = Field(sa_column=Column(sa.Date(), primary_key=True))
+
+
 class PathrStreak(SQLModel, table=True):
     __tablename__ = "pathr_streak"
 

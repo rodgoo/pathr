@@ -13,8 +13,10 @@
 
 import { useEffect, useState, type CSSProperties } from "react";
 import { social } from "@/api/endpoints";
-import type { PessoaCartao } from "@/api/types";
+import type { PessoaCartao, SequenciaDupla } from "@/api/types";
+import { CardDeConquista } from "@/components/social/CardDeConquista";
 import { Icon } from "@/components/ui/icons";
+import { marcoAtingido, proximoMarco } from "@/lib/conquista";
 import { MarcaDaTecnologia, identidade } from "@/lib/tecnologias";
 import { ACC, ACC3, C, HAIRLINE, TEXT, tint } from "@/lib/tokens";
 
@@ -223,6 +225,10 @@ export function CartaoPessoa({
         </div>
       ) : null}
 
+      {pessoa.relacao === "amigos" && pessoa.sequencia ? (
+        <SequenciaJuntos pessoa={pessoa} sequencia={pessoa.sequencia} />
+      ) : null}
+
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8.4, alignItems: "center", marginTop: "auto" }}>
         {pessoa.relacao === "nenhuma" ? (
           <button type="button" className="btn btn-tom" style={tom(ACC)} disabled={ocupado}
@@ -277,7 +283,7 @@ export function CartaoPessoa({
           ) : (
             <>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, color: C.verde }}>
-                <Icon name="user" size={14} />
+                <Icon name="users" size={14} />
                 Amigos
               </span>
               <button type="button" className="btn btn-ghost" style={{ fontSize: 12, color: TEXT.faint }}
@@ -291,5 +297,67 @@ export function CartaoPessoa({
 
       {erro ? <p role="alert" style={{ margin: 0, fontSize: 12, color: C.ambar }}>{erro}</p> : null}
     </article>
+  );
+}
+
+/**
+ * A sequência de estudos com este amigo: quantos dias seguidos os dois
+ * estudaram, quem ainda falta hoje, e — num marco (7, 30, 60, 90…) — o card
+ * para compartilhar.
+ */
+function SequenciaJuntos({ pessoa, sequencia }: { pessoa: PessoaCartao; sequencia: SequenciaDupla }) {
+  const [abrindo, setAbrindo] = useState(false);
+  const primeiro = pessoa.name.split(/\s+/)[0] ?? pessoa.name;
+  const { atual, hoje_voce, hoje_amigo } = sequencia;
+  const marco = marcoAtingido(atual);
+  const cor = atual > 0 ? "#e2794a" : TEXT.faint;
+
+  let hoje: string;
+  if (hoje_voce && hoje_amigo) hoje = "Vocês dois já estudaram hoje.";
+  else if (hoje_voce) hoje = `Falta ${primeiro} estudar hoje.`;
+  else if (hoje_amigo) hoje = `${primeiro} já estudou hoje. Falta você.`;
+  else hoje = atual > 0 ? "Estudem hoje para manter a sequência." : "Estudem no mesmo dia para começar uma sequência.";
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexDirection: "column",
+        gap: 6,
+        padding: "9px 11px",
+        borderRadius: 9,
+        background: tint("#e2794a", atual > 0 ? 9 : 4),
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 13, color: TEXT.strong }}>
+        <Icon name="fogo" size={16} style={{ color: cor }} fill={atual > 0 ? cor : "none"} fillOpacity={atual > 0 ? 0.35 : undefined} />
+        {atual > 0 ? (
+          <span>
+            <strong style={{ color: cor }}>{atual}</strong> {atual === 1 ? "dia" : "dias"} estudando juntos
+          </span>
+        ) : (
+          <span style={{ color: TEXT.muted }}>Sem sequência juntos ainda</span>
+        )}
+        {sequencia.recorde > atual ? (
+          <span style={{ marginLeft: "auto", fontSize: 11, color: TEXT.faint }}>recorde {sequencia.recorde}</span>
+        ) : null}
+      </div>
+      <div style={{ fontSize: 12, color: TEXT.muted }}>
+        {hoje}
+        {atual > 0 && !marco ? ` Faltam ${proximoMarco(atual) - atual} para o card de ${proximoMarco(atual)} dias.` : ""}
+      </div>
+      {marco ? (
+        <button
+          type="button"
+          className="btn btn-tom"
+          style={{ ...tom("#e2794a"), alignSelf: "flex-start" }}
+          onClick={() => setAbrindo(true)}
+        >
+          <Icon name="award" size={15} />
+          Card de {marco} dias
+        </button>
+      ) : null}
+      {abrindo && marco ? <CardDeConquista amigo={pessoa} dias={marco} onFechar={() => setAbrindo(false)} /> : null}
+    </div>
   );
 }

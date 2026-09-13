@@ -58,7 +58,7 @@ export function Sidebar() {
         { label: "Vagas", screen: "vagas", icon: "suitcase" },
         // O contador é de convites RECEBIDOS: é o único número aqui que pede
         // uma ação, e sem ele o convite ficaria esperando alguém abrir a aba.
-        { label: "Amigos", screen: "amigos", icon: "user", badge: convites ? String(convites) : undefined },
+        { label: "Amigos", screen: "amigos", icon: "users", badge: convites ? String(convites) : undefined },
       ],
     },
     {

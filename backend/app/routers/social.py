@@ -38,7 +38,8 @@ from supabase import Client
 from app.config import settings
 from app.database import get_supabase
 from app.deps import client_ip, get_current_user
-from app.services import limites, usernames
+from app.services import limites, sequencia_dupla, usernames
+from app.services.progress import local_today
 
 router = APIRouter(prefix="/social", tags=["pessoas"])
 
@@ -458,9 +459,21 @@ def listar_amigos(
     minhas = _minhas_tags(supabase, user_id)
     grupos: dict[str, list[dict[str, Any]]] = {"amigos": [], "recebidos": [], "enviados": []}
     chave = {"amigos": "amigos", "recebido": "recebidos", "enviado": "enviados"}
+    # A sequência em dupla só existe entre amigos: ela revela em que dias a
+    # outra pessoa estudou (ver services/sequencia_dupla.py).
+    hoje = local_today(current_user.get("timezone_name"))
+    meus_dias: set | None = None
     for outro, relacao in relacoes.items():
-        if outro in cartoes:
-            grupos[chave[relacao["relacao"]]].append(_publico(cartoes[outro], minhas))
+        if outro not in cartoes:
+            continue
+        cartao = _publico(cartoes[outro], minhas)
+        if relacao["relacao"] == "amigos":
+            if meus_dias is None:
+                meus_dias = sequencia_dupla.dias_de_estudo(supabase, user_id, hoje)
+            cartao["sequencia"] = sequencia_dupla.calcular(
+                meus_dias, sequencia_dupla.dias_de_estudo(supabase, outro, hoje), hoje
+            )
+        grupos[chave[relacao["relacao"]]].append(cartao)
     for lista in grupos.values():
         lista.sort(key=lambda c: (c.get("name") or "").lower())
     return grupos

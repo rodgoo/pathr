@@ -44,6 +44,7 @@ class Cidade:
     lat: float
     lon: float
     capital: bool
+    fuso: str = "America/Sao_Paulo"
 
     def para_tela(self) -> dict[str, object]:
         return {"ibge": self.ibge, "nome": self.nome, "uf": self.uf, "capital": self.capital}
@@ -67,6 +68,35 @@ def uf_de(estado: Optional[str]) -> Optional[str]:
     return _UF_POR_NOME.get(normaliza(limpo))
 
 
+# O fuso de cada UF quando a cidade não se acha. Dentro do estado há exceções
+# (o oeste do Amazonas em Rio Branco, Fernando de Noronha), e essas vêm da
+# base de municípios, cidade a cidade.
+FUSO_DA_UF: dict[str, str] = {
+    "AC": "America/Rio_Branco", "AM": "America/Manaus", "RO": "America/Porto_Velho",
+    "RR": "America/Boa_Vista", "MT": "America/Cuiaba", "MS": "America/Campo_Grande",
+    "TO": "America/Araguaina", "BA": "America/Bahia",
+}
+FUSO_PADRAO = "America/Sao_Paulo"
+
+
+def _fuso_oficial(uf: str, fuso: str) -> str:
+    """A base usa "America/Porto_Velho" para todo o UTC-4; o nome oficial de
+    cada estado é outro (Manaus, Cuiabá…). O relógio é o mesmo, mas é o nome
+    do estado que a pessoa reconhece se um dia o vir numa tela."""
+    if fuso in ("America/Porto_Velho", "America/Sao_Paulo", ""):
+        return FUSO_DA_UF.get(uf, fuso or FUSO_PADRAO)
+    return fuso
+
+
+def fuso_de(cidade: Optional[str], estado: Optional[str]) -> str:
+    """O fuso IANA de onde a pessoa mora: pela cidade, senão pela UF, senão
+    o de Brasília."""
+    achada = achar(cidade, estado)
+    if achada:
+        return achada.fuso
+    return FUSO_DA_UF.get(uf_de(estado) or "", FUSO_PADRAO)
+
+
 @lru_cache(maxsize=1)
 def _cidades() -> tuple[Cidade, ...]:
     with _ARQUIVO.open(encoding="utf-8", newline="") as arquivo:
@@ -78,6 +108,7 @@ def _cidades() -> tuple[Cidade, ...]:
                 lat=float(linha["lat"]),
                 lon=float(linha["lon"]),
                 capital=linha["capital"] == "1",
+                fuso=_fuso_oficial(linha["uf"], linha.get("fuso") or ""),
             )
             for linha in csv.DictReader(arquivo)
         )

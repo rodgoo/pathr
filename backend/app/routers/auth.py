@@ -61,7 +61,7 @@ from app.security import (
     verify_password,
     verify_totp_code,
 )
-from app.services import limites, usernames
+from app.services import geo, limites, usernames
 from app.services.moderacao import e_moderador
 from app.services.email import send_password_reset, send_verification_email
 
@@ -308,6 +308,9 @@ def signup(
         "email": email,
         "name": payload.name.strip(),
         "password_hash": hash_password(payload.password),
+        # O dia de estudo vira à meia-noite de onde a pessoa mora, não de
+        # Brasília (ver services/geo.fuso_de).
+        "timezone_name": geo.fuso_de(payload.city, payload.state),
     }
     # O índice único é quem garante o @: duas pessoas "Ana Souza" no mesmo
     # segundo passam as duas pela checagem, e só a segunda é recusada. Para

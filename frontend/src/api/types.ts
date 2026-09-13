@@ -50,6 +50,17 @@ export interface PessoaCartao {
   em_comum?: string[];
   /** Os dois têm exatamente as mesmas tecnologias. */
   mesma_stack?: boolean;
+  /** Só entre amigos: os dias seguidos em que os dois estudaram. */
+  sequencia?: SequenciaDupla;
+}
+
+export interface SequenciaDupla {
+  atual: number;
+  recorde: number;
+  /** Quem olha já estudou hoje. */
+  hoje_voce: boolean;
+  /** O amigo já estudou hoje. */
+  hoje_amigo: boolean;
 }
 
 export interface Amizades {

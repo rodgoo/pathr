@@ -18,7 +18,7 @@ from supabase import Client
 from app.config import settings
 from app.database import get_supabase
 from app.deps import get_current_user
-from app.services import progresso
+from app.services import geo, progresso
 from app.services.progress import minutos_de_leitura
 from app.schemas.auth import SignupRequest
 
@@ -143,6 +143,17 @@ def update_profile(
         .execute()
         .data
     )
+    if rows and ("city" in update or "state" in update):
+        # O fuso sai de onde a pessoa mora: é por ele que o "dia" do streak, da
+        # sequência com os amigos e dos avisos por e-mail vira à meia-noite
+        # dela. Com o padrão de Brasília, quem mora em Manaus perdia a
+        # sequência às 23h locais.
+        try:
+            supabase.table("pathr_user").update(
+                {"timezone_name": geo.fuso_de(rows[0].get("city"), rows[0].get("state"))}
+            ).eq("id", str(current_user["id"])).execute()
+        except Exception:  # noqa: BLE001
+            logger.warning("não consegui atualizar o fuso de %s", current_user["id"])
     return _com_avisos(rows[0]) if rows else {}
 
 
