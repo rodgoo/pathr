@@ -27,6 +27,7 @@ from app.ai_providers import AiProviderError
 from app.config import settings
 from app.database import get_supabase
 from app.deps import get_current_user
+from app.services import cifra
 from app.services.resume_parser import parse_resume_with_fallback
 from app.services.tag_catalog import TagCatalog
 from app.services.text_extract import extract_text, normalize_kind
@@ -50,7 +51,19 @@ def _owned(supabase: Client, resume_id: str, user_id: str) -> dict[str, Any]:
     )
     if not rows:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Currículo não encontrado.")
-    return rows[0]
+    return _decifrado(rows[0])
+
+
+def _decifrado(resume: dict[str, Any]) -> dict[str, Any]:
+    """A linha com o texto extraído e os dados lidos em claro, para uso nesta
+    requisição. No banco os dois ficam cifrados (services/cifra.py): o
+    currículo tem nome, e-mail, telefone e histórico de quem o enviou."""
+    user_id = str(resume.get("user_id") or "")
+    return {
+        **resume,
+        "raw_text": cifra.decifrar(resume.get("raw_text"), cifra.ctx_curriculo_texto(user_id)),
+        "parsed": cifra.decifrar_json(resume.get("parsed"), cifra.ctx_curriculo_dados(user_id)),
+    }
 
 
 def _public(resume: dict[str, Any]) -> dict[str, Any]:
@@ -109,7 +122,7 @@ async def upload_resume(
         .data
     )
     if existing:
-        return {**_public(existing[0]), "reused": True}
+        return {**_public(_decifrado(existing[0])), "reused": True}
 
     extraction = extract_text(data, kind)
     storage_path = _store_file(supabase, user_id, content_hash, kind, data, file.content_type)
@@ -124,7 +137,7 @@ async def upload_resume(
                 "size_bytes": len(data),
                 "content_hash": content_hash,
                 "storage_path": storage_path,
-                "raw_text": extraction.text[:200_000] or None,
+                "raw_text": cifra.cifrar(extraction.text[:200_000] or None, cifra.ctx_curriculo_texto(user_id)),
                 "status": "pending",
                 # Nota da extração já entra aqui: se o PDF for digitalizado,
                 # o usuário vê o motivo antes mesmo de mandar ler.
@@ -134,7 +147,7 @@ async def upload_resume(
         .execute()
         .data[0]
     )
-    return {**_public(created), "reused": False}
+    return {**_public(_decifrado(created)), "reused": False}
 
 
 def _store_file(
@@ -152,7 +165,8 @@ def _store_file(
     try:
         supabase.storage.from_(settings.resume_bucket).upload(
             path,
-            data,
+            # Cifrado: quem abrir o bucket por fora vê bytes sem sentido.
+            cifra.cifrar_bytes(data, cifra.ctx_arquivo(settings.resume_bucket, path)),
             {"content-type": content_type or "application/octet-stream", "upsert": "true"},
         )
     except Exception:  # noqa: BLE001
@@ -175,7 +189,7 @@ def list_resumes(
         .data
         or []
     )
-    return [_public(row) for row in rows]
+    return [_public(_decifrado(row)) for row in rows]
 
 
 @router.get("/{resume_id}")
@@ -241,7 +255,7 @@ async def parse_resume_endpoint(
         supabase.table("pathr_resume")
         .update(
             {
-                "parsed": parsed,
+                "parsed": cifra.cifrar_json(parsed, cifra.ctx_curriculo_dados(user_id)),
                 "status": "parsed",
                 "error": None,
                 "parsed_at": _now().isoformat(),
@@ -261,7 +275,7 @@ async def parse_resume_endpoint(
         latency_ms=ai_result.latency_ms,
         output={"tecnologias": len(parsed.get("tecnologias") or [])},
     )
-    return _public(updated)
+    return _public(_decifrado(updated))
 
 
 def _load_file(supabase: Client, resume: dict) -> Optional[bytes]:
@@ -269,9 +283,10 @@ def _load_file(supabase: Client, resume: dict) -> Optional[bytes]:
     if not path:
         return None
     try:
-        return supabase.storage.from_(settings.resume_bucket).download(path)
+        dados = supabase.storage.from_(settings.resume_bucket).download(path)
     except Exception:  # noqa: BLE001
         return None
+    return cifra.decifrar_bytes(dados, cifra.ctx_arquivo(settings.resume_bucket, path))
 
 
 def _open_ai_job(supabase: Client, user_id: str, resume_id: str) -> Optional[str]:

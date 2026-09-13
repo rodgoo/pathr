@@ -40,7 +40,7 @@ from app.config import settings
 from app.database import get_supabase
 from app.deps import get_current_user
 from app.routers.profile import _IMAGENS, _tipo_real
-from app.services import limites
+from app.services import cifra, limites
 from app.services.moderacao import e_moderador
 
 router = APIRouter(prefix="/relatos", tags=["relatos"])
@@ -58,15 +58,20 @@ def _nao_encontrado(detalhe: str = "Relato não encontrado.") -> HTTPException:
     return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=detalhe)
 
 
+def _texto(relato: dict[str, Any], coluna: str) -> Optional[str]:
+    """Mensagem e resposta ficam cifradas no banco (services/cifra.py)."""
+    return cifra.decifrar(relato.get(coluna), cifra.ctx_relato(str(relato.get("user_id") or ""), coluna))
+
+
 def _publico(relato: dict[str, Any]) -> dict[str, Any]:
     return {
         "id": str(relato["id"]),
         "kind": relato.get("kind"),
-        "message": relato.get("message"),
+        "message": _texto(relato, "message"),
         "page": relato.get("page"),
         "has_attachment": bool(relato.get("attachment_path")),
         "status": relato.get("status"),
-        "moderator_note": relato.get("moderator_note"),
+        "moderator_note": _texto(relato, "moderator_note"),
         "created_at": relato.get("created_at"),
         "updated_at": relato.get("updated_at"),
     }
@@ -79,6 +84,7 @@ def _guardar_foto(supabase: Client, caminho: str, dados: bytes, tipo: str) -> No
     um relato perdido porque ninguém rodou o bootstrap é o tipo de falha que
     só aparece quando alguém tenta reclamar de algo.
     """
+    dados = cifra.cifrar_bytes(dados, cifra.ctx_arquivo(settings.report_bucket, caminho))
     bucket = supabase.storage.from_(settings.report_bucket)
     try:
         bucket.upload(caminho, dados, {"content-type": tipo, "upsert": "false"})
@@ -140,7 +146,7 @@ async def relatar(
             {
                 "user_id": user_id,
                 "kind": tipo,
-                "message": mensagem,
+                "message": cifra.cifrar(mensagem, cifra.ctx_relato(user_id, "message")),
                 "page": (pagina or "").strip()[:60] or None,
                 "status": "aberto",
             }
@@ -252,12 +258,22 @@ def moderar(
 ):
     _so_moderacao(current_user)
     relato_id = _id_valido(relato_id)
+    # A resposta é cifrada com o dono do relato, não com quem modera: é quem
+    # relatou que a lê (e a exporta).
+    existente = (
+        supabase.table("pathr_report").select("user_id").eq("id", relato_id).limit(1).execute().data or []
+    )
+    if not existente:
+        raise _nao_encontrado()
+    dono = str(existente[0]["user_id"])
     atualizadas = (
         supabase.table("pathr_report")
         .update(
             {
                 "status": payload.status,
-                "moderator_note": (payload.moderator_note or "").strip() or None,
+                "moderator_note": cifra.cifrar(
+                    (payload.moderator_note or "").strip() or None, cifra.ctx_relato(dono, "moderator_note")
+                ),
                 "updated_at": _agora(),
             }
         )
@@ -290,7 +306,11 @@ def foto_do_relato(
     if tipo not in _IMAGENS:
         raise _nao_encontrado("Foto não encontrada.")
     try:
-        dados = supabase.storage.from_(settings.report_bucket).download(relato["attachment_path"])
+        # Decifrada ANTES de conferir os bytes: cifrada, nenhuma foto passaria.
+        dados = cifra.decifrar_bytes(
+            supabase.storage.from_(settings.report_bucket).download(relato["attachment_path"]),
+            cifra.ctx_arquivo(settings.report_bucket, relato["attachment_path"]),
+        )
     except Exception as exc:  # noqa: BLE001
         raise _nao_encontrado("Foto não encontrada.") from exc
     # Conferida de novo na saída: o que está no bucket é o que vai para a tela

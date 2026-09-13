@@ -61,7 +61,7 @@ from app.security import (
     verify_password,
     verify_totp_code,
 )
-from app.services import geo, limites, usernames
+from app.services import cifra, geo, limites, usernames
 from app.services.moderacao import e_moderador
 from app.services.email import send_password_reset, send_verification_email
 
@@ -343,7 +343,8 @@ def signup(
     supabase.table("pathr_profile").insert(
         {
             "user_id": user_id,
-            "birth_date": payload.birth_date.isoformat(),
+            # Cifrada no banco (services/cifra.py).
+            "birth_date": cifra.cifrar(payload.birth_date.isoformat(), cifra.ctx_nascimento(user_id)),
             "city": payload.city.strip(),
             "state": payload.state.strip(),
             "country": payload.country,

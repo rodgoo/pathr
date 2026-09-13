@@ -276,7 +276,9 @@ class PathrProfile(SQLModel, table=True):
     # porque não autentica nada: é dado pessoal, do mesmo tipo do resto deste
     # arquivo. A data é `date` e não `datetime` de propósito — nascimento não
     # tem hora, e guardar uma inventaria fuso onde não existe.
-    birth_date: Optional[date] = Field(default=None, sa_type=sa.Date)
+    # Texto CIFRADO (AES-256-GCM, services/cifra.py), não `date`: a data em
+    # claro só existe na memória do servidor. Ver migração 0024.
+    birth_date: Optional[str] = Field(default=None)
     city: Optional[str] = Field(default=None)
     state: Optional[str] = Field(default=None)  # UF, duas letras no Brasil
     # Até onde a pessoa vai numa vaga presencial ou híbrida. Nulo = padrão

@@ -26,7 +26,7 @@ import { CampoUsername } from "@/components/social/CampoUsername";
 import { C, TEXT } from "@/lib/tokens";
 
 /** Idade mínima, igual à do servidor (backend/app/schemas/auth.py). */
-const IDADE_MINIMA = 14;
+const IDADE_MINIMA = 18;
 
 function problems(password: string): string[] {
   const found: string[] = [];

@@ -9,7 +9,7 @@ from pydantic import BaseModel, EmailStr, Field, field_validator
 # Limites de idade do cadastro. O piso existe porque abaixo dele o tratamento
 # de dados de menor exige consentimento de responsável, que este app não
 # coleta. O teto é só sanidade: pega o dedo que digitou 1902 em vez de 1992.
-IDADE_MINIMA = 14
+IDADE_MINIMA = 18
 IDADE_MAXIMA = 110
 
 

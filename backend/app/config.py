@@ -98,6 +98,14 @@ class Settings(BaseSettings):
     # repouso. Gere com: python -c "from cryptography.fernet import Fernet;
     # print(Fernet.generate_key().decode())"
     mfa_encryption_key: str = ""
+    # AES-256-GCM dos dados sensíveis (services/cifra.py): 32 bytes em base64
+    # url-safe. Gere com: python -c "import os,base64;
+    # print(base64.urlsafe_b64encode(os.urandom(32)).decode())"
+    # Guarde uma cópia fora do Fly: perder a chave é perder os dados cifrados.
+    data_encryption_key: str = ""
+    # Chaves anteriores, separadas por vírgula, só para LER o que foi cifrado
+    # antes de uma troca de chave.
+    data_encryption_keys_old: str = ""
     access_token_minutes: int = 30
     refresh_token_days: int = 30
     # Tentativas de senha erradas antes do bloqueio temporário da conta.

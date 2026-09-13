@@ -33,7 +33,7 @@ from supabase import Client
 from app.config import settings
 from app.database import get_supabase
 from app.services import email as emails
-from app.services import erros
+from app.services import cifra, erros
 
 router = APIRouter(prefix="/jobs/varredura", tags=["operação"])
 
@@ -62,7 +62,7 @@ def _desde(horas: int) -> str:
 def _relatos(supabase: Client, horas: int) -> list[dict[str, Any]]:
     linhas = (
         supabase.table("pathr_report")
-        .select("id,kind,message,page,status,attachment_path,created_at")
+        .select("id,user_id,kind,message,page,status,attachment_path,created_at")
         .gte("created_at", _desde(horas))
         .order("created_at")
         .execute()
@@ -75,7 +75,11 @@ def _relatos(supabase: Client, horas: int) -> list[dict[str, Any]]:
         {
             "id": str(linha["id"]),
             "tipo": linha.get("kind"),
-            "mensagem": linha.get("message"),
+            # Decifrada aqui e nunca guardada assim: sai só para o Notion da
+            # moderação, sem autor.
+            "mensagem": cifra.decifrar(
+                linha.get("message"), cifra.ctx_relato(str(linha.get("user_id") or ""), "message")
+            ),
             "pagina": linha.get("page"),
             "status": linha.get("status"),
             "tem_foto": bool(linha.get("attachment_path")),

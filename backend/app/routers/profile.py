@@ -18,7 +18,7 @@ from supabase import Client
 from app.config import settings
 from app.database import get_supabase
 from app.deps import get_current_user
-from app.services import geo, progresso
+from app.services import cifra, geo, progresso
 from app.services.progress import minutos_de_leitura
 from app.schemas.auth import SignupRequest
 
@@ -95,6 +95,10 @@ def _com_avisos(perfil: dict[str, Any]) -> dict[str, Any]:
     sempre. Sem isso o frontend teria que conhecer os padrões também, e os dois
     lados sairiam de sincronia no primeiro aviso novo.
     """
+    if perfil.get("birth_date"):
+        perfil["birth_date"] = cifra.decifrar(
+            perfil["birth_date"], cifra.ctx_nascimento(str(perfil.get("user_id") or ""))
+        )
     guardado = perfil.get("notifications") or {}
     perfil["notifications"] = {
         chave: bool(guardado.get(chave, padrao)) for chave, padrao in AVISOS.items()
@@ -135,6 +139,12 @@ def update_profile(
             **{k: bool(v) for k, v in recebido.items() if k in AVISOS},
         }
 
+    if update.get("birth_date") is not None:
+        # Cifrada no banco (services/cifra.py); a validação de idade já rodou
+        # sobre a data em claro, no modelo.
+        update["birth_date"] = cifra.cifrar(
+            update["birth_date"].isoformat(), cifra.ctx_nascimento(str(current_user["id"]))
+        )
     update["updated_at"] = _now().isoformat()
     rows = (
         supabase.table("pathr_profile")
@@ -245,7 +255,9 @@ async def upload_avatar(
     caminho = f"{user_id}/avatar.{_IMAGENS[tipo]}"
     try:
         supabase.storage.from_(settings.avatar_bucket).upload(
-            caminho, data, {"content-type": tipo, "upsert": "true"}
+            caminho,
+            cifra.cifrar_bytes(data, cifra.ctx_arquivo(settings.avatar_bucket, caminho)),
+            {"content-type": tipo, "upsert": "true"},
         )
     except Exception as exc:  # noqa: BLE001
         # Aqui NÃO é best-effort, ao contrário do currículo: lá os bytes já
@@ -296,7 +308,10 @@ def get_avatar(
     if not caminho:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sem foto de perfil.")
     try:
-        data = supabase.storage.from_(settings.avatar_bucket).download(caminho)
+        data = cifra.decifrar_bytes(
+            supabase.storage.from_(settings.avatar_bucket).download(caminho),
+            cifra.ctx_arquivo(settings.avatar_bucket, caminho),
+        )
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Foto de perfil não encontrada."
@@ -598,6 +613,13 @@ def export_data(
     # pessoa já tem no arquivo original, e que inchariam o JSON sem acrescentar.
     for curriculo in dados.get("pathr_resume") or []:
         curriculo.pop("raw_text", None)
+        curriculo["parsed"] = _ou_indisponivel(
+            lambda: cifra.decifrar_json(curriculo.get("parsed"), cifra.ctx_curriculo_dados(user_id))
+        )
+    for perfil in dados.get("pathr_profile") or []:
+        perfil["birth_date"] = _ou_indisponivel(
+            lambda: cifra.decifrar(perfil.get("birth_date"), cifra.ctx_nascimento(user_id))
+        )
 
     dados["relatos"] = _relatos_para_exportar(supabase, user_id)
     dados["amizades"] = _amizades_para_exportar(supabase, user_id)
@@ -614,7 +636,20 @@ def _relatos_para_exportar(supabase: Client, user_id: str) -> list[dict[str, Any
     for linha in linhas:
         linha["tinha_foto"] = bool(linha.pop("attachment_path", None))
         linha.pop("attachment_type", None)
+        for coluna in ("message", "moderator_note"):
+            linha[coluna] = _ou_indisponivel(
+                lambda: cifra.decifrar(linha.get(coluna), cifra.ctx_relato(user_id, coluna))
+            )
     return linhas
+
+
+def _ou_indisponivel(ler):
+    """Um campo que não decifra (chave trocada sem a antiga) não derruba a
+    exportação inteira: sai marcado, e o resto do arquivo vai."""
+    try:
+        return ler()
+    except cifra.CifraIndisponivel:
+        return "(não foi possível decifrar)"
 
 
 def _amizades_para_exportar(supabase: Client, user_id: str) -> list[dict[str, Any]]:

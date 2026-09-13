@@ -66,7 +66,7 @@ export const PRIVACIDADE: DocumentoLegal = {
           <Subtitulo>Perfil</Subtitulo>
           <Lista
             itens={[
-              "Data de nascimento, cidade, estado (UF) e país.",
+              "Data de nascimento (guardada cifrada), cidade, estado (UF) e país.",
               "Cargo atual, cargo ou objetivo desejado, senioridade, anos de experiência, horas de estudo por semana, estilo de aprendizado e objetivos.",
               "Opcionais: título, bio, links do LinkedIn e do GitHub e foto de perfil.",
               "Preferências de avisos por e-mail, se você aparece nas sugestões de pessoas e o raio de busca de vagas presenciais.",
@@ -148,7 +148,7 @@ export const PRIVACIDADE: DocumentoLegal = {
               </>,
               <>
                 <Forte>Verificar a idade mínima</Forte>: a data de nascimento é usada para confirmar que você tem ao menos
-                14 anos.
+                18 anos.
               </>,
               <>
                 <Forte>Moderação e melhoria do app</Forte> (legítimo interesse): analisar os relatos enviados e corrigir
@@ -358,9 +358,9 @@ export const PRIVACIDADE: DocumentoLegal = {
       titulo: "Idade mínima",
       corpo: (
         <P>
-          É preciso ter ao menos <Forte>14 anos</Forte> para criar uma conta; o cadastro confere a data de nascimento.
-          Dados de adolescentes são tratados no seu melhor interesse (art. 14 da LGPD), e recomendamos que quem tem
-          menos de 18 anos use o PathR com o conhecimento dos pais ou responsáveis.
+          O PathR é só para maiores de idade: é preciso ter ao menos <Forte>18 anos</Forte> para criar uma conta, e o
+          cadastro confere a data de nascimento. Se soubermos de uma conta de alguém com menos de 18 anos, ela é
+          encerrada e os dados são apagados.
         </P>
       ),
     },

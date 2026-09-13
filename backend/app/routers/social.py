@@ -38,7 +38,7 @@ from supabase import Client
 from app.config import settings
 from app.database import get_supabase
 from app.deps import client_ip, get_current_user
-from app.services import limites, sequencia_dupla, usernames
+from app.services import cifra, limites, sequencia_dupla, usernames
 from app.services.progress import local_today
 
 router = APIRouter(prefix="/social", tags=["pessoas"])
@@ -606,7 +606,10 @@ def avatar_de(
         if not perfil.get("discoverable", True):
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sem foto de perfil.")
     try:
-        dados = supabase.storage.from_(settings.avatar_bucket).download(alvo["avatar_path"])
+        dados = cifra.decifrar_bytes(
+            supabase.storage.from_(settings.avatar_bucket).download(alvo["avatar_path"]),
+            cifra.ctx_arquivo(settings.avatar_bucket, alvo["avatar_path"]),
+        )
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sem foto de perfil.") from exc
     extensao = str(alvo["avatar_path"]).rsplit(".", 1)[-1].lower()

@@ -2,7 +2,7 @@
  * Termos de uso.
  *
  * O que o PathR oferece, o que se espera de quem usa e os limites do que o app
- * promete. A idade mínima (14) vem de backend/app/schemas/auth.py; o resto do
+ * promete. A idade mínima (18) vem de backend/app/schemas/auth.py; o resto do
  * que é fato técnico está detalhado em Privacidade.tsx e Seguranca.tsx, e aqui
  * só é referido — duas descrições do mesmo fato divergiriam.
  */
@@ -17,7 +17,7 @@ export const TERMOS: DocumentoLegal = {
   introducao:
     "As regras para usar o PathR: o que o app oferece, o que esperamos de quem usa e o que cabe a cada parte. Ao criar uma conta ou usar o app, você concorda com estes termos.",
   resumo: [
-    "O PathR é uma ferramenta gratuita de plano de estudos; é preciso ter ao menos 14 anos.",
+    "O PathR é uma ferramenta gratuita de plano de estudos, só para maiores de 18 anos.",
     "O conteúdo gerado por IA pode conter erros e não garante emprego, promoção ou certificação.",
     "Seu currículo e o que você escreve continuam seus; usamos só para fazer o app funcionar para você.",
     "Respeito nos recursos sociais: nada de assédio, spam, raspagem de dados ou dados de terceiros.",
@@ -65,8 +65,8 @@ export const TERMOS: DocumentoLegal = {
         <Lista
           itens={[
             <>
-              É preciso ter <Forte>ao menos 14 anos</Forte>. Se você tem menos de 18, use o PathR com o conhecimento dos
-              seus pais ou responsáveis.
+              É preciso ter <Forte>ao menos 18 anos</Forte>. Contas de menores de idade são encerradas e os dados
+              apagados.
             </>,
             "Informe dados verdadeiros e mantenha o e-mail atualizado — é por ele que você confirma a conta e recupera a senha.",
             "A conta é pessoal. Você é responsável por manter a senha em sigilo e pelo que for feito com o seu acesso; se suspeitar de uso indevido, troque a senha e encerre as sessões.",
