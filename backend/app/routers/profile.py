@@ -7,6 +7,7 @@ tempo da tela no pior caso das cinco, e nenhuma delas é reaproveitada em
 outro lugar.
 """
 
+import logging
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Optional
 
@@ -22,6 +23,7 @@ from app.services.progress import minutos_de_leitura
 from app.schemas.auth import SignupRequest
 
 router = APIRouter(prefix="/profile", tags=["perfil"])
+logger = logging.getLogger("pathr.privacidade")
 
 
 class ProfileUpdate(BaseModel):
@@ -585,7 +587,72 @@ def export_data(
     # pessoa já tem no arquivo original, e que inchariam o JSON sem acrescentar.
     for curriculo in dados.get("pathr_resume") or []:
         curriculo.pop("raw_text", None)
+
+    dados["relatos"] = _relatos_para_exportar(supabase, user_id)
+    dados["amizades"] = _amizades_para_exportar(supabase, user_id)
     return dados
+
+
+def _relatos_para_exportar(supabase: Client, user_id: str) -> list[dict[str, Any]]:
+    """Os relatos da pessoa, com a resposta da moderação. O caminho interno da
+    foto não sai: é detalhe do storage, não dado dela — sai só se havia foto."""
+    try:
+        linhas = supabase.table("pathr_report").select("*").eq("user_id", user_id).execute().data or []
+    except Exception:  # noqa: BLE001
+        return []
+    for linha in linhas:
+        linha["tinha_foto"] = bool(linha.pop("attachment_path", None))
+        linha.pop("attachment_type", None)
+    return linhas
+
+
+def _amizades_para_exportar(supabase: Client, user_id: str) -> list[dict[str, Any]]:
+    """Amizades e convites, com o @ da outra pessoa — e só o @.
+
+    O arquivo é da pessoa que pediu; nome, e-mail ou foto da outra ponta são
+    dados de outra conta e não entram."""
+    try:
+        linhas = (
+            supabase.table("pathr_friendship").select("*")
+            .or_(f"requester_id.eq.{user_id},addressee_id.eq.{user_id}")
+            .execute().data or []
+        )
+        outros = [
+            str(l["addressee_id"] if str(l["requester_id"]) == user_id else l["requester_id"]) for l in linhas
+        ]
+        arrobas = {
+            str(u["id"]): u.get("username")
+            for u in (
+                supabase.table("pathr_user").select("id,username").in_("id", outros).execute().data or []
+            )
+        } if outros else {}
+    except Exception:  # noqa: BLE001
+        return []
+    saida = []
+    for linha in linhas:
+        enviei = str(linha["requester_id"]) == user_id
+        outro = str(linha["addressee_id"] if enviei else linha["requester_id"])
+        if linha.get("status") == "accepted":
+            situacao = "amigos"
+        else:
+            situacao = "convite enviado" if enviei else "convite recebido"
+        saida.append({"com": arrobas.get(outro), "situacao": situacao, "desde": linha.get("created_at")})
+    return saida
+
+
+def _apagar_arquivos(supabase: Client, bucket: str, caminhos: list[str]) -> None:
+    """Remove arquivos do storage sem derrubar a exclusão da conta.
+
+    Se o storage falhar, a conta é apagada mesmo assim — manter a conta viva
+    por causa de um arquivo seria o pior dos dois mundos — e a falha fica no
+    log com o bucket e a quantidade, para a limpeza ser refeita à mão."""
+    caminhos = [c for c in caminhos if c]
+    if not caminhos:
+        return
+    try:
+        supabase.storage.from_(bucket).remove(caminhos)
+    except Exception:  # noqa: BLE001
+        logger.warning("exclusão de conta: %d arquivo(s) ficaram em %s", len(caminhos), bucket, exc_info=True)
 
 
 @router.delete("/account", status_code=status.HTTP_204_NO_CONTENT)
@@ -605,9 +672,42 @@ def delete_account(
     que ela mandou apagar.
     """
     user_id = str(current_user["id"])
+
+    # Os ARQUIVOS primeiro, enquanto as linhas que dizem onde eles estão ainda
+    # existem. A cascata do banco apaga as linhas, mas não sabe nada do storage:
+    # antes disto o currículo, a foto e as fotos dos relatos ficavam nos buckets
+    # depois de a pessoa mandar apagar tudo.
+    def caminhos(tabela: str, coluna: str) -> list[str]:
+        try:
+            return [
+                str(l[coluna])
+                for l in supabase.table(tabela).select(coluna).eq("user_id", user_id).execute().data or []
+                if l.get(coluna)
+            ]
+        except Exception:  # noqa: BLE001
+            return []
+
+    _apagar_arquivos(supabase, settings.resume_bucket, caminhos("pathr_resume", "storage_path"))
+    _apagar_arquivos(supabase, settings.report_bucket, caminhos("pathr_report", "attachment_path"))
+    _apagar_arquivos(supabase, settings.avatar_bucket, [current_user.get("avatar_path") or ""])
+
+    # Tabelas que a lista de exportação não cobre, mas que são da pessoa:
+    # relatos, amizades (as duas pontas) e a trilha de segurança — IP e
+    # navegador de cada login não têm por que sobreviver à conta.
+    extras = (
+        ("pathr_report", "user_id"),
+        ("pathr_friendship", "requester_id"),
+        ("pathr_friendship", "addressee_id"),
+        ("pathr_security_event", "user_id"),
+    )
     for tabela in _TABELAS_DO_USUARIO:
         try:
             supabase.table(tabela).delete().eq("user_id", user_id).execute()
+        except Exception:  # noqa: BLE001
+            continue
+    for tabela, coluna in extras:
+        try:
+            supabase.table(tabela).delete().eq(coluna, user_id).execute()
         except Exception:  # noqa: BLE001
             continue
     supabase.table("pathr_user").delete().eq("id", user_id).execute()

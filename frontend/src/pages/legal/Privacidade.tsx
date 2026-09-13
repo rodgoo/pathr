@@ -310,8 +310,9 @@ export const PRIVACIDADE: DocumentoLegal = {
               </>,
               <>
                 <Forte>Registros de segurança e de erros</Forte>: por tempo limitado, pelo necessário para proteger as
-                contas e corrigir defeitos. Registros de segurança (tipo de evento, data, IP e navegador) podem
-                permanecer após a exclusão da conta, para prevenção a fraudes e defesa de direitos (art. 16 da LGPD).
+                contas e corrigir defeitos. Os registros de segurança ligados à sua conta (tipo de evento, data, IP e
+                navegador) são apagados junto com ela; tentativas de acesso que não chegaram a identificar uma conta
+                não têm dono e ficam só pelo tempo de prevenção a fraudes (art. 16 da LGPD).
               </>,
               <>
                 <Forte>Triagem no Notion</Forte>: os relatos copiados, que não identificam o autor, podem ser mantidos
@@ -319,9 +320,10 @@ export const PRIVACIDADE: DocumentoLegal = {
               </>,
             ]}
           />
-          <Nota tom="atencao">
-            Para garantir a remoção imediata dos arquivos enviados, apague o currículo e a foto de perfil nas próprias
-            telas antes de excluir a conta, ou peça a remoção pelo e-mail <EmailContato />.
+          <Nota>
+            Ao excluir a conta, os arquivos enviados — currículos, foto de perfil e fotos anexadas a relatos — são
+            removidos do armazenamento junto com os dados. Se algo ficar para trás por falha técnica, peça a remoção
+            pelo e-mail <EmailContato />.
           </Nota>
         </>
       ),
@@ -334,12 +336,12 @@ export const PRIVACIDADE: DocumentoLegal = {
           <P>A LGPD (art. 18) garante a você, entre outros, os direitos abaixo. A maioria pode ser exercida no próprio app:</P>
           <Fichas
             itens={[
-              { nome: "Acesso e portabilidade", papel: "Configurações › Avisos e privacidade", detalhe: "“Exportar meus dados” baixa um arquivo JSON com conta, perfil, competências, currículos (sem o texto extraído), roadmap, quizzes, atividade, idiomas, materiais, cursos, explicações e checklists." },
+              { nome: "Acesso e portabilidade", papel: "Configurações › Avisos e privacidade", detalhe: "“Exportar meus dados” baixa um arquivo JSON com conta, perfil, competências, currículos (sem o texto extraído), roadmap, quizzes, atividade, idiomas, materiais, cursos, explicações, checklists, relatos e amizades (só com o @ da outra pessoa)." },
               { nome: "Correção", papel: "Configurações e Perfil", detalhe: "Nome, dados do perfil, objetivo, competências e preferências podem ser editados a qualquer momento." },
-              { nome: "Eliminação", papel: "Configurações › Avisos e privacidade", detalhe: "“Excluir conta” apaga a conta e os dados vinculados. Currículos podem ser apagados um a um." },
+              { nome: "Eliminação", papel: "Configurações › Avisos e privacidade", detalhe: "“Excluir conta” apaga a conta, os dados vinculados, os arquivos enviados, relatos, amizades e registros de segurança da conta. Currículos também podem ser apagados um a um." },
               { nome: "Revogar consentimento e se opor", papel: "Configurações › Avisos e privacidade", detalhe: "Desligue avisos por e-mail e a opção de aparecer nas sugestões." },
               { nome: "Informação", papel: "Esta página", detalhe: "Com quem compartilhamos, para que e por quanto tempo." },
-              { nome: "Demais pedidos", papel: "Por e-mail", detalhe: "Amizades e relatos não entram no arquivo exportado; peça esses dados, ou qualquer outro direito, por e-mail." },
+              { nome: "Demais pedidos", papel: "Por e-mail", detalhe: "Qualquer outro direito, ou dúvida sobre o que guardamos, pode ser pedido por e-mail." },
             ]}
           />
           <P>
