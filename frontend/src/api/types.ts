@@ -427,6 +427,8 @@ export interface ExplanationResult {
   gaps: ExplanationGap[];
   /** Quantas lacunas entraram na fila de revisao (as repetidas nao entram). */
   viraram_revisao?: number;
+  /** A resposta nao corresponde ao pedido (outro assunto, ordem ao corretor). */
+  fora_do_tema?: boolean;
   created_at?: string;
 }
 

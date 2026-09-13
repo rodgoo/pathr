@@ -23,6 +23,7 @@ import type { RoadmapNode } from "@/api/types";
 import { ACC3, C, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { Kicker, Panel } from "@/components/ui/primitives";
+import { EditorDeCodigo } from "@/components/ui/EditorDeCodigo";
 
 /** Quanto tempo sem digitar antes de gravar. Curto o bastante para não perder
  * trabalho, longo o bastante para não mandar uma requisição por tecla. */
@@ -88,10 +89,13 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
     try {
       // O conceito sai do título do módulo: é o que a pessoa está estudando, e
       // pedir para ela digitá-lo de novo seria burocracia antes do exercício.
+      // `atividade`: corrigida pelo que o módulo pede (a tarefa vem do banco),
+      // lendo os comentários como a explicação da pessoa — não como ensaio.
       const resultado = await explanationsApi.submit({
         concept: node.title,
         content: answer.trim(),
         node_id: node.id,
+        modo: "atividade",
       });
       setCorrecao(resultado);
     } catch (caught) {
@@ -133,16 +137,19 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
 
       <div className="field" style={{ marginTop: 14 }}>
         <label htmlFor="activity-answer">Sua resposta</label>
-        <textarea
+        {/* A fonte vem da classe e não daqui: inline ela venceria a regra de
+            toque do app.css, e o Safari do iPhone daria zoom ao focar. */}
+        <EditorDeCodigo
           id="activity-answer"
-          className="input campo-codigo"
           value={answer}
-          onChange={(event) => setAnswer(event.target.value)}
-          placeholder="Escreva aqui, do zero."
-          // A fonte vem da classe e não daqui: inline ela venceria a regra de
-          // toque do app.css, e o Safari do iPhone daria zoom ao focar.
-          style={{ minHeight: 200 }}
+          onChange={setAnswer}
+          placeholder={"Escreva aqui, do zero.\n\ngit push  // comentários explicam o que o comando faz"}
+          describedBy="activity-answer-dica"
         />
+        <div id="activity-answer-dica" style={{ fontSize: 11.5, color: TEXT.faint, marginTop: 5 }}>
+          Comentários (<code>//</code>, <code>#</code>, <code>--</code>, <code>/* */</code>) contam como a sua
+          explicação. Só vale resposta para esta atividade.
+        </div>
       </div>
 
       <div style={{ marginTop: 14, display: "flex", gap: 8.4, alignItems: "center", flexWrap: "wrap" }}>
@@ -213,6 +220,26 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
  * só uma nota, e nota não ensina nada.
  */
 function Correcao({ resultado }: { resultado: ExplanationResult }) {
+  if (resultado.fora_do_tema) {
+    return (
+      <div
+        role="alert"
+        style={{
+          marginTop: 14,
+          padding: 14,
+          borderRadius: 8,
+          background: "#0c0c10",
+          borderLeft: `2px solid ${C.ambar}`,
+          fontSize: 13,
+          lineHeight: 1.55,
+        }}
+      >
+        <strong style={{ fontWeight: 500, color: C.ambar }}>Não parece uma resposta para esta atividade.</strong>{" "}
+        {resultado.feedback ?? "Escreva a solução do que o módulo pede."} Nada entrou na revisão nem contou como
+        estudo.
+      </div>
+    );
+  }
   const bom = resultado.score >= 70;
   return (
     <div

@@ -207,6 +207,56 @@ a,
   font-size: 13px;
 }
 
+/* — editor com cores (EditorDeCodigo) —
+   Duas camadas com a MESMA caixa: a colorida embaixo, o textarea de letra
+   transparente por cima. Qualquer medida que só uma delas tiver desalinha a
+   cor da letra, por isso tudo o que mexe em tamanho mora em __camada. */
+.editor-codigo {
+  position: relative;
+  border-radius: var(--radius-md);
+  background: #0c0c10;
+}
+.editor-codigo__camada {
+  box-sizing: border-box;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-md);
+  line-height: 1.6;
+  letter-spacing: normal;
+  tab-size: 2;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.editor-codigo__cores {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.editor-codigo__campo {
+  position: relative;
+  display: block;
+  resize: vertical;
+  background: transparent;
+  color: transparent;
+  caret-color: var(--color-accent);
+  border-color: var(--color-divider);
+  outline: none;
+}
+.editor-codigo__campo::placeholder {
+  color: rgba(233, 233, 237, 0.35);
+}
+.editor-codigo__campo::selection {
+  background: rgba(120, 140, 255, 0.35);
+  color: transparent;
+}
+.editor-codigo__campo:focus-visible {
+  border-color: var(--color-accent);
+}
+
 /* — alvos de toque —
 
    O app foi desenhado para o mouse: abas de 29px, pílulas de 33px, campos de

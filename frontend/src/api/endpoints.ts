@@ -363,7 +363,7 @@ export const explanations = {
    * que e a ilusao que o exercicio existe para quebrar. Vem a nota, o que se
    * sustentou e as lacunas -- e cada lacuna ja entrou na fila de revisao.
    */
-  submit: (body: { concept: string; content: string; node_id?: string }) =>
+  submit: (body: { concept: string; content: string; node_id?: string; modo?: "explicacao" | "atividade" }) =>
     api.post<ExplanationResult>("/explanations", body),
   list: (nodeId?: string) =>
     api.get<ExplanationResult[]>(nodeId ? `/explanations?node_id=${nodeId}` : "/explanations"),
