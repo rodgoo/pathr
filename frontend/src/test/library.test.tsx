@@ -12,7 +12,7 @@
  * "nada encontrado" que esconde o acervo.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { MaterialTab } from "@/components/quiz/MaterialTab";
@@ -111,4 +111,16 @@ it("em português sem resultado, diz quantos há em inglês e oferece mostrá-lo
   await userEvent.click(screen.getByRole("button", { name: "Mostrar também em inglês" }));
 
   expect(await screen.findByText("Docker docs")).toBeInTheDocument();
+});
+
+it("o que já foi concluído desce para a seção Concluído, e o que falta vem primeiro", async () => {
+  const feito = { ...doc, id: "d3", title: "Docker Compose na prática", user_status: "done" };
+  mockServer({ "GET /library": () => ({ body: [feito, doc] }) });
+  montar();
+  const secao = await screen.findByRole("region", { name: "Concluídos" });
+  expect(within(secao).getByText("Docker Compose na prática")).toBeInTheDocument();
+  expect(within(secao).queryByText("Docker docs")).not.toBeInTheDocument();
+  // O pendente aparece antes da seção no documento.
+  const pendente = screen.getByText("Docker docs");
+  expect(pendente.compareDocumentPosition(secao) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 });

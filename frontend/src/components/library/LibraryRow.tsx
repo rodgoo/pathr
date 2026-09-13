@@ -23,9 +23,9 @@ const ICON_BY_KIND: Record<string, IconName> = {
   exercise: "code",
 };
 
-/** Em curso lidera, salvo é marcador, concluído recua. */
+/** Em curso lidera, salvo é marcador, concluído é verde — a cor de "feito" no app inteiro. */
 function stateColor(state: ResourceState | null): string {
-  if (state === "done") return "rgba(233,233,237,.4)";
+  if (state === "done") return C.verde;
   if (state === "in_progress") return ACC4;
   if (state === "saved") return C.azul;
   return TEXT.faint;

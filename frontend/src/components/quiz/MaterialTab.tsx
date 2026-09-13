@@ -21,7 +21,8 @@ import { useEffect, useState } from "react";
 import { useAppState } from "@/hooks/useAppState";
 import { useQuery, type Query } from "@/hooks/useApi";
 import { curarModulo } from "@/lib/curadoria";
-import { TEXT } from "@/lib/tokens";
+import { C, TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
 import type { ContentLang } from "@/types";
 import { Chip } from "@/components/ui/Chip";
 import { Segmented } from "@/components/ui/Segmented";
@@ -233,44 +234,68 @@ function Lista({
     );
   }
 
+  const linha = (resource: Resource) => (
+    <LibraryRow
+      key={resource.id}
+      resource={resource}
+      onAbrir={() => onAbrir(resource.id)}
+      kindLabel={KIND_LABEL[resource.kind] ?? resource.kind}
+      onProgress={async (next) => {
+        resources.set((current) =>
+          current.map((item) =>
+            item.id === resource.id ? { ...item, user_status: next } : item,
+          ),
+        );
+        await libraryApi.setProgress(resource.id, {
+          status: next,
+          minutes_spent: next === "done" ? resource.duration_min ?? 0 : 0,
+        });
+      }}
+      onPosition={async (nota) => {
+        resources.set((current) =>
+          current.map((item) =>
+            item.id === resource.id ? { ...item, user_position_note: nota } : item,
+          ),
+        );
+        // O status vai junto porque a rota o exige, e ele NÃO muda aqui:
+        // anotar onde parou não conclui nem reabre nada.
+        await libraryApi.setProgress(resource.id, {
+          status: resource.user_status ?? "in_progress",
+          position_note: nota,
+        });
+      }}
+    />
+  );
+
+  // O que já foi concluído desce para uma seção própria: misturado à lista,
+  // o material que falta ficava entre itens já vistos e a pessoa tinha de
+  // ler cada etiqueta para achar o próximo.
+  const pendentes = matching.filter((item) => item.user_status !== "done");
+  const concluidos = matching.filter((item) => item.user_status === "done");
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8.4 }}>
       <p style={{ fontSize: 11.5, color: TEXT.faint, margin: 0 }}>
         {matching.length} {matching.length === 1 ? "material" : "materiais"}{" "}
         {acervo ? "em todo o seu plano." : "para as tecnologias deste módulo."}
+        {concluidos.length > 0 ? ` ${concluidos.length} ${concluidos.length === 1 ? "concluído" : "concluídos"}.` : ""}
       </p>
-      {matching.map((resource) => (
-        <LibraryRow
-          key={resource.id}
-          resource={resource}
-          onAbrir={() => onAbrir(resource.id)}
-          kindLabel={KIND_LABEL[resource.kind] ?? resource.kind}
-          onProgress={async (next) => {
-            resources.set((current) =>
-              current.map((item) =>
-                item.id === resource.id ? { ...item, user_status: next } : item,
-              ),
-            );
-            await libraryApi.setProgress(resource.id, {
-              status: next,
-              minutes_spent: next === "done" ? resource.duration_min ?? 0 : 0,
-            });
-          }}
-          onPosition={async (nota) => {
-            resources.set((current) =>
-              current.map((item) =>
-                item.id === resource.id ? { ...item, user_position_note: nota } : item,
-              ),
-            );
-            // O status vai junto porque a rota o exige, e ele NÃO muda aqui:
-            // anotar onde parou não conclui nem reabre nada.
-            await libraryApi.setProgress(resource.id, {
-              status: resource.user_status ?? "in_progress",
-              position_note: nota,
-            });
-          }}
-        />
-      ))}
+      {pendentes.map(linha)}
+      {pendentes.length === 0 ? (
+        <p style={{ fontSize: 12.5, color: C.verde, margin: "2px 0", display: "flex", alignItems: "center", gap: 6 }}>
+          <Icon name="check" size={14} /> Tudo deste recorte já foi concluído.
+        </p>
+      ) : null}
+      {concluidos.length > 0 ? (
+        <section aria-label="Concluídos" style={{ display: "flex", flexDirection: "column", gap: 8.4, marginTop: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11.5, letterSpacing: ".12em", textTransform: "uppercase", color: C.verde, fontWeight: 600 }}>
+            <Icon name="check" size={13} />
+            Concluído · {concluidos.length}
+            <span aria-hidden style={{ flex: 1, height: 1, background: "rgba(99,180,143,.25)", marginLeft: 4 }} />
+          </div>
+          {concluidos.map(linha)}
+        </section>
+      ) : null}
     </div>
   );
 }
