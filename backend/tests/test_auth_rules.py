@@ -130,7 +130,10 @@ def test_cadastro_grava_nascimento_e_residencia_no_perfil(cliente, banco):
 
     perfis = banco.linhas("pathr_profile")
     assert len(perfis) == 1
-    assert perfis[0]["birth_date"] == "1998-04-12"
+    # Guardada cifrada quando há chave (services/cifra.py): compara o dado, não a forma.
+    from app.services import cifra
+
+    assert cifra.decifrar(perfis[0]["birth_date"], cifra.ctx_nascimento(str(perfis[0]["user_id"]))) == "1998-04-12"
     assert perfis[0]["city"] == "Vitória"
     assert perfis[0]["state"] == "ES"
     assert perfis[0]["country"] == "BR"

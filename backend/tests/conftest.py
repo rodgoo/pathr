@@ -27,6 +27,16 @@ def offline_rotation():
 
 
 @pytest.fixture(autouse=True)
+def offline_cifra(monkeypatch):
+    """Sem a chave de cifra do `.env.local`: com ela, o resultado dos testes
+    dependeria da máquina de quem roda. Quem testa a cifra liga uma chave de
+    teste (ver tests/test_cifra.py)."""
+    monkeypatch.setattr(settings, "data_encryption_key", "")
+    monkeypatch.setattr(settings, "data_encryption_keys_old", "")
+    yield
+
+
+@pytest.fixture(autouse=True)
 def offline_deepl(monkeypatch):
     """Sem DeepL na suíte. O `.env.local` tem a chave real, e sem isto os
     testes do treino traduziam de verdade: gastavam cota, dependiam de rede e
