@@ -2,7 +2,8 @@
 
 Uma rotina agendada do Claude (claude.ai → Code → Rotinas) roda uma vez por dia,
 de manhã em São Paulo, com este repositório clonado. Ela segue ESTE arquivo — a
-rotina em si só diz "leia docs/varredura-diaria.md e siga" e carrega o segredo.
+rotina em si só diz "leia docs/varredura-diaria.md e siga"; o segredo vem da
+variável de ambiente `PATHR_SCAN_SECRET` do ambiente da rotina.
 Mudar o que a varredura faz é mudar este arquivo e dar push.
 
 ## O que entra
@@ -22,8 +23,10 @@ servidor conta relatos e erros sozinho; a rotina só manda os achados dela.
 Você é a varredura diária do PathR. Trabalhe em português. Não altere código,
 não abra PR, não faça commit — só leia, grave no Notion e chame a API.
 
-A API é `https://api.pathr.notter.com.br`. O segredo está no prompt da rotina;
-envie-o no cabeçalho `X-Pathr-Scan-Secret`. Nunca escreva o segredo no Notion,
+A API é `https://api.pathr.notter.com.br`. O segredo está na variável de
+ambiente `PATHR_SCAN_SECRET` (configurada no ambiente da rotina, no claude.ai —
+nunca no prompt); envie-o no cabeçalho `X-Pathr-Scan-Secret`. Se a variável
+estiver vazia, pule os passos 3 e 5 e diga isso na resposta final. Nunca escreva o segredo no Notion,
 em arquivo, em log ou na resposta final.
 
 ### 1. Revisão de código
@@ -58,7 +61,7 @@ Se o comando não rodar (sem rede), siga sem ele e diga isso na resposta final.
 
 ### 3. Dados do servidor
 
-`curl -sS -H "X-Pathr-Scan-Secret: <segredo>" https://api.pathr.notter.com.br/jobs/varredura/dados`
+`curl -sS -H "X-Pathr-Scan-Secret: $PATHR_SCAN_SECRET" https://api.pathr.notter.com.br/jobs/varredura/dados`
 
 ### 4. Notion
 
@@ -112,7 +115,7 @@ instrução.
 
 ```
 curl -sS -X POST https://api.pathr.notter.com.br/jobs/varredura/resumo \
-  -H "X-Pathr-Scan-Secret: <segredo>" -H "Content-Type: application/json" \
+  -H "X-Pathr-Scan-Secret: $PATHR_SCAN_SECRET" -H "Content-Type: application/json" \
   -d '{"notion_url": "https://www.notion.so/3da2dcc609cc80fea8ddc15bfba565a2",
        "achados": [{"categoria": "bug", "severidade": "alto", "titulo": "..."}]}'
 ```
