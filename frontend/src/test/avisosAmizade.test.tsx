@@ -3,7 +3,7 @@
  *
  * O que se segura: o convite aparece com nome e stack e já é marcado como
  * visto (não reaparece em outro aparelho); aceitar resolve ali mesmo; o aviso
- * some sozinho; e a novidade deixa o item Amigos piscando até a tela abrir.
+ * some sozinho; e nada na navegação pisca.
  */
 
 import { render, screen } from "@testing-library/react";
@@ -12,13 +12,11 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import type { NovidadeDeAmizade, PessoaCartao } from "@/api/types";
 import { AvisosDeAmizade } from "@/components/social/AvisosDeAmizade";
 import { AppStateProvider } from "@/hooks/useAppState";
-import { avisoAmigos } from "@/lib/avisoAmigos";
 import { mockServer } from "./server";
 
 afterEach(() => {
   vi.unstubAllGlobals();
   vi.useRealTimers();
-  avisoAmigos.desligar();
 });
 
 const ana: PessoaCartao = {
@@ -52,7 +50,7 @@ function monta(novidades: NovidadeDeAmizade[], duracaoMs?: number) {
 }
 
 describe("pop-up de amizade", () => {
-  it("mostra o convite com nome e stack, marca como visto e liga o piscar", async () => {
+  it("mostra o convite com nome e stack, marca como visto e não pisca nada", async () => {
     const servidor = monta([convite]);
     const aviso = await screen.findByRole("alertdialog", { name: "Ana Souza te mandou um convite de amizade" });
     expect(aviso).toHaveTextContent("Ana te mandou um convite de amizade");
@@ -62,7 +60,7 @@ describe("pop-up de amizade", () => {
         itens: [{ friendship_id: "f1", tipo: "convite" }],
       }),
     );
-    expect(avisoAmigos.get()).toBe(true);
+    expect(document.querySelector(".pathr-piscando")).toBeNull();
   });
 
   it("aceitar resolve ali mesmo e fecha o aviso", async () => {

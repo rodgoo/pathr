@@ -13,7 +13,8 @@
  *
  * Cada novidade aparece UMA vez, em qualquer aparelho: ao mostrar, ela é
  * marcada como vista no servidor. Como o pop-up some rápido, o item Amigos da
- * navegação fica piscando até a pessoa abrir a tela (lib/avisoAmigos).
+ * navegação NÃO pisca: um item de menu piscando em amarelo competia com a
+ * tela inteira, e o contador de convites em Amigos já diz que há o que ver.
  */
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -21,7 +22,6 @@ import { social } from "@/api/endpoints";
 import type { NovidadeDeAmizade } from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
 import { useQuery } from "@/hooks/useApi";
-import { avisoAmigos } from "@/lib/avisoAmigos";
 import { ACC, ACC3, C, TEXT, tint } from "@/lib/tokens";
 import { dataRevision } from "@/offline/status";
 import { FotoDePessoa } from "@/components/social/CartaoPessoa";
@@ -33,7 +33,6 @@ const RECONSULTA_MS = 60_000;
 
 /** `duracaoMs` existe para o teste; na tela vale o padrão de 5 segundos. */
 export function AvisosDeAmizade({ duracaoMs = VISIVEL_MS }: { duracaoMs?: number } = {}) {
-  const { state } = useAppState();
   const novidades = useQuery(() => social.novidades(), []);
   const [abertos, setAbertos] = useState<NovidadeDeAmizade[]>([]);
   const mostrados = useRef(new Set<string>());
@@ -52,16 +51,10 @@ export function AvisosDeAmizade({ duracaoMs = VISIVEL_MS }: { duracaoMs?: number
     if (!novas.length) return;
     novas.forEach((item) => mostrados.current.add(`${item.tipo}:${item.friendship_id}`));
     setAbertos((atuais) => [...atuais, ...novas]);
-    avisoAmigos.ligar();
     void social
       .marcarVistas(novas.map((item) => ({ friendship_id: item.friendship_id, tipo: item.tipo })))
       .catch(() => undefined); // sem marcar, o pior é o aviso reaparecer uma vez
   }, [novidades.data]);
-
-  // Abriu a tela Amigos: a novidade foi vista.
-  useEffect(() => {
-    if (state.screen === "amigos") avisoAmigos.desligar();
-  }, [state.screen]);
 
   const fechar = useCallback((item: NovidadeDeAmizade) => {
     setAbertos((atuais) => atuais.filter((a) => a !== item));
@@ -71,9 +64,6 @@ export function AvisosDeAmizade({ duracaoMs = VISIVEL_MS }: { duracaoMs?: number
     <>
       <style>{`
         @keyframes pathr-aviso-entra { from { opacity: 0; transform: translateY(-8px) } to { opacity: 1; transform: none } }
-        @keyframes pathr-pisca { 0%, 100% { box-shadow: inset 0 0 0 1px rgba(226,121,74,0) } 50% { box-shadow: inset 0 0 0 1px rgba(226,121,74,.9); background: rgba(226,121,74,.14) } }
-        .pathr-piscando { animation: pathr-pisca 1.4s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) { .pathr-piscando { animation: none; box-shadow: inset 0 0 0 1px rgba(226,121,74,.8) } }
       `}</style>
       {abertos.length ? (
         <div

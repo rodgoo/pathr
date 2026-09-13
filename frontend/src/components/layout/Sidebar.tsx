@@ -12,7 +12,6 @@ import { english as englishApi, roadmap as roadmapApi, social } from "@/api/endp
 import { useAppState } from "@/hooks/useAppState";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@/hooks/useApi";
-import { useAmigosPiscando } from "@/lib/avisoAmigos";
 import { ACC4, PANEL, SURF, TEXT } from "@/lib/tokens";
 import type { Screen } from "@/types";
 import { Icon, type IconName } from "@/components/ui/icons";
@@ -24,8 +23,6 @@ interface NavEntry {
   screen: Screen;
   icon: IconName;
   badge?: string;
-  /** Novidade que pede atenção (convite ou aceite de amizade). */
-  piscando?: boolean;
 }
 
 export function Sidebar() {
@@ -36,7 +33,6 @@ export function Sidebar() {
   const english = useQuery(() => englishApi.profile(), []);
   const amizades = useQuery(() => social.amigos(), []);
   const convites = amizades.data?.recebidos.length ?? 0;
-  const amigosPiscando = useAmigosPiscando();
 
   // O material aberto pertence à tela de onde veio — ver MobileNav.
   const telaAtiva = state.screen === "material" ? state.resourceReturn : state.screen;
@@ -68,7 +64,6 @@ export function Sidebar() {
           screen: "amigos",
           icon: "users",
           badge: convites ? String(convites) : undefined,
-          piscando: amigosPiscando && telaAtiva !== "amigos",
         },
       ],
     },
@@ -210,7 +205,7 @@ function NavButton({
     <button
       type="button"
       // A lateral também aparece no celular deitado, onde o alvo é o dedo.
-      className={item.piscando ? "toque pathr-piscando" : "toque"}
+      className="toque"
       onClick={onClick}
       onMouseEnter={() => setRealce(true)}
       onMouseLeave={() => setRealce(false)}
@@ -218,7 +213,6 @@ function NavButton({
       onBlur={() => setRealce(false)}
       aria-current={active ? "page" : undefined}
       aria-label={item.badge ? `${item.label} (${item.badge})` : undefined}
-      title={item.piscando ? "Novidade em Amigos" : undefined}
       style={{
         display: "flex",
         alignItems: "center",
