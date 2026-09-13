@@ -57,17 +57,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
 
   const load = useCallback(async () => {
-    try {
-      const current = await authApi.me();
-      setUser(current);
-      setStatus("authenticated");
-    } catch {
-      // Qualquer falha aqui — 401, rede fora — significa "não logado" para o
-      // app. Um erro de rede mostra a tela de entrada, e tentar de novo é o
-      // próprio botão de entrar.
-      setUser(null);
-      setStatus("anonymous");
+    // Só um "não autenticado" do servidor (401/403) desloga. Rede caindo, a
+    // máquina da API reiniciando num deploy ou um 5xx passageiro NÃO são
+    // logout: antes, qualquer falha aqui mandava a pessoa para a tela de
+    // entrar, e um deploy no meio do uso parecia uma sessão encerrada do nada.
+    // Tenta de novo algumas vezes antes de desistir.
+    const esperas = [0, 1500, 4000, 9000];
+    for (let tentativa = 0; tentativa < esperas.length; tentativa += 1) {
+      if (esperas[tentativa]) await new Promise((r) => setTimeout(r, esperas[tentativa]));
+      try {
+        const current = await authApi.me();
+        setUser(current);
+        setStatus("authenticated");
+        return;
+      } catch (erro) {
+        if (erro instanceof ApiError && (erro.status === 401 || erro.status === 403)) break;
+      }
     }
+    setUser(null);
+    setStatus("anonymous");
   }, []);
 
   // Na montagem: há sessão viva no cookie? O cliente tenta renovar sozinho

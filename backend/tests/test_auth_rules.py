@@ -310,16 +310,57 @@ def test_token_de_sessao_ja_derrubada_nao_derruba_os_outros_aparelhos(banco, cli
     assert celular.get("revoked_at") is None
 
 
-def test_reuso_de_token_trocado_ha_tempo_continua_sendo_roubo(banco, cliente):
+def test_reuso_de_token_trocado_ha_tempo_derruba_so_aquele_login(banco, cliente):
+    """Caso de produção (13/09): um celular com o cookie velho de uma conta
+    derrubava TODAS as sessões dela — inclusive a do computador, num login à
+    parte. Agora cai só a família suspeita; o computador segue logado."""
     banco.tabelas["pathr_user"] = [usuario(email_verified_at="2026-01-01T00:00:00+00:00")]
-    banco.tabelas["pathr_refresh_token"] = [
-        _sessao("velha", "token-roubado", revogada_ha=timedelta(hours=2)),
-        _sessao("nova", "token-atual", rotated_from="velha"),
-        _sessao("celular", "token-celular"),
-    ]
+    velha = _sessao("velha", "token-roubado", revogada_ha=timedelta(hours=2))
+    nova = _sessao("nova", "token-atual", rotated_from="velha")
+    computador = _sessao("computador", "token-computador")
+    velha["family_id"] = nova["family_id"] = "familia-celular"
+    computador["family_id"] = "familia-computador"
+    banco.tabelas["pathr_refresh_token"] = [velha, nova, computador]
 
     resposta = _renova(cliente, "token-roubado")
 
     assert resposta.status_code == 401
-    assert all(s.get("revoked_at") for s in banco.linhas("pathr_refresh_token"))
+    estado = {s["id"]: s.get("revoked_at") for s in banco.linhas("pathr_refresh_token")}
+    assert estado["velha"] and estado["nova"]
+    assert estado["computador"] is None
     assert "refresh_reuse" in banco.eventos()
+    assert _renova(cliente, "token-computador").status_code == 200
+
+
+def test_reuso_em_token_antigo_sem_familia_segue_a_cadeia_e_poupa_o_resto(banco, cliente):
+    banco.tabelas["pathr_user"] = [usuario(email_verified_at="2026-01-01T00:00:00+00:00")]
+    banco.tabelas["pathr_refresh_token"] = [
+        _sessao("a", "token-a", revogada_ha=timedelta(hours=3)),
+        _sessao("b", "token-b", revogada_ha=timedelta(hours=2), rotated_from="a"),
+        _sessao("c", "token-c", rotated_from="b"),
+        _sessao("outro", "token-outro"),
+    ]
+
+    assert _renova(cliente, "token-a").status_code == 401
+    estado = {s["id"]: s.get("revoked_at") for s in banco.linhas("pathr_refresh_token")}
+    assert estado["c"] and estado["outro"] is None
+
+
+def test_rotacao_herda_a_familia_do_login(banco, cliente):
+    banco.tabelas["pathr_user"] = [usuario(email_verified_at="2026-01-01T00:00:00+00:00")]
+    inicial = _sessao("login", "token-login")
+    inicial["family_id"] = "familia-1"
+    banco.tabelas["pathr_refresh_token"] = [inicial]
+
+    assert _renova(cliente, "token-login").status_code == 200
+    nova = next(s for s in banco.linhas("pathr_refresh_token") if s["id"] != "login")
+    assert nova["family_id"] == "familia-1" and nova["rotated_from"] == "login"
+
+
+def test_cadastro_apaga_cookie_de_sessao_de_outra_conta(cliente):
+    """O celular que cria conta nova não pode seguir com o cookie de outra conta."""
+    cliente.cookies.set(REFRESH_COOKIE, "token-de-outra-conta")
+    resposta = cliente.post("/auth/signup", json=CADASTRO_VALIDO)
+    assert resposta.status_code == 201, resposta.text
+    apagados = [c for c in resposta.headers.get_list("set-cookie") if c.startswith(f"{REFRESH_COOKIE}=")]
+    assert apagados and ("Max-Age=0" in apagados[0] or "expires=" in apagados[0].lower())

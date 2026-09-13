@@ -179,8 +179,14 @@ def _issue_session(
     request: Optional[Request],
     *,
     rotated_from: Optional[str] = None,
+    family_id: Optional[str] = None,
 ) -> SessionOut:
-    """Cria a linha de sessão e devolve o par de tokens."""
+    """Cria a linha de sessão e devolve o par de tokens.
+
+    `family_id` é o LOGIN a que o token pertence: nasce igual ao id no login e
+    é herdado a cada rotação. É por ele que um reuso suspeito derruba só aquele
+    aparelho, e não todos os lugares onde a conta está aberta.
+    """
     session_id = str(uuid.uuid4())
     refresh_token = new_token()
     supabase.table("pathr_refresh_token").insert(
@@ -190,6 +196,7 @@ def _issue_session(
             "token_hash": hash_token(refresh_token),
             "expires_at": (_now() + timedelta(days=settings.refresh_token_days)).isoformat(),
             "rotated_from": rotated_from,
+            "family_id": family_id or session_id,
             "user_agent": user_agent(request),
             "ip": client_ip(request),
         }
@@ -357,6 +364,13 @@ def signup(
     send_verification_email(created["email"], created.get("name") or "", token)
     _log_event(supabase, "signup", user_id=user_id, request=request)
 
+    # Um aparelho que cria conta nova pode ainda guardar o cookie de sessão de
+    # OUTRA conta — já rotacionado há tempo. Se ele sobrevive, a próxima
+    # renovação (ao confirmar o e-mail, por exemplo) apresenta esse token velho
+    # e dispara a detecção de reuso contra a outra conta. Foi o que desconectou
+    # um computador em 13/09. Quem acabou de criar conta não está logado em
+    # nenhuma: os cookies saem daqui.
+    _clear_session_cookies(response)
     return MessageOut(
         detail="Conta criada. Confirme seu e-mail pelo link que enviamos para entrar."
     )
@@ -490,6 +504,47 @@ def _reuso(supabase: Client, session: dict) -> Optional[str]:
     return "roubo"
 
 
+def _familia(session: dict) -> str:
+    return str(session.get("family_id") or session["id"])
+
+
+def _revogar_familia(supabase: Client, session: dict) -> None:
+    """Revoga a cadeia de rotação de UM login — e só ela.
+
+    Antes, reuso revogava toda sessão viva da conta. O caso que derrubou
+    produção (13/09): um celular guardava o cookie antigo de uma conta; ao
+    confirmar o e-mail de OUTRA conta criada nele, o app tentou renovar com
+    esse cookie velho — indistinguível de roubo — e o castigo caiu no
+    computador, logado num login totalmente separado. Revogando a família, o
+    token suspeito e tudo que descende dele morrem (um invasor com o cookie
+    velho perde o acesso), e os outros aparelhos seguem logados.
+
+    Token anterior à coluna `family_id` (ela chegou na migração 0025, que já
+    preenche as cadeias existentes): segue os sucessores pelo `rotated_from`.
+    """
+    familia = session.get("family_id")
+    agora = _now().isoformat()
+    if familia:
+        supabase.table("pathr_refresh_token").update({"revoked_at": agora}).eq(
+            "family_id", str(familia)
+        ).is_("revoked_at", "null").execute()
+        return
+    fila, vistos = [str(session["id"])], set()
+    while fila and len(vistos) < 2000:
+        atual = fila.pop()
+        if atual in vistos:
+            continue
+        vistos.add(atual)
+        supabase.table("pathr_refresh_token").update({"revoked_at": agora}).eq("id", atual).is_(
+            "revoked_at", "null"
+        ).execute()
+        fila.extend(
+            str(linha["id"])
+            for linha in supabase.table("pathr_refresh_token").select("id").eq("rotated_from", atual).execute().data
+            or []
+        )
+
+
 def _parse_momento(valor: Any) -> Optional[datetime]:
     if not valor:
         return None
@@ -508,9 +563,10 @@ def refresh(
 ):
     """Troca o refresh token por um par novo, queimando o antigo.
 
-    Reuso de um token já rotacionado é tratado como roubo de cookie: revoga
-    TODA sessão viva do usuário. O custo de errar aqui é a pessoa logar de
-    novo; o custo de não fazer nada é um invasor manter acesso indefinido.
+    Reuso de um token já rotacionado há tempo é tratado como roubo de cookie:
+    revoga a FAMÍLIA daquele login (ver `_revogar_familia`). Outros aparelhos
+    da mesma conta não caem — derrubá-los por um cookie velho em outro lugar
+    era um logout do nada, sem ganho de segurança para o login suspeito.
     """
     raw = request.cookies.get(REFRESH_COOKIE)
     if not raw:
@@ -541,11 +597,12 @@ def refresh(
             # ação era desfeita e a conta, desconectada.
             users = supabase.table("pathr_user").select("*").eq("id", user_id).limit(1).execute().data
             if users:
-                return _issue_session(supabase, users[0], response, request, rotated_from=str(session["id"]))
+                return _issue_session(
+                    supabase, users[0], response, request,
+                    rotated_from=str(session["id"]), family_id=_familia(session),
+                )
         if tipo == "roubo":
-            supabase.table("pathr_refresh_token").update({"revoked_at": _now().isoformat()}).eq(
-                "user_id", user_id
-            ).is_("revoked_at", "null").execute()
+            _revogar_familia(supabase, session)
             _log_event(supabase, "refresh_reuse", user_id=user_id, request=request)
             _clear_session_cookies(response)
             raise HTTPException(
@@ -575,7 +632,9 @@ def refresh(
     supabase.table("pathr_refresh_token").update({"revoked_at": _now().isoformat()}).eq(
         "id", session["id"]
     ).execute()
-    return _issue_session(supabase, users[0], response, request, rotated_from=str(session["id"]))
+    return _issue_session(
+        supabase, users[0], response, request, rotated_from=str(session["id"]), family_id=_familia(session)
+    )
 
 
 @router.post("/logout", response_model=MessageOut)
