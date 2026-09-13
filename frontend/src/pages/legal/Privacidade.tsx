@@ -306,11 +306,12 @@ export const PRIVACIDADE: DocumentoLegal = {
                 você sair.
               </>,
               <>
-                <Forte>Contadores de limite de uso</Forte>: descartados depois de cerca de dois dias.
+                <Forte>Contadores de limite de uso</Forte>: apagados após 2 dias.
               </>,
               <>
-                <Forte>Registros de segurança e de erros</Forte>: por tempo limitado, pelo necessário para proteger as
-                contas e corrigir defeitos. Os registros de segurança ligados à sua conta (tipo de evento, data, IP e
+                <Forte>Registros de erros do servidor</Forte>: apagados após 30 dias (a mensagem já é gravada sem e-mail,
+                identificadores ou tokens). <Forte>Registros de segurança</Forte>: pelo necessário para proteger as
+                contas. Os registros de segurança ligados à sua conta (tipo de evento, data, IP e
                 navegador) são apagados junto com ela; tentativas de acesso que não chegaram a identificar uma conta
                 não têm dono e ficam só pelo tempo de prevenção a fraudes (art. 16 da LGPD).
               </>,
