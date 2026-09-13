@@ -10,6 +10,7 @@ import { useState, type FormEvent } from "react";
 import { auth as authApi } from "@/api/endpoints";
 import { errorMessage } from "@/hooks/useAuth";
 import { AuthShell, Field, PasswordField, FormError } from "@/components/auth/AuthShell";
+import { Icon } from "@/components/ui/icons";
 import { C } from "@/lib/tokens";
 
 export function ForgotPasswordPage({ onNavigate }: { onNavigate: (path: string) => void }) {
@@ -35,6 +36,7 @@ export function ForgotPasswordPage({ onNavigate }: { onNavigate: (path: string) 
   return (
     <AuthShell
       title="Recuperar senha"
+      icon="lock"
       subtitle={sent ? undefined : "Enviamos um link para você definir uma nova senha."}
       footer={
         <a href="/entrar" onClick={(e) => { e.preventDefault(); onNavigate("/entrar"); }}>
@@ -53,6 +55,7 @@ export function ForgotPasswordPage({ onNavigate }: { onNavigate: (path: string) 
           <Field
             id="forgot-email"
             label="E-mail da conta"
+            icon="mail"
             type="email"
             autoComplete="email"
             required
@@ -60,6 +63,7 @@ export function ForgotPasswordPage({ onNavigate }: { onNavigate: (path: string) 
             onChange={(event) => setEmail(event.target.value)}
           />
           <button type="submit" className="btn btn-primary btn-block" disabled={pending}>
+            {pending ? null : <Icon name="send" size={17} />}
             {pending ? "Enviando…" : "Enviar link"}
           </button>
         </form>
@@ -96,7 +100,7 @@ export function ResetPasswordPage({
 
   if (!token) {
     return (
-      <AuthShell title="Link inválido" subtitle="Este endereço não traz um token de recuperação.">
+      <AuthShell title="Link inválido" icon="info" subtitle="Este endereço não traz um token de recuperação.">
         <button
           type="button"
           className="btn btn-primary btn-block"
@@ -109,7 +113,7 @@ export function ResetPasswordPage({
   }
 
   return (
-    <AuthShell title="Nova senha" subtitle={done ? undefined : "Escolha uma senha que você não usa em outro lugar."}>
+    <AuthShell title="Nova senha" icon="shieldCheck" subtitle={done ? undefined : "Escolha uma senha que você não usa em outro lugar."}>
       {done ? (
         <div>
           <p style={{ fontSize: 14, color: C.verde, margin: "0 0 14px" }}>Senha alterada.</p>
@@ -122,6 +126,7 @@ export function ResetPasswordPage({
             onClick={() => onNavigate("/entrar")}
           >
             Entrar com a nova senha
+            <Icon name="seta" size={17} className="auth-seta" />
           </button>
         </div>
       ) : (
@@ -130,6 +135,7 @@ export function ResetPasswordPage({
           <PasswordField
             id="reset-password"
             label="Nova senha"
+            icon="lock"
             autoComplete="new-password"
             hint="Ao menos 10 caracteres, com letra e número."
             required

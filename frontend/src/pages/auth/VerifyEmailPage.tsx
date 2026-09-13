@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 import { auth as authApi } from "@/api/endpoints";
 import { errorMessage, useAuth } from "@/hooks/useAuth";
 import { AuthShell } from "@/components/auth/AuthShell";
+import { Icon } from "@/components/ui/icons";
 import { C } from "@/lib/tokens";
 
 type State = "verifying" | "ok" | "failed";
@@ -56,7 +57,7 @@ export function VerifyEmailPage({
 
   if (state === "verifying") {
     return (
-      <AuthShell title="Confirmando…">
+      <AuthShell title="Confirmando…" icon="mail">
         <p style={{ fontSize: 14, color: "rgba(233,233,237,.7)", margin: 0 }} aria-live="polite">
           Um instante.
         </p>
@@ -66,7 +67,7 @@ export function VerifyEmailPage({
 
   if (state === "ok") {
     return (
-      <AuthShell title="E-mail confirmado" subtitle="Tudo pronto para começar.">
+      <AuthShell title="E-mail confirmado" icon="shieldCheck" subtitle="Tudo pronto para começar.">
         <p style={{ fontSize: 14, color: C.verde, margin: "0 0 16.8px" }}>
           Sua conta está ativa.
         </p>
@@ -76,13 +77,14 @@ export function VerifyEmailPage({
           onClick={() => onNavigate(status === "authenticated" ? "/" : "/entrar")}
         >
           {status === "authenticated" ? "Ir para o app" : "Entrar"}
+          <Icon name="seta" size={17} className="auth-seta" />
         </button>
       </AuthShell>
     );
   }
 
   return (
-    <AuthShell title="Não deu para confirmar" subtitle={message}>
+    <AuthShell title="Não deu para confirmar" icon="info" subtitle={message}>
       <button
         type="button"
         className="btn btn-secondary btn-block"

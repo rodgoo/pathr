@@ -1,76 +1,119 @@
 /**
  * Moldura das telas de entrada.
  *
- * Um cartão centrado sobre o fundo do app, com a marca em cima. Diferente do
- * AppShell de propósito: aqui não existe navegação, e mostrar uma barra
- * lateral com links que a pessoa ainda não pode abrir só confunde.
+ * Um cartão sobre o fundo preto, com a marca em cima e um brilho difuso do
+ * acento atrás — o preto AMOLED continua sendo o chão. Em tela larga, um
+ * painel ao lado diz em três linhas o que a pessoa ganha ao entrar; no celular
+ * ele some e fica só o cartão.
+ *
+ * Diferente do AppShell de propósito: aqui não existe navegação, e mostrar uma
+ * barra lateral com links que a pessoa ainda não pode abrir só confunde.
+ *
+ * O visual mora em `styles/auth.css`, tudo sob `.auth`: os campos e botões
+ * ficam mais altos e o primário ganha fundo cheio só nestas telas.
  */
 
 import { useState } from "react";
-import type { ReactNode } from "react";
-import { BG, PANEL, TEXT } from "@/lib/tokens";
-import { Icon } from "@/components/ui/icons";
+import type { CSSProperties, ReactNode } from "react";
+import { C, TEXT } from "@/lib/tokens";
+import { Icon, type IconName } from "@/components/ui/icons";
 import { Logo } from "@/components/ui/Logo";
 import { Select, type SelectOption } from "@/components/ui/Select";
+import "@/styles/auth.css";
+
+const BENEFICIOS: readonly { icone: IconName; tom: string; titulo: string; detalhe: string }[] = [
+  { icone: "refresh", tom: C.azul, titulo: "Plano que se corrige toda semana", detalhe: "O roteiro acompanha o seu ritmo." },
+  { icone: "flag", tom: C.verde, titulo: "Treinos de idioma diários", detalhe: "Poucos minutos, todo dia." },
+  { icone: "suitcase", tom: C.ambar, titulo: "Vagas que combinam com você", detalhe: "Filtradas pelo que você já sabe." },
+];
 
 export function AuthShell({
   title,
   subtitle,
   children,
   footer,
+  icon,
 }: {
   title: string;
   subtitle?: ReactNode;
   children: ReactNode;
   footer?: ReactNode;
+  /** Símbolo do cartão, ao lado do título. */
+  icon?: IconName;
 }) {
   return (
-    <div
-      style={{
-        minHeight: "100vh",
-        background: BG,
-        color: TEXT.full,
-        fontFamily: "Inter, system-ui, sans-serif",
-        display: "grid",
-        placeItems: "center",
-        padding: 22.4,
-      }}
-    >
-      <div style={{ width: "min(420px, 100%)" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8.4, marginBottom: 22.4 }}>
-          <Logo size={32} />
-          <div style={{ display: "flex", flexDirection: "column", lineHeight: 1.15 }}>
-            <span style={{ fontSize: 16, fontWeight: 500 }}>PathR</span>
-            <span style={{ fontSize: 10, letterSpacing: ".06em", color: TEXT.faint }}>
-              pathr.notter.com.br
+    <div className="auth">
+      <div className="auth-brilho" aria-hidden="true" />
+
+      <div className="auth-grade">
+        <div className="auth-painel">
+          <span className="auth-kicker">
+            <Icon name="road" size={13} />
+            Plataforma de estudos
+          </span>
+          <p className="auth-painel-titulo">
+            Seu próximo passo, <em>já planejado.</em>
+          </p>
+          <p className="auth-painel-texto">
+            O PathR transforma o seu currículo numa trilha de estudos em fases, até a vaga que você quer.
+          </p>
+          <ul className="auth-beneficios">
+            {BENEFICIOS.map((b) => (
+              <li key={b.titulo}>
+                <span className="auth-beneficio-icone" style={{ "--tom": b.tom } as CSSProperties}>
+                  <Icon name={b.icone} size={18} />
+                </span>
+                <span>
+                  {b.titulo}
+                  <small>{b.detalhe}</small>
+                </span>
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <div className="auth-coluna">
+          <div className="auth-marca">
+            <span className="auth-marca-logo">
+              <Logo size={28} />
             </span>
+            <div className="auth-marca-nome">
+              <strong>PathR</strong>
+              <span>pathr.notter.com.br</span>
+            </div>
           </div>
-        </div>
 
-        <div
-          style={{
-            padding: 22.4,
-            borderRadius: 14,
-            background: PANEL,
-            boxShadow: "0 0 0 1px #222228",
-          }}
-        >
-          <h1 style={{ fontSize: 24, margin: "0 0 5.6px" }}>{title}</h1>
-          {subtitle ? (
-            <p style={{ fontSize: 13.5, color: "rgba(233,233,237,.6)", margin: "0 0 16.8px" }}>
-              {subtitle}
-            </p>
-          ) : null}
-          {children}
-        </div>
-
-        {footer ? (
-          <div style={{ marginTop: 14, fontSize: 13, color: TEXT.muted, textAlign: "center" }}>
-            {footer}
+          <div className="auth-cartao">
+            <div className="auth-cabeca">
+              {icon ? (
+                <span className="auth-selo">
+                  <Icon name={icon} size={20} />
+                </span>
+              ) : null}
+              <div style={{ minWidth: 0 }}>
+                <h1 className="auth-titulo">{title}</h1>
+                {subtitle ? <p className="auth-subtitulo">{subtitle}</p> : null}
+              </div>
+            </div>
+            {children}
           </div>
-        ) : null}
+
+          {footer ? <div className="auth-rodape">{footer}</div> : null}
+        </div>
       </div>
     </div>
+  );
+}
+
+/**
+ * Símbolo à esquerda de um campo. Decorativo: o rótulo já diz o que é.
+ */
+function SimboloDoCampo({ icon }: { icon?: IconName }) {
+  if (!icon) return null;
+  return (
+    <span className="campo-icone-simbolo">
+      <Icon name={icon} size={17} />
+    </span>
   );
 }
 
@@ -104,16 +147,26 @@ export function Field({
   id,
   label,
   hint,
+  icon,
   ...input
 }: {
   id: string;
   label: string;
   hint?: string;
+  /** Símbolo decorativo à esquerda do texto. */
+  icon?: IconName;
 } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <div className="field" style={{ marginBottom: 11.2 }}>
       <label htmlFor={id}>{label}</label>
-      <input id={id} className="input" {...input} />
+      {icon ? (
+        <div className="campo-icone">
+          <SimboloDoCampo icon={icon} />
+          <input id={id} className="input" {...input} />
+        </div>
+      ) : (
+        <input id={id} className="input" {...input} />
+      )}
       {hint ? (
         <div style={{ fontSize: 11, color: TEXT.faint, marginTop: 4 }}>{hint}</div>
       ) : null}
@@ -140,25 +193,30 @@ export function PasswordField({
   id,
   label,
   hint,
+  icon,
+  style,
   ...input
 }: {
   id: string;
   label: string;
   hint?: string;
+  /** Símbolo decorativo à esquerda do texto. */
+  icon?: IconName;
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "type">) {
   const [visible, setVisible] = useState(false);
 
   return (
     <div className="field" style={{ marginBottom: 11.2 }}>
       <label htmlFor={id}>{label}</label>
-      <div style={{ position: "relative" }}>
+      <div className={icon ? "campo-icone" : undefined} style={{ position: "relative" }}>
+        <SimboloDoCampo icon={icon} />
         <input
           id={id}
           className="input"
           type={visible ? "text" : "password"}
           // Espaço para o botão: sem isso o texto passa por baixo dele. Cabe
           // a versão de 44px que o toque exige, não só a de 30 do mouse.
-          style={{ paddingRight: 52 }}
+          style={{ paddingRight: 52, ...style }}
           {...input}
         />
         <button

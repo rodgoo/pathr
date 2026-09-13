@@ -20,6 +20,7 @@ import {
   PasswordField,
   SelectField,
 } from "@/components/auth/AuthShell";
+import { Icon } from "@/components/ui/icons";
 import { UFS } from "@/lib/ufs";
 import { CampoUsername } from "@/components/social/CampoUsername";
 import { C, TEXT } from "@/lib/tokens";
@@ -93,7 +94,7 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
   // Passo seguinte ao envio: a conta existe, mas ninguém entra sem confirmar.
   if (done) {
     return (
-      <AuthShell title="Confirme seu e-mail" subtitle={done}>
+      <AuthShell title="Confirme seu e-mail" subtitle={done} icon="mail">
         <p style={{ fontSize: 13, color: TEXT.faint, margin: "0 0 16.8px" }}>
           Enviamos um link para <strong style={{ color: "rgba(233,233,237,.9)" }}>{email.trim()}</strong>.
           O link vale por três dias. Se não chegar, olhe também o spam.
@@ -104,6 +105,7 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
           onClick={() => onNavigate("/entrar")}
         >
           Ir para entrar
+          <Icon name="seta" size={17} className="auth-seta" />
         </button>
       </AuthShell>
     );
@@ -112,6 +114,7 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
   return (
     <AuthShell
       title="Criar conta"
+      icon="userPlus"
       subtitle="Envie seu currículo e o plano sai pronto, dividido em fases."
       footer={
         <>
@@ -128,6 +131,7 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
         <Field
           id="signup-name"
           label="Como quer ser chamado"
+          icon="user"
           autoComplete="name"
           required
           value={name}
@@ -145,6 +149,7 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
         <Field
           id="signup-email"
           label="E-mail"
+          icon="mail"
           type="email"
           autoComplete="email"
           required
@@ -186,6 +191,7 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
         <PasswordField
           id="signup-password"
           label="Senha"
+          icon="lock"
           autoComplete="new-password"
           required
           value={password}
@@ -208,6 +214,7 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
         </ul>
 
         <button type="submit" className="btn btn-primary btn-block" disabled={pending || !ready}>
+          {pending ? null : <Icon name="userPlus" size={17} />}
           {pending ? "Criando…" : "Criar conta"}
         </button>
       </form>

@@ -18,6 +18,8 @@ import { Icon } from "@/components/ui/icons";
 import { MarcaDaTecnologia, identidade } from "@/lib/tecnologias";
 import { ACC, ACC3, C, HAIRLINE, TEXT, tint } from "@/lib/tokens";
 
+export type AcaoDeAmizade = "convidar" | "aceitar" | "desfazer";
+
 /** O tom de um `.btn-tom`: a cor do significado da ação. */
 const tom = (cor: string) => ({ "--tom": cor }) as CSSProperties;
 
@@ -93,6 +95,7 @@ export function CartaoPessoa({
   pessoa,
   onMudou,
   somenteLeitura = false,
+  onDemo,
 }: {
   pessoa: PessoaCartao;
   /** A relação mudou no servidor: quem mostra a lista recarrega. */
@@ -103,13 +106,22 @@ export function CartaoPessoa({
    * sem suporte a ele deixaria um visitante disparar um convite.
    */
   somenteLeitura?: boolean;
+  /**
+   * Só com `somenteLeitura`: em vez da API, avisa qual ação foi pedida, para
+   * a página de apresentação simular o resultado na tela sem sair do navegador.
+   */
+  onDemo?: (acao: AcaoDeAmizade) => void;
 }) {
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [confirmandoSaida, setConfirmandoSaida] = useState(false);
 
-  async function agir(acao: () => Promise<unknown>) {
-    if (somenteLeitura) return;
+  async function agir(acao: () => Promise<unknown>, tipo: AcaoDeAmizade) {
+    if (somenteLeitura) {
+      onDemo?.(tipo);
+      setConfirmandoSaida(false);
+      return;
+    }
     setOcupado(true);
     setErro(null);
     try {
@@ -214,7 +226,7 @@ export function CartaoPessoa({
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8.4, alignItems: "center", marginTop: "auto" }}>
         {pessoa.relacao === "nenhuma" ? (
           <button type="button" className="btn btn-tom" style={tom(ACC)} disabled={ocupado}
-            onClick={() => void agir(() => social.convidar(pessoa.username))}>
+            onClick={() => void agir(() => social.convidar(pessoa.username), "convidar")}>
             <Icon name="plus" size={15} />
             {ocupado ? "Enviando…" : "Adicionar"}
           </button>
@@ -223,12 +235,12 @@ export function CartaoPessoa({
         {pessoa.relacao === "recebido" && id ? (
           <>
             <button type="button" className="btn btn-tom" style={tom(C.verde)} disabled={ocupado}
-              onClick={() => void agir(() => social.aceitar(id))}>
+              onClick={() => void agir(() => social.aceitar(id), "aceitar")}>
               <Icon name="check" size={15} />
               Aceitar
             </button>
             <button type="button" className="btn btn-tom-leve" style={tom(C.rosa)} disabled={ocupado}
-              onClick={() => void agir(() => social.desfazer(id))}>
+              onClick={() => void agir(() => social.desfazer(id), "desfazer")}>
               <Icon name="x" size={15} />
               Recusar
             </button>
@@ -242,7 +254,7 @@ export function CartaoPessoa({
               Convite enviado
             </span>
             <button type="button" className="btn btn-tom-leve" style={tom(C.rosa)} disabled={ocupado}
-              onClick={() => void agir(() => social.desfazer(id))}>
+              onClick={() => void agir(() => social.desfazer(id), "desfazer")}>
               <Icon name="x" size={14} />
               Cancelar
             </button>
@@ -254,7 +266,7 @@ export function CartaoPessoa({
             <>
               <span style={{ fontSize: 12.5, color: TEXT.muted }}>Desfazer a amizade?</span>
               <button type="button" className="btn btn-tom" style={tom(C.rosa)} disabled={ocupado}
-                onClick={() => void agir(() => social.desfazer(id))}>
+                onClick={() => void agir(() => social.desfazer(id), "desfazer")}>
                 <Icon name="trash" size={14} />
                 Desfazer
               </button>

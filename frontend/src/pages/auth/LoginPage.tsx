@@ -15,6 +15,7 @@ import { useState, type FormEvent } from "react";
 import { auth as authApi } from "@/api/endpoints";
 import { errorMessage, isEmailUnverified, isMfaRequired, useAuth } from "@/hooks/useAuth";
 import { AuthShell, Field, PasswordField, FormError } from "@/components/auth/AuthShell";
+import { Icon } from "@/components/ui/icons";
 import { chaveSuportada, mensagemDeErroDaChave, temChaveNesteAparelho } from "@/lib/passkeys";
 
 export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }) {
@@ -56,11 +57,11 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
   const botaoDeChave = (principal: boolean) => (
     <button
       type="button"
-      className={principal ? "btn btn-primary btn-block" : "btn btn-secondary btn-block"}
-      style={principal ? undefined : { marginTop: 11.2 }}
+      className={principal ? "btn btn-primary btn-block" : "btn btn-chave btn-block"}
       disabled={passkeyPending || pending}
       onClick={() => void entrarComChave()}
     >
+      <Icon name="fingerprint" size={18} />
       {passkeyPending ? "Aguardando o aparelho…" : "Entrar com chave de acesso"}
     </button>
   );
@@ -92,6 +93,7 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
   return (
     <AuthShell
       title="Entrar"
+      icon="logIn"
       subtitle="Seu plano de estudos continua de onde parou."
       footer={
         <>
@@ -105,20 +107,7 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
       {lembrada ? (
         <>
           {botaoDeChave(true)}
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: 8.4,
-              margin: "14px 0",
-              fontSize: 12,
-              color: "rgba(233,233,237,.45)",
-            }}
-          >
-            <span style={{ flex: 1, height: 1, background: "rgba(233,233,237,.14)" }} />
-            ou entre com a senha
-            <span style={{ flex: 1, height: 1, background: "rgba(233,233,237,.14)" }} />
-          </div>
+          <div className="auth-divisor" style={{ margin: "16px 0 14px" }}>ou entre com a senha</div>
         </>
       ) : null}
       <form onSubmit={submit} noValidate>
@@ -157,6 +146,7 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
         <Field
           id="login-email"
           label="E-mail"
+          icon="mail"
           type="email"
           autoComplete="email"
           required
@@ -167,6 +157,7 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
         <PasswordField
           id="login-password"
           label="Senha"
+          icon="lock"
           autoComplete="current-password"
           required
           value={password}
@@ -188,21 +179,33 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
           />
         ) : null}
 
-        <button type="submit" className="btn btn-primary btn-block" disabled={pending}>
+        <button
+          type="submit"
+          // Quem já usa a chave neste aparelho tem a chave como ação cheia;
+          // a senha vira a alternativa, e dois botões cheios competiriam.
+          className={lembrada ? "btn btn-secondary btn-block" : "btn btn-primary btn-block"}
+          disabled={pending}
+        >
           {pending ? "Entrando…" : needsMfa ? "Confirmar código" : "Entrar"}
+          {pending ? null : <Icon name="seta" size={17} className="auth-seta" />}
         </button>
 
-        <div style={{ marginTop: 11.2, textAlign: "center" }}>
+        <div style={{ marginTop: 12, textAlign: "center" }}>
           <a
             href="/recuperar-senha"
-            style={{ fontSize: 12.5 }}
+            className="auth-link-menor"
             onClick={(e) => { e.preventDefault(); onNavigate("/recuperar-senha"); }}
           >
             Esqueci minha senha
           </a>
         </div>
       </form>
-      {suportada && !lembrada ? botaoDeChave(false) : null}
+      {suportada && !lembrada ? (
+        <>
+          <div className="auth-divisor" aria-hidden="true">ou</div>
+          {botaoDeChave(false)}
+        </>
+      ) : null}
     </AuthShell>
   );
 }
