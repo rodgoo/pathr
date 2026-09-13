@@ -162,6 +162,45 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 22%, transparent);
 }
 .auth .input:disabled { opacity: .6; }
+
+/* O texto de exemplo é apoio, não conteúdo: no tamanho do campo (14px, 16px
+   no toque) ele ficava maior que os rótulos e dicas da tela. A fonte do CAMPO
+   não muda — abaixo de 16px o Safari do iPhone dá zoom ao focar. */
+.auth .input::placeholder {
+  font-size: 13px;
+  color: rgba(233, 233, 237, .38);
+}
+
+/* Data de nascimento.
+   - `color-scheme: dark`: sem ele o navegador desenha o ícone do calendário
+     (e o seletor que abre) no tema claro — ícone preto sobre o campo preto.
+   - No celular o campo nativo de data tem largura mínima própria, maior que o
+     formulário, e vazava pela direita. `appearance: none` + `min-width: 0`
+     devolvem a largura ao layout; o seletor nativo continua abrindo ao tocar. */
+.auth .input[type="date"] {
+  color-scheme: dark;
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+}
+.auth .input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: .6;
+}
+.auth .input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 1; }
+@media (pointer: coarse) {
+  .auth .input[type="date"] {
+    -webkit-appearance: none;
+    appearance: none;
+    text-align: left;
+  }
+  .auth .input[type="date"]::-webkit-date-and-time-value {
+    text-align: left;
+    min-height: 1.4em;
+  }
+}
 /* Preenchimento automático nas telas de conta. A regra global de nocturne.css
    pinta o campo por uma sombra interna — mas o anel de foco acima TROCA o
    box-shadow inteiro, e ao clicar no campo preenchido a sombra escura sumia e
