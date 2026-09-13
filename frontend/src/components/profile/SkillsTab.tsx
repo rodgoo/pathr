@@ -51,13 +51,17 @@ export const CATEGORIAS: readonly { slug: string; label: string }[] = [
   { slug: "mobile", label: "Mobile" },
   { slug: "ferramenta", label: "Ferramentas" },
   { slug: "metodologia", label: "Metodologia" },
-  { slug: "dominio", label: "Domínio de negócio" },
   { slug: "soft-skill", label: "Comportamental" },
 ];
 
 /** Idioma não é competência que se marca com N0–N5 aqui: o nível é medido no
- * módulo de Idiomas (nivelamento e treinos), e é de lá que o resto do app lê. */
-export const CATEGORIAS_FORA_DAS_SKILLS = new Set(["idioma"]);
+ * módulo de Idiomas (nivelamento e treinos), e é de lá que o resto do app lê.
+ *
+ * Domínio de negócio (bancário, varejo, seguros…) também fica de fora: não é
+ * algo que se estuda num módulo da trilha, e a lista só enchia a aba com
+ * opções que ninguém marcava. As tags continuam no catálogo porque a leitura
+ * de currículo e de vagas ainda as reconhece. */
+export const CATEGORIAS_FORA_DAS_SKILLS = new Set(["idioma", "dominio"]);
 
 /** A partir de que nível o plano para de ensinar o assunto. Vem do gerador de
  * roadmap, que cobre o caminho até N3 — acima disso, ensinar seria repetir. */
