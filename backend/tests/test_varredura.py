@@ -175,3 +175,20 @@ def test_excecao_nao_tratada_vira_linha_redigida_com_rota_molde(banco):
     assert novo["route"] == "/_teste_quebra/{item_id}"
     assert novo["error_type"] == "ValueError"
     assert "ana@" not in novo["message"] and "123456789" not in novo["message"]
+
+
+def test_local_da_falha_no_conteiner_nao_duplica_app(monkeypatch):
+    import traceback as tb
+
+    class _Q:
+        def __init__(self, f, n):
+            self.filename, self.lineno = f, n
+
+    monkeypatch.setattr(
+        erros.traceback,
+        "extract_tb",
+        lambda _t: [_Q("/usr/local/lib/python3.12/site-packages/starlette/routing.py", 1),
+                    _Q("/app/app/routers/vagas.py", 42)],
+    )
+    assert erros.local_da_falha(ValueError("x")) == "app/routers/vagas.py:42"
+    assert tb  # o módulo real continua intacto fora do monkeypatch

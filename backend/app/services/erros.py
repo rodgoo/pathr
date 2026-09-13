@@ -47,7 +47,9 @@ def local_da_falha(exc: BaseException) -> str | None:
     for quadro in traceback.extract_tb(exc.__traceback__):
         caminho = quadro.filename.replace("\\", "/")
         if "/app/" in caminho and "/site-packages/" not in caminho:
-            nosso = f"app/{caminho.split('/app/', 1)[1]}:{quadro.lineno}"
+            # rsplit, e não split: no contêiner o código mora em /app/app/…,
+            # e cortar na PRIMEIRA ocorrência daria "app/app/routers/…".
+            nosso = f"app/{caminho.rsplit('/app/', 1)[1]}:{quadro.lineno}"
     return nosso
 
 
