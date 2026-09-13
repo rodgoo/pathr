@@ -23,7 +23,7 @@ from app.middleware_usuario import UsuarioDaRequisicao
 from app.seguranca_http import CabecalhosDeSeguranca
 from app.services import eventos
 from app.database import get_supabase
-from app.services.erros import registrar as registrar_erro
+from app.services.erros import para_o_log, registrar as registrar_erro
 from app.services import validacao_pt
 
 logger = logging.getLogger("pathr")
@@ -70,7 +70,7 @@ class ErroInterno(BaseHTTPMiddleware):
         try:
             return await call_next(request)
         except Exception as exc:  # noqa: BLE001
-            logger.exception("erro não tratado em %s %s", request.method, request.url.path)
+            logger.error("erro não tratado em %s %s: %s", request.method, request.url.path, para_o_log(exc))
             # Também no banco: o log da Fly roda e some, e a varredura diária
             # precisa contar quantas vezes cada defeito aconteceu.
             #

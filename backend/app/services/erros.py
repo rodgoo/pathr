@@ -22,6 +22,11 @@ logger = logging.getLogger("pathr.erros")
 _MAX_MENSAGEM = 300
 
 _REDACOES = (
+    # O Postgres copia a linha recusada inteira na mensagem ("Failing row
+    # contains (…, texto que a pessoa escreveu, …)") e o valor da chave
+    # duplicada ("Key (email)=(fulano@…)"). É conteúdo de usuário: sai inteiro.
+    (re.compile(r"Failing row contains \(.*", re.S), "Failing row contains (<linha>)"),
+    (re.compile(r"(Key \([^)]*\))=\(.*?\)(?= already| is not|\s|$)", re.S), r"\1=(<valor>)"),
     (re.compile(r"[\w.+-]+@[\w-]+\.[\w.-]+"), "<email>"),
     (re.compile(r"\b[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\b", re.I), "<uuid>"),
     (re.compile(r"\beyJ[\w-]+\.[\w-]+\.[\w-]+"), "<jwt>"),
@@ -35,6 +40,17 @@ def redigir(texto: str) -> str:
         texto = padrao.sub(marcador, texto)
     texto = " ".join(texto.split())
     return texto[:_MAX_MENSAGEM]
+
+
+def para_o_log(exc: BaseException) -> str:
+    """Onde quebrou (os quadros da pilha) e a mensagem REDIGIDA.
+
+    `logger.exception` imprimiria `str(exc)` cru — e com um NOT NULL violado
+    isso é a linha inteira, com o texto que a pessoa escreveu, parando no log
+    da Fly. A pilha é o que se precisa para consertar; o dado, não.
+    """
+    pilha = "".join(traceback.format_tb(exc.__traceback__))
+    return f"{pilha}{type(exc).__name__}: {redigir(str(exc))}"
 
 
 def local_da_falha(exc: BaseException) -> str | None:

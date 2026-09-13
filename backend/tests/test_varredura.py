@@ -156,6 +156,21 @@ def test_redacao_tira_dado_pessoal_da_mensagem_do_erro():
     assert "ana@" not in texto and "6f1c" not in texto and "eyJ" not in texto and "98765" not in texto
 
 
+def test_linha_recusada_pelo_postgres_nao_vai_para_log_nem_banco():
+    # O NOT NULL copia a linha inteira — com o texto que a pessoa escreveu.
+    try:
+        raise RuntimeError(
+            "null value in column id violates not-null constraint. "
+            "Failing row contains (null, git push // meu texto secreto, 2026)."
+        )
+    except RuntimeError as exc:
+        log = erros.para_o_log(exc)
+        banco_msg = erros.redigir(str(exc))
+    assert "secreto" not in log and "secreto" not in banco_msg
+    assert "test_varredura.py" in log  # a pilha continua lá
+    assert "Key (email)=(<valor>)" in erros.redigir("Key (email)=(ana@x.com) already exists.")
+
+
 def test_excecao_nao_tratada_vira_linha_redigida_com_rota_molde(banco):
     rota = APIRouter()
 
