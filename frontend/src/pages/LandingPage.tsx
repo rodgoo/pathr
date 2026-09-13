@@ -481,7 +481,12 @@ function ComoFunciona() {
 
 function PreviaTrilha({ feitos, alternar }: { feitos: Set<number>; alternar: (indice: number) => void }) {
   const total = FEITOS_ANTES + feitos.size;
-  const pct = Math.round((total / TOTAL_DE_MODULOS) * 100);
+  // Duas medidas, e cada uma no seu lugar: a barra é da FASE (cinco módulos,
+  // chega a 100% quando todos são marcados); a linha de baixo é do plano
+  // inteiro. Com uma barra só do plano, fechar a fase parava em 47% e parecia
+  // que faltava metade.
+  const pctFase = Math.round((feitos.size / MODULOS.length) * 100);
+  const pctPlano = Math.round((total / TOTAL_DE_MODULOS) * 100);
   const restantes = MODULOS.reduce((soma, m, i) => soma + (feitos.has(i) ? 0 : m.minutos), 0);
   const fechou = feitos.size === MODULOS.length;
   return (
@@ -489,13 +494,16 @@ function PreviaTrilha({ feitos, alternar }: { feitos: Set<number>; alternar: (in
       <div>
         <div style={{ display: "flex", alignItems: "baseline", gap: 8, flexWrap: "wrap" }}>
           <span style={{ fontSize: 13.5, color: TEXT.strong }}>Fase 2 · Backend com Spring</span>
-          <span style={{ marginLeft: "auto", fontSize: 12, color: TEXT.faint }}>
-            {total} de {TOTAL_DE_MODULOS} módulos · <span style={{ color: ACC4 }}>{pct}%</span>
+          <span style={{ marginLeft: "auto", fontSize: 12, color: fechou ? C.verde : TEXT.faint }}>
+            {feitos.size} de {MODULOS.length} módulos · <span style={{ color: fechou ? C.verde : ACC4 }}>{pctFase}%</span>
           </span>
         </div>
-        <div role="progressbar" aria-label="Progresso da trilha de exemplo" aria-valuenow={pct} aria-valuemin={0} aria-valuemax={100}
+        <div role="progressbar" aria-label="Progresso da trilha de exemplo" aria-valuenow={pctFase} aria-valuemin={0} aria-valuemax={100}
           style={{ height: 6, borderRadius: 3, background: "rgba(233,233,237,.08)", marginTop: 8, overflow: "hidden" }}>
-          <div style={{ width: `${pct}%`, height: "100%", borderRadius: 3, background: `linear-gradient(90deg, ${ACC}, ${C.verde})`, transition: "width .5s cubic-bezier(.2,.7,.2,1)" }} />
+          <div style={{ width: `${pctFase}%`, height: "100%", borderRadius: 3, background: fechou ? C.verde : `linear-gradient(90deg, ${ACC}, ${C.verde})`, transition: "width .5s cubic-bezier(.2,.7,.2,1), background .3s" }} />
+        </div>
+        <div style={{ fontSize: 11.5, color: TEXT.faint, marginTop: 6 }}>
+          Plano completo: {total} de {TOTAL_DE_MODULOS} módulos · {pctPlano}% — o cartão de progresso lá em cima acompanha.
         </div>
       </div>
       <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 6 }}>
