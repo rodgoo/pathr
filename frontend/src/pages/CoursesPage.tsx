@@ -80,7 +80,10 @@ function mesPorExtenso(anoMes: string): string {
 }
 
 /** O formulário "Adicionar certificação" do LinkedIn, já preenchido. */
-export function linkParaLinkedIn(curso: Course, hoje = new Date()): string {
+export function linkParaLinkedIn(
+  curso: Pick<Course, "titulo" | "emissor" | "url">,
+  hoje = new Date(),
+): string {
   const query = new URLSearchParams({
     startTask: "CERTIFICATION_NAME",
     name: curso.titulo,
@@ -206,7 +209,27 @@ function Bloco({ titulo, cursos, vazio }: { titulo: string; cursos: Course[]; va
 }
 
 function CartaoDoCurso({ curso }: { curso: Course }) {
+  const [possuo, setPossuo] = useState(Boolean(curso.possuo));
+  const [salvando, setSalvando] = useState(false);
+  const [erro, setErro] = useState<string | null>(null);
   const { gratuito, detalhe } = curso.certificado;
+
+  // Otimista: o botão muda na hora e volta atrás se o servidor recusar.
+  async function alternarPossuo() {
+    const antes = possuo;
+    setPossuo(!antes);
+    setSalvando(true);
+    setErro(null);
+    try {
+      if (antes) await coursesApi.disown(curso.id);
+      else await coursesApi.own(curso.id);
+    } catch (caught) {
+      setPossuo(antes);
+      setErro(caught instanceof Error ? caught.message : "Não consegui salvar.");
+    } finally {
+      setSalvando(false);
+    }
+  }
   const corDoSelo = gratuito ? C.verde : C.ambar;
   const meta = [curso.emissor, NIVEL[curso.nivel], curso.idioma === "pt" ? "Português" : "Inglês"];
   if (curso.horas) meta.push(`~${curso.horas}h`);
@@ -278,6 +301,18 @@ function CartaoDoCurso({ curso }: { curso: Course }) {
             Ir para o curso
             <Icon name="externalLink" size={14} />
           </a>
+          <button
+            type="button"
+            className={possuo ? "btn btn-primary" : "btn btn-secondary"}
+            aria-pressed={possuo}
+            disabled={salvando}
+            onClick={() => void alternarPossuo()}
+            title={possuo ? "Aparece em Perfil e tags. Clique para desmarcar." : "Marque se você já tem este certificado."}
+            style={possuo ? { background: tint(C.verde, 14), borderColor: C.verde, color: C.verde } : undefined}
+          >
+            {possuo ? <Icon name="check" size={14} /> : null}
+            {possuo ? "Já possuo" : "Já possuo?"}
+          </button>
           <a
             className="btn btn-ghost"
             href={linkParaLinkedIn(curso)}
@@ -286,9 +321,10 @@ function CartaoDoCurso({ curso }: { curso: Course }) {
             title="Depois de receber o certificado"
             style={{ textDecoration: "none", fontSize: SIZE.apoio }}
           >
-            Concluí: adicionar ao LinkedIn
+            Adicionar ao LinkedIn
           </a>
         </div>
+        {erro ? <div style={{ fontSize: 12, color: C.ambar }}>{erro}</div> : null}
       </article>
     </Panel>
   );

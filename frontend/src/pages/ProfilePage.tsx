@@ -8,23 +8,26 @@
  */
 
 import type { CSSProperties } from "react";
-import { profile as profileApi, tags as tagsApi } from "@/api/endpoints";
-import type { UserTag } from "@/api/types";
+import { courses as coursesApi, profile as profileApi, tags as tagsApi } from "@/api/endpoints";
+import type { OwnedCourse, UserTag } from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@/hooks/useApi";
-import { ACC4, TEXT } from "@/lib/tokens";
+import { ACC, ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Meter, Panel, SCREEN_IN } from "@/components/ui/primitives";
 import { Avatar } from "@/components/profile/Avatar";
 import { TagButton } from "@/components/profile/TagButton";
 import { MASTERY_LABELS } from "@/components/profile/TechnologyRow";
+import { Icon } from "@/components/ui/icons";
+import { linkParaLinkedIn } from "@/pages/CoursesPage";
 
 export function ProfilePage() {
   const { user } = useAuth();
   const { dispatch } = useAppState();
   const overview = useQuery((signal) => profileApi.overview(signal), []);
   const tags = useQuery(() => tagsApi.mine(), []);
+  const certificados = useQuery(() => coursesApi.mine(), []);
 
   if (overview.loading || tags.loading) return <Loading label="Carregando seu perfil…" />;
   if (overview.error) return <ErrorState message={overview.error} onRetry={overview.reload} />;
@@ -118,10 +121,94 @@ export function ProfilePage() {
           <ScaleLegend />
         </Panel>
       )}
+
+      <Certificados
+        lista={certificados.data ?? []}
+        carregando={certificados.loading}
+        onVerCursos={() => dispatch({ type: "navigate", screen: "cursos" })}
+      />
     </div>
   );
 }
 
+
+/**
+ * Os certificados que a pessoa marcou como "já possuo" na aba Cursos.
+ *
+ * Moram aqui, e não só em Cursos, porque são credencial: o que se tem, junto
+ * das competências. O atalho para o LinkedIn fica em cada um — é para isso
+ * que a pessoa foi atrás do certificado.
+ */
+function Certificados({
+  lista,
+  carregando,
+  onVerCursos,
+}: {
+  lista: OwnedCourse[];
+  carregando: boolean;
+  onVerCursos: () => void;
+}) {
+  return (
+    <Panel pad={16.8} style={{ marginTop: 11.2 }}>
+      <section aria-label="Certificados">
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: 8.4, marginBottom: 8.4 }}>
+          <Kicker>{`Certificados · ${lista.length}`}</Kicker>
+          <span style={{ fontSize: 11.5, color: TEXT.faint }}>
+            Marcados como "já possuo" na aba Cursos
+          </span>
+          <button
+            type="button"
+            className="btn btn-ghost"
+            style={{ marginLeft: "auto", fontSize: 12.5 }}
+            onClick={onVerCursos}
+          >
+            Ver cursos
+          </button>
+        </div>
+        {carregando ? null : lista.length === 0 ? (
+          <p style={{ margin: 0, fontSize: 12.5, color: TEXT.muted }}>
+            Nenhum ainda. Em Cursos, marque "Já possuo" nos certificados que você tem.
+          </p>
+        ) : (
+          <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+            {lista.map((curso, posicao) => (
+              <li
+                key={curso.id}
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  alignItems: "center",
+                  gap: "4px 11.2px",
+                  padding: "8.4px 0",
+                  borderTop: posicao === 0 ? "none" : `1px solid ${HAIRLINE}`,
+                }}
+              >
+                <Icon name="award" size={16} style={{ color: curso.gratuito ? C.verde : C.ambar, flex: "none" }} />
+                <div style={{ flex: "1 1 220px", minWidth: 0 }}>
+                  <a href={curso.url} target="_blank" rel="noreferrer noopener" style={{ color: TEXT.full, fontSize: 14 }}>
+                    {curso.titulo}
+                  </a>
+                  <div style={{ fontSize: 12, color: TEXT.muted }}>
+                    {curso.emissor}
+                    {curso.tags.length ? ` · ${curso.tags.join(", ")}` : ""}
+                  </div>
+                </div>
+                <a
+                  href={linkParaLinkedIn(curso)}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  style={{ fontSize: 12.5, color: ACC }}
+                >
+                  Adicionar ao LinkedIn
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    </Panel>
+  );
+}
 
 function IdentityCard({
   name,

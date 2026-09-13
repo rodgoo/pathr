@@ -1,13 +1,14 @@
 """Cursos com certificado, escolhidos pelo que a pessoa quer aprender.
 
 O catálogo e a ordenação moram em services/courses.py. Aqui só se junta o que
-diz o que a pessoa quer: as tags (meta e "quero aprender"), os módulos ainda
-abertos do roadmap e a frase do objetivo.
+diz o que a pessoa quer: as tags marcadas como meta, os módulos ainda
+abertos do roadmap e a frase do objetivo. E o que a pessoa já possui: o
+certificado marcado aqui aparece em Perfil e tags.
 """
 
 from typing import Any
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException, status
 from supabase import Client
 
 from app.database import get_supabase
@@ -16,6 +17,75 @@ from app.routers.tags import _objetivo_de, list_mine
 from app.services import courses
 
 router = APIRouter(prefix="/courses", tags=["cursos"])
+
+
+def _meus(supabase: Client, user_id: str) -> list[dict[str, Any]]:
+    return (
+        supabase.table("pathr_user_course")
+        .select("course_id,created_at")
+        .eq("user_id", user_id)
+        .order("created_at", desc=True)
+        .execute()
+        .data
+        or []
+    )
+
+
+@router.get("/mine")
+def my_courses(
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """Os cursos com certificado que a pessoa marcou como "já possuo", do mais
+    recente ao mais antigo. Curso que saiu do catálogo não aparece."""
+    saida = []
+    for linha in _meus(supabase, str(current_user["id"])):
+        curso = courses.por_id(str(linha["course_id"]))
+        if curso:
+            saida.append({**courses.resumido(curso), "possuido_em": linha.get("created_at")})
+    return saida
+
+
+def _curso_ou_404(course_id: str) -> courses.Curso:
+    curso = courses.por_id(course_id)
+    if not curso:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Curso não encontrado.")
+    return curso
+
+
+@router.put("/mine/{course_id}")
+def mark_owned(
+    course_id: str,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """Marca como "já possuo". Idempotente: marcar de novo não duplica."""
+    curso = _curso_ou_404(course_id)
+    user_id = str(current_user["id"])
+    existente = (
+        supabase.table("pathr_user_course")
+        .select("course_id,created_at")
+        .eq("user_id", user_id)
+        .eq("course_id", curso.id)
+        .limit(1)
+        .execute()
+        .data
+    )
+    linha = existente[0] if existente else (
+        supabase.table("pathr_user_course").insert({"user_id": user_id, "course_id": curso.id}).execute().data[0]
+    )
+    return {**courses.resumido(curso), "possuido_em": linha.get("created_at")}
+
+
+@router.delete("/mine/{course_id}", status_code=status.HTTP_204_NO_CONTENT)
+def unmark_owned(
+    course_id: str,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    supabase.table("pathr_user_course").delete().eq("user_id", str(current_user["id"])).eq(
+        "course_id", course_id
+    ).execute()
 
 
 @router.get("")
@@ -34,6 +104,9 @@ def list_courses(
     ).strip()
 
     cursos = courses.recomendar(minhas, _slugs_do_roadmap(supabase, user_id), objetivo)
+    possuidos = {linha["course_id"] for linha in _meus(supabase, user_id)}
+    for curso in cursos:
+        curso["possuo"] = curso["id"] in possuidos
     return {
         "cursos": cursos,
         "conferido_em": courses.CONFERIDO_EM,

@@ -9,6 +9,7 @@ import { api } from "./client";
 import type {
   ApiStatusReport,
   CourseList,
+  OwnedCourse,
   JobAnalysis,
   JobList,
   EnglishAnswerResult,
@@ -172,6 +173,10 @@ export const roadmap = {
  * curado no servidor (services/courses.py) e chega já ordenado. */
 export const courses = {
   list: () => api.get<CourseList>("/courses"),
+  /** Os certificados marcados como "já possuo". */
+  mine: () => api.get<OwnedCourse[]>("/courses/mine"),
+  own: (courseId: string) => api.put<OwnedCourse>(`/courses/mine/${encodeURIComponent(courseId)}`, {}),
+  disown: (courseId: string) => api.del<void>(`/courses/mine/${encodeURIComponent(courseId)}`),
 };
 
 /** Vagas reais de fontes confiáveis (Gupy, Remotive, Adzuna, sites de vaga),

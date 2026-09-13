@@ -459,5 +459,25 @@ def recomendar(
     return resultado
 
 
+_POR_ID = {curso.id: curso for curso in CURSOS}
+
+
+def por_id(course_id: str) -> Optional[Curso]:
+    return _POR_ID.get(course_id)
+
+
+def resumido(curso: Curso) -> dict[str, Any]:
+    """O curso como aparece em Perfil e tags: o suficiente para mostrar e
+    adicionar ao LinkedIn, sem a relevância, que depende das metas."""
+    return {
+        "id": curso.id,
+        "titulo": curso.titulo,
+        "emissor": curso.emissor,
+        "url": curso.url,
+        "tags": list(curso.tags),
+        "gratuito": curso.gratuito,
+    }
+
+
 def _nome_do_slug(curso: Curso, slug: str) -> str:
     return next((nome for nome in curso.tags if slugify(nome) == slug), slug)

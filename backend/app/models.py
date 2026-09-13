@@ -590,6 +590,22 @@ class PathrUserResource(SQLModel, table=True):
     __table_args__ = (sa.UniqueConstraint("user_id", "resource_id", name="uq_pathr_user_resource"),)
 
 
+class PathrUserCourse(SQLModel, table=True):
+    """Curso com certificado que a pessoa já possui.
+
+    `course_id` é o id do catálogo em código (services/courses.py), não FK:
+    ver a migration 0018_user_course."""
+
+    __tablename__ = "pathr_user_course"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id"))
+    course_id: str
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+
+    __table_args__ = (sa.UniqueConstraint("user_id", "course_id", name="uq_pathr_user_course"),)
+
+
 class PathrNodeResource(SQLModel, table=True):
     """Curadoria: quais recursos o roadmap indicou para um nó, e em que ordem.
     Tabela de junção (e não um array em PathrRoadmapNode) porque a relação

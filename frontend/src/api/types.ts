@@ -717,6 +717,19 @@ export interface Course {
   /** Por que o curso apareceu: qual configuração pediu qual tag. */
   motivos: { tipo: "meta" | "quero_aprender" | "roadmap" | "objetivo"; tag: string }[];
   relevancia: number;
+  /** A pessoa marcou "já possuo" este certificado. */
+  possuo?: boolean;
+}
+
+/** Um certificado que a pessoa já possui, como aparece em Perfil e tags. */
+export interface OwnedCourse {
+  id: string;
+  titulo: string;
+  emissor: string;
+  url: string;
+  tags: string[];
+  gratuito: boolean;
+  possuido_em: string | null;
 }
 
 export interface CourseList {

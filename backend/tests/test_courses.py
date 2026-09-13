@@ -170,3 +170,49 @@ def test_endpoint_sem_nada_pedido():
     banco = FakeSupabase(pathr_tag=[], pathr_user_tag=[], pathr_profile=[], pathr_roadmap=[])
     resposta = list_courses({"id": "eu"}, banco)
     assert resposta == {"cursos": [], "conferido_em": courses.CONFERIDO_EM, "tem_pedido": False}
+
+
+# ── "Já possuo" ───────────────────────────────────────────────────────────
+
+
+def test_marcar_ja_possuo_aparece_na_lista_e_em_meus_cursos():
+    from app.routers.courses import mark_owned, my_courses, unmark_owned
+
+    banco = FakeSupabase(
+        pathr_tag=[{"id": "t1", "slug": "aws", "name": "AWS", "category": "cloud"}],
+        pathr_user_tag=[{"id": "u1", "user_id": "eu", "tag_id": "t1", "proficiency": 1, "is_target": True}],
+        pathr_profile=[{"user_id": "eu"}],
+        pathr_roadmap=[],
+        pathr_user_course=[],
+    )
+    eu = {"id": "eu"}
+
+    marcado = mark_owned("aws-ccp", eu, banco)
+    mark_owned("aws-ccp", eu, banco)  # de novo: não duplica
+
+    assert marcado["titulo"] == "AWS Certified Cloud Practitioner"
+    assert len(banco.linhas("pathr_user_course")) == 1
+    assert [c["id"] for c in my_courses(eu, banco)] == ["aws-ccp"]
+    lista = {c["id"]: c["possuo"] for c in list_courses(eu, banco)["cursos"]}
+    assert lista["aws-ccp"] is True and lista["aws-cloud-practitioner-essentials"] is False
+
+    unmark_owned("aws-ccp", eu, banco)
+    assert my_courses(eu, banco) == []
+
+
+def test_marcar_curso_inexistente_e_404():
+    import pytest
+    from fastapi import HTTPException
+
+    from app.routers.courses import mark_owned
+
+    with pytest.raises(HTTPException) as erro:
+        mark_owned("nao-existe", {"id": "eu"}, FakeSupabase(pathr_user_course=[]))
+    assert erro.value.status_code == 404
+
+
+def test_curso_que_saiu_do_catalogo_nao_quebra_meus_cursos():
+    from app.routers.courses import my_courses
+
+    banco = FakeSupabase(pathr_user_course=[{"user_id": "eu", "course_id": "curso-antigo", "created_at": "2026-01-01"}])
+    assert my_courses({"id": "eu"}, banco) == []

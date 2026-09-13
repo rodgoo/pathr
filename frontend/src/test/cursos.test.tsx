@@ -52,6 +52,7 @@ const lista: CourseList = {
     curso("pago", "AWS Certified Cloud Practitioner", {
       certificado: { gratuito: false, detalhe: "Prova paga (cerca de US$ 100)." },
       demanda: { nota: 30, faixa: "basico", rotulo: "Chama apagada", motivo: null },
+      possuo: true,
     }),
   ],
 };
@@ -105,6 +106,32 @@ describe("cursos com certificado", () => {
     expect(
       await screen.findByText("Ainda não há certificação séria para o que você pediu"),
     ).toBeInTheDocument();
+  });
+
+  it("marca e desmarca 'já possuo', e volta atrás se o servidor recusar", async () => {
+    const servidor = mockServer({
+      "GET /courses": () => ({ body: lista }),
+      "PUT /courses/mine/gratis": () => ({ body: { id: "gratis" } }),
+      "DELETE /courses/mine/pago": () => ({ status: 500, body: { detail: "Falhou." } }),
+    });
+    const user = userEvent.setup();
+    render(
+      <AppStateProvider>
+        <CoursesPage />
+      </AppStateProvider>,
+    );
+
+    const [primeiro, segundo] = await screen.findAllByRole("button", { name: /Já possuo/ });
+    expect(primeiro).toHaveAttribute("aria-pressed", "false");
+    await user.click(primeiro);
+    expect(primeiro).toHaveAttribute("aria-pressed", "true");
+    expect(servidor.calls.some((c) => c.method === "PUT" && c.url === "/courses/mine/gratis")).toBe(true);
+
+    // O segundo já vinha marcado; a remoção falha e o botão volta a marcado.
+    expect(segundo).toHaveAttribute("aria-pressed", "true");
+    await user.click(segundo);
+    expect(await screen.findByText("Falhou.")).toBeInTheDocument();
+    expect(segundo).toHaveAttribute("aria-pressed", "true");
   });
 
   it("abre o formulário de certificação do LinkedIn já preenchido", () => {

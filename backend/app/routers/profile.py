@@ -535,6 +535,7 @@ _TABELAS_DO_USUARIO = (
     "pathr_explanation",
     "pathr_activity_draft",
     "pathr_weekly_checklist",
+    "pathr_user_course",
 )
 
 
