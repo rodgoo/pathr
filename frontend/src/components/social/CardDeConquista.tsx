@@ -18,6 +18,7 @@ import { profile as profileApi, social, tags as tagsApi } from "@/api/endpoints"
 import type { PessoaCartao } from "@/api/types";
 import { useAuth } from "@/hooks/useAuth";
 import { fraseAleatoria } from "@/lib/conquista";
+import { fotoDe } from "@/lib/fotos";
 import { ACC, ACC3, ACC4, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { IconButton } from "@/components/ui/IconButton";
@@ -204,24 +205,22 @@ export function desenharCard(ctx: CanvasRenderingContext2D, dados: DadosDoCard) 
   ctx.fillText(URL_DO_APP, LARGURA / 2, ALTURA - 56);
 }
 
-function carregarImagem(blob: Blob): Promise<HTMLImageElement> {
+function carregarImagem(url: string): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
-    const url = URL.createObjectURL(blob);
     const imagem = new Image();
     imagem.onload = () => resolve(imagem);
-    imagem.onerror = () => {
-      URL.revokeObjectURL(url);
-      reject(new Error("foto"));
-    };
+    imagem.onerror = () => reject(new Error("foto"));
     imagem.src = url;
   });
 }
 
-async function fotoOuNada(buscar: () => Promise<Blob>): Promise<HTMLImageElement | null> {
+/** A foto da memória de fotos (lib/fotos), ou null: sem ela, as iniciais. */
+async function fotoOuNada(chave: string, buscar: () => Promise<Blob>): Promise<HTMLImageElement | null> {
   try {
-    return await carregarImagem(await buscar());
+    const url = await fotoDe(chave, buscar);
+    return url ? await carregarImagem(url) : null;
   } catch {
-    return null; // sem foto, o card mostra as iniciais
+    return null;
   }
 }
 
@@ -245,8 +244,8 @@ export function CardDeConquista({
     let vivo = true;
     (async () => {
       const [minhaFoto, fotoDele, minhas] = await Promise.all([
-        user?.has_avatar ? fotoOuNada(() => profileApi.avatar()) : Promise.resolve(null),
-        amigo.has_avatar ? fotoOuNada(() => social.avatar(amigo.username)) : Promise.resolve(null),
+        user?.has_avatar ? fotoOuNada("eu", () => profileApi.avatar()) : Promise.resolve(null),
+        amigo.has_avatar ? fotoOuNada(amigo.username, () => social.avatar(amigo.username)) : Promise.resolve(null),
         tagsApi.mine().catch(() => []),
       ]);
       const alvo = canvas.current;

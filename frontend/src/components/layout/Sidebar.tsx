@@ -7,10 +7,12 @@
  * um plano ainda não gerado.
  */
 
+import { useState } from "react";
 import { english as englishApi, roadmap as roadmapApi, social } from "@/api/endpoints";
 import { useAppState } from "@/hooks/useAppState";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@/hooks/useApi";
+import { useAmigosPiscando } from "@/lib/avisoAmigos";
 import { ACC4, PANEL, SURF, TEXT } from "@/lib/tokens";
 import type { Screen } from "@/types";
 import { Icon, type IconName } from "@/components/ui/icons";
@@ -22,6 +24,8 @@ interface NavEntry {
   screen: Screen;
   icon: IconName;
   badge?: string;
+  /** Novidade que pede atenção (convite ou aceite de amizade). */
+  piscando?: boolean;
 }
 
 export function Sidebar() {
@@ -32,6 +36,7 @@ export function Sidebar() {
   const english = useQuery(() => englishApi.profile(), []);
   const amizades = useQuery(() => social.amigos(), []);
   const convites = amizades.data?.recebidos.length ?? 0;
+  const amigosPiscando = useAmigosPiscando();
 
   // O material aberto pertence à tela de onde veio — ver MobileNav.
   const telaAtiva = state.screen === "material" ? state.resourceReturn : state.screen;
@@ -58,7 +63,13 @@ export function Sidebar() {
         { label: "Vagas", screen: "vagas", icon: "suitcase" },
         // O contador é de convites RECEBIDOS: é o único número aqui que pede
         // uma ação, e sem ele o convite ficaria esperando alguém abrir a aba.
-        { label: "Amigos", screen: "amigos", icon: "users", badge: convites ? String(convites) : undefined },
+        {
+          label: "Amigos",
+          screen: "amigos",
+          icon: "users",
+          badge: convites ? String(convites) : undefined,
+          piscando: amigosPiscando && telaAtiva !== "amigos",
+        },
       ],
     },
     {
@@ -85,6 +96,13 @@ export function Sidebar() {
         flex: "1 1 200px",
         maxWidth: 226,
         minWidth: 186,
+        // Presa na janela: a página rola, a barra fica. Sem isto o painel
+        // subia junto com o conteúdo e META e Sair sumiam da tela.
+        position: "sticky",
+        top: 11.2,
+        alignSelf: "flex-start",
+        height: "calc(100dvh - 22.4px)",
+        overflow: "hidden",
         display: "flex",
         flexDirection: "column",
         gap: 22.4,
@@ -104,7 +122,11 @@ export function Sidebar() {
         </div>
       </div>
 
-      <nav aria-label="Navegação principal" style={{ display: "contents" }}>
+      <nav
+        aria-label="Navegação principal"
+        // Só a lista rola, e só se não couber: META e Sair ficam presos embaixo.
+        style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 22.4 }}
+      >
         {groups.map((group) => (
           <div key={group.label} style={{ display: "flex", flexDirection: "column", gap: 2.8 }}>
             <div
@@ -131,7 +153,7 @@ export function Sidebar() {
         ))}
       </nav>
 
-      <div style={{ marginTop: "auto", display: "flex", flexDirection: "column", gap: 8.4 }}>
+      <div style={{ flex: "none", display: "flex", flexDirection: "column", gap: 8.4 }}>
         {plan ? (
           <div
             style={{
@@ -179,13 +201,23 @@ function NavButton({
   active: boolean;
   onClick: () => void;
 }) {
+  // O contador só aparece com o mouse em cima (ou o foco do teclado): na
+  // lista inteira ele distrai de onde a pessoa quer ir. O leitor de tela
+  // continua ouvindo — ele vai no rótulo acessível, não só no visual.
+  const [realce, setRealce] = useState(false);
   return (
     <button
       type="button"
       // A lateral também aparece no celular deitado, onde o alvo é o dedo.
-      className="toque"
+      className={item.piscando ? "toque pathr-piscando" : "toque"}
       onClick={onClick}
+      onMouseEnter={() => setRealce(true)}
+      onMouseLeave={() => setRealce(false)}
+      onFocus={() => setRealce(true)}
+      onBlur={() => setRealce(false)}
       aria-current={active ? "page" : undefined}
+      aria-label={item.badge ? `${item.label} (${item.badge})` : undefined}
+      title={item.piscando ? "Novidade em Amigos" : undefined}
       style={{
         display: "flex",
         alignItems: "center",
@@ -208,7 +240,10 @@ function NavButton({
       <span style={{ flex: 1, minWidth: 0 }}>{item.label}</span>
       {item.badge ? (
         <span
+          aria-hidden
           style={{
+            opacity: realce ? 1 : 0,
+            transition: "opacity .15s ease",
             fontSize: 10,
             padding: "1px 6px",
             borderRadius: 5,

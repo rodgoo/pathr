@@ -1136,6 +1136,10 @@ class PathrFriendship(SQLModel, table=True):
     status: str = Field(default="pending")  # pending | accepted
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
     responded_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
+    # Quando quem recebeu viu o aviso do convite, e quando quem enviou viu o
+    # aviso de que foi aceito (migração 0026). Nulo = o pop-up ainda aparece.
+    invite_seen_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
+    accept_seen_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
 
 
 class PathrRateEvent(SQLModel, table=True):

@@ -54,6 +54,14 @@ export interface PessoaCartao {
   sequencia?: SequenciaDupla;
 }
 
+/** Um aviso de amizade para o pop-up: convite recebido ou convite aceito. */
+export interface NovidadeDeAmizade {
+  tipo: "convite" | "aceito";
+  friendship_id: string;
+  quando: string | null;
+  pessoa: PessoaCartao;
+}
+
 export interface SequenciaDupla {
   atual: number;
   recorde: number;

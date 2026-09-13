@@ -31,14 +31,14 @@ from datetime import datetime, timezone
 from typing import Any, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, Response, status
 from pydantic import BaseModel, Field
 from supabase import Client
 
 from app.config import settings
 from app.database import get_supabase
 from app.deps import client_ip, get_current_user
-from app.services import cifra, limites, sequencia_dupla, usernames
+from app.services import cifra, eventos, limites, sequencia_dupla, usernames
 from app.services.progress import local_today
 
 router = APIRouter(prefix="/social", tags=["pessoas"])
@@ -482,6 +482,7 @@ def listar_amigos(
 @router.post("/amigos/{username}", status_code=status.HTTP_201_CREATED)
 def convidar(
     username: str,
+    tarefas: BackgroundTasks,
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
 ):
@@ -502,6 +503,7 @@ def convidar(
             supabase.table("pathr_friendship").update(
                 {"status": "accepted", "responded_at": _agora()}
             ).eq("id", existente["friendship_id"]).execute()
+            _avisar(tarefas, outro)
             return {"relacao": "amigos"}
         return {"relacao": existente["relacao"]}
 
@@ -517,6 +519,7 @@ def convidar(
         # O índice do par recusou: um convite cruzado chegou no mesmo instante.
         # O estado real está no banco; responder com ele é mais honesto que 500.
         return {"relacao": _relacoes(supabase, user_id).get(outro, {}).get("relacao", "enviado")}
+    _avisar(tarefas, outro)
     return {"relacao": "enviado"}
 
 
@@ -543,6 +546,7 @@ def _convite_de(supabase: Client, friendship_id: str, user_id: str) -> dict[str,
 @router.post("/convites/{friendship_id}/aceitar")
 def aceitar(
     friendship_id: str,
+    tarefas: BackgroundTasks,
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
 ):
@@ -554,7 +558,91 @@ def aceitar(
     supabase.table("pathr_friendship").update(
         {"status": "accepted", "responded_at": _agora()}
     ).eq("id", friendship_id).eq("addressee_id", user_id).execute()
+    _avisar(tarefas, str(convite["requester_id"]))
     return {"relacao": "amigos"}
+
+
+def _avisar(tarefas: BackgroundTasks, user_id: str) -> None:
+    """Acorda as telas abertas da OUTRA pessoa: elas reconsultam as novidades
+    e mostram o pop-up na hora, sem esperar ela recarregar a página. Depois da
+    resposta, para um aviso que falhe não custar o convite."""
+    tarefas.add_task(eventos.publicar, user_id, "/social/novidades")
+
+
+# ---------------------------------------------------------------------------
+# Novidades: o pop-up de convite recebido e de convite aceito
+# ---------------------------------------------------------------------------
+
+
+@router.get("/novidades")
+def novidades(
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """Convites recebidos que a pessoa ainda não viu, e convites dela que foram
+    aceitos desde a última vez. Cada item traz o cartão da outra pessoa."""
+    user_id = str(current_user["id"])
+    recebidos = (
+        supabase.table("pathr_friendship").select("*")
+        .eq("addressee_id", user_id).eq("status", "pending").is_("invite_seen_at", "null")
+        .execute().data or []
+    )
+    aceitos = (
+        supabase.table("pathr_friendship").select("*")
+        .eq("requester_id", user_id).eq("status", "accepted").is_("accept_seen_at", "null")
+        .execute().data or []
+    )
+    itens = [("convite", l, str(l["requester_id"])) for l in recebidos] + [
+        ("aceito", l, str(l["addressee_id"])) for l in aceitos
+    ]
+    if not itens:
+        return []
+    relacoes = _relacoes(supabase, user_id)
+    cartoes = _cartoes(supabase, [outro for _, _, outro in itens], relacoes)
+    minhas = _minhas_tags(supabase, user_id)
+    saida = []
+    for tipo, linha, outro in itens:
+        if outro in cartoes:
+            saida.append({
+                "tipo": tipo,
+                "friendship_id": str(linha["id"]),
+                "quando": linha.get("responded_at") if tipo == "aceito" else linha.get("created_at"),
+                "pessoa": _publico(cartoes[outro], minhas),
+            })
+    saida.sort(key=lambda item: str(item.get("quando") or ""))
+    return saida
+
+
+class NovidadeVista(BaseModel):
+    friendship_id: str = Field(max_length=40)
+    tipo: str = Field(pattern="^(convite|aceito)$")
+
+
+class NovidadesVistas(BaseModel):
+    itens: list[NovidadeVista] = Field(max_length=50)
+
+
+@router.post("/novidades/vistas", status_code=status.HTTP_204_NO_CONTENT)
+def marcar_vistas(
+    payload: NovidadesVistas,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """O pop-up apareceu: não aparece de novo, em nenhum aparelho. Só a ponta
+    certa marca — o convite, quem recebeu; o aceite, quem enviou."""
+    user_id = str(current_user["id"])
+    agora = _agora()
+    for item in payload.itens:
+        try:
+            UUID(item.friendship_id)
+        except ValueError:
+            continue
+        consulta = supabase.table("pathr_friendship")
+        if item.tipo == "convite":
+            consulta.update({"invite_seen_at": agora}).eq("id", item.friendship_id).eq("addressee_id", user_id).execute()
+        else:
+            consulta.update({"accept_seen_at": agora}).eq("id", item.friendship_id).eq("requester_id", user_id).execute()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.delete("/convites/{friendship_id}", status_code=status.HTTP_204_NO_CONTENT)

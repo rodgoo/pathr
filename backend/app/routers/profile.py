@@ -18,7 +18,7 @@ from supabase import Client
 from app.config import settings
 from app.database import get_supabase
 from app.deps import get_current_user
-from app.services import cifra, geo, progresso
+from app.services import cifra, geo, imagem, progresso
 from app.services.progress import minutos_de_leitura
 from app.schemas.auth import SignupRequest
 
@@ -251,6 +251,9 @@ async def upload_avatar(
             detail="Formato não aceito. Envie JPG, PNG ou WebP.",
         )
 
+    # Reduzida a 512 px e sem EXIF (services/imagem.py): a foto da câmera tinha
+    # megabytes e demorava a aparecer em toda tela.
+    data = imagem.reduzir(data, tipo)
     user_id = str(current_user["id"])
     caminho = f"{user_id}/avatar.{_IMAGENS[tipo]}"
     try:

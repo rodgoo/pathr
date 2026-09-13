@@ -14,6 +14,7 @@
  */
 
 import { useEffect, useState } from "react";
+import { esquecerFoto, fotoDe } from "@/lib/fotos";
 import { profile as profileApi } from "@/api/endpoints";
 import { useAuth } from "@/hooks/useAuth";
 import { ACC3, TEXT } from "@/lib/tokens";
@@ -59,24 +60,13 @@ export function Avatar({ nome, editavel = false }: { nome: string; editavel?: bo
       return;
     }
     let vivo = true;
-    let criada: string | null = null;
-    void profileApi
-      .avatar()
-      .then((blob) => {
-        if (!vivo) return;
-        criada = URL.createObjectURL(blob);
-        setUrl(criada);
-      })
-      .catch(() => {
-        // Sem foto na tela é melhor que uma tela com erro: as iniciais
-        // aparecem e o resto do perfil continua utilizável.
-        if (vivo) setUrl(null);
-      });
+    // Da memória de fotos (lib/fotos): a mesma foto não é baixada de novo a
+    // cada tela. Sem foto, as iniciais aparecem e o perfil segue utilizável.
+    void fotoDe("eu", () => profileApi.avatar()).then((guardada) => {
+      if (vivo) setUrl(guardada);
+    });
     return () => {
       vivo = false;
-      // O object URL segura os bytes na memória até ser revogado, e um por
-      // montagem vazaria a cada visita à tela.
-      if (criada) URL.revokeObjectURL(criada);
     };
   }, [temFoto]);
 
@@ -85,6 +75,7 @@ export function Avatar({ nome, editavel = false }: { nome: string; editavel?: bo
     setOcupado(true);
     try {
       await profileApi.uploadAvatar(arquivo);
+      esquecerFoto("eu");
       // O `has_avatar` mora na sessão: sem recarregar, a tela continuaria
       // achando que não há foto e nem tentaria buscá-la.
       await refresh();
@@ -100,6 +91,7 @@ export function Avatar({ nome, editavel = false }: { nome: string; editavel?: bo
     setOcupado(true);
     try {
       await profileApi.removeAvatar();
+      esquecerFoto("eu");
       await refresh();
     } catch (caught) {
       setErro(caught instanceof Error ? caught.message : "Não consegui remover a imagem.");

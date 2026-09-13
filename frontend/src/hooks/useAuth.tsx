@@ -26,6 +26,7 @@ import { clearReads } from "@/offline/cache";
 import type { User } from "@/api/types";
 import { limparEstadoGuardado } from "./useAppState";
 import { esquecerVagas } from "@/lib/vagasGuardadas";
+import { esquecerTodasAsFotos } from "@/lib/fotos";
 import { lembrarChave } from "@/lib/passkeys";
 
 type Status = "checking" | "authenticated" | "anonymous";
@@ -134,6 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // deve começar na tela inicial, não no meio do estudo de outra pessoa.
       limparEstadoGuardado();
       esquecerVagas();
+      esquecerTodasAsFotos();
       setUser(null);
       setStatus("anonymous");
       // O conteúdo guardado para uso offline sai do aparelho junto. A FILA de

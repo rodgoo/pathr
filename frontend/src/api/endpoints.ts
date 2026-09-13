@@ -9,6 +9,7 @@ import { api } from "./client";
 import { esquecerVagas } from "@/lib/vagasGuardadas";
 import type {
   Amizades,
+  NovidadeDeAmizade,
   ApiStatusReport,
   DisponibilidadeUsername,
   PessoaCartao,
@@ -114,6 +115,10 @@ export const social = {
     api.del<void>(`/social/convites/${encodeURIComponent(friendshipId)}`),
   avatar: (username: string) =>
     api.blob(`/social/pessoas/${encodeURIComponent(username)}/avatar`),
+  /** Convites recebidos e aceites que ainda não viraram pop-up. */
+  novidades: () => api.get<NovidadeDeAmizade[]>("/social/novidades"),
+  marcarVistas: (itens: { friendship_id: string; tipo: "convite" | "aceito" }[]) =>
+    api.post<void>("/social/novidades/vistas", { itens }),
 };
 
 export const auth = {

@@ -22,6 +22,7 @@ import { ALTURA_DA_BARRA, MobileNav } from "./MobileNav";
 import { OfflineBar } from "./OfflineBar";
 import { ScreenBoundary } from "./ScreenBoundary";
 import { Sidebar } from "./Sidebar";
+import { AvisosDeAmizade } from "@/components/social/AvisosDeAmizade";
 
 const FUNDO: React.CSSProperties = {
   // 100dvh e não 100vh: no Safari do iPhone, `vh` conta a barra de endereço
@@ -77,6 +78,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <main style={{ ...PAINEL, flex: 1, padding: 14 }}>{conteudo}</main>
         </div>
         <MobileNav />
+        <AvisosDeAmizade />
       </div>
     );
   }
@@ -96,6 +98,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <OfflineBar />
         {conteudo}
       </main>
+      <AvisosDeAmizade />
     </div>
   );
 }

@@ -17,6 +17,7 @@ import type { PessoaCartao, SequenciaDupla } from "@/api/types";
 import { CardDeConquista } from "@/components/social/CardDeConquista";
 import { Icon } from "@/components/ui/icons";
 import { marcoAtingido, proximoMarco } from "@/lib/conquista";
+import { fotoDe } from "@/lib/fotos";
 import { MarcaDaTecnologia, identidade } from "@/lib/tecnologias";
 import { ACC, ACC3, C, HAIRLINE, TEXT, tint } from "@/lib/tokens";
 
@@ -52,18 +53,13 @@ export function FotoDePessoa({ pessoa, lado = 48 }: { pessoa: PessoaCartao; lado
   useEffect(() => {
     if (!pessoa.has_avatar) return undefined;
     let vivo = true;
-    let criada: string | null = null;
-    social
-      .avatar(pessoa.username)
-      .then((blob) => {
-        if (!vivo) return;
-        criada = URL.createObjectURL(blob);
-        setUrl(criada);
-      })
-      .catch(() => undefined);
+    // Da memória de fotos (lib/fotos): a lista de amigos, o pop-up e o card
+    // usam a mesma foto sem baixá-la de novo.
+    void fotoDe(pessoa.username, () => social.avatar(pessoa.username)).then((guardada) => {
+      if (vivo) setUrl(guardada);
+    });
     return () => {
       vivo = false;
-      if (criada) URL.revokeObjectURL(criada);
     };
   }, [pessoa.username, pessoa.has_avatar]);
 

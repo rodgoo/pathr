@@ -23,6 +23,7 @@
  */
 
 import { useState } from "react";
+import { useAmigosPiscando } from "@/lib/avisoAmigos";
 import { useAppState } from "@/hooks/useAppState";
 import { useAuth } from "@/hooks/useAuth";
 import { ACC4, PANEL, TEXT } from "@/lib/tokens";
@@ -71,6 +72,8 @@ export function MobileNav() {
   // onde a pessoa está.
   const telaAtiva = state.screen === "material" ? state.resourceReturn : state.screen;
   const naFolha = FOLHA.some((item) => item.screen === telaAtiva);
+  // Amigos mora na folha do "Mais": com novidade, os dois piscam até a tela abrir.
+  const amigosPiscando = useAmigosPiscando() && telaAtiva !== "amigos";
 
   return (
     <>
@@ -124,6 +127,7 @@ export function MobileNav() {
                 key={item.screen}
                 item={item}
                 ativo={telaAtiva === item.screen}
+                piscando={item.screen === "amigos" && amigosPiscando}
                 onClick={() => vaiPara(item.screen)}
               />
             ))}
@@ -173,6 +177,7 @@ export function MobileNav() {
           item={{ label: "Mais", screen: "config", icon: "dots" }}
           ativo={naFolha || abriuMais}
           expandido={abriuMais}
+          piscando={amigosPiscando && !abriuMais}
           onClick={() => setAbriuMais((aberto) => !aberto)}
         />
       </nav>
@@ -184,16 +189,19 @@ function BotaoDaBarra({
   item,
   ativo,
   expandido,
+  piscando,
   onClick,
 }: {
   item: Destino;
   ativo: boolean;
   expandido?: boolean;
+  piscando?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
+      className={piscando ? "pathr-piscando" : undefined}
       onClick={onClick}
       aria-current={ativo && expandido === undefined ? "page" : undefined}
       aria-expanded={expandido}
@@ -228,15 +236,18 @@ function BotaoDaBarra({
 function ItemDaFolha({
   item,
   ativo,
+  piscando,
   onClick,
 }: {
   item: Destino;
   ativo: boolean;
+  piscando?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
+      className={piscando ? "pathr-piscando" : undefined}
       onClick={onClick}
       aria-current={ativo ? "page" : undefined}
       style={{
