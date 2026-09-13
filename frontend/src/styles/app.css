@@ -138,8 +138,19 @@ a,
     rgba(255, 255, 255, 0.42) 50%,
     transparent 65%
   );
-  animation: noc-sweep 1.6s ease-in-out infinite;
+  animation: marca-reflexo 2.4s cubic-bezier(.45, 0, .25, 1) infinite;
   pointer-events: none;
+}
+
+/* Um reflexo só, que atravessa o símbolo e SEGUE para o nome, e depois uma
+   pausa. Antes eram duas animações de 1.6s com curvas diferentes (uma
+   ease-in-out, a outra linear) e o fundo do nome se repetindo: a luz saía do
+   símbolo, o nome acendia fora de compasso e o brilho parecia voltar do fim.
+   Agora as duas dividem o mesmo ciclo — símbolo de 0 a 40%, nome de 32% a
+   78% — e o resto do ciclo é escuro, para o olho perceber um "passar". */
+@keyframes marca-reflexo {
+  0% { transform: translateX(-100%); }
+  40%, 100% { transform: translateX(100%); }
 }
 
 .nome-brilho {
@@ -152,20 +163,23 @@ a,
     var(--color-text) 50%,
     rgba(233, 233, 237, 0.3) 80%
   );
-  background-size: 220% 100%;
+  /* 250%: o período de repetição do fundo (2,5× a largura) é maior que o
+     curso da luz, então só UMA faixa clara aparece por vez — com 220% a
+     cópia seguinte entrava pela esquerda e parecia o brilho recomeçando. */
+  background-size: 250% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  animation: noc-nome 1.6s linear infinite;
+  animation: noc-nome 2.4s cubic-bezier(.45, 0, .25, 1) infinite;
   letter-spacing: 0.01em;
 }
 
 @keyframes noc-nome {
-  from {
-    background-position: 160% 0;
+  0%, 32% {
+    background-position: 105% 0;
   }
-  to {
-    background-position: -60% 0;
+  78%, 100% {
+    background-position: -5% 0;
   }
 }
 
