@@ -587,36 +587,48 @@ function LacunaCompacta({ lacuna, cursos }: { lacuna: JobListGap; cursos: JobCou
     <div
       style={{
         display: "flex",
-        flexWrap: "wrap",
-        alignItems: "center",
-        gap: "4px 10px",
+        flexDirection: "column",
+        gap: 4,
         padding: "6px 10px",
         borderRadius: 7,
         background: "rgba(233,233,237,.04)",
       }}
     >
-      <span style={{ fontSize: 13, color: lacuna.situacao === "falta" ? C.rosa : C.ambar }}>{lacuna.nome}</span>
-      <span style={{ fontSize: 11, color: lacuna.obrigatorio ? TEXT.muted : TEXT.faint }}>
-        {lacuna.obrigatorio ? "obrigatório" : "diferencial"}
-        {lacuna.situacao === "parcial" ? (lacuna.idioma ? " · um degrau abaixo" : " · você está começando") : ""}
-        {lacuna.situacao === "sem_nivel" ? " · sem nivelamento" : ""}
-      </span>
+      {/* Nome e ação na MESMA linha: a ação fica à direita do que ela afeta,
+          e não caída numa linha própria embaixo do certificado. */}
+      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <span style={{ flex: 1, minWidth: 0, display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: "2px 8px" }}>
+          <span style={{ fontSize: 13, color: lacuna.situacao === "falta" ? C.rosa : C.ambar }}>{lacuna.nome}</span>
+          <span style={{ fontSize: 11, color: lacuna.obrigatorio ? TEXT.muted : TEXT.faint }}>
+            {lacuna.obrigatorio ? "obrigatório" : "diferencial"}
+            {lacuna.situacao === "parcial" ? (lacuna.idioma ? " · um degrau abaixo" : " · você está começando") : ""}
+            {lacuna.situacao === "sem_nivel" ? " · sem nivelamento" : ""}
+          </span>
+        </span>
+        <span style={{ flex: "none" }}>
+          <AcaoDaLacuna lacuna={lacuna} />
+        </span>
+      </div>
       {curso ? (
+        // Texto corrido, e não `inline-flex`: com flex, título e preço viravam
+        // blocos separados e o "· pago" caía sozinho numa coluna estreita ao
+        // lado de um título quebrado em duas linhas.
         <a
           href={linkExterno(curso.url)}
           target="_blank"
           rel="noreferrer noopener"
-          style={{ fontSize: 12, color: ACC, display: "inline-flex", alignItems: "center", gap: 4, minWidth: 0 }}
+          style={{ fontSize: 12, color: ACC, lineHeight: 1.45 }}
           title={`${curso.emissor} · certificado ${curso.gratuito ? "gratuito" : "pago"}`}
         >
-          <Icon name="award" size={13} style={{ color: curso.gratuito ? C.verde : C.ambar, flex: "none" }} />
+          <Icon
+            name="award"
+            size={13}
+            style={{ color: curso.gratuito ? C.verde : C.ambar, verticalAlign: "-2px", marginRight: 4 }}
+          />
           {curso.titulo}
-          <span style={{ color: TEXT.faint }}>· {curso.gratuito ? "gratuito" : "pago"}</span>
+          <span style={{ color: TEXT.faint, whiteSpace: "nowrap" }}> · {curso.gratuito ? "gratuito" : "pago"}</span>
         </a>
       ) : null}
-      <span style={{ marginLeft: "auto" }}>
-        <AcaoDaLacuna lacuna={lacuna} />
-      </span>
     </div>
   );
 }
@@ -674,13 +686,19 @@ function Nota({ nota, estimada }: { nota: number | null | undefined; estimada?: 
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={nota}
-      style={{ minWidth: 120, textAlign: "right" }}
+      // Número, legenda e barra alinhados pela mesma borda esquerda e na
+      // mesma largura. Alinhados à direita, no celular — onde o bloco desce
+      // para uma linha própria — o número ficava solto no meio, sem
+      // relação com o começo da barra.
+      style={{ width: 150, maxWidth: "100%" }}
     >
-      <div style={{ fontSize: 20, lineHeight: 1, color: cor }}>{nota}%</div>
-      <div style={{ fontSize: 11, color: TEXT.faint, margin: "3px 0 5px" }}>
-        {estimada ? "estimado pelo título" : "combina com você"}
+      <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+        <span style={{ fontSize: 20, lineHeight: 1, color: cor }}>{nota}%</span>
+        <span style={{ fontSize: 11, color: TEXT.faint }}>
+          {estimada ? "estimado pelo título" : "combina com você"}
+        </span>
       </div>
-      <div style={{ height: 5, borderRadius: 3, background: "rgba(233,233,237,.1)" }}>
+      <div style={{ height: 5, marginTop: 6, borderRadius: 3, background: "rgba(233,233,237,.1)" }}>
         <div style={{ width: `${nota}%`, height: "100%", borderRadius: 3, background: cor }} />
       </div>
     </div>

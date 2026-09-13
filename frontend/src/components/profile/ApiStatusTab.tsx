@@ -154,18 +154,26 @@ function Linha({ item, primeira }: { item: ApiIntegration; primeira: boolean }) 
       role="group"
       aria-label={`${item.nome}: ${rotulo}`}
       style={{
-        display: "flex",
-        flexWrap: "wrap",
-        gap: "5.6px 14px",
         padding: "11.2px 0",
         borderTop: primeira ? "none" : `1px solid ${HAIRLINE}`,
       }}
     >
-      <div style={{ flex: "1 1 280px", minWidth: 0 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 8.4, flexWrap: "wrap" }}>
-          <Ponto cor={cor} />
-          <span style={{ fontSize: SIZE.corpo, color: TEXT.full }}>{item.nome}</span>
-          {item.modelo ? <span style={{ fontSize: 11, color: TEXT.faint }}>{item.modelo}</span> : null}
+      <div style={{ minWidth: 0 }}>
+        {/* Estado e tempo de resposta na linha do nome, à direita. Numa coluna
+            própria, no celular ela descia para baixo da descrição e ficava
+            flutuando no meio do cartão. */}
+        <div style={{ display: "flex", alignItems: "baseline", gap: 8.4 }}>
+          <span style={{ flex: 1, minWidth: 0, display: "flex", alignItems: "center", gap: 8.4, flexWrap: "wrap" }}>
+            <Ponto cor={cor} />
+            <span style={{ fontSize: SIZE.corpo, color: TEXT.full }}>{item.nome}</span>
+            {item.modelo ? <span style={{ fontSize: 11, color: TEXT.faint }}>{item.modelo}</span> : null}
+          </span>
+          <span style={{ flex: "none", textAlign: "right", whiteSpace: "nowrap" }}>
+            <span style={{ fontSize: 12.5, color: cor }}>{rotulo}</span>
+            {item.latencia_ms !== null ? (
+              <span style={{ fontSize: 11, color: TEXT.faint }}> · {numero(item.latencia_ms)} ms</span>
+            ) : null}
+          </span>
         </div>
         <div style={{ fontSize: 12, color: TEXT.muted, marginTop: 3, paddingLeft: 16.4 }}>{item.para_que}</div>
         {item.detalhe ? (
@@ -176,12 +184,6 @@ function Linha({ item, primeira }: { item: ApiIntegration; primeira: boolean }) 
           </div>
         ) : null}
         <Uso item={item} />
-      </div>
-      <div style={{ textAlign: "right", minWidth: 110 }}>
-        <div style={{ fontSize: 12.5, color: cor }}>{rotulo}</div>
-        {item.latencia_ms !== null ? (
-          <div style={{ fontSize: 11, color: TEXT.faint }}>{numero(item.latencia_ms)} ms</div>
-        ) : null}
       </div>
     </div>
   );

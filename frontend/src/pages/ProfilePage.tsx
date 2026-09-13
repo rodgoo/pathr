@@ -156,21 +156,24 @@ function Certificados({
   return (
     <Panel pad={16.8} style={{ marginTop: 11.2 }}>
       <section aria-label="Certificados">
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: 8.4, marginBottom: 8.4 }}>
+        {/* "Ver cursos" na linha do título, e a explicação embaixo: com os três
+            na mesma linha flexível, no celular o botão sobrava sozinho numa
+            linha própria. */}
+        <div style={{ display: "flex", alignItems: "center", gap: 8.4 }}>
           <Kicker>{`Certificados · ${lista.length}`}</Kicker>
-          <span style={{ fontSize: 11.5, color: TEXT.faint }}>
-            Marcados como "já possuo" na aba Cursos
-          </span>
           <button
             type="button"
             className="btn btn-ghost"
-            style={{ marginLeft: "auto", fontSize: 12.5 }}
+            style={{ marginLeft: "auto", fontSize: 12.5, flex: "none" }}
             onClick={onVerCursos}
           >
             <Icon name="award" size={15} />
             Ver cursos
           </button>
         </div>
+        <p style={{ margin: "2px 0 8.4px", fontSize: 11.5, color: TEXT.faint }}>
+          Marcados como "já possuo" na aba Cursos
+        </p>
         {carregando ? null : lista.length === 0 ? (
           <p style={{ margin: 0, fontSize: 12.5, color: TEXT.muted }}>
             Nenhum ainda. Em Cursos, marque "Já possuo" nos certificados que você tem.
@@ -247,36 +250,26 @@ function IdentityCard({
     <Panel
       tone="section"
       pad={16.8}
-      style={{
-        marginBottom: 11.2,
-        display: "flex",
-        flexWrap: "wrap",
-        gap: 16.8,
-        alignItems: "flex-start",
-      }}
+      style={{ marginBottom: 11.2, display: "flex", flexDirection: "column", gap: 11.2 }}
     >
-      <Avatar nome={name} editavel />
-
-      <div style={{ flex: 1, minWidth: 220, display: "flex", flexDirection: "column", gap: 11.2 }}>
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 8.4 }}>
+      {/* Foto, nome e "Editar perfil" numa linha que nunca quebra. Antes o
+          bloco de texto tinha largura mínima e, no celular, descia inteiro
+          para baixo da foto — deixando um vão vazio ao lado dela. */}
+      <div style={{ display: "flex", gap: 14, alignItems: "flex-start" }}>
+        <Avatar nome={name} editavel />
+        <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
           {/* O @ embaixo do nome: é por ele que as outras contas te acham, e
               ele precisa estar à vista no lugar onde a pessoa se reconhece. */}
-          <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
-            <span style={{ fontSize: 22, lineHeight: 1.2 }}>{name}</span>
-            {username ? (
-              <span style={{ fontSize: 13, color: ACC4, marginTop: 2 }}>@{username}</span>
-            ) : null}
-          </span>
-          <button
-            type="button"
-            className="btn btn-ghost"
-            style={{ marginLeft: "auto", fontSize: 12.5 }}
-            onClick={onEdit}
-          >
+          <span style={{ fontSize: 22, lineHeight: 1.2, overflowWrap: "anywhere" }}>{name}</span>
+          {username ? <span style={{ fontSize: 13, color: ACC4, marginTop: -4 }}>@{username}</span> : null}
+          <button type="button" className="btn btn-ghost" style={{ fontSize: 12.5, marginTop: 2 }} onClick={onEdit}>
             <Icon name="pencil" size={15} />
             Editar perfil
           </button>
         </div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
 
         <div
           style={{
