@@ -18,6 +18,7 @@ import { useQuery } from "@/hooks/useApi";
 import { C, TEXT } from "@/lib/tokens";
 import { Segmented } from "@/components/ui/Segmented";
 import { Kicker, Panel } from "@/components/ui/primitives";
+import { MidiaAnexada } from "./MidiaAnexada";
 
 const TIPOS: readonly { value: TipoRelato; label: string }[] = [
   { value: "reclamacao", label: "Reclamação" },
@@ -173,6 +174,11 @@ export function RelatarTab() {
                 </div>
                 {/* Texto puro, nunca HTML: o React escapa, e nada aqui vira link. */}
                 <p style={{ margin: "4px 0 0", fontSize: 13.5, whiteSpace: "pre-wrap" }}>{relato.message}</p>
+                {relato.has_attachment ? (
+                  <div style={{ marginTop: 6 }}>
+                    <MidiaAnexada relatoId={relato.id} />
+                  </div>
+                ) : null}
                 {relato.moderator_note ? (
                   <p style={{ margin: "6px 0 0", fontSize: 12.5, color: TEXT.muted }}>
                     <strong style={{ fontWeight: 500 }}>Resposta:</strong> {relato.moderator_note}

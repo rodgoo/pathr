@@ -10,14 +10,15 @@
  * um endereço que o autor do relato tenha escolhido.
  */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { relatos } from "@/api/endpoints";
 import type { RelatoModeracao, StatusRelato } from "@/api/types";
 import { useQuery } from "@/hooks/useApi";
-import { C, HAIRLINE, TEXT } from "@/lib/tokens";
+import { C, TEXT } from "@/lib/tokens";
 import { Segmented } from "@/components/ui/Segmented";
 import { Select } from "@/components/ui/Select";
 import { Kicker, Panel } from "@/components/ui/primitives";
+import { MidiaAnexada } from "./MidiaAnexada";
 
 type Situacao = "abertos" | "todos" | "resolvidos";
 
@@ -32,34 +33,6 @@ const OPCOES_STATUS: readonly { value: StatusRelato; label: string }[] = [
   { value: "em_analise", label: "Em análise" },
   { value: "resolvido", label: "Resolvido" },
 ];
-
-function FotoDoRelato({ id }: { id: string }) {
-  const [url, setUrl] = useState<string | null>(null);
-  useEffect(() => {
-    let vivo = true;
-    let criada: string | null = null;
-    relatos
-      .foto(id)
-      .then((blob) => {
-        if (!vivo) return;
-        criada = URL.createObjectURL(blob);
-        setUrl(criada);
-      })
-      .catch(() => undefined);
-    return () => {
-      vivo = false;
-      if (criada) URL.revokeObjectURL(criada);
-    };
-  }, [id]);
-  if (!url) return <span style={{ fontSize: 12, color: TEXT.faint }}>Carregando foto…</span>;
-  return (
-    <img
-      src={url}
-      alt="Foto anexada ao relato"
-      style={{ maxWidth: "100%", maxHeight: 320, borderRadius: 8, boxShadow: `0 0 0 1px ${HAIRLINE}` }}
-    />
-  );
-}
 
 function ItemModeracao({ relato, onSalvo }: { relato: RelatoModeracao; onSalvo: () => void }) {
   const [statusNovo, setStatusNovo] = useState<StatusRelato>(relato.status);
@@ -98,7 +71,11 @@ function ItemModeracao({ relato, onSalvo }: { relato: RelatoModeracao; onSalvo: 
         </span>
       </div>
       <p style={{ margin: 0, fontSize: 14, whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>{relato.message}</p>
-      {relato.has_attachment ? <FotoDoRelato id={relato.id} /> : null}
+      {relato.has_attachment ? (
+        <div>
+          <MidiaAnexada relatoId={relato.id} />
+        </div>
+      ) : null}
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8.4, alignItems: "flex-end" }}>
         <div style={{ width: 170 }}>
