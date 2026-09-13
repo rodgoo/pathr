@@ -40,6 +40,7 @@ function renderApp(server: MockServer, path = "/entrar") {
 }
 
 const semSessao = () => ({ status: 401, body: { detail: "sem sessão" } });
+const cidades = () => ({ body: [{ ibge: "3205309", nome: "Vitória", uf: "ES", capital: true }] });
 
 afterEach(() => {
   vi.unstubAllGlobals();
@@ -82,7 +83,7 @@ describe("cadastro", () => {
   vi.setConfig({ testTimeout: 15_000 });
 
   it("exige nascimento e residência antes de deixar enviar", async () => {
-    const server = mockServer({ "GET /auth/me": semSessao });
+    const server = mockServer({ "GET /auth/me": semSessao, "GET /geo/cidades/publico": cidades });
     const { user } = renderApp(server, "/cadastro");
 
     await screen.findByRole("heading", { name: "Criar conta" });
@@ -95,10 +96,9 @@ describe("cadastro", () => {
     expect(screen.getByRole("button", { name: "Criar conta" })).toBeDisabled();
 
     await user.type(screen.getByLabelText("Data de nascimento"), "1998-04-12");
+    // Digitar a cidade inteira a reconhece sozinha — a UF vem junto, sem campo próprio.
     await user.type(screen.getByLabelText("Cidade onde mora"), "Vitória");
-    // A UF é o select do app, não o nativo: escolhe-se como uma pessoa faz.
-    await user.click(screen.getByRole("combobox", { name: "UF" }));
-    await user.click(screen.getByRole("option", { name: "ES" }));
+    expect(await screen.findByText("Cidade reconhecida: Vitória - ES")).toBeInTheDocument();
 
     expect(screen.getByRole("button", { name: "Criar conta" })).toBeEnabled();
   });
@@ -106,6 +106,7 @@ describe("cadastro", () => {
   it("manda os campos novos e termina pedindo a confirmação, sem logar", async () => {
     const server = mockServer({
       "GET /auth/me": semSessao,
+      "GET /geo/cidades/publico": cidades,
       "POST /auth/signup": () => ({
         status: 201,
         body: { detail: "Conta criada. Confirme seu e-mail pelo link que enviamos para entrar." },
@@ -117,10 +118,9 @@ describe("cadastro", () => {
     await user.type(screen.getByLabelText("Como quer ser chamado"), "Rodrigo");
     await user.type(screen.getByLabelText("E-mail"), "pessoa@exemplo.com");
     await user.type(screen.getByLabelText("Data de nascimento"), "1998-04-12");
+    // Digitar a cidade inteira a reconhece sozinha — a UF vem junto, sem campo próprio.
     await user.type(screen.getByLabelText("Cidade onde mora"), "Vitória");
-    // A UF é o select do app, não o nativo: escolhe-se como uma pessoa faz.
-    await user.click(screen.getByRole("combobox", { name: "UF" }));
-    await user.click(screen.getByRole("option", { name: "ES" }));
+    expect(await screen.findByText("Cidade reconhecida: Vitória - ES")).toBeInTheDocument();
     await user.type(screen.getByLabelText("Senha"), "Senha-Longa-9");
     await user.click(screen.getByRole("button", { name: "Criar conta" }));
 
@@ -164,7 +164,7 @@ describe("entrada com e-mail não confirmado", () => {
 
 describe("campo de senha", () => {
   it("alterna entre oculto e visível sem perder o que foi digitado", async () => {
-    const server = mockServer({ "GET /auth/me": semSessao });
+    const server = mockServer({ "GET /auth/me": semSessao, "GET /geo/cidades/publico": cidades });
     const { user } = renderApp(server);
 
     await screen.findByRole("heading", { name: "Entrar" });

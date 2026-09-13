@@ -281,6 +281,8 @@ export const jobs = {
 /** Cidades do Brasil pelo começo do nome, para o campo de região. */
 export const geo = {
   cidades: (q: string) => api.get<City[]>(`/geo/cidades?q=${encodeURIComponent(q)}`),
+  /** Sem sessão, para o cadastro. Limitada por IP no servidor. */
+  cidadesPublico: (q: string) => api.get<City[]>(`/geo/cidades/publico?q=${encodeURIComponent(q)}`),
 };
 
 /** O estado das integrações externas. A chave nunca vem junto. */

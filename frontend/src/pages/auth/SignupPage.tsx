@@ -18,10 +18,10 @@ import {
   Field,
   FormError,
   PasswordField,
-  SelectField,
 } from "@/components/auth/AuthShell";
 import { Icon } from "@/components/ui/icons";
-import { UFS } from "@/lib/ufs";
+import type { City } from "@/api/types";
+import { CidadeDoCadastro } from "@/components/auth/CidadeDoCadastro";
 import { CampoUsername } from "@/components/social/CampoUsername";
 import { C, TEXT } from "@/lib/tokens";
 
@@ -52,8 +52,9 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [birthDate, setBirthDate] = useState("");
-  const [city, setCity] = useState("");
-  const [state, setState] = useState("");
+  // A cidade só vale escolhida da lista (ou reconhecida): é o que traz a UF
+  // certa e o nome como o IBGE escreve.
+  const [cidade, setCidade] = useState<City | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState<string | null>(null);
@@ -64,8 +65,7 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
     email.includes("@") &&
     missing.length === 0 &&
     birthDate !== "" &&
-    city.trim().length >= 2 &&
-    state !== "" &&
+    cidade !== null &&
     usernameOk;
 
   async function submit(event: FormEvent) {
@@ -79,8 +79,8 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
         email: email.trim(),
         password,
         birth_date: birthDate,
-        city: city.trim(),
-        state,
+        city: cidade?.nome ?? "",
+        state: cidade?.uf ?? "",
         username: username.trim().replace(/^@+/, ""),
       });
       setDone(detail);
@@ -168,25 +168,7 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
           onChange={(event) => setBirthDate(event.target.value)}
         />
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 96px", gap: 8.4 }}>
-          <Field
-            id="signup-city"
-            label="Cidade onde mora"
-            autoComplete="address-level2"
-            required
-            value={city}
-            onChange={(event) => setCity(event.target.value)}
-          />
-          <SelectField
-            id="signup-state"
-            label="UF"
-            required
-            placeholder="—"
-            value={state}
-            onChange={setState}
-            options={UFS.map((uf) => ({ value: uf, label: uf }))}
-          />
-        </div>
+        <CidadeDoCadastro id="signup-city" escolhida={cidade} onEscolher={setCidade} />
 
         <PasswordField
           id="signup-password"
