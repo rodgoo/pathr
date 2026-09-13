@@ -177,6 +177,13 @@ class Settings(BaseSettings):
     # aberta para qualquer um acionar e-mail em nome do app.
     jobs_secret: str = ""
 
+    # --- Varredura diária ---
+    # Segredo PRÓPRIO da rotina que alimenta o Notion, separado do JOBS_SECRET
+    # de propósito: ele só abre /jobs/varredura, que lê relatos sem autor e
+    # manda no máximo um e-mail por dia para a moderação. Vazaria menos do que
+    # o outro, que dispara e-mail para todas as contas.
+    scan_secret: str = ""
+
     # --- Chave de acesso (WebAuthn) ---
     # O domínio a que as chaves ficam presas. Vazio = o host de FRONTEND_URL
     # (pathr.notter.com.br), e é de propósito que NÃO seja notter.com.br: no

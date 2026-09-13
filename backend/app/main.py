@@ -21,6 +21,8 @@ from app.config import settings
 from app.middleware_usuario import UsuarioDaRequisicao
 from app.seguranca_http import CabecalhosDeSeguranca
 from app.services import eventos
+from app.database import get_supabase
+from app.services.erros import registrar as registrar_erro
 
 logger = logging.getLogger("pathr")
 
@@ -65,8 +67,13 @@ class ErroInterno(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
         try:
             return await call_next(request)
-        except Exception:  # noqa: BLE001
+        except Exception as exc:  # noqa: BLE001
             logger.exception("erro não tratado em %s %s", request.method, request.url.path)
+            # Também no banco: o log da Fly roda e some, e a varredura diária
+            # precisa contar quantas vezes cada defeito aconteceu.
+            registrar_erro(
+                app.dependency_overrides.get(get_supabase, get_supabase), request.method, request.scope, exc
+            )
             return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={"detail": "Algo quebrou do nosso lado. Já registramos o erro."},
@@ -193,6 +200,7 @@ from app.routers import (  # noqa: E402
     roadmap,
     social,
     status_apis,
+    varredura,
     geo,
     tags,
     vagas,
@@ -233,4 +241,5 @@ app.include_router(explanations.router)
 app.include_router(plan.router)
 app.include_router(passkeys.router)
 app.include_router(jobs.router)
+app.include_router(varredura.router)
 app.include_router(walkthroughs.router)

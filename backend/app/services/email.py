@@ -540,3 +540,69 @@ def send_streak_at_risk(to_email: str, to_name: str, streak: int) -> bool:
             miolo,
         ),
     )
+
+
+# ---------------------------------------------------------------------------
+# Moderação: o resumo da varredura diária
+#
+# Vai só para quem modera (settings.moderator_emails), pedido pela rotina em
+# routers/varredura.py. Rosa quando há algo crítico ou alto — é o e-mail que
+# precisa ser aberto primeiro —, roxo nos outros dias.
+# ---------------------------------------------------------------------------
+
+_ROSA = "#d9849f"
+
+
+def _plural(n: int, um: str, varios: str) -> str:
+    return f"{n} {um if n == 1 else varios}"
+
+
+def send_scan_summary(to_email: str, numeros: dict, destaques: list[str], notion_url: str | None) -> bool:
+    sev = numeros["por_severidade"]
+    urgente = sev["critico"] + sev["alto"] > 0
+    cor = _ROSA if urgente else _ROXO
+
+    linha_bugs = (
+        f'<b style="color:{_TINTA}">{_plural(numeros["bugs"], "bug encontrado", "bugs encontrados")} hoje</b>'
+        f' &mdash; {_plural(sev["critico"], "crítico", "críticos")}, {_plural(sev["alto"], "alto", "altos")}, '
+        f'{_plural(sev["medio"], "médio", "médios")} e {_plural(sev["baixo"], "baixo", "baixos")}'
+    )
+    if numeros["vulnerabilidades"]:
+        linha_bugs += f' ({_plural(numeros["vulnerabilidades"], "vulnerabilidade", "vulnerabilidades")})'
+
+    erros_txt = _plural(numeros["erros"], "erro", "erros") + " no servidor"
+    if numeros["erros"]:
+        erros_txt += f' ({_plural(numeros["ocorrencias_de_erro"], "ocorrência", "ocorrências")})'
+
+    relatos_txt = (
+        f'Usuários relataram {_plural(numeros["relatos_bug"], "bug", "bugs")} no sistema e '
+        f'{_plural(numeros["relatos_sugestao"], "sugestão", "sugestões")}.'
+    )
+    total_relatos = numeros["relatos_bug"] + numeros["relatos_sugestao"]
+
+    miolo = (
+        _cabecalho(cor)
+        + _titulo("Varredura diária", "O que apareceu hoje no PathR.", cor)
+        + _placar(
+            [
+                (str(numeros["bugs"]), "bugs", _ROSA if urgente else _ROXO_CLARO),
+                (str(numeros["sugestoes"]), "sugestões", _ROXO_CLARO),
+                (str(numeros["erros"]), "erros", _AMBAR if numeros["erros"] else _ROXO_CLARO),
+                (str(total_relatos), "relatos", _VERDE),
+            ]
+        )
+        + _texto(linha_bugs + ".", topo=20)
+        + _texto(f'{_plural(numeros["sugestoes"], "sugestão", "sugestões")} de melhoria.', topo=6)
+        + _texto(erros_txt + ".", topo=6)
+        + _texto(relatos_txt, topo=6)
+        + (_itens(destaques, cor) if destaques else "")
+        + (_botao("Abrir no Notion", escape(notion_url), cor) if notion_url else "")
+        + _rodape(mostrar_preferencias=False)
+    )
+    assunto = (
+        f'PathR hoje: {_plural(numeros["bugs"], "bug", "bugs")} '
+        f'({sev["critico"]} crít., {sev["alto"]} altos) · '
+        f'{_plural(numeros["sugestoes"], "sugestão", "sugestões")} · '
+        f'{_plural(numeros["erros"], "erro", "erros")} · {_plural(total_relatos, "relato", "relatos")}'
+    )
+    return _send(to_email, "Moderação PathR", assunto, _pagina(relatos_txt, miolo))

@@ -1146,4 +1146,34 @@ class PathrReport(SQLModel, table=True):
     updated_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
 
 
+class PathrErrorEvent(SQLModel, table=True):
+    """Uma exceção não tratada que virou 500. Ver migração 0022.
+
+    `message` chega aqui já redigida (services/erros.py): sem e-mail, UUID,
+    token ou número longo de ninguém.
+    """
+
+    __tablename__ = "pathr_error_event"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    fingerprint: str
+    method: str
+    route: str
+    error_type: str
+    message: Optional[str] = Field(default=None)
+    location: Optional[str] = Field(default=None)
+    occurred_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+
+
+class PathrScanRun(SQLModel, table=True):
+    """Uma varredura diária por data — a trava contra resumo repetido."""
+
+    __tablename__ = "pathr_scan_run"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    ran_on: date = Field(sa_column=Column(sa.Date(), nullable=False, unique=True))
+    summary: dict[str, Any] = Field(default_factory=dict, sa_column=_jsonb())
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+
+
 _mirror_defaults_to_database()
