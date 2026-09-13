@@ -13,6 +13,7 @@
  */
 
 import { useCallback, useEffect, useState } from "react";
+import { comTransicao } from "@/lib/transicao";
 
 export interface Location {
   path: string;
@@ -38,7 +39,7 @@ export function useLocation(): [Location, (path: string) => void] {
 
   const navigate = useCallback((path: string) => {
     window.history.pushState({}, "", path);
-    setLocation(read());
+    comTransicao(() => setLocation(read()));
   }, []);
 
   return [location, navigate];

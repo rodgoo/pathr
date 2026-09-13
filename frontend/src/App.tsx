@@ -32,6 +32,7 @@ import { ProfilePage } from "@/pages/ProfilePage";
 import { ResourcePage } from "@/pages/ResourcePage";
 import { RoadmapPage } from "@/pages/RoadmapPage";
 import { SettingsPage } from "@/pages/SettingsPage";
+import { ManualPage } from "@/pages/ManualPage";
 
 // As telas podem devolver null enquanto os dados chegam, então o tipo
 // precisa admitir isso — um Record<Screen, () => JSX.Element> obrigaria cada
@@ -50,6 +51,7 @@ const SCREENS: Record<Screen, () => JSX.Element | null> = {
   cursos: CoursesPage,
   vagas: JobsPage,
   config: SettingsPage,
+  manual: ManualPage,
 };
 
 export function App() {

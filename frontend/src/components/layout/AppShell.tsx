@@ -75,7 +75,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           }}
         >
           <OfflineBar />
-          <main style={{ ...PAINEL, flex: 1, padding: 14 }}>{conteudo}</main>
+          <main className="pathr-tela" style={{ ...PAINEL, flex: 1, padding: 14 }}>{conteudo}</main>
         </div>
         <MobileNav />
         <AvisosDeAmizade />
@@ -94,7 +94,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       }}
     >
       <Sidebar />
-      <main style={{ ...PAINEL, flex: "1 1 620px", padding: 22.4 }}>
+      <main className="pathr-tela" style={{ ...PAINEL, flex: "1 1 620px", padding: 22.4 }}>
         <OfflineBar />
         {conteudo}
       </main>

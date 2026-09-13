@@ -278,3 +278,37 @@ a,
     align-items: center;
   }
 }
+
+/* Troca de tela (lib/transicao.ts, View Transitions API). Só a área de
+   conteúdo anima: a navegação continua parada enquanto a tela troca. */
+.pathr-tela {
+  view-transition-name: pathr-tela;
+}
+
+::view-transition-old(pathr-tela) {
+  animation: pathr-tela-sai 140ms ease-in both;
+}
+
+::view-transition-new(pathr-tela) {
+  animation: pathr-tela-entra 280ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+/* O resto da página (site público, barra) cruza rápido. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+}
+
+@keyframes pathr-tela-sai {
+  to {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes pathr-tela-entra {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}

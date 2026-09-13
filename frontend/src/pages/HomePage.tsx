@@ -19,6 +19,7 @@ import { TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { SCREEN_IN } from "@/components/ui/primitives";
+import { PrimeirosPassos } from "@/components/manual/PrimeirosPassos";
 import { ConsistencyPanel } from "@/components/dashboard/ConsistencyPanel";
 import { ContinueCard } from "@/components/dashboard/ContinueCard";
 import { KpiCards } from "@/components/dashboard/KpiCards";
@@ -52,6 +53,8 @@ export function HomePage() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 16.8, ...SCREEN_IN }}>
+      {/* Some sozinho quando os passos essenciais estão feitos (ou dispensado). */}
+      <PrimeirosPassos compacto />
 
       <header style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: 11.2 }}>
         <div>

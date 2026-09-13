@@ -85,6 +85,7 @@ export function Sidebar() {
         { label: "Perfil e tags", screen: "perfil", icon: "user" },
         { label: "Currículo", screen: "cv", icon: "file" },
         { label: "Relatar", screen: "relatar", icon: "flag" },
+        { label: "Manual de bordo", screen: "manual", icon: "info" },
         { label: "Configurações", screen: "config", icon: "cog" },
       ],
     },
@@ -232,6 +233,7 @@ function NavButton({
         background: active ? "rgba(145,132,217,.13)" : "transparent",
         color: active ? ACC4 : "rgba(233,233,237,.72)",
         boxShadow: active ? "inset 0 0 0 1px rgba(145,132,217,.35)" : "none",
+        transition: "background-color .2s ease, color .2s ease, box-shadow .2s ease",
       }}
     >
       <span style={{ width: 16, height: 16, flex: "none", display: "grid", placeItems: "center" }}>

@@ -29,39 +29,61 @@ import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel } from "@/components/ui/primitives";
 import { RegiaoDasVagas } from "./RegiaoDasVagas";
 
+/** As áreas, na ordem em que aparecem no filtro. */
+const AREAS = [
+  "Fullstack",
+  "Frontend",
+  "Backend",
+  "Mobile",
+  "Dados",
+  "IA e ML",
+  "DevOps e Cloud",
+  "Qualidade (QA)",
+  "Segurança",
+  "Carreira",
+] as const;
+type Area = (typeof AREAS)[number];
+
 /** Destinos prontos. O título vira `target_role`; o detalhe explica o recorte,
  * porque "Fullstack Java pleno" quer dizer coisas diferentes para quem foca em
  * vaga internacional e para quem foca em arquitetura. */
-const DESTINOS: readonly { titulo: string; detalhe: string }[] = [
-  {
-    titulo: "Fullstack Java pleno, sem depender de IA para codar",
-    detalhe: "ênfase em escrever do zero e revisar",
-  },
-  {
-    titulo: "Fullstack Java pleno com foco em vagas internacionais",
-    detalhe: "inclui entrevista técnica em inglês",
-  },
-  {
-    titulo: "Especialista backend Java, arquitetura e system design",
-    detalhe: "menos frontend, mais desenho de sistema",
-  },
-  {
-    titulo: "Migrar de frontend para dados e engenharia de plataforma",
-    detalhe: "SQL, pipelines e infraestrutura",
-  },
-  {
-    titulo: "Sair de júnior para pleno na empresa atual",
-    detalhe: "foco em entregar sozinho e revisar código",
-  },
-  {
-    titulo: "Preparação intensiva para entrevistas",
-    detalhe: "algoritmos, system design e comportamental",
-  },
-  { titulo: "Fundar um produto próprio", detalhe: "do MVP ao deploy, com custo controlado" },
-  {
-    titulo: "Ainda decidindo — quero um plano amplo",
-    detalhe: "cobre base ampla e ajusta depois",
-  },
+// Os oito primeiros títulos são os de antes, sem uma letra mudada: quem já
+// escolheu um deles continua vendo a opção marcada. O título vira o
+// `target_role`, que o roadmap, as vagas (o papel no título da vaga) e os
+// cursos leem — por isso cada um cita a área e as tecnologias do caminho.
+const DESTINOS: readonly { titulo: string; detalhe: string; area: Area }[] = [
+  { area: "Fullstack", titulo: "Fullstack Java pleno, sem depender de IA para codar", detalhe: "ênfase em escrever do zero e revisar" },
+  { area: "Fullstack", titulo: "Fullstack Java pleno com foco em vagas internacionais", detalhe: "inclui entrevista técnica em inglês" },
+  { area: "Backend", titulo: "Especialista backend Java, arquitetura e system design", detalhe: "menos frontend, mais desenho de sistema" },
+  { area: "Dados", titulo: "Migrar de frontend para dados e engenharia de plataforma", detalhe: "SQL, pipelines e infraestrutura" },
+  { area: "Carreira", titulo: "Sair de júnior para pleno na empresa atual", detalhe: "foco em entregar sozinho e revisar código" },
+  { area: "Carreira", titulo: "Preparação intensiva para entrevistas", detalhe: "algoritmos, system design e comportamental" },
+  { area: "Carreira", titulo: "Fundar um produto próprio", detalhe: "do MVP ao deploy, com custo controlado" },
+  { area: "Carreira", titulo: "Ainda decidindo — quero um plano amplo", detalhe: "cobre base ampla e ajusta depois" },
+
+  { area: "Fullstack", titulo: "Fullstack JavaScript/TypeScript com React e Node.js", detalhe: "do front ao back numa linguagem só" },
+  { area: "Fullstack", titulo: "Fullstack Python com Django ou FastAPI e React", detalhe: "APIs em Python e interface moderna" },
+  { area: "Frontend", titulo: "Desenvolvedor frontend React com TypeScript", detalhe: "componentes, estado, testes e performance" },
+  { area: "Frontend", titulo: "Desenvolvedor frontend Angular para sistemas corporativos", detalhe: "RxJS, formulários e integração com APIs" },
+  { area: "Frontend", titulo: "Frontend com foco em acessibilidade, design system e UX", detalhe: "HTML semântico, CSS e componentes reutilizáveis" },
+  { area: "Backend", titulo: "Desenvolvedor backend Node.js e TypeScript com APIs e microsserviços", detalhe: "NestJS, filas, bancos e observabilidade" },
+  { area: "Backend", titulo: "Desenvolvedor backend Python com FastAPI e dados", detalhe: "APIs, SQL, testes e deploy" },
+  { area: "Backend", titulo: "Desenvolvedor backend .NET e C# para empresas", detalhe: "ASP.NET, Entity Framework e Azure" },
+  { area: "Backend", titulo: "Desenvolvedor backend Go para sistemas de alta performance", detalhe: "concorrência, gRPC e Kubernetes" },
+  { area: "Mobile", titulo: "Desenvolvedor mobile com Flutter", detalhe: "Android e iOS com um código só" },
+  { area: "Mobile", titulo: "Desenvolvedor mobile React Native", detalhe: "aproveita JavaScript e React no celular" },
+  { area: "Mobile", titulo: "Desenvolvedor Android nativo com Kotlin", detalhe: "Jetpack Compose e arquitetura moderna" },
+  { area: "Dados", titulo: "Analista de dados com SQL, Python e Power BI", detalhe: "consultas, dashboards e storytelling com dados" },
+  { area: "Dados", titulo: "Engenheiro de dados com Spark, Airflow e cloud", detalhe: "pipelines, data lake e qualidade de dados" },
+  { area: "IA e ML", titulo: "Cientista de dados e machine learning com Python", detalhe: "estatística, modelos e avaliação" },
+  { area: "IA e ML", titulo: "Engenheiro de IA com LLMs, RAG e agentes", detalhe: "integração de modelos em produtos reais" },
+  { area: "DevOps e Cloud", titulo: "DevOps e SRE com Docker, Kubernetes e CI/CD", detalhe: "automação, observabilidade e confiabilidade" },
+  { area: "DevOps e Cloud", titulo: "Engenheiro cloud AWS com certificação", detalhe: "arquitetura na AWS e infraestrutura como código" },
+  { area: "Qualidade (QA)", titulo: "QA e automação de testes com Cypress, Playwright e APIs", detalhe: "testes end-to-end, de API e em pipeline" },
+  { area: "Segurança", titulo: "Segurança da informação e AppSec para desenvolvedores", detalhe: "OWASP, pentest de aplicações e código seguro" },
+  { area: "Carreira", titulo: "Primeiro emprego em tecnologia, do zero", detalhe: "lógica, Git, uma linguagem e portfólio" },
+  { area: "Carreira", titulo: "Transição de carreira para tecnologia", detalhe: "vinda de outra área, no seu ritmo" },
+  { area: "Carreira", titulo: "Tech lead: liderança técnica e arquitetura", detalhe: "decisões técnicas, code review e mentoria" },
 ];
 
 /** Trechos que a pessoa cola no texto livre com um clique: são as restrições
@@ -102,11 +124,15 @@ export function ObjectiveTab() {
   // dispararia uma escrita e anunciaria "salvo" para quem só passou o cursor.
   const [contextoSalvo, setContextoSalvo] = useState("");
   const [salvamento, setSalvamento] = useState<Salvamento>(null);
+  // O filtro de área dos destinos. Abre na área do destino já escolhido.
+  const [area, setArea] = useState<Area | "Todas">("Todas");
   const temporizador = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     if (!carregado.data) return;
     setPerfil(carregado.data);
+    const escolhido = DESTINOS.find((d) => d.titulo === carregado.data?.target_role);
+    if (escolhido) setArea(escolhido.area);
     const texto = (carregado.data.goals ?? []).map(String).join("\n");
     setContexto(texto);
     setContextoSalvo(texto);
@@ -154,6 +180,33 @@ export function ObjectiveTab() {
           <Estado salvamento={salvamento} campo="destino" />
         </div>
 
+        {/* Muitos destinos: a área filtra, e "Todas" mostra a lista inteira. */}
+        <div role="group" aria-label="Área" style={{ display: "flex", flexWrap: "wrap", gap: 5.6, marginBottom: 11.2 }}>
+          {(["Todas", ...AREAS] as const).map((opcao) => {
+            const ativa = area === opcao;
+            return (
+              <button
+                key={opcao}
+                type="button"
+                aria-pressed={ativa}
+                onClick={() => setArea(opcao)}
+                style={{
+                  padding: "5px 11px",
+                  borderRadius: 999,
+                  font: "inherit",
+                  fontSize: 12,
+                  cursor: "pointer",
+                  border: `1px solid ${ativa ? ACC : "rgba(233,233,237,.14)"}`,
+                  background: ativa ? "rgba(145,132,217,.13)" : "transparent",
+                  color: ativa ? ACC4 : TEXT.muted,
+                }}
+              >
+                {opcao}
+              </button>
+            );
+          })}
+        </div>
+
         <div
           role="radiogroup"
           aria-label="Destino do plano"
@@ -163,7 +216,7 @@ export function ObjectiveTab() {
             gap: 8.4,
           }}
         >
-          {DESTINOS.map((destino) => {
+          {DESTINOS.filter((destino) => area === "Todas" || destino.area === area).map((destino) => {
             const ativo = perfil.target_role === destino.titulo;
             return (
               <button

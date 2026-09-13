@@ -26,6 +26,7 @@ import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel } from "@/components/ui/primitives";
 import { MASTERY_LABELS } from "./TechnologyRow";
 import { SuggestedTags } from "./SuggestedTags";
+import { TutorialDeNiveis } from "./TutorialDeNiveis";
 
 /**
  * A ordem das categorias na tela, e o nome que cada uma mostra.
@@ -152,6 +153,7 @@ export function SkillsTab() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
+      <TutorialDeNiveis />
       <Panel pad={16.8}>
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 11.2 }}>
           <Kicker>Skills do plano</Kicker>

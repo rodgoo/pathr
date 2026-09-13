@@ -26,6 +26,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useMemo,
@@ -34,6 +35,7 @@ import {
   type ReactNode,
 } from "react";
 import { INITIAL_STATE, reducer, type Action, type AppState } from "./appState";
+import { comTransicao } from "@/lib/transicao";
 import type { Screen } from "@/types";
 
 const _VERSAO = 1;
@@ -99,7 +101,14 @@ export function AppStateProvider({
     }
   }, [state]);
 
-  const value = useMemo(() => ({ state, dispatch }), [state]);
+  // Trocar de tela passa pela transição do navegador (lib/transicao); o resto
+  // das ações é imediato. Estável: o `dispatch` do React também é.
+  const despachar = useCallback<Dispatch<Action>>((acao) => {
+    if (acao.type === "navigate") comTransicao(() => dispatch(acao));
+    else dispatch(acao);
+  }, []);
+
+  const value = useMemo(() => ({ state, dispatch: despachar }), [state, despachar]);
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 }
 
