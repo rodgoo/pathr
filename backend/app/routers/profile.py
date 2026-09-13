@@ -17,6 +17,7 @@ from supabase import Client
 from app.config import settings
 from app.database import get_supabase
 from app.deps import get_current_user
+from app.services import progresso
 from app.services.progress import minutos_de_leitura
 from app.schemas.auth import SignupRequest
 
@@ -359,12 +360,14 @@ def overview(
             "cefr_level": english.get("cefr_level"),
             "target_level": english.get("target_level"),
         },
-        "roadmap": _roadmap_summary(roadmap, nodes),
+        "roadmap": _roadmap_summary(roadmap, nodes, supabase, user_id),
         "activity": _activity_summary(supabase, user_id),
     }
 
 
-def _roadmap_summary(roadmap: Optional[dict], nodes: list[dict]) -> Optional[dict]:
+def _roadmap_summary(
+    roadmap: Optional[dict], nodes: list[dict], supabase: Optional[Client] = None, user_id: str = ""
+) -> Optional[dict]:
     """Progresso do plano, contado a partir dos nós.
 
     Vem dos nós e não de um contador guardado no roadmap porque um contador
@@ -374,7 +377,13 @@ def _roadmap_summary(roadmap: Optional[dict], nodes: list[dict]) -> Optional[dic
     if not roadmap:
         return None
     trackable = [node for node in nodes if node.get("kind") != "phase"]
-    done = [node for node in trackable if node.get("status") == "done"]
+    # O mesmo cálculo do roadmap: o que se fez na lista da semana conta.
+    avanco = (
+        progresso.avanco_por_modulo(progresso.checklists_do_usuario(supabase, user_id, str(roadmap["id"])))
+        if supabase is not None and user_id
+        else {}
+    )
+    trackable = progresso.com_avanco(trackable, avanco)
     current = next((node for node in trackable if node.get("status") == "doing"), None)
     return {
         "id": str(roadmap["id"]),
@@ -382,9 +391,7 @@ def _roadmap_summary(roadmap: Optional[dict], nodes: list[dict]) -> Optional[dic
         "horizon_weeks": roadmap.get("horizon_weeks"),
         "weekly_hours": roadmap.get("weekly_hours"),
         "status": roadmap.get("status"),
-        "total_nodes": len(trackable),
-        "done_nodes": len(done),
-        "progress_pct": round(100 * len(done) / len(trackable)) if trackable else 0,
+        **progresso.resumo(trackable, avanco),
         "current_node": current,
     }
 

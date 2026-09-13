@@ -15,6 +15,7 @@ from supabase import Client
 
 from app.database import get_supabase
 from app.deps import get_current_user
+from app.services import progresso
 from app.services import escada, roadmap_builder
 from app.services.progress import log_activity
 from app.services.tag_catalog import TagCatalog
@@ -385,15 +386,19 @@ def get_roadmap(
             children.setdefault(str(parent), []).append(node)
 
     modules = [node for node in nodes if node.get("kind") != "phase"]
-    done = sum(1 for node in modules if node.get("status") == "done")
+    # O que já se fez na lista da semana entra no avanço de cada módulo e no
+    # percentual do plano — ver services/progresso.py.
+    avanco = progresso.avanco_por_modulo(
+        progresso.checklists_do_usuario(supabase, str(current_user["id"]), roadmap_id)
+    )
+    com_avanco = {str(m["id"]): m for m in progresso.com_avanco(modules, avanco)}
 
     return {
         **roadmap,
-        "progress_pct": round(100 * done / len(modules)) if modules else 0,
-        "total_nodes": len(modules),
-        "done_nodes": done,
+        **progresso.resumo(modules, avanco),
         "phases": [
-            {**phase, "modules": children.get(str(phase["id"]), [])} for phase in phases
+            {**phase, "modules": [com_avanco.get(str(m["id"]), m) for m in children.get(str(phase["id"]), [])]}
+            for phase in phases
         ],
     }
 
