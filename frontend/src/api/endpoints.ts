@@ -176,10 +176,11 @@ export const courses = {
 /** Vagas reais de fontes confiáveis (Gupy, Remotive, Adzuna, sites de vaga),
  * e o que falta para cada uma. Ver services/vagas.py. */
 export const jobs = {
-  list: (params: { q?: string; remotas?: boolean } = {}) => {
+  list: (params: { q?: string; remotas?: boolean; alcance?: "todas" | "nacionais" | "internacionais" } = {}) => {
     const query = new URLSearchParams();
     if (params.q) query.set("q", params.q);
     if (params.remotas) query.set("remotas", "true");
+    if (params.alcance && params.alcance !== "todas") query.set("alcance", params.alcance);
     return api.get<JobList>(`/vagas?${query}`);
   },
   /** Um dos três: a vaga da listagem, o link de uma vaga ou o texto do anúncio.

@@ -12,7 +12,7 @@ import asyncio
 import hashlib
 from typing import Any, Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from supabase import Client
 
@@ -49,6 +49,22 @@ def _minhas_por_slug(minhas: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     return {str(tag["slug"]): tag for tag in minhas}
 
 
+def _nivel_de_ingles(supabase: Client, user_id: str) -> Optional[str]:
+    """O CEFR medido no módulo de Idiomas. Só lê: quem nunca abriu o módulo
+    não ganha perfil de idioma criado por ter olhado vagas."""
+    linhas = (
+        supabase.table("pathr_english_profile")
+        .select("cefr_level")
+        .eq("user_id", user_id)
+        .eq("language", "en")
+        .limit(1)
+        .execute()
+        .data
+        or []
+    )
+    return (linhas[0].get("cefr_level") if linhas else None) or None
+
+
 def _senioridade(perfil: dict[str, Any]) -> Optional[str]:
     valor = str(perfil.get("seniority") or "").lower().replace("ê", "e").replace("ú", "u")
     return next((nivel for nivel in ("junior", "pleno", "senior") if nivel in valor), None)
@@ -58,6 +74,7 @@ def _senioridade(perfil: dict[str, Any]) -> Optional[str]:
 async def listar_vagas(
     q: str = "",
     remotas: bool = False,
+    alcance: str = Query(default="todas", pattern="^(todas|nacionais|internacionais)$"),
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
 ):
@@ -73,6 +90,7 @@ async def listar_vagas(
         return {"termos": [], "vagas": [], "fontes": {}, "sem_perfil": True}
 
     encontradas, fontes = await servico.buscar(termos)
+    nivel_ingles = _nivel_de_ingles(supabase, user_id)
     lista = servico.para_tela(
         encontradas,
         _catalogo(supabase),
@@ -80,8 +98,16 @@ async def listar_vagas(
         senioridade=_senioridade(perfil),
         estado_uf=perfil.get("state"),
         so_remotas=remotas,
+        alcance=alcance,
+        nivel_ingles=nivel_ingles,
     )
-    return {"termos": termos, "vagas": lista, "fontes": fontes, "sem_perfil": False}
+    return {
+        "termos": termos,
+        "vagas": lista,
+        "fontes": fontes,
+        "sem_perfil": False,
+        "nivel_ingles": nivel_ingles,
+    }
 
 
 class AnaliseVaga(BaseModel):
@@ -159,6 +185,7 @@ async def analisar_vaga(
         lambda nome: por_chave.get(slugify(nome)),
         _minhas_por_slug(list_mine(current_user, supabase)),
         set(_slugs_do_roadmap(supabase, user_id)),
+        nivel_ingles=_nivel_de_ingles(supabase, user_id),
     )
     return {
         "titulo": titulo or str(extraido.get("titulo") or "").strip() or "Vaga analisada",

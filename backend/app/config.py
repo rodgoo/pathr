@@ -154,7 +154,10 @@ class Settings(BaseSettings):
     # o Brasil) pede as duas; vazias, a fonte fica de fora. O Tavily/Brave de
     # cima também procura vagas em sites confiáveis. Ver services/vagas.py.
     adzuna_app_id: str = ""  # https://developer.adzuna.com
-    adzuna_app_key: str = ""
+    # O painel da Adzuna chama de "app_key", mas quem copia escreve
+    # ADZUNA_API_KEY com a mesma frequência. Aceitar os dois evita a chave
+    # preenchida que o app não enxerga.
+    adzuna_app_key: str = Field(default="", validation_alias=AliasChoices("ADZUNA_APP_KEY", "ADZUNA_API_KEY"))
 
     # --- Tradução (módulo de idioma) ---
     # Vazio desliga o DeepL e a tradução do modelo de IA vale sozinha. Chave

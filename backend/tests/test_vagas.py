@@ -156,6 +156,14 @@ def test_listagem_ordena_por_compatibilidade_e_nao_da_nota_a_link_de_busca():
     assert lista[-1]["compatibilidade"]["nota"] is None
 
 
+def test_trecho_da_adzuna_nao_ganha_nota():
+    """O trecho que só cita "Java" daria 100% a uma vaga que pede muito mais."""
+    vagas = [_vaga("adzuna:1", "Dev Java", "Desenvolvedor Java para projeto...", fonte="Adzuna",
+                   extra={"so_trecho": True})]
+    linha = V.para_tela(vagas, CATALOGO, _minhas(java=3))[0]
+    assert linha["compatibilidade"]["nota"] is None and linha["so_trecho"] is True
+
+
 def test_so_remotas():
     vagas = [_vaga("a", "Dev", "Java", remota=True), _vaga("b", "Dev", "Java", remota=False)]
     assert [l["id"] for l in V.para_tela(vagas, CATALOGO, {}, so_remotas=True)] == ["a"]
@@ -224,7 +232,7 @@ def test_endpoint_lista_pelos_termos_do_perfil(monkeypatch):
 
     monkeypatch.setattr(V, "_gupy", gupy)
     monkeypatch.setattr(V, "_remotive", vazio)
-    resposta = asyncio.run(router.listar_vagas(q="", remotas=False, current_user={"id": "eu"}, supabase=_banco()))
+    resposta = asyncio.run(router.listar_vagas(q="", remotas=False, alcance="todas", current_user={"id": "eu"}, supabase=_banco()))
     assert resposta["termos"] == ["Java"]
     assert resposta["vagas"][0]["compatibilidade"] == {"nota": 50, "tem": ["Java"], "parcial": [], "falta": ["Docker"]}
 
@@ -257,3 +265,79 @@ def test_endpoint_recusa_texto_curto_demais():
     with pytest.raises(HTTPException) as erro:
         asyncio.run(router.analisar_vaga(router.AnaliseVaga(texto="Dev Java"), current_user={"id": "eu"}, supabase=_banco()))
     assert erro.value.status_code == 422
+
+
+# ── Inglês e alcance ────────────────────────────────────────────────────────
+
+
+@pytest.mark.parametrize(
+    "texto,internacional,esperado",
+    [
+        ("Requisitos: Java e inglês avançado para reuniões.", False, "C1"),
+        ("Diferencial: inglês intermediário.", False, "B1"),
+        ("English level: B2 or higher.", False, "B2"),
+        ("Fluent English is required.", False, "C1"),
+        # "avançado" longe da palavra inglês não é pedido de inglês.
+        ("Conhecimento avançado de SQL e Java. " + "Benefícios completos para você e sua família. " * 3 + "Inglês básico.", False, "A2"),
+        ("Conhecimento avançado de SQL.", False, None),
+        # Anúncio escrito em inglês, sem nível dito: o piso de trabalho.
+        ("We are looking for a backend engineer with experience in Java and you will work with our team.", False, "B2"),
+        ("Vaga remota em Java.", True, "B2"),
+    ],
+)
+def test_nivel_de_ingles_exigido(texto, internacional, esperado):
+    assert V.ingles_exigido(texto, internacional) == esperado
+
+
+def test_situacao_do_ingles_na_regua_cefr():
+    assert V.situacao_do_ingles("B2", "C1") == "tem"
+    assert V.situacao_do_ingles("B2", "B2") == "tem"
+    assert V.situacao_do_ingles("B2", "B1") == "parcial"
+    assert V.situacao_do_ingles("C1", "A2") == "falta"
+    assert V.situacao_do_ingles("B2", None) == "sem_nivel"
+    assert V.situacao_do_ingles(None, "B2") is None
+
+
+def test_alcance_separa_nacionais_de_internacionais_e_ingles_abaixo_desce():
+    vagas = [
+        _vaga("remotive:1", "Backend Engineer", "Java. Fluent English required.", fonte="Remotive", remota=True),
+        _vaga("gupy:1", "Dev Java", "Java e SQL."),
+        _vaga("gupy:2", "Dev Java", "Java e SQL. Inglês fluente obrigatório."),
+    ]
+    minhas = _minhas(java=3, sql=2)
+
+    nacionais = V.para_tela(vagas, CATALOGO, minhas, alcance="nacionais", nivel_ingles="B1")
+    assert [l["id"] for l in nacionais] == ["gupy:1", "gupy:2"]
+    assert nacionais[1]["ingles"] == {"exigido": "C1", "seu": "B1", "situacao": "falta"}
+
+    internacionais = V.para_tela(vagas, CATALOGO, minhas, alcance="internacionais", nivel_ingles="B1")
+    assert [l["id"] for l in internacionais] == ["remotive:1"]
+    assert internacionais[0]["internacional"] is True
+
+
+def test_analise_poe_o_ingles_como_lacuna_com_curso_e_caminho_para_idiomas():
+    texto = "Desenvolvedor Java. Requisitos: Java, inglês avançado."
+    requisitos = [{"nome": "Java", "obrigatorio": True}, {"nome": "Inglês avançado", "obrigatorio": True}]
+    analise = V.analisar(requisitos, texto, CATALOGO, _achar, _minhas(java=3), set(), nivel_ingles="B1")
+
+    ingles = [r for r in analise["requisitos"] if r["nome"].startswith("Inglês")]
+    assert len(ingles) == 1 and ingles[0]["nome"] == "Inglês C1" and ingles[0]["situacao"] == "falta"
+    lacuna = next(l for l in analise["lacunas"] if l["nome"] == "Inglês C1")
+    assert lacuna["idioma"] is True and lacuna["cursos"][0]["id"] == "ef-set"
+    # Java (2 de 2) + Inglês em falta (0 de 2)
+    assert analise["nota"] == 50
+
+
+def test_sem_nivelamento_o_ingles_fica_fora_da_nota():
+    analise = V.analisar([{"nome": "Java", "obrigatorio": True}], "Java e inglês fluente.", CATALOGO, _achar,
+                         _minhas(java=3), set(), nivel_ingles=None)
+    assert analise["ingles"]["situacao"] == "sem_nivel"
+    assert analise["nota"] == 100
+
+
+def test_vaga_so_entra_se_for_mesmo_sobre_o_termo():
+    assert V.cita_o_termo("Java", "Senior Java Engineer", [], "")
+    assert V.cita_o_termo("Java", "Backend Engineer", ["java", "spring"], "")
+    assert V.cita_o_termo("Java", "Backend Engineer", [], "We use Java 21. Java experience required.")
+    # JavaScript no rodapé não faz de um redator uma vaga de Java.
+    assert not V.cita_o_termo("Java", "Freelance Copywriter", ["writing"], "Our site uses JavaScript. Java once.")

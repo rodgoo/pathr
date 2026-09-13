@@ -19,7 +19,7 @@
 
 import { useState, type FormEvent } from "react";
 import { jobs as jobsApi, tags as tagsApi } from "@/api/endpoints";
-import type { Job, JobAnalysis, JobGap, JobList, JobRequirement } from "@/api/types";
+import type { Job, JobAnalysis, JobEnglish, JobGap, JobList, JobRequirement } from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
 import { useMutation, useQuery } from "@/hooks/useApi";
 import { ACC, ACC4, C, HAIRLINE, SIZE, TEXT, tint } from "@/lib/tokens";
@@ -29,10 +29,17 @@ import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
 
 type Filtro = "todas" | "remotas";
+type Alcance = "todas" | "nacionais" | "internacionais";
 
 const FILTROS: readonly { value: Filtro; label: string }[] = [
   { value: "todas", label: "Todas" },
   { value: "remotas", label: "Remotas" },
+];
+
+const ALCANCES: readonly { value: Alcance; label: string }[] = [
+  { value: "todas", label: "Brasil e exterior" },
+  { value: "nacionais", label: "Nacionais" },
+  { value: "internacionais", label: "Internacionais" },
 ];
 
 const NOME_DA_FONTE: Record<keyof JobList["fontes"], string> = {
@@ -47,6 +54,7 @@ const ESTADO_DA_FONTE = { ok: "ativa", erro: "fora do ar agora", sem_chave: "sem
 const NIVEL = { junior: "Júnior", pleno: "Pleno", senior: "Sênior" } as const;
 
 const SITUACAO: Record<JobRequirement["situacao"], { rotulo: string; cor: string }> = {
+  sem_nivel: { rotulo: "faça o nivelamento", cor: C.azul },
   tem: { rotulo: "você tem", cor: C.verde },
   parcial: { rotulo: "começando", cor: C.ambar },
   falta: { rotulo: "falta", cor: C.rosa },
@@ -65,9 +73,13 @@ function haQuanto(dias: number | null): string | null {
 
 export function JobsPage() {
   const [filtro, setFiltro] = useState<Filtro>("todas");
+  const [alcance, setAlcance] = useState<Alcance>("todas");
   const [busca, setBusca] = useState("");
   const [termo, setTermo] = useState("");
-  const lista = useQuery(() => jobsApi.list({ q: termo, remotas: filtro === "remotas" }), [termo, filtro]);
+  const lista = useQuery(
+    () => jobsApi.list({ q: termo, remotas: filtro === "remotas", alcance }),
+    [termo, filtro, alcance],
+  );
 
   function buscar(evento: FormEvent) {
     evento.preventDefault();
@@ -88,7 +100,7 @@ export function JobsPage() {
 
       <form
         onSubmit={buscar}
-        style={{ display: "flex", flexWrap: "wrap", gap: 8.4, alignItems: "center", margin: "22.4px 0 11.2px" }}
+        style={{ display: "flex", flexWrap: "wrap", gap: 8.4, alignItems: "center", margin: "22.4px 0 8.4px" }}
       >
         <input
           className="input"
@@ -114,15 +126,11 @@ export function JobsPage() {
             Voltar ao meu perfil
           </button>
         ) : null}
-        <Segmented
-          name="vagas-filtro"
-          label="Tipo de vaga"
-          value={filtro}
-          options={FILTROS}
-          onChange={setFiltro}
-          style={{ marginLeft: "auto" }}
-        />
       </form>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8.4, marginBottom: 11.2 }}>
+        <Segmented name="vagas-alcance" label="Onde" value={alcance} options={ALCANCES} onChange={setAlcance} />
+        <Segmented name="vagas-filtro" label="Tipo de vaga" value={filtro} options={FILTROS} onChange={setFiltro} />
+      </div>
 
       {lista.loading ? <Loading label="Procurando vagas nas fontes…" /> : null}
       {lista.error ? <ErrorState message={lista.error} onRetry={lista.reload} /> : null}
@@ -158,7 +166,19 @@ function Resultado({ dados }: { dados: JobList }) {
     <>
       <div style={{ fontSize: 12, color: TEXT.muted, marginBottom: 11.2, lineHeight: 1.6 }}>
         Buscando por <span style={{ color: TEXT.full }}>{dados.termos.join(" · ")}</span> ·{" "}
-        {dados.vagas.length} {dados.vagas.length === 1 ? "vaga" : "vagas"}
+        {dados.vagas.length} {dados.vagas.length === 1 ? "vaga" : "vagas"} · seu inglês:{" "}
+        {dados.nivel_ingles ? (
+          <span style={{ color: TEXT.full }}>{dados.nivel_ingles}</span>
+        ) : (
+          <button
+            type="button"
+            className="btn btn-ghost"
+            style={{ fontSize: 12, padding: 0, minHeight: 0 }}
+            onClick={() => dispatch({ type: "navigate", screen: "ingles" })}
+          >
+            sem nivelamento — fazer agora
+          </button>
+        )}
         <div style={{ color: TEXT.faint }}>
           Fontes:{" "}
           {fontes.map((fonte, posicao) => {
@@ -219,12 +239,15 @@ function CartaoDaVaga({ vaga }: { vaga: Job }) {
           <div style={{ flex: "1 1 280px", minWidth: 0 }}>
             <h2 style={{ fontSize: 15.5, fontWeight: 500, margin: 0, lineHeight: 1.35 }}>{vaga.titulo}</h2>
             <div style={{ fontSize: 12, color: TEXT.muted, marginTop: 3 }}>
+              {vaga.internacional ? <span style={{ color: C.azul }}>Internacional · </span> : null}
               {detalhes ? `${detalhes} · ` : ""}via {vaga.fonte}
               {vaga.na_sua_regiao ? <span style={{ color: C.verde }}> · na sua região</span> : null}
             </div>
           </div>
           <Nota nota={nota} />
         </div>
+
+        <SeloDeIngles ingles={vaga.ingles} />
 
         {nota !== null ? (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 5.6, marginTop: 11.2 }}>
@@ -240,8 +263,9 @@ function CartaoDaVaga({ vaga }: { vaga: Job }) {
           </div>
         ) : (
           <p style={{ margin: "8.4px 0 0", fontSize: 12, color: TEXT.faint }}>
-            Encontrada por buscador: o anúncio não foi lido aqui. Abra a vaga, ou peça a análise para lermos a
-            página.
+            {vaga.so_trecho
+              ? "A fonte mandou só um trecho do anúncio. Peça a análise para lermos a vaga inteira."
+              : "Encontrada por buscador: o anúncio não foi lido aqui. Abra a vaga, ou peça a análise para lermos a página."}
           </p>
         )}
 
@@ -270,6 +294,24 @@ function CartaoDaVaga({ vaga }: { vaga: Job }) {
         ) : null}
       </article>
     </Panel>
+  );
+}
+
+const INGLES: Record<NonNullable<JobEnglish["situacao"]>, { cor: string; texto: (i: JobEnglish) => string }> = {
+  tem: { cor: C.verde, texto: (i) => `Inglês ${i.exigido} pedido · você tem ${i.seu}` },
+  parcial: { cor: C.ambar, texto: (i) => `Inglês ${i.exigido} pedido · você ${i.seu}, um degrau abaixo` },
+  falta: { cor: C.rosa, texto: (i) => `Inglês ${i.exigido} pedido · você ${i.seu}` },
+  sem_nivel: { cor: C.azul, texto: (i) => `Inglês ${i.exigido} pedido · faça o nivelamento para comparar` },
+};
+
+function SeloDeIngles({ ingles }: { ingles: JobEnglish }) {
+  if (!ingles.situacao) return null;
+  const { cor, texto } = INGLES[ingles.situacao];
+  return (
+    <div style={{ marginTop: 8.4, fontSize: 12, color: cor, display: "flex", alignItems: "center", gap: 5 }}>
+      <Icon name="flag" size={13} />
+      {texto(ingles)}
+    </div>
   );
 }
 
@@ -458,6 +500,7 @@ function Requisitos({ titulo, lista }: { titulo: string; lista: JobRequirement[]
 }
 
 function Lacuna({ lacuna }: { lacuna: JobGap }) {
+  const { dispatch } = useAppState();
   const [meta, setMeta] = useState(lacuna.e_meta);
   const marcar = useMutation(async () => {
     if (lacuna.user_tag_id) return tagsApi.update(lacuna.user_tag_id, { is_target: true });
@@ -471,10 +514,20 @@ function Lacuna({ lacuna }: { lacuna: JobGap }) {
         <span style={{ fontSize: 14, color: TEXT.full }}>{lacuna.nome}</span>
         <span style={{ fontSize: 11, color: lacuna.obrigatorio ? C.rosa : TEXT.faint }}>
           {lacuna.obrigatorio ? "obrigatório" : "desejável"}
-          {lacuna.situacao === "parcial" ? " · você está começando" : ""}
+          {lacuna.situacao === "parcial" ? (lacuna.idioma ? " · um degrau abaixo" : " · você está começando") : ""}
+          {lacuna.situacao === "sem_nivel" ? " · sem nivelamento para comparar" : ""}
         </span>
         <span style={{ marginLeft: "auto", fontSize: 12 }}>
-          {lacuna.no_roadmap ? (
+          {lacuna.idioma ? (
+            <button
+              type="button"
+              className="btn btn-ghost"
+              style={{ fontSize: 12 }}
+              onClick={() => dispatch({ type: "navigate", screen: "ingles" })}
+            >
+              {lacuna.situacao === "sem_nivel" ? "Fazer o nivelamento" : "Treinar inglês"}
+            </button>
+          ) : lacuna.no_roadmap ? (
             <span style={{ color: ACC4 }}>já está no seu roadmap</span>
           ) : meta ? (
             <span style={{ color: C.verde }}>meta marcada</span>

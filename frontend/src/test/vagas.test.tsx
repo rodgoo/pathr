@@ -29,6 +29,9 @@ const vaga = (id: string, extra: Partial<Job> = {}): Job => ({
   nivel: "pleno",
   na_sua_regiao: false,
   so_link: false,
+  so_trecho: false,
+  internacional: false,
+  ingles: { exigido: null, seu: "B2", situacao: null },
   resumo: "Java e AWS",
   compatibilidade: { nota: 67, tem: ["Java"], parcial: [], falta: ["AWS"] },
   ...extra,
@@ -62,6 +65,7 @@ const analise: JobAnalysis = {
     { nome: "AWS", obrigatorio: true, situacao: "falta", tag_id: "t2", user_tag_id: null, e_meta: false },
     { nome: "Docker", obrigatorio: false, situacao: "parcial", tag_id: "t3", user_tag_id: "u3", e_meta: false },
   ],
+  ingles: { exigido: null, seu: "B2", situacao: null },
   lacunas: [
     {
       nome: "AWS", obrigatorio: true, situacao: "falta", tag_id: "t2", user_tag_id: null, e_meta: false,
@@ -149,6 +153,37 @@ describe("vagas", () => {
     expect(servidor.calls.find((c) => c.url === "/vagas/analise")?.body).toEqual({
       url: "https://www.vagas.com.br/vagas/v123",
     });
+  });
+
+  it("filtra internacionais e mostra o inglês pedido contra o seu nível", async () => {
+    const { user, servidor } = monta({
+      "GET /vagas": () => ({
+        body: {
+          ...lista,
+          nivel_ingles: "B1",
+          vagas: [
+            vaga("remotive:1", {
+              titulo: "Backend Engineer",
+              fonte: "Remotive",
+              internacional: true,
+              ingles: { exigido: "C1", seu: "B1", situacao: "falta" },
+            }),
+          ],
+        },
+      }),
+    });
+
+    expect(await screen.findByText("Inglês C1 pedido · você B1")).toBeInTheDocument();
+    expect(screen.getByText(/Internacional ·/)).toBeInTheDocument();
+
+    await user.click(screen.getByRole("radio", { name: "Internacionais" }));
+    await screen.findByText("Inglês C1 pedido · você B1");
+    expect(servidor.calls.some((c) => c.url.includes("alcance=internacionais"))).toBe(true);
+  });
+
+  it("sem nivelamento, oferece fazer o teste de inglês", async () => {
+    monta({ "GET /vagas": () => ({ body: { ...lista, nivel_ingles: null } }) });
+    expect(await screen.findByRole("button", { name: "sem nivelamento — fazer agora" })).toBeInTheDocument();
   });
 
   it("sem perfil, manda cadastrar tecnologias", async () => {

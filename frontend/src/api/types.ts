@@ -704,6 +704,14 @@ export interface JobCompatibility {
   falta: string[];
 }
 
+/** O inglês que a vaga pede contra o nível medido no módulo de Idiomas. */
+export interface JobEnglish {
+  exigido: string | null;
+  seu: string | null;
+  /** null quando a vaga não pede inglês; sem_nivel quando não há nivelamento. */
+  situacao: "tem" | "parcial" | "falta" | "sem_nivel" | null;
+}
+
 export interface Job {
   id: string;
   titulo: string;
@@ -717,6 +725,11 @@ export interface Job {
   na_sua_regiao: boolean;
   /** Veio de um buscador: só o link, sem o anúncio lido. */
   so_link: boolean;
+  /** Veio só um trecho do anúncio (Adzuna): sem nota até a análise ler a página. */
+  so_trecho: boolean;
+  /** Contratação de fora (Remotive, ou vaga de buscador anunciada em inglês). */
+  internacional: boolean;
+  ingles: JobEnglish;
   resumo: string | null;
   compatibilidade: JobCompatibility;
 }
@@ -729,12 +742,14 @@ export interface JobList {
   fontes: Partial<Record<"gupy" | "remotive" | "adzuna" | "busca", JobSourceState>>;
   /** Sem competências nem objetivo: não há por onde buscar. */
   sem_perfil: boolean;
+  /** O CEFR do módulo de Idiomas, ou null sem nivelamento. */
+  nivel_ingles?: string | null;
 }
 
 export interface JobRequirement {
   nome: string;
   obrigatorio: boolean;
-  situacao: "tem" | "parcial" | "falta" | "desconhecido";
+  situacao: "tem" | "parcial" | "falta" | "desconhecido" | "sem_nivel";
   tag_id: string | null;
   user_tag_id: string | null;
   e_meta: boolean;
@@ -742,6 +757,8 @@ export interface JobRequirement {
 
 export interface JobGap extends JobRequirement {
   no_roadmap: boolean;
+  /** A lacuna é o inglês: o caminho passa pelo módulo de Idiomas. */
+  idioma?: boolean;
   cursos: { id: string; titulo: string; emissor: string; url: string; gratuito: boolean }[];
 }
 
@@ -756,6 +773,7 @@ export interface JobAnalysis {
   requisitos: JobRequirement[];
   /** Obrigatórias primeiro. */
   lacunas: JobGap[];
+  ingles: JobEnglish;
 }
 
 export interface PracticeAnswerResult {

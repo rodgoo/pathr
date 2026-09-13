@@ -223,6 +223,79 @@ def termos_de_busca(minhas: Iterable[dict[str, Any]], objetivo: str = "") -> lis
     return termos
 
 
+# ---------------------------------------------------------------------------
+# Inglês e alcance
+# ---------------------------------------------------------------------------
+
+CEFR = ("A1", "A2", "B1", "B2", "C1", "C2")
+
+# Do mais alto para o mais baixo: "inglês avançado ou fluente" pede C1, não B1.
+_NIVEL_DE_INGLES: tuple[tuple[str, re.Pattern[str]], ...] = (
+    ("C2", re.compile(r"nativ[oa]|native|bil[ií]ngue|bilingual", re.I)),
+    ("C1", re.compile(r"fluente|flu[eê]ncia|fluent|fluency|avan[cç]ad[oa]|advanced|proficien", re.I)),
+    ("B2", re.compile(r"upper[- ]intermediate|intermedi[aá]rio[- /]avan[cç]ado|conversa[cç][aã]o|conversational|professional working", re.I)),
+    ("B1", re.compile(r"intermedi[aá]ri[oa]|intermediate", re.I)),
+    ("A2", re.compile(r"b[aá]sico|basic|elementary", re.I)),
+)
+_CITA_INGLES = re.compile(r"ingl[eê]s|english", re.I)
+_CITA_CEFR = re.compile(r"\b(A1|A2|B1|B2|C1|C2)\b")
+
+# Palavras que só aparecem em texto corrido de cada língua. Contar as duas diz
+# em que língua o anúncio foi escrito, sem biblioteca de detecção.
+_PALAVRAS_EN = re.compile(r"\b(the|and|with|you|will|our|for|experience|team|we|are|of)\b", re.I)
+_PALAVRAS_PT = re.compile(r"\b(de|com|para|você|voce|nossa|nosso|experiência|experiencia|equipe|vaga|e|na|no)\b", re.I)
+
+# Vaga escrita em inglês, ou de empresa de fora, sem nível dito: B2 é o piso de
+# quem trabalha no idioma — reunião, code review, e-mail.
+INGLES_DE_TRABALHO = "B2"
+
+
+def escrita_em_ingles(texto: str) -> bool:
+    en = len(_PALAVRAS_EN.findall(texto))
+    pt = len(_PALAVRAS_PT.findall(texto))
+    return en >= 3 and en > pt * 1.5
+
+
+def ingles_exigido(texto: str, internacional: bool) -> Optional[str]:
+    """O nível de inglês que a vaga pede, na régua CEFR, ou None.
+
+    O nível só é lido perto da palavra "inglês"/"English" — "conhecimento
+    avançado de SQL" não é pedido de inglês avançado.
+    """
+    for trecho in _CITA_INGLES.finditer(texto):
+        janela = texto[max(0, trecho.start() - 60): trecho.end() + 60]
+        cefr = _CITA_CEFR.search(janela)
+        if cefr:
+            return cefr.group(1)
+        for nivel, padrao in _NIVEL_DE_INGLES:
+            if padrao.search(janela):
+                return nivel
+    if internacional or escrita_em_ingles(texto):
+        return INGLES_DE_TRABALHO
+    # Citou inglês sem dizer o nível: pede ao menos ler documentação.
+    return "B1" if _CITA_INGLES.search(texto) else None
+
+
+def situacao_do_ingles(exigido: Optional[str], seu: Optional[str]) -> Optional[str]:
+    """tem | parcial (um degrau abaixo) | falta | sem_nivel (sem nivelamento)."""
+    if not exigido:
+        return None
+    if not seu or seu not in CEFR:
+        return "sem_nivel"
+    diferenca = CEFR.index(exigido) - CEFR.index(seu)
+    return "tem" if diferenca <= 0 else ("parcial" if diferenca == 1 else "falta")
+
+
+def e_internacional(vaga: "Vaga") -> bool:
+    """Contratação de fora: Remotive, ou vaga de buscador anunciada em inglês.
+    Gupy e Adzuna aqui são do Brasil — mesmo em inglês, a vaga é nacional."""
+    if vaga.fonte == "Remotive":
+        return True
+    if vaga.extra.get("so_link"):
+        return escrita_em_ingles(f"{vaga.titulo} {vaga.descricao}")
+    return False
+
+
 _NIVEIS_NO_TITULO = {
     "junior": re.compile(r"j[uú]nior|\bjr\b|trainee|est[aá]gi", re.I),
     "pleno": re.compile(r"\bpleno\b|\bpl\b|mid[- ]level", re.I),
@@ -295,6 +368,19 @@ async def _gupy(termo: str) -> list[Vaga]:
     return [v for v in vagas if v.titulo and v.url]
 
 
+def cita_o_termo(termo: str, titulo: str, tags: Iterable[str], descricao: str) -> bool:
+    """A vaga é mesmo sobre o termo buscado?
+
+    A busca da Remotive casa o termo em qualquer canto do anúncio: procurar
+    "Java" trazia redator freelancer porque o rodapé citava JavaScript. Vale
+    o termo no título ou nas tags, ou citado mais de uma vez na descrição.
+    """
+    padrao = re.compile(rf"(?<![\w.#+]){re.escape(termo)}(?![\w#+])", re.I)
+    if padrao.search(titulo) or any(padrao.fullmatch(str(tag).strip()) for tag in tags):
+        return True
+    return len(padrao.findall(texto_puro(descricao))) >= 2
+
+
 async def _remotive(termo: str) -> list[Vaga]:
     async with httpx.AsyncClient(timeout=_TIMEOUT, headers={"User-Agent": _UA}) as cliente:
         resposta = await cliente.get(REMOTIVE, params={"search": termo, "limit": 30})
@@ -303,6 +389,8 @@ async def _remotive(termo: str) -> list[Vaga]:
     for item in resposta.json().get("jobs") or []:
         local = str(item.get("candidate_required_location") or "")
         if local and not _LOCAL_QUE_ACEITA_BRASIL.search(local):
+            continue
+        if not cita_o_termo(termo, str(item.get("title") or ""), item.get("tags") or [], str(item.get("description") or "")):
             continue
         vagas.append(
             Vaga(
@@ -348,6 +436,7 @@ async def _adzuna(termo: str) -> list[Vaga]:
                 # A Adzuna devolve só um trecho da descrição; a análise
                 # completa lê a página.
                 descricao=texto_puro(str(item.get("description") or "")),
+                extra={"so_trecho": True},
             )
         )
     return [v for v in vagas if v.titulo and v.url]
@@ -485,15 +574,23 @@ def para_tela(
     estado_uf: Optional[str] = None,
     so_remotas: bool = False,
     limite: int = 60,
+    alcance: str = "todas",
+    nivel_ingles: Optional[str] = None,
 ) -> list[dict[str, Any]]:
     linhas = []
     for vaga in vagas:
         if so_remotas and vaga.remota is not True:
             continue
+        internacional = e_internacional(vaga)
+        if (alcance == "nacionais" and internacional) or (alcance == "internacionais" and not internacional):
+            continue
+        exigido = ingles_exigido(f"{vaga.titulo}\n{vaga.descricao}", internacional)
+        estado_ingles = situacao_do_ingles(exigido, nivel_ingles)
         so_link = bool(vaga.extra.get("so_link"))
-        # Resultado de busca traz só o trecho do buscador. Uma nota tirada dali
-        # diria "100%" para uma vaga cujo anúncio ninguém leu.
-        citadas = {} if so_link else tags_citadas(f"{vaga.titulo}\n{vaga.descricao}", catalogo)
+        so_trecho = bool(vaga.extra.get("so_trecho"))
+        # Resultado de busca e Adzuna trazem só um trecho do anúncio. Uma nota
+        # tirada dali diria "100%" para a vaga cujo trecho só citou "Java".
+        citadas = {} if (so_link or so_trecho) else tags_citadas(f"{vaga.titulo}\n{vaga.descricao}", catalogo)
         compat = compatibilidade(((s, t["name"], True) for s, t in citadas.items()), minhas)
         nivel = nivel_do_titulo(vaga.titulo)
         regiao = bool(estado_uf and (vaga.extra.get("estado") or "").upper() == estado_uf.upper())
@@ -506,6 +603,12 @@ def para_tela(
             pontos += 5
         dias = _dias_desde(vaga.publicada_em)
         if dias is not None and dias > 30:
+            pontos -= 10
+        # Inglês abaixo do pedido barra a entrevista antes de qualquer
+        # tecnologia: desce na lista, mas não some — dá para chegar lá.
+        if estado_ingles == "falta":
+            pontos -= 25
+        elif estado_ingles == "parcial":
             pontos -= 10
         linhas.append(
             (
@@ -522,6 +625,9 @@ def para_tela(
                     "nivel": nivel,
                     "na_sua_regiao": regiao,
                     "so_link": so_link,
+                    "so_trecho": so_trecho,
+                    "internacional": internacional,
+                    "ingles": {"exigido": exigido, "seu": nivel_ingles, "situacao": estado_ingles},
                     "resumo": vaga.descricao[:280] or None,
                     "compatibilidade": compat,
                 },
@@ -589,15 +695,25 @@ def analisar(
     achar: Callable[[str], Optional[dict[str, Any]]],
     minhas: dict[str, dict[str, Any]],
     slugs_do_roadmap: set[str],
+    nivel_ingles: Optional[str] = None,
 ) -> dict[str, Any]:
     """Os requisitos da vaga contra o que a pessoa sabe, e o caminho para cada lacuna.
 
     `requisitos_brutos` vem da IA; vazio (IA fora), cai no casamento de tags
     do texto, com todos contando como obrigatórios — melhor cobrar a mais do
     que esconder uma lacuna.
+
+    O inglês não é medido pela tag: é comparado na régua CEFR com o nível do
+    módulo de Idiomas, que é medido de verdade.
     """
     requisitos: list[dict[str, Any]] = []
-    vistos: set[str] = set()
+    # O inglês tem requisito próprio, montado abaixo. Marcá-lo como visto evita
+    # que a IA ou o casamento de tags o repitam como uma tecnologia comum.
+    vistos: set[str] = {"ingles"}
+    ingles_obrigatorio = next(
+        (bool(r.get("obrigatorio", True)) for r in requisitos_brutos if _CITA_INGLES.search(str(r.get("nome") or ""))),
+        True,
+    )
 
     def acrescenta(nome: str, obrigatorio: bool, tag: Optional[dict[str, Any]]) -> None:
         chave = str(tag["slug"]) if tag else _normaliza(nome).strip()
@@ -608,7 +724,7 @@ def analisar(
 
     for bruto in requisitos_brutos:
         nome = str(bruto.get("nome") or "").strip()
-        if not nome:
+        if not nome or _CITA_INGLES.search(nome):
             continue
         tag = achar(nome) or next(iter(tags_citadas(nome, catalogo).values()), None)
         acrescenta(nome, bool(bruto.get("obrigatorio", True)), tag)
@@ -642,9 +758,44 @@ def analisar(
                 }
             )
 
-    compat = compatibilidade(
-        ((str(r["tag"]["slug"]), r["nome"], r["obrigatorio"]) for r in requisitos if r["tag"]), minhas
-    )
+    pesados = [(str(r["tag"]["slug"]), r["nome"], r["obrigatorio"]) for r in requisitos if r["tag"]]
+    minhas_para_nota = dict(minhas)
+
+    exigido = ingles_exigido(texto, False)
+    estado_ingles = situacao_do_ingles(exigido, nivel_ingles)
+    if exigido:
+        tag_ingles = achar("Inglês")
+        item = {
+            "nome": f"Inglês {exigido}",
+            "obrigatorio": ingles_obrigatorio,
+            "situacao": estado_ingles,
+            "tag_id": str(tag_ingles["id"]) if tag_ingles and tag_ingles.get("id") else None,
+            "user_tag_id": None,
+            "e_meta": False,
+        }
+        avaliados.append(item)
+        if estado_ingles != "tem":
+            sugeridos = courses.recomendar([{"slug": "ingles", "name": "Inglês", "is_target": True}])
+            lacunas.append(
+                {
+                    **item,
+                    "no_roadmap": False,
+                    "cursos": [_curso_resumido(c) for c in sugeridos[:3]],
+                    "idioma": True,
+                }
+            )
+        # Sem nivelamento não há como dizer se atende: fica fora da nota em
+        # vez de contar como falta.
+        if estado_ingles != "sem_nivel":
+            minhas_para_nota["__ingles__"] = {"proficiency": {"tem": 3, "parcial": 1}.get(estado_ingles, 0)}
+            pesados.append(("__ingles__", item["nome"], ingles_obrigatorio))
+
+    compat = compatibilidade(pesados, minhas_para_nota)
     # Obrigatório primeiro: é o que barra a candidatura.
     lacunas.sort(key=lambda l: (not l["obrigatorio"], l["situacao"] != "falta", l["nome"]))
-    return {"requisitos": avaliados, "lacunas": lacunas, "nota": compat["nota"]}
+    return {
+        "requisitos": avaliados,
+        "lacunas": lacunas,
+        "nota": compat["nota"],
+        "ingles": {"exigido": exigido, "seu": nivel_ingles, "situacao": estado_ingles},
+    }
