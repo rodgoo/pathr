@@ -21,6 +21,15 @@ nenhum teste.
 3. **Fundo escuro precisa ser pintado.** Cliente que ignora o CSS do corpo põe
    a mensagem sobre branco; se o texto claro não tiver fundo escuro pintado
    ATRÁS dele, some. Cada tabela pinta o próprio `bgcolor`.
+4. **O app do Gmail no celular inverte as cores.** Em modo escuro ele "clareia"
+   o que é escuro: o e-mail preto chegava BRANCO no celular e preto no
+   computador. Duas travas, que só agem dentro do Gmail:
+   - o fundo vai também como `background-image` (um degradê de uma cor só) —
+     imagem de fundo o Gmail não inverte;
+   - o texto vai dentro de `_nitido()`: duas camadas com `mix-blend-mode`
+     (screen e difference) que desfazem a inversão pixel a pixel. O seletor
+     `u + .body` só existe no HTML que o Gmail monta; nos outros clientes a
+     regra não casa, e as camadas são invisíveis.
 
 ## O assunto carrega o conteúdo, não o nome do app
 
@@ -124,6 +133,17 @@ def _send(to_email: str, to_name: str, subject: str, html: str) -> bool:
 # ---------------------------------------------------------------------------
 
 
+def _preto(cor: str) -> str:
+    """Fundo pintado duas vezes: cor e imagem. O app do Gmail inverte a cor,
+    mas não a imagem — e é a imagem que fica por cima."""
+    return f"background-color:{cor};background-image:linear-gradient({cor},{cor})"
+
+
+def _nitido(conteudo: str) -> str:
+    """Texto que o modo escuro do Gmail não apaga. Ver a trava 4 no topo."""
+    return f'<span class="gm-s"><span class="gm-d">{conteudo}</span></span>'
+
+
 def _primeiro_nome(nome: str) -> str:
     """Só o primeiro nome, já escapado.
 
@@ -167,7 +187,7 @@ def _cabecalho(cor: str) -> str:
           </td>
           <td valign="middle">
             <span style="font-family:{_FONTE};font-size:19px;font-weight:600;
-                         letter-spacing:-.01em;color:{_TINTA}">PathR</span>
+                         letter-spacing:-.01em;color:{_TINTA}">{_nitido("PathR")}</span>
           </td>
         </tr>
       </table>
@@ -175,7 +195,7 @@ def _cabecalho(cor: str) -> str:
   </tr>
   <tr>
     <td height="3" bgcolor="{cor}"
-        style="font-size:0;line-height:0;height:3px;background-color:{cor};
+        style="font-size:0;line-height:0;height:3px;{_preto(cor)};
                border-radius:2px">&nbsp;</td>
   </tr>
 </table>
@@ -185,16 +205,16 @@ def _cabecalho(cor: str) -> str:
 def _titulo(rotulo: str, titulo: str, cor: str) -> str:
     return f"""
 <div style="font-family:{_FONTE};font-size:11px;font-weight:600;letter-spacing:.14em;
-            text-transform:uppercase;color:{cor};padding:26px 0 0">{rotulo}</div>
+            text-transform:uppercase;color:{cor};padding:26px 0 0">{_nitido(rotulo)}</div>
 <h1 style="font-family:{_FONTE};font-size:26px;line-height:1.25;font-weight:600;
-           letter-spacing:-.02em;color:{_TINTA};margin:10px 0 0">{titulo}</h1>
+           letter-spacing:-.02em;color:{_TINTA};margin:10px 0 0">{_nitido(titulo)}</h1>
 """.strip()
 
 
 def _texto(corpo: str, topo: int = 14) -> str:
     return (
         f'<p style="font-family:{_FONTE};font-size:15px;line-height:1.65;color:{_TINTA_SUAVE};'
-        f'margin:{topo}px 0 0">{corpo}</p>'
+        f'margin:{topo}px 0 0">{_nitido(corpo)}</p>'
     )
 
 
@@ -204,7 +224,7 @@ def _botao(rotulo: str, url: str, cor: str) -> str:
     return f"""
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0 0">
   <tr>
-    <td align="center" bgcolor="{cor}" style="border-radius:8px">
+    <td align="center" bgcolor="{cor}" style="border-radius:8px;{_preto(cor)}">
       <a href="{url}"
          style="display:inline-block;padding:13px 26px;font-family:{_FONTE};font-size:15px;
                 font-weight:600;color:{_FUNDO};text-decoration:none;border-radius:8px">{rotulo}</a>
@@ -225,9 +245,9 @@ def _itens(titulos: list[str], cor: str) -> str:
         f"""
   <tr>
     <td valign="top" width="18"
-        style="font-family:{_FONTE};font-size:15px;line-height:1.6;color:{cor}">&bull;</td>
+        style="font-family:{_FONTE};font-size:15px;line-height:1.6;color:{cor}">{_nitido("&bull;")}</td>
     <td style="font-family:{_FONTE};font-size:15px;line-height:1.6;color:{_TINTA};
-               padding-bottom:6px">{escape(titulo)}</td>
+               padding-bottom:6px">{_nitido(escape(titulo))}</td>
   </tr>"""
         for titulo in titulos[:6]
     )
@@ -237,7 +257,7 @@ def _itens(titulos: list[str], cor: str) -> str:
   <tr>
     <td></td>
     <td style="font-family:{_FONTE};font-size:13px;line-height:1.6;color:{_TINTA_FRACA}">
-      e mais {resto} {'item' if resto == 1 else 'itens'}
+      {_nitido(f"e mais {resto} {'item' if resto == 1 else 'itens'}")}
     </td>
   </tr>"""
     return f"""
@@ -258,16 +278,16 @@ def _placar(colunas: list[tuple[str, str, str]]) -> str:
         f"""
     <td width="{largura}" valign="top" style="padding:0 6px">
       <div style="font-family:{_FONTE};font-size:28px;font-weight:600;letter-spacing:-.02em;
-                  color:{cor};line-height:1.1">{valor}</div>
+                  color:{cor};line-height:1.1">{_nitido(valor)}</div>
       <div style="font-family:{_FONTE};font-size:12px;color:{_TINTA_FRACA};
-                  padding-top:4px">{rotulo}</div>
+                  padding-top:4px">{_nitido(rotulo)}</div>
     </td>"""
         for valor, rotulo, cor in colunas
     )
     return f"""
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
        bgcolor="{_SUPERFICIE}"
-       style="margin:22px 0 0;background-color:{_SUPERFICIE};border:1px solid {_LINHA};
+       style="margin:22px 0 0;{_preto(_SUPERFICIE)};border:1px solid {_LINHA};
               border-radius:10px">
   <tr><td style="padding:18px 10px">
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
@@ -293,8 +313,8 @@ def _rodape(mostrar_preferencias: bool, url_alternativa: str = "") -> str:
             f"""
       <div style="font-family:{_FONTE};font-size:12px;line-height:1.6;color:{_TINTA_FRACA};
                   padding-bottom:14px">
-        Se o botão não funcionar, copie este endereço no navegador:<br />
-        <span style="color:{_TINTA_SUAVE};word-break:break-all">{url_alternativa}</span>
+        {_nitido("Se o botão não funcionar, copie este endereço no navegador:")}<br />
+        <span style="color:{_TINTA_SUAVE};word-break:break-all">{_nitido(url_alternativa)}</span>
       </div>"""
         )
     if mostrar_preferencias:
@@ -302,15 +322,14 @@ def _rodape(mostrar_preferencias: bool, url_alternativa: str = "") -> str:
             f"""
       <div style="font-family:{_FONTE};font-size:12px;line-height:1.6;color:{_TINTA_FRACA};
                   padding-bottom:10px">
-        Você escolhe quais avisos recebe em
-        <a href="{settings.frontend_url}" style="color:{_ROXO};text-decoration:none">Configurações
-        &rsaquo; Avisos e privacidade</a>.
+        {_nitido("Você escolhe quais avisos recebe em")}
+        <a href="{settings.frontend_url}" style="color:{_ROXO};text-decoration:none">{_nitido("Configurações &rsaquo; Avisos e privacidade")}</a>.
       </div>"""
         )
     partes.append(
         f"""
       <div style="font-family:{_FONTE};font-size:12px;color:{_TINTA_FRACA}">
-        PathR &middot; seu plano de estudos
+        {_nitido("PathR &middot; seu plano de estudos")}
       </div>"""
     )
     return f"""
@@ -338,20 +357,25 @@ def _pagina(preheader: str, miolo: str) -> str:
 <meta name="viewport" content="width=device-width,initial-scale=1" />
 <meta name="color-scheme" content="dark" />
 <meta name="supported-color-schemes" content="dark" />
+<style>
+  /* Só casa no HTML do Gmail (ele põe um <u> antes do corpo). Ver trava 4. */
+  u + .body .gm-s {{ background:#000; mix-blend-mode:screen; }}
+  u + .body .gm-d {{ background:#000; mix-blend-mode:difference; }}
+</style>
 </head>
-<body style="margin:0;padding:0;background-color:{_FUNDO}">
+<body class="body" style="margin:0;padding:0;{_preto(_FUNDO)}">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;
             height:0;width:0">{escape(preheader)}{'&#847;&zwnj;&nbsp;' * 40}</div>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-       bgcolor="{_FUNDO}" style="background-color:{_FUNDO};margin:0;padding:0">
+       bgcolor="{_FUNDO}" style="{_preto(_FUNDO)};margin:0;padding:0">
   <tr>
     <td align="center" style="padding:32px 16px">
       <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-             bgcolor="{_PAINEL}" style="max-width:560px;background-color:{_PAINEL};
+             bgcolor="{_PAINEL}" style="max-width:560px;{_preto(_PAINEL)};
              border:1px solid {_LINHA};border-radius:16px">
         <tr>
           <td bgcolor="{_PAINEL}"
-              style="background-color:{_PAINEL};border-radius:16px;padding:28px 28px 26px">
+              style="{_preto(_PAINEL)};border-radius:16px;padding:28px 28px 26px">
             {miolo}
           </td>
         </tr>

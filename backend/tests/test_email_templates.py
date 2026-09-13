@@ -146,6 +146,17 @@ def test_fundo_escuro_e_pintado_nas_tabelas(enviados):
     assert f'bgcolor="{emails._PAINEL}"' in html
 
 
+def test_gmail_do_celular_nao_clareia_o_email(enviados):
+    """O app do Gmail em modo escuro invertia o preto para branco. O fundo vai
+    também como imagem (que ele não inverte) e o texto dentro das camadas que
+    desfazem a inversão — com a regra presa ao HTML do Gmail."""
+    for html in _todos(enviados):
+        assert f"background-image:linear-gradient({emails._FUNDO},{emails._FUNDO})" in html
+        assert 'class="body"' in html and "u + .body .gm-s" in html and "u + .body .gm-d" in html
+    emails.send_daily_plan("a@b.c", "Ana", ["Revisar SQL"], 10)
+    html = enviados[-1][1]
+    assert '<span class="gm-s"><span class="gm-d">Revisar SQL</span></span>' in html
+
 def test_botao_e_tabela_e_nao_link_com_padding(enviados):
     """Outlook ignora padding em <a> e o botão viraria texto sublinhado."""
     emails.send_daily_plan("a@b.c", "Ana", ["x"], 10)
