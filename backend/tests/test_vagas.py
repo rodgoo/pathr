@@ -341,3 +341,28 @@ def test_vaga_so_entra_se_for_mesmo_sobre_o_termo():
     assert V.cita_o_termo("Java", "Backend Engineer", [], "We use Java 21. Java experience required.")
     # JavaScript no rodapé não faz de um redator uma vaga de Java.
     assert not V.cita_o_termo("Java", "Freelance Copywriter", ["writing"], "Our site uses JavaScript. Java once.")
+
+
+def test_adzuna_marca_remota_pelo_anuncio(monkeypatch):
+    """A Adzuna não informa trabalho remoto: sem ler o anúncio, toda vaga dela
+    sumia do filtro de remotas."""
+    import httpx
+
+    monkeypatch.setattr(settings, "adzuna_app_id", "id")
+    monkeypatch.setattr(settings, "adzuna_app_key", "chave")
+    resultados = {"results": [
+        {"id": 1, "title": "Desenvolvedor Java - Trabalho Remoto", "description": "Java", "redirect_url": "https://a/1",
+         "location": {"display_name": "Belo Horizonte, Minas Gerais"}},
+        {"id": 2, "title": "Desenvolvedor Java", "description": "Presencial no centro.", "redirect_url": "https://a/2",
+         "location": {"display_name": "São Paulo"}},
+    ]}
+    original = httpx.AsyncClient
+
+    def cliente(**argumentos):
+        return original(transport=httpx.MockTransport(lambda _p: httpx.Response(200, json=resultados)), **argumentos)
+
+    monkeypatch.setattr(V.httpx, "AsyncClient", cliente)
+    vagas = {v.id: v for v in asyncio.run(V._adzuna("Java"))}
+    assert vagas["adzuna:1"].remota is True and vagas["adzuna:1"].local == "Remoto · Belo Horizonte, Minas Gerais"
+    assert vagas["adzuna:2"].remota is None
+    assert len(vagas) == 2

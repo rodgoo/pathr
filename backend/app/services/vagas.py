@@ -341,15 +341,25 @@ async def _com_cache(fonte: str, termo: str, buscar: Callable[[str], Awaitable[l
 
 
 async def _gupy(termo: str) -> list[Vaga]:
+    # Duas páginas: a busca comum e a só de remotas. Numa só, as 30 primeiras
+    # vêm misturadas e a maior parte das remotas fica de fora — "java" tem 95
+    # remotas na Gupy, e a busca comum trazia 27.
     async with httpx.AsyncClient(timeout=_TIMEOUT, headers={"User-Agent": _UA}) as cliente:
-        resposta = await cliente.get(GUPY, params={"jobName": termo, "limit": 30})
-    resposta.raise_for_status()
+        respostas = await asyncio.gather(
+            cliente.get(GUPY, params={"jobName": termo, "limit": 30}),
+            cliente.get(GUPY, params={"jobName": termo, "limit": 30, "workplaceType": "remote"}),
+        )
+    itens: dict[Any, dict[str, Any]] = {}
+    for resposta in respostas:
+        resposta.raise_for_status()
+        for item in resposta.json().get("data") or []:
+            itens.setdefault(item.get("id"), item)
     vagas = []
-    for item in resposta.json().get("data") or []:
+    for item in itens.values():
         # O portal da Gupy mistura vagas da América Latina inteira.
         if str(item.get("country") or "Brasil") != "Brasil":
             continue
-        remota =item.get("workplaceType") == "remote" or bool(item.get("isRemoteWork"))
+        remota = item.get("workplaceType") == "remote" or bool(item.get("isRemoteWork"))
         lugar = " - ".join(p for p in (item.get("city"), item.get("state")) if p)
         vagas.append(
             Vaga(
@@ -382,11 +392,20 @@ def cita_o_termo(termo: str, titulo: str, tags: Iterable[str], descricao: str) -
 
 
 async def _remotive(termo: str) -> list[Vaga]:
+    # A busca por termo acha pouco; a categoria de desenvolvimento inteira,
+    # filtrada pelo termo aqui, acha as vagas que não repetem o termo no título.
     async with httpx.AsyncClient(timeout=_TIMEOUT, headers={"User-Agent": _UA}) as cliente:
-        resposta = await cliente.get(REMOTIVE, params={"search": termo, "limit": 30})
-    resposta.raise_for_status()
+        respostas = await asyncio.gather(
+            cliente.get(REMOTIVE, params={"search": termo, "limit": 50}),
+            cliente.get(REMOTIVE, params={"category": "software-dev", "limit": 100}),
+        )
+    itens: dict[Any, dict[str, Any]] = {}
+    for resposta in respostas:
+        resposta.raise_for_status()
+        for item in resposta.json().get("jobs") or []:
+            itens.setdefault(item.get("id"), item)
     vagas = []
-    for item in resposta.json().get("jobs") or []:
+    for item in itens.values():
         local = str(item.get("candidate_required_location") or "")
         if local and not _LOCAL_QUE_ACEITA_BRASIL.search(local):
             continue
@@ -408,34 +427,50 @@ async def _remotive(termo: str) -> list[Vaga]:
     return [v for v in vagas if v.titulo and v.url]
 
 
+# A Adzuna não diz se a vaga é remota; o anúncio diz.
+_CITA_REMOTO = re.compile(r"remot[oa]|home[ -]?office|100% remote|fully remote|trabalho remoto|anywhere", re.I)
+
+
 async def _adzuna(termo: str) -> list[Vaga]:
+    chaves = {
+        "app_id": settings.adzuna_app_id.strip(),
+        "app_key": settings.adzuna_app_key.strip(),
+        "results_per_page": 30,
+        "content-type": "application/json",
+    }
+    # A segunda busca é a das remotas: sem ela, as remotas vêm diluídas entre
+    # as presenciais das capitais.
     async with httpx.AsyncClient(timeout=_TIMEOUT, headers={"User-Agent": _UA}) as cliente:
-        resposta = await cliente.get(
-            ADZUNA,
-            params={
-                "app_id": settings.adzuna_app_id.strip(),
-                "app_key": settings.adzuna_app_key.strip(),
-                "what": termo,
-                "results_per_page": 30,
-                "content-type": "application/json",
-            },
+        respostas = await asyncio.gather(
+            cliente.get(ADZUNA, params={**chaves, "what": termo}),
+            cliente.get(ADZUNA, params={**chaves, "what": termo, "what_or": "remoto remota home office"}),
         )
-    resposta.raise_for_status()
+    itens: dict[Any, dict[str, Any]] = {}
+    for resposta in respostas:
+        resposta.raise_for_status()
+        for item in resposta.json().get("results") or []:
+            itens.setdefault(item.get("id"), item)
     vagas = []
-    for item in resposta.json().get("results") or []:
+    for item in itens.values():
+        titulo = texto_puro(str(item.get("title") or ""))
+        descricao = texto_puro(str(item.get("description") or ""))
+        local = (item.get("location") or {}).get("display_name")
+        remota = bool(_CITA_REMOTO.search(f"{titulo} {descricao} {local or ''}"))
         vagas.append(
             Vaga(
                 id=f"adzuna:{item.get('id')}",
-                titulo=texto_puro(str(item.get("title") or "")),
+                titulo=titulo,
                 empresa=(item.get("company") or {}).get("display_name"),
                 url=str(item.get("redirect_url") or ""),
                 fonte="Adzuna",
-                local=(item.get("location") or {}).get("display_name"),
-                remota=None,
+                local=f"Remoto · {local}" if remota and local else ("Remoto" if remota else local),
+                # Sem citar remoto não dá para afirmar que é presencial: None,
+                # e não False.
+                remota=True if remota else None,
                 publicada_em=item.get("created"),
                 # A Adzuna devolve só um trecho da descrição; a análise
                 # completa lê a página.
-                descricao=texto_puro(str(item.get("description") or "")),
+                descricao=descricao,
                 extra={"so_trecho": True},
             )
         )
@@ -573,7 +608,7 @@ def para_tela(
     senioridade: Optional[str] = None,
     estado_uf: Optional[str] = None,
     so_remotas: bool = False,
-    limite: int = 60,
+    limite: int = 100,
     alcance: str = "todas",
     nivel_ingles: Optional[str] = None,
 ) -> list[dict[str, Any]]:
