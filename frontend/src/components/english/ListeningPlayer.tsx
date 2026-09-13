@@ -21,6 +21,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { locucao, SEM_VOZ_DO_IDIOMA, vozesDoIdioma } from "@/lib/fala";
 import { ACC, ACC3, HAIRLINE, TEXT } from "@/lib/tokens";
 
 /** Uma fala do diálogo: quem fala e o que diz. */
@@ -53,21 +54,25 @@ export function separarFalas(contexto: string): Fala[] {
 /** As vozes do sistema chegam de forma assíncrona no Safari e no Chrome: na
  * primeira chamada a lista costuma vir vazia, e só o evento `voiceschanged`
  * avisa que encheu. Sem esperar, todo diálogo sairia na voz padrão. */
-function useVozes(idioma: string): SpeechSynthesisVoice[] {
+export function useVozes(idioma: string): { vozes: SpeechSynthesisVoice[]; semVozDoIdioma: boolean } {
   const [vozes, setVozes] = useState<SpeechSynthesisVoice[]>([]);
+  // Só dá para dizer "não há voz" depois que o sistema entregou a lista —
+  // antes disso ela vem vazia em todo navegador.
+  const [carregou, setCarregou] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined" || !window.speechSynthesis) return;
     const carregar = () => {
       const todas = window.speechSynthesis.getVoices();
-      setVozes(todas.filter((voz) => voz.lang.toLowerCase().startsWith(idioma)));
+      if (todas.length > 0) setCarregou(true);
+      setVozes(vozesDoIdioma(todas, idioma));
     };
     carregar();
     window.speechSynthesis.addEventListener("voiceschanged", carregar);
     return () => window.speechSynthesis.removeEventListener("voiceschanged", carregar);
   }, [idioma]);
 
-  return vozes;
+  return { vozes, semVozDoIdioma: carregou && vozes.length === 0 };
 }
 
 export function ListeningPlayer({
@@ -79,7 +84,7 @@ export function ListeningPlayer({
   idioma?: string;
 }) {
   const falas = separarFalas(contexto);
-  const vozes = useVozes(idioma);
+  const { vozes, semVozDoIdioma } = useVozes(idioma);
   const [tocando, setTocando] = useState(false);
   const [atual, setAtual] = useState(-1);
   const [mostrarTexto, setMostrarTexto] = useState(false);
@@ -106,11 +111,9 @@ export function ListeningPlayer({
 
   /** Quem fala em cada linha ganha uma voz diferente, quando o sistema tem
    * mais de uma. É o que deixa o diálogo audível como diálogo. */
-  function vozDe(quem: string): SpeechSynthesisVoice | undefined {
-    if (vozes.length === 0) return undefined;
+  function posicaoDaVoz(quem: string): number {
     const nomes = [...new Set(falas.map((f) => f.quem))];
-    const posicao = Math.max(0, nomes.indexOf(quem));
-    return vozes[posicao % vozes.length];
+    return Math.max(0, nomes.indexOf(quem));
   }
 
   function tocar() {
@@ -120,10 +123,9 @@ export function ListeningPlayer({
     setTocando(true);
 
     falas.forEach((fala, indice) => {
-      const fase = new SpeechSynthesisUtterance(fala.texto);
-      fase.lang = vozDe(fala.quem)?.lang ?? `${idioma}-US`;
-      const voz = vozDe(fala.quem);
-      if (voz) fase.voice = voz;
+      // As vozes vêm da melhor para a pior; cada interlocutor pega a sua a
+      // partir da melhor, e só dá a volta se o sistema tiver poucas.
+      const fase = locucao(fala.texto, idioma, vozes, posicaoDaVoz(fala.quem));
       // Um pouco mais devagar que o padrão: é material de estudo em língua
       // estrangeira, e a velocidade nativa do sintetizador atropela quem
       // ainda está aprendendo.
@@ -195,6 +197,12 @@ export function ListeningPlayer({
           {falas.length} falas
         </span>
       </div>
+
+      {suportado && semVozDoIdioma ? (
+        <p role="note" style={{ margin: "8.4px 0 0", fontSize: 11.5, color: "#cfa25e", lineHeight: 1.5 }}>
+          {SEM_VOZ_DO_IDIOMA}
+        </p>
+      ) : null}
 
       {/* A transcrição só aparece quando pedida: junto do áudio, o item
           viraria leitura e pararia de medir escuta. Quando aparece, a fala em

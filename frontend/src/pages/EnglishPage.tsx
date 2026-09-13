@@ -58,9 +58,16 @@ export function EnglishPage() {
 
   const data = profile.data;
   // O nível de agora sai de todas as respostas, e não só do último
-  // nivelamento: é assim que o treino diário aparece no número grande. O do
-  // nivelamento continua dito embaixo, como referência.
-  const nivelAtual = quadro.data?.overall.answered ? quadro.data.overall.level : data.cefr_level;
+  // nivelamento: é assim que o treino diário aparece no número grande. Mas só
+  // quando essa estimativa já firmou. Com poucas respostas por habilidade ela
+  // é "inicial" e oscila — mostrava B1 para quem o nivelamento mediu B2, e o
+  // selo da barra lateral (que é o do nivelamento) dizia outra coisa.
+  const estimativaFirme = Boolean(
+    quadro.data?.overall.answered &&
+      (quadro.data.overall.confidence === "alta" || quadro.data.overall.confidence === "media"),
+  );
+  const nivelAtual =
+    (estimativaFirme ? quadro.data?.overall.level : null) ?? data.cefr_level ?? quadro.data?.overall.level ?? null;
   const reached = nivelAtual ? BANDS.indexOf(nivelAtual as (typeof BANDS)[number]) + 1 : 0;
   // Um nivelamento aberto só vale como retomada se ainda faltar responder.
   const emAndamento =
@@ -197,6 +204,9 @@ export function EnglishPage() {
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))",
             gap: 11.2,
+            // Cada cartão do tamanho do próprio conteúdo. Esticados, o treino
+            // e o nível viravam colunas vazias da altura da lista de melhoras.
+            alignItems: "start",
           }}
         >
           <CartaoDoTreino
@@ -235,7 +245,9 @@ export function EnglishPage() {
             </div>
             <p style={{ fontSize: 11.5, color: "rgba(233,233,237,.65)", margin: "8.4px 0 14px" }}>
               {data.cefr_level
-                ? `Estimado com o nivelamento (${data.cefr_level}) e os treinos. Refaça o nivelamento quando quiser uma medida nova.`
+                ? estimativaFirme
+                  ? `Estimado com o nivelamento (${data.cefr_level}) e os treinos. Refaça o nivelamento quando quiser uma medida nova.`
+                  : "Medido no nivelamento. Os treinos passam a ajustar este número quando tiverem respostas suficientes."
                 : "Sem nivelamento ainda. O teste leva cerca de 12 minutos — dá para treinar antes, e o nível se ajusta com as respostas."}
             </p>
             {emAndamento ? (

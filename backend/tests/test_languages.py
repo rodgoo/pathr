@@ -459,3 +459,26 @@ def test_listening_com_dialogo_curto_chega_a_tela():
         )
     )
     assert len(linhas) == 1
+
+
+# ---------------------------------------------------------------------------
+# Item que aponta um trecho destacado precisa trazer o trecho marcado
+# ---------------------------------------------------------------------------
+
+
+def test_pergunta_sobre_parte_sublinhada_sem_marca_e_irrespondivel():
+    """Caso real: "replace the underlined part" num contexto sem sublinhado nenhum."""
+    from app.routers.languages import _respondivel
+
+    prompt = "Choose the most appropriate phrasal verb to replace the underlined part in the comment."
+    sem_marca = 'Code review comment: "Can you please clean up this function?"'
+    com_marca = 'Code review comment: "Can you please [[clean up]] this function?"'
+    assert not _respondivel(prompt, "vocabulary", sem_marca)
+    assert _respondivel(prompt, "vocabulary", com_marca)
+
+
+def test_escuta_com_lacuna_no_dialogo_e_irrespondivel():
+    from app.routers.languages import _respondivel
+
+    assert not _respondivel("What will Ana do?", "listening", "Ana: I __ push it.\nMarc: Ok.")
+    assert _respondivel("What will Ana do?", "listening", "Ana: I'll push it.\nMarc: Ok.")

@@ -119,8 +119,9 @@ POR TIPO (use SÓ os campos do tipo)
 - match: pares = 4 a 6 objetos {a: termo no idioma, b: tradução em português},
   todos do tópico; enunciado "Associe".
 - listening: texto = o que será FALADO em voz alta (uma fala curta, ou um
-  diálogo com "Nome: fala", uma fala por linha); enunciado = pergunta que só se
-  responde ouvindo o texto; alternativas (4); correta.
+  diálogo com "Nome: fala", uma fala por linha), COMPLETO e sem lacuna — nunca
+  "___": a voz leria o símbolo e a pessoa não ouviria a palavra; enunciado =
+  pergunta que só se responde ouvindo o texto; alternativas (4); correta.
 - dictation: texto = UMA frase de 5 a 14 palavras (conte: acima de 20 é
   recusada, ninguém escreve de ouvido uma frase desse tamanho); traducao;
   enunciado "Escreva o que ouvir".
@@ -317,7 +318,7 @@ def _publico(sessao: dict[str, Any], itens: list[dict[str, Any]]) -> dict[str, A
                 "topic": i.get("topic"),
                 "band": i.get("cefr_band"),
                 "origin": i.get("origin"),
-                "payload": i.get("payload") or {},
+                "payload": treino.audio_para_voz(i.get("payload") or {}, i.get("correct")),
             }
             for i in itens
             if i.get("is_correct") is None

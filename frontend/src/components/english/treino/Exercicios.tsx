@@ -20,7 +20,8 @@ import { useEffect, useMemo, useState } from "react";
 import type { PracticeAnswer, PracticeAnswerResult, PracticeItem } from "@/api/types";
 import { ACC, ACC3, C, HAIRLINE, PANEL, TEXT } from "@/lib/tokens";
 import { ChoiceList } from "@/components/ui/ChoiceList";
-import { ListeningPlayer } from "@/components/english/ListeningPlayer";
+import { ListeningPlayer, useVozes } from "@/components/english/ListeningPlayer";
+import { locucao, SEM_VOZ_DO_IDIOMA } from "@/lib/fala";
 
 /** Código de voz do navegador para cada idioma do catálogo. */
 const VOZ: Record<string, string> = {
@@ -397,14 +398,14 @@ function AssociarPares({ item, travado, resultado, onResponder }: ExercicioProps
 function OuvirFrase({ texto, idioma }: { texto: string; idioma: string }) {
   const suportado = typeof window !== "undefined" && !!window.speechSynthesis;
   const [tocando, setTocando] = useState(false);
+  const { vozes, semVozDoIdioma } = useVozes(idioma);
 
   useEffect(() => () => window.speechSynthesis?.cancel(), [texto]);
 
   function tocar(velocidade: number) {
     if (!suportado) return;
     window.speechSynthesis.cancel();
-    const fala = new SpeechSynthesisUtterance(texto);
-    fala.lang = VOZ[idioma] ?? idioma;
+    const fala = locucao(texto, idioma, vozes);
     fala.rate = velocidade;
     fala.onend = () => setTocando(false);
     setTocando(true);
@@ -426,6 +427,11 @@ function OuvirFrase({ texto, idioma }: { texto: string; idioma: string }) {
       <button type="button" className="btn btn-ghost" onClick={() => tocar(0.6)}>
         Mais devagar
       </button>
+      {semVozDoIdioma ? (
+        <p role="note" style={{ flexBasis: "100%", margin: 0, fontSize: 11.5, color: C.ambar }}>
+          {SEM_VOZ_DO_IDIOMA}
+        </p>
+      ) : null}
     </div>
   );
 }
@@ -502,14 +508,14 @@ function Fala({ item, idioma, travado, resultado, onResponder }: ExercicioProps)
   const [ouvindo, setOuvindo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const texto = item.payload.texto ?? "";
+  const { vozes } = useVozes(idioma);
 
   useEffect(() => () => reconhecimento?.stop(), [reconhecimento]);
 
   function ouvirModelo() {
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
-    const fala = new SpeechSynthesisUtterance(texto);
-    fala.lang = VOZ[idioma] ?? idioma;
+    const fala = locucao(texto, idioma, vozes);
     fala.rate = 0.9;
     window.speechSynthesis.speak(fala);
   }

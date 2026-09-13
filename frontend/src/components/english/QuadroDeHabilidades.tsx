@@ -55,7 +55,7 @@ export function QuadroDeHabilidades({ quadro }: { quadro: SkillBoard | null }) {
         <Kicker>Por habilidade</Kicker>
         {quadro?.overall.level ? (
           <span style={{ fontSize: 11.5, color: TEXT.faint, marginLeft: "auto" }}>
-            geral {quadro.overall.level}
+            nos treinos: {quadro.overall.level}
           </span>
         ) : null}
       </div>

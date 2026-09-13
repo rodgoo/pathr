@@ -287,6 +287,56 @@ def test_consulta_de_palavra_usa_o_deepl_e_sobrevive_a_ia_fora(deepl, monkeypatc
     assert resposta["translation"] == "reservar"
 
 
+def test_palavra_ja_consultada_volta_do_cartao_sem_ia_nem_deepl(deepl, monkeypatch):
+    """Reabrir a mesma palavra não pode repetir a espera: o cartão já tem a
+    resposta. "Book" no começo da frase é a mesma consulta que "book"."""
+    from app.routers import languages as router
+    from tests.fake_supabase import FakeSupabase
+
+    async def ia(*_a, **_k):
+        raise AssertionError("não devia chamar a IA")
+
+    monkeypatch.setattr(router, "generate_json", ia)
+    usuario = "11111111-1111-1111-1111-111111111111"
+    banco = FakeSupabase(pathr_english_vocab=[{
+        "id": "v1", "user_id": usuario, "language": "en", "term": "book",
+        "translation": "reservar", "definition": "Marcar com antecedência.",
+        "example": "Book a room.", "phonetic": "/bʊk/", "cefr_band": "A2",
+        "ease": 2.5, "interval_days": 6, "repetitions": 2, "due_at": "2026-10-01T00:00:00+00:00",
+    }])
+
+    resposta = _rodar(router.lookup_word(
+        router.VocabLookup(term="Book", language="en", context="Book a room for us."),
+        current_user={"id": usuario},
+        supabase=banco,
+    ))
+
+    assert resposta["translation"] == "reservar"
+    assert resposta["definition"] == "Marcar com antecedência."
+    assert deepl.pedidos == []
+    # Continua sendo evidência: o mesmo cartão, sem duplicar.
+    assert len(banco.linhas("pathr_english_vocab")) == 1
+
+
+def test_consulta_nao_espera_a_ia_lenta_quando_o_deepl_ja_traduziu(deepl, monkeypatch):
+    from app.routers import languages as router
+    from tests.fake_supabase import FakeSupabase
+
+    deepl.traducoes = {"meeting": "reunião"}
+
+    async def ia_lenta(*_a, **_k):
+        await asyncio.sleep(30)
+
+    monkeypatch.setattr(router, "generate_json", ia_lenta)
+    monkeypatch.setattr(router, "_ESPERA_DA_EXPLICACAO", 0.05)
+    resposta = _rodar(router.lookup_word(
+        router.VocabLookup(term="meeting", language="en"),
+        current_user={"id": "11111111-1111-1111-1111-111111111111"},
+        supabase=FakeSupabase(pathr_english_vocab=[]),
+    ))
+    assert resposta["translation"] == "reunião"
+
+
 def test_prompts_do_modelo_levam_a_mesma_lista_de_termos():
     """A reserva e o DeepL precisam preservar os mesmos termos."""
     from app.routers import language_practice as router

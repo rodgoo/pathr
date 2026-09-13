@@ -89,6 +89,10 @@ Regras:
    em voz alta para a pessoa ouvir. O contexto é o diálogo, e não a descrição
    da cena: "Daily stand-up on Zoom" sozinho não diz a ninguém quem ficou com
    a tarefa. Escreva falas curtas e naturais, como gente fala numa reunião.
+   Se a pergunta aponta um trecho ("replace the underlined part"), MARQUE o
+   trecho no contexto entre colchetes duplos: "Can you please [[clean up]]
+   this function?". A tela desenha isso sublinhado; texto sem a marca não
+   tem sublinhado nenhum, e a pergunta fica sem resposta.
 7. O campo banda: A1, A2, B1, B2, C1 ou C2 — a dificuldade real do item.
 8. A explicação diz por que a certa soa natural e por que a mais tentadora
    das erradas soa estranha para um falante nativo.
@@ -108,6 +112,15 @@ _REMETE_A_MIDIA = re.compile(
     r"|no\s+áudio|na\s+gravação",
     re.IGNORECASE,
 )
+
+# O enunciado aponta para um trecho destacado ("replace the underlined part").
+# Texto puro não tem sublinhado: o trecho precisa vir marcado com [[ ]], que a
+# tela desenha sublinhado. Sem a marca, a pergunta não tem resposta.
+_REMETE_A_DESTAQUE = re.compile(
+    r"\b(?:underlined|highlighted|in\s+bold|bolded|in\s+italics)\b|sublinhad|destacad|em\s+negrito",
+    re.IGNORECASE,
+)
+_TRECHO_MARCADO = re.compile(r"\[\[[^\[\]]+\]\]")
 
 # Uma fala transcrita começa por quem fala: "Ana: I'll push it after lunch."
 # Duas ou mais dessas linhas são um diálogo; nenhuma é a descrição de cena que
@@ -135,7 +148,11 @@ def _respondivel(prompt: str, skill: str, contexto: str) -> bool:
     Vale para qualquer habilidade que remeta a uma mídia inexistente, e vale
     sempre para `listening`: ali a transcrição não é enfeite, é o enunciado.
     """
-    if skill == "listening" and not _tem_transcricao(contexto):
+    # Lacuna no diálogo que vai para a voz: ela leria "underscore" no lugar
+    # da palavra que a pergunta cobra.
+    if skill == "listening" and (not _tem_transcricao(contexto) or "__" in contexto):
+        return False
+    if _REMETE_A_DESTAQUE.search(prompt) and not _TRECHO_MARCADO.search(f"{contexto} {prompt}"):
         return False
     return not (_REMETE_A_MIDIA.search(prompt) and not _tem_transcricao(contexto))
 
@@ -1036,6 +1053,28 @@ async def lookup_word(
         )
 
     idioma = _idioma_valido(payload.language)
+    user_id = str(current_user["id"])
+
+    # Já consultada antes: o cartão guarda o que a consulta respondeu. Sem
+    # isto, reabrir a mesma palavra refazia a chamada à IA e ao DeepL — a mesma
+    # espera de segundos para uma resposta que o banco já tinha.
+    guardado = _cartao_ja_consultado(supabase, user_id, idioma, termo)
+    if guardado:
+        significado = {
+            "term": termo,
+            "translation": guardado.get("translation"),
+            # A tabela não guarda sinônimos; perder só eles é melhor que esperar.
+            "synonyms": [],
+            "definition": guardado.get("definition"),
+            "example": guardado.get("example"),
+            "phonetic": guardado.get("phonetic"),
+            "cefr_band": guardado.get("cefr_band") or "B1",
+        }
+        significado["card"] = _registra_consulta(
+            supabase, user_id, idioma, {**significado, "term": guardado["term"]}
+        )
+        return significado
+
     alvo = languages.idioma(idioma)
     nome = alvo.nome if alvo else "Ingles"
 
@@ -1059,13 +1098,18 @@ async def lookup_word(
     # consulta somaria as duas esperas. A tradução do DeepL tem preferência
     # (ver services/traducao.py); a do modelo é a reserva.
     pelo_deepl = asyncio.create_task(traducao.traduzir([termo], idioma, contexto=contexto or None))
-    try:
-        resultado = await generate_json(SYSTEM_PROMPT, pedido, _LOOKUP_SCHEMA)
-        conteudo = resultado.content or {}
-    except AiProviderError:
-        conteudo = {}
+    pela_ia = asyncio.create_task(_explicacao_da_ia(pedido))
     traduzidas = await pelo_deepl
     traducao_deepl = traduzidas[0] if traduzidas else None
+    try:
+        # Com a tradução do DeepL em mãos, a explicação é complemento: a IA tem
+        # alguns segundos, não o orçamento inteiro da rotação. Era essa espera
+        # — um provedor lento, depois outro — que deixava a consulta travada.
+        conteudo = await asyncio.wait_for(
+            pela_ia, timeout=_ESPERA_DA_EXPLICACAO if traducao_deepl else None
+        )
+    except asyncio.TimeoutError:
+        conteudo = {}
 
     if not conteudo and not traducao_deepl:
         # Sem consulta a pessoa perde a ajuda, mas nao perde o nivelamento: a
@@ -1092,8 +1136,39 @@ async def lookup_word(
         "cefr_band": str(conteudo.get("cefr") or "B1").strip().upper()[:2] or "B1",
     }
 
-    significado["card"] = _registra_consulta(supabase, str(current_user["id"]), idioma, significado)
+    significado["card"] = _registra_consulta(supabase, user_id, idioma, significado)
     return significado
+
+
+_ESPERA_DA_EXPLICACAO = 6.0
+
+
+async def _explicacao_da_ia(pedido: str) -> dict[str, Any]:
+    try:
+        resultado = await generate_json(SYSTEM_PROMPT, pedido, _LOOKUP_SCHEMA)
+        return resultado.content or {}
+    except AiProviderError:
+        return {}
+
+
+def _cartao_ja_consultado(
+    supabase: Client, user_id: str, idioma: str, termo: str
+) -> Optional[dict[str, Any]]:
+    """O cartão da palavra, se ele já tem tradução. "Book" no começo da frase e
+    "book" no meio são a mesma consulta."""
+    variantes = list({termo, termo.lower(), termo[:1].upper() + termo[1:].lower()})
+    linhas = (
+        supabase.table("pathr_english_vocab")
+        .select("*")
+        .eq("user_id", user_id)
+        .eq("language", idioma)
+        .in_("term", variantes)
+        .limit(1)
+        .execute()
+        .data
+        or []
+    )
+    return linhas[0] if linhas and linhas[0].get("translation") else None
 
 
 def _registra_consulta(

@@ -464,6 +464,19 @@ textarea.input { min-height: 90px; resize: vertical; }
   text-decoration-color: #9184d9;
 }
 
+/* O trecho que a pergunta aponta. Sublinhado cheio e grosso, na cor de
+   destaque, por cima do pontilhado de consulta de cada palavra dentro dele. */
+.destaque {
+  background: none;
+  color: inherit;
+}
+.destaque,
+.destaque .palavra {
+  text-decoration: underline solid #b5abfc;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
 .palavra[aria-expanded="true"] {
   background: rgba(145, 132, 217, 0.18);
   color: #d2cefd;

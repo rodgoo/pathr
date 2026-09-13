@@ -25,9 +25,27 @@ import { english as englishApi } from "@/api/endpoints";
 import type { WordMeaning } from "@/api/types";
 import { useMutation } from "@/hooks/useApi";
 import { ACC, ACC3, HAIRLINE, TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
 
 /** Palavras e o que as separa, preservando os dois na mesma lista. */
 const PEDACOS = /([^\W\d_][\w'’-]*)/u;
+
+/**
+ * O que já se consultou nesta aba, por idioma, palavra e frase. Reabrir a
+ * mesma palavra no mesmo texto não vai ao servidor: a resposta não muda, e a
+ * espera de novo era o que fazia a consulta parecer lenta. A frase entra na
+ * chave porque o significado depende dela ("book" de reservar ≠ de livro).
+ */
+const consultadas = new Map<string, WordMeaning>();
+
+/** O trecho destacado pelo servidor: `[[clean up]]`. Ver `_TRECHO_MARCADO`. */
+const MARCA = /\[\[([^[\]]+)\]\]/g;
+const TRECHOS = /(\[\[[^[\]]+\]\])/;
+const MARCA_INTEIRA = /^\[\[([^[\]]+)\]\]$/;
+
+export function limparConsultasEmMemoria() {
+  consultadas.clear();
+}
 
 interface Alvo {
   palavra: string;
@@ -50,7 +68,10 @@ export function TextoConsultavel({
   const bloco = useRef<HTMLSpanElement | null>(null);
   const [alvo, setAlvo] = useState<Alvo | null>(null);
   const [significado, setSignificado] = useState<WordMeaning | null>(null);
-  const consulta = useMutation((palavra: string) => englishApi.lookup(palavra, idioma, texto));
+  // O servidor recebe a frase sem a marca de destaque: "[[clean up]]" é
+  // desenho de tela, não parte do que a pessoa leu.
+  const semMarcas = texto.replace(MARCA, "$1");
+  const consulta = useMutation((palavra: string) => englishApi.lookup(palavra, idioma, semMarcas));
 
   function fechar() {
     setAlvo(null);
@@ -82,8 +103,17 @@ export function TextoConsultavel({
       esquerda: elemento.offsetLeft,
       altura: elemento.offsetHeight,
     });
+    const chave = `${idioma}|${palavra.toLowerCase()}|${texto}`;
+    const guardado = consultadas.get(chave);
+    if (guardado) {
+      setSignificado(guardado);
+      return;
+    }
     const achado = await consulta.run(palavra);
-    if (achado) setSignificado(achado);
+    if (achado) {
+      consultadas.set(chave, achado);
+      setSignificado(achado);
+    }
   }
 
   return (
@@ -91,24 +121,38 @@ export function TextoConsultavel({
     // conteúdo de frase pode morar ali. `display: block` devolve o
     // comportamento de bloco sem quebrar o encaixe.
     <span ref={bloco} style={{ display: "block", position: "relative", ...style }}>
-      {texto.split(PEDACOS).map((pedaco, posicao) =>
-        PEDACOS.test(pedaco) && pedaco.length > 1 ? (
-          <button
-            // A posição entra na chave porque a mesma palavra repete no texto,
-            // e duas ocorrências são dois lugares diferentes para ancorar.
-            key={`${pedaco}-${posicao}`}
-            type="button"
-            className="palavra"
-            aria-label={`Consultar "${pedaco}"`}
-            aria-expanded={alvo?.palavra === pedaco}
-            onClick={(evento) => void consultar(pedaco, evento.currentTarget)}
-          >
-            {pedaco}
-          </button>
+      {texto.split(TRECHOS).map((trecho, indiceDoTrecho) => {
+        const destacado = MARCA_INTEIRA.exec(trecho);
+        const conteudo = destacado ? destacado[1] : trecho;
+        const palavras = conteudo.split(PEDACOS).map((pedaco, posicao) =>
+          PEDACOS.test(pedaco) && pedaco.length > 1 ? (
+            <button
+              // A posição entra na chave porque a mesma palavra repete no texto,
+              // e duas ocorrências são dois lugares diferentes para ancorar.
+              key={`${pedaco}-${indiceDoTrecho}-${posicao}`}
+              type="button"
+              className="palavra"
+              aria-label={`Consultar "${pedaco}"`}
+              aria-expanded={alvo?.palavra === pedaco}
+              onClick={(evento) => void consultar(pedaco, evento.currentTarget)}
+            >
+              {pedaco}
+            </button>
+          ) : (
+            <span key={`t-${indiceDoTrecho}-${posicao}`}>{pedaco}</span>
+          ),
+        );
+        // O trecho que a pergunta aponta ("the underlined part") continua
+        // sublinhado por cima das palavras consultáveis — o pontilhado de cada
+        // palavra não pode apagar o destaque de que a resposta depende.
+        return destacado ? (
+          <mark key={`d-${indiceDoTrecho}`} className="destaque">
+            {palavras}
+          </mark>
         ) : (
-          <span key={`t-${posicao}`}>{pedaco}</span>
-        ),
-      )}
+          <span key={`s-${indiceDoTrecho}`}>{palavras}</span>
+        );
+      })}
 
       {alvo ? (
         <Balao
@@ -180,10 +224,11 @@ function Balao({
           type="button"
           className="btn btn-ghost"
           aria-label="Fechar"
-          style={{ marginLeft: "auto", padding: 0, fontSize: 12.5, color: TEXT.faint }}
+          title="Fechar"
+          style={{ marginLeft: "auto", padding: 4, minHeight: 0, color: TEXT.faint }}
           onClick={onFechar}
         >
-          fechar
+          <Icon name="x" size={14} />
         </button>
       </span>
 

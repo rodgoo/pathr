@@ -311,3 +311,40 @@ def test_resposta_para_estimativa_usa_a_chance_do_formato_e_ignora_pulo():
     respostas = T.respostas_para_estimativa(linhas)
     assert len(respostas) == 1 and respostas[0].chance == 0.0
     assert isinstance(respostas[0], P.Resposta)
+
+
+# ---------------------------------------------------------------------------
+# Texto que vai para a voz: nunca com lacuna escrita
+# ---------------------------------------------------------------------------
+
+
+def test_escuta_com_lacuna_no_audio_e_recusada():
+    """A voz leria "underscore underscore" no lugar da palavra que a pergunta cobra."""
+    item = {
+        "enunciado": "What will Ana do?",
+        "texto": "Ana: I ___ push it after lunch.\nMarc: Thanks.",
+        "alternativas": ["will", "would", "was", "am"],
+        "correta": 0,
+        "explicacao": "x",
+    }
+    assert T.validar(item, T.Encomenda(0, "listening", "listening", "futuro", "B1", "novo")) is None
+
+
+def test_ditado_com_lacuna_e_recusado():
+    item = {"texto": "Please ___ the pull request today", "explicacao": "x"}
+    assert T.validar(item, T.Encomenda(0, "dictation", "listening", "futuro", "B1", "novo")) is None
+
+
+def test_audio_gravado_com_lacuna_sai_com_a_palavra_certa():
+    payload = {"audio": "Ana: I __ push it after lunch.", "alternativas": ["would", "'ll", "was", "am"]}
+    assert T.audio_para_voz(payload, {"indice": 1})["audio"] == "Ana: I 'll push it after lunch."
+
+
+def test_audio_sem_gabarito_perde_so_o_simbolo():
+    falado = T.audio_para_voz({"audio": "We __ and __ it."}, None)["audio"]
+    assert "_" not in falado
+
+
+def test_audio_sem_lacuna_nao_muda():
+    payload = {"audio": "Marc: I'll review it."}
+    assert T.audio_para_voz(payload, {"indice": 0}) is payload

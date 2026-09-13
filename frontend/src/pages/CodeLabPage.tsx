@@ -355,11 +355,13 @@ function Depurador({
         <span className="tag tag-outline">{exemplo.level}</span>
         <button
           type="button"
-          className="btn btn-ghost"
-          style={{ marginLeft: "auto", fontSize: 12 }}
+          className="btn btn-ghost btn-icon"
+          aria-label="Fechar exemplo"
+          title="Fechar"
+          style={{ marginLeft: "auto", alignSelf: "center" }}
           onClick={onFechar}
         >
-          Fechar
+          <Icon name="x" size={16} />
         </button>
       </div>
 

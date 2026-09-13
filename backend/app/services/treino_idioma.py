@@ -369,6 +369,10 @@ def canonico(topico: Optional[str], habilidade: str, pedido: str) -> str:
 # ---------------------------------------------------------------------------
 
 LACUNA = "___"
+# Lacuna escrita em texto que vai para a VOZ. A síntese lê o símbolo —
+# "underscore underscore" — e a pessoa nunca ouve a palavra que devia
+# entender para responder.
+_LACUNA_ESCRITA = re.compile(r"_{2,}")
 _TEM_LETRA_OU_DIGITO = re.compile(r"[A-Za-z0-9]")
 _FALA = re.compile(r"^[^\n:]{1,40}:\s*\S", re.MULTILINE)
 
@@ -386,6 +390,26 @@ def _alternativas(item: dict[str, Any]) -> Optional[tuple[list[str], int]]:
     if len(opcoes) != 4 or len({o.lower() for o in opcoes}) != 4 or not 0 <= correta <= 3:
         return None
     return opcoes, correta
+
+
+def audio_para_voz(payload: dict[str, Any], gabarito: Any) -> dict[str, Any]:
+    """O payload com o texto falado pronto para a síntese de voz.
+
+    Exercícios gravados antes da guarda de `validar` podem ter a lacuna no
+    áudio. Na escuta com UMA lacuna, ela é preenchida com a alternativa certa
+    — a palavra que a pessoa devia ouvir. Sem como saber qual é, o símbolo sai
+    do texto: um silêncio é menos errado que "underscore underscore".
+    """
+    audio = payload.get("audio")
+    if not isinstance(audio, str) or not _LACUNA_ESCRITA.search(audio):
+        return payload
+    alternativas = payload.get("alternativas") or []
+    indice = gabarito.get("indice") if isinstance(gabarito, dict) else None
+    if len(_LACUNA_ESCRITA.findall(audio)) == 1 and isinstance(indice, int) and 0 <= indice < len(alternativas):
+        falado = _LACUNA_ESCRITA.sub(str(alternativas[indice]), audio)
+    else:
+        falado = _LACUNA_ESCRITA.sub(" ", audio)
+    return {**payload, "audio": re.sub(r"[ \t]{2,}", " ", falado)}
 
 
 def validar(item: dict[str, Any], encomenda: Encomenda) -> Optional[dict[str, Any]]:
@@ -424,7 +448,7 @@ def validar(item: dict[str, Any], encomenda: Encomenda) -> Optional[dict[str, An
             payload["emoji"] = emoji
         if tipo == "listening":
             audio = str(item.get("texto") or "").strip()
-            if len(_palavras(audio)) < 3:
+            if len(_palavras(audio)) < 3 or _LACUNA_ESCRITA.search(audio):
                 return None
             # O texto falado vai ao navegador: é o que a síntese de voz lê.
             # A tela o esconde até a pessoa pedir a transcrição.
@@ -473,7 +497,7 @@ def validar(item: dict[str, Any], encomenda: Encomenda) -> Optional[dict[str, An
 
     elif tipo in ("dictation", "speaking"):
         texto = " ".join(_palavras(str(item.get("texto") or "")))
-        if not 3 <= len(_palavras(texto)) <= 20:
+        if not 3 <= len(_palavras(texto)) <= 20 or _LACUNA_ESCRITA.search(texto):
             return None
         gabarito["texto"] = texto
         payload["traducao"] = str(item.get("traducao") or "").strip()[:300]

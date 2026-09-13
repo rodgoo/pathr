@@ -12,11 +12,12 @@
 
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, it, vi } from "vitest";
-import { TextoConsultavel } from "@/components/english/TextoConsultavel";
+import { limparConsultasEmMemoria, TextoConsultavel } from "@/components/english/TextoConsultavel";
 import { mockServer } from "./server";
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  limparConsultasEmMemoria();
 });
 
 const significado = {
@@ -84,6 +85,20 @@ it("uma consulta que falha não trava o item", async () => {
   expect(screen.getByRole("button", { name: 'Consultar "Friday"' })).toBeInTheDocument();
 });
 
+it("reabrir a mesma palavra não consulta o servidor de novo", async () => {
+  const servidor = mockServer({ "POST /languages/lookup": () => ({ body: significado }) });
+  render(<TextoConsultavel texto="We deploy on Friday." />);
+  const palavra = screen.getByRole("button", { name: 'Consultar "deploy"' });
+
+  fireEvent.click(palavra);
+  expect(await screen.findByText("implantar")).toBeInTheDocument();
+  fireEvent.click(screen.getByRole("button", { name: "Fechar" }));
+  fireEvent.click(palavra);
+
+  expect(await screen.findByText("implantar")).toBeInTheDocument();
+  expect(servidor.calls.filter((chamada) => chamada.url.includes("/lookup"))).toHaveLength(1);
+});
+
 it("tocar na mesma palavra de novo fecha a consulta", async () => {
   mockServer({ "POST /languages/lookup": () => ({ body: significado }) });
   render(<TextoConsultavel texto="We deploy on Friday." />);
@@ -94,4 +109,18 @@ it("tocar na mesma palavra de novo fecha a consulta", async () => {
 
   fireEvent.click(palavra);
   await waitFor(() => expect(screen.queryByText("implantar")).not.toBeInTheDocument());
+});
+
+it("o trecho destacado aparece sublinhado e as palavras continuam consultáveis", async () => {
+  const servidor = mockServer({ "POST /languages/lookup": () => ({ body: significado }) });
+  const { container } = render(<TextoConsultavel texto='Can you please [[clean up]] this function?' />);
+
+  const destaque = container.querySelector("mark.destaque");
+  expect(destaque?.textContent).toBe("clean up");
+  expect(container.textContent).not.toContain("[[");
+
+  fireEvent.click(screen.getByRole("button", { name: 'Consultar "clean"' }));
+  await waitFor(() => expect(servidor.calls.length).toBeGreaterThan(0));
+  // A frase vai ao servidor sem a marca.
+  expect((servidor.calls[0].body as { context: string }).context).toBe("Can you please clean up this function?");
 });
