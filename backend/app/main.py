@@ -176,6 +176,7 @@ from app.routers import (  # noqa: E402
     quizzes,
     resumes,
     roadmap,
+    status_apis,
     tags,
     vagas,
 )
@@ -202,6 +203,7 @@ app.include_router(resumes.router)
 app.include_router(tags.router)
 app.include_router(courses.router)
 app.include_router(vagas.router)
+app.include_router(status_apis.router)
 app.include_router(roadmap.router)
 app.include_router(library.router)
 app.include_router(quizzes.router)

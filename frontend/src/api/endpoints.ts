@@ -7,6 +7,7 @@
 
 import { api } from "./client";
 import type {
+  ApiStatusReport,
   CourseList,
   JobAnalysis,
   JobList,
@@ -187,6 +188,11 @@ export const jobs = {
    * Chama a IA na primeira vez de cada anúncio — leva alguns segundos. */
   analyze: (body: { vaga_id?: string; url?: string; texto?: string }) =>
     api.post<JobAnalysis>("/vagas/analise", body),
+};
+
+/** O estado das integrações externas. A chave nunca vem junto. */
+export const status = {
+  apis: (atualizar = false) => api.get<ApiStatusReport>(`/status/apis?atualizar=${atualizar}`),
 };
 
 export const library = {

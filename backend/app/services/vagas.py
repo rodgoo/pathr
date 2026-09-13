@@ -315,6 +315,9 @@ def nivel_do_titulo(titulo: str) -> Optional[str]:
 # ---------------------------------------------------------------------------
 
 _cache: dict[tuple[str, str], tuple[float, list[Vaga]]] = {}
+# O resultado do último uso REAL de cada fonte. A página de status lê daqui as
+# fontes que não se chama só para checar (Remotive, buscadores pagos).
+ultimo_estado: dict[str, tuple[str, datetime]] = {}
 # As vagas vistas por id, para a análise não precisar buscar a descrição de novo.
 _por_id: dict[str, Vaga] = {}
 
@@ -568,11 +571,15 @@ async def buscar(termos: list[str]) -> tuple[list[Vaga], dict[str, str]]:
 
     vistas: set[tuple[str, str]] = set()
     vagas: list[Vaga] = []
+    agora = datetime.now(timezone.utc)
     for (fonte, _), resposta in zip(pedidos, respostas):
         if isinstance(resposta, BaseException):
             logger.warning("fonte de vagas %s falhou: %s", fonte, resposta)
             estado[fonte] = "erro"
+            ultimo_estado[fonte] = ("erro", agora)
             continue
+        if estado[fonte] != "erro":
+            ultimo_estado[fonte] = ("ok", agora)
         for vaga in resposta:
             # A mesma vaga aparece por dois termos ("Java" e "Spring Boot") e
             # às vezes em duas fontes.

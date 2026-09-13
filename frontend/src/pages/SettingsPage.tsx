@@ -14,6 +14,7 @@ import type { IconName } from "@/components/ui/icons";
 import { SCREEN_IN } from "@/components/ui/primitives";
 import { LanguageSettings } from "@/components/english/LanguageSettings";
 import { AccountTab } from "@/components/profile/AccountTab";
+import { ApiStatusTab } from "@/components/profile/ApiStatusTab";
 import { NoticesTab } from "@/components/profile/NoticesTab";
 import { ObjectiveTab } from "@/components/profile/ObjectiveTab";
 import { SkillsTab } from "@/components/profile/SkillsTab";
@@ -24,6 +25,7 @@ const TABS: readonly { value: SettingsTab; label: string; icon: IconName }[] = [
   { value: "skills", label: "Skills", icon: "code" },
   { value: "idiomas", label: "Idiomas", icon: "globe" },
   { value: "avisos", label: "Avisos e privacidade", icon: "cog" },
+  { value: "integracoes", label: "Status das APIs", icon: "server" },
 ];
 
 export function SettingsPage() {
@@ -46,7 +48,7 @@ export function SettingsPage() {
           maxWidth: "62ch",
         }}
       >
-        Conta, objetivo de estudo, competências, idiomas e avisos. Tudo o que muda aqui recalcula o plano na próxima geração.
+        Conta, objetivo de estudo, competências, idiomas, avisos e o status das integrações. Tudo o que muda aqui recalcula o plano na próxima geração.
       </p>
 
       <div
@@ -72,6 +74,7 @@ export function SettingsPage() {
       {tab === "skills" ? <SkillsTab /> : null}
       {tab === "idiomas" ? <LanguageSettings /> : null}
       {tab === "avisos" ? <NoticesTab /> : null}
+      {tab === "integracoes" ? <ApiStatusTab /> : null}
 
       {/* A licença dos ícones (CC BY 4.0) pede crédito visível — um
           comentário no código não conta, porque quem usa o app nunca o lê. */}

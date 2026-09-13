@@ -667,6 +667,38 @@ export type PracticeAnswer =
   | { pares: Record<string, number> }
   | { texto: string };
 
+export type ApiIntegrationState = "ok" | "degradada" | "erro" | "nao_configurada" | "sem_verificacao";
+
+export interface ApiIntegration {
+  id: string;
+  nome: string;
+  categoria: string;
+  /** O que a integração sustenta no app. */
+  para_que: string;
+  configurada: boolean;
+  estado: ApiIntegrationState;
+  detalhe: string;
+  latencia_ms: number | null;
+  uso: {
+    hoje?: { requisicoes: number; tokens: number };
+    usados?: number;
+    limite?: number;
+    restantes?: number;
+    unidade?: string;
+  } | null;
+  /** Só nas IAs. */
+  modelo?: string;
+  ultimo_uso_em?: string;
+}
+
+export interface ApiStatusReport {
+  itens: ApiIntegration[];
+  resumo: Partial<Record<ApiIntegrationState, number>>;
+  verificado_em: string;
+  /** Segundos até o servidor aceitar outra verificação. */
+  pode_atualizar_em_s: number;
+}
+
 /** Da barra de chama: de "pegando fogo" (muito procurado) a "chama apagada" (o básico). */
 export type DemandBand = "pegando_fogo" | "em_alta" | "procurado" | "comum" | "basico";
 
