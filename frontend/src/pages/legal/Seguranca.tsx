@@ -23,7 +23,7 @@ export const SEGURANCA: DocumentoLegal = {
     "Chave de acesso (passkey) e segundo fator por aplicativo autenticador são suportados.",
     "Sessão em cookies HttpOnly e SameSite=Strict, com renovação rotativa e “sair de todos os dispositivos”.",
     "Arquivos em armazenamento privado, entregues só pelo servidor e só para quem tem permissão.",
-    "Achou uma falha? Conte para rodgoocode@hotmail.com antes de divulgar.",
+    "Achou uma falha? Conte para privacidade@notter.com.br antes de divulgar.",
   ],
   secoes: [
     {

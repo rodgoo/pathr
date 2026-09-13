@@ -37,7 +37,7 @@ export interface DocumentoLegal {
 }
 
 export const ULTIMA_ATUALIZACAO = "13 de setembro de 2026";
-export const EMAIL_CONTATO = "rodgoocode@hotmail.com";
+export const EMAIL_CONTATO = "privacidade@notter.com.br";
 
 // ---------------------------------------------------------------------------
 // Peças de texto, usadas pelos três documentos

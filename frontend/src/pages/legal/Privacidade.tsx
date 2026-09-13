@@ -23,7 +23,7 @@ export const PRIVACIDADE: DocumentoLegal = {
     "O currículo e o conteúdo de estudo são enviados a provedores de inteligência artificial para gerar o plano, os quizzes e as correções.",
     "Outras contas veem só o seu cartão (nome, @, foto, cidade, objetivo e tecnologias) — nunca o seu e-mail ou a data de nascimento.",
     "Você pode exportar tudo em um arquivo ou excluir a conta a qualquer momento, em Configurações › Avisos e privacidade.",
-    "Dúvidas ou pedidos sobre seus dados: rodgoocode@hotmail.com.",
+    "Dúvidas ou pedidos sobre seus dados: privacidade@notter.com.br.",
   ],
   secoes: [
     {
