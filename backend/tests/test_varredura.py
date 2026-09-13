@@ -177,6 +177,40 @@ def test_excecao_nao_tratada_vira_linha_redigida_com_rota_molde(banco):
     assert "ana@" not in novo["message"] and "123456789" not in novo["message"]
 
 
+def test_registro_do_erro_roda_fora_do_event_loop(banco, monkeypatch):
+    """O cliente do banco é síncrono: registrado dentro do middleware async,
+    cada 500 travava todas as requisições da máquina enquanto o banco
+    respondia. Agora roda no threadpool, como tarefa da resposta."""
+    import asyncio
+
+    import app.main as principal
+
+    chamadas = []
+
+    def registrar(_factory, metodo, _scope, exc):
+        try:
+            asyncio.get_running_loop()
+            no_loop = True
+        except RuntimeError:
+            no_loop = False
+        chamadas.append((metodo, type(exc).__name__, no_loop))
+
+    monkeypatch.setattr(principal, "registrar_erro", registrar)
+    rota = APIRouter()
+
+    @rota.get("/_teste_quebra_loop")
+    def _quebra():
+        raise ValueError("quebrou")
+
+    app.include_router(rota)
+    try:
+        resposta = TestClient(app, raise_server_exceptions=False).get("/_teste_quebra_loop")
+    finally:
+        app.router.routes[:] = [r for r in app.router.routes if getattr(r, "path", "") != "/_teste_quebra_loop"]
+    assert resposta.status_code == 500
+    assert chamadas == [("GET", "ValueError", False)]
+
+
 def test_local_da_falha_no_conteiner_nao_duplica_app(monkeypatch):
     import traceback as tb
 

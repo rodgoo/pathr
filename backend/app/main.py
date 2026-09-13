@@ -14,6 +14,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
+from starlette.background import BackgroundTask
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.ai_providers import AiProviderError
@@ -71,12 +72,22 @@ class ErroInterno(BaseHTTPMiddleware):
             logger.exception("erro não tratado em %s %s", request.method, request.url.path)
             # Também no banco: o log da Fly roda e some, e a varredura diária
             # precisa contar quantas vezes cada defeito aconteceu.
-            registrar_erro(
-                app.dependency_overrides.get(get_supabase, get_supabase), request.method, request.scope, exc
-            )
+            #
+            # Como tarefa da resposta, e não aqui: o cliente Supabase é
+            # síncrono, e este middleware roda no event loop. Numa sequência de
+            # 500 — justamente quando o banco está lento — cada registro
+            # travaria todas as outras requisições da máquina. A BackgroundTask
+            # roda função síncrona no threadpool, depois de a resposta sair.
             return JSONResponse(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 content={"detail": "Algo quebrou do nosso lado. Já registramos o erro."},
+                background=BackgroundTask(
+                    registrar_erro,
+                    app.dependency_overrides.get(get_supabase, get_supabase),
+                    request.method,
+                    request.scope,
+                    exc,
+                ),
             )
 
 

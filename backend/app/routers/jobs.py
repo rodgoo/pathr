@@ -32,7 +32,7 @@ from app.config import settings
 from app.database import get_supabase
 from app.routers.profile import AVISOS
 from app.services import email as emails
-from app.services import notifications, weekly_plan
+from app.services import faxina, notifications, weekly_plan
 
 router = APIRouter(prefix="/jobs", tags=["operação"])
 logger = logging.getLogger("pathr.jobs")
@@ -190,4 +190,11 @@ def disparar_avisos(request: Request, supabase: Client = Depends(get_supabase)):
             # Uma conta com dado estranho não pode impedir os avisos das outras.
             logger.warning("aviso falhou para %s", user_id, exc_info=True)
 
-    return {"usuarios": len(usuarios), "enviados": len(enviados), "tipos": sorted(set(enviados))}
+    # Depois dos avisos, e à parte deles: a faxina falhar não pode custar um
+    # e-mail, e um e-mail falhar não pode deixar a tabela crescer.
+    return {
+        "usuarios": len(usuarios),
+        "enviados": len(enviados),
+        "tipos": sorted(set(enviados)),
+        "faxina": faxina.apagar_eventos_velhos(supabase, agora),
+    }

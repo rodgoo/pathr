@@ -30,7 +30,6 @@ bloqueio por conta (`security.is_locked`) continua valendo por fora daqui.
 from __future__ import annotations
 
 import logging
-import random
 from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -111,12 +110,8 @@ def consumir(supabase: Client, regra: Regra, chave: Optional[str]) -> None:
         )
 
     try:
+        # A linha velha sai no disparo de hora em hora (services/faxina.py).
         supabase.table("pathr_rate_event").insert({"action": regra.acao, "key": chave}).execute()
-        # Faxina de vez em quando, e não num job: uma linha velha só ocupa
-        # espaço, e uma vez a cada ~200 usos basta para a tabela não crescer.
-        if random.random() < 0.005:
-            limite_velho = (_agora() - timedelta(days=2)).isoformat()
-            supabase.table("pathr_rate_event").delete().lt("created_at", limite_velho).execute()
     except Exception:  # noqa: BLE001
         logger.warning("limite %s: registro indisponivel", regra.acao)
 
