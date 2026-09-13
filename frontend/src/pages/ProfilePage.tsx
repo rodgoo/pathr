@@ -22,6 +22,7 @@ import { MASTERY_LABELS } from "@/components/profile/TechnologyRow";
 import { Icon } from "@/components/ui/icons";
 import { linkParaLinkedIn } from "@/pages/CoursesPage";
 
+import { linkExterno } from "@/lib/linkExterno";
 export function ProfilePage() {
   const { user } = useAuth();
   const { dispatch } = useAppState();
@@ -189,7 +190,7 @@ function Certificados({
               >
                 <Icon name="award" size={16} style={{ color: curso.gratuito ? C.verde : C.ambar, flex: "none" }} />
                 <div style={{ flex: "1 1 220px", minWidth: 0 }}>
-                  <a href={curso.url} target="_blank" rel="noreferrer noopener" style={{ color: TEXT.full, fontSize: 14 }}>
+                  <a href={linkExterno(curso.url)} target="_blank" rel="noreferrer noopener" style={{ color: TEXT.full, fontSize: 14 }}>
                     {curso.titulo}
                   </a>
                   <div style={{ fontSize: 12, color: TEXT.muted }}>

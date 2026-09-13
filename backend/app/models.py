@@ -1124,4 +1124,26 @@ class PathrRateEvent(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
 
+class PathrReport(SQLModel, table=True):
+    """Uma reclamação ou sugestão, com foto opcional. Ver migração 0021.
+
+    `attachment_path` é caminho INTERNO do bucket, escolhido pelo servidor —
+    nunca uma URL vinda do cliente. A foto sai por GET /relatos/{id}/foto.
+    """
+
+    __tablename__ = "pathr_report"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id"))
+    kind: str  # reclamacao | sugestao
+    message: str
+    page: Optional[str] = Field(default=None)
+    attachment_path: Optional[str] = Field(default=None)
+    attachment_type: Optional[str] = Field(default=None)
+    status: str = Field(default="aberto")  # aberto | em_analise | resolvido
+    moderator_note: Optional[str] = Field(default=None)
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+    updated_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
+
+
 _mirror_defaults_to_database()

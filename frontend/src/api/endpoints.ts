@@ -13,6 +13,10 @@ import type {
   DisponibilidadeUsername,
   PessoaCartao,
   Relacao,
+  Relato,
+  RelatoModeracao,
+  StatusRelato,
+  TipoRelato,
   City,
   CourseList,
   OwnedCourse,
@@ -65,6 +69,28 @@ function depoisDeMudarOPerfil<T>(resposta: T): T {
  * O @ vai sem o símbolo: o servidor normaliza de qualquer jeito, e mandar
  * limpo evita que "@rodgoo" e "rodgoo" pareçam dois nomes na tela.
  */
+/**
+ * Relatos para a moderação. A foto vai como ARQUIVO, nunca como endereço: uma
+ * URL enviada pelo cliente e mostrada na tela de quem modera seria XSS na
+ * conta com mais poder do app.
+ */
+export const relatos = {
+  enviar: (dados: { tipo: TipoRelato; mensagem: string; pagina?: string; foto?: File | null }) => {
+    const form = new FormData();
+    form.append("tipo", dados.tipo);
+    form.append("mensagem", dados.mensagem);
+    if (dados.pagina) form.append("pagina", dados.pagina);
+    if (dados.foto) form.append("foto", dados.foto);
+    return api.form<Relato>("/relatos", form);
+  },
+  meus: () => api.get<Relato[]>("/relatos/meus"),
+  moderacao: (situacao: "abertos" | "todos" | "resolvidos" = "abertos") =>
+    api.get<RelatoModeracao[]>(`/relatos/moderacao?situacao=${situacao}`),
+  moderar: (id: string, corpo: { status: StatusRelato; moderator_note?: string | null }) =>
+    api.patch<Relato>(`/relatos/${encodeURIComponent(id)}`, corpo),
+  foto: (id: string) => api.blob(`/relatos/${encodeURIComponent(id)}/foto`),
+};
+
 export const social = {
   disponivel: (username: string, nome = "") =>
     api.get<DisponibilidadeUsername>(

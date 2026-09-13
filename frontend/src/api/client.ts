@@ -247,4 +247,6 @@ export const api = {
     form.append("file", file);
     return request<T>(path, { method: "POST", formData: form });
   },
+  /** Formulário com vários campos e arquivo opcional — o relato com foto. */
+  form: <T>(path: string, form: FormData) => request<T>(path, { method: "POST", formData: form }),
 };

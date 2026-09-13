@@ -78,6 +78,9 @@ class UserOut(BaseModel):
     timezone_name: str
     theme: str
     username: str = ""
+    # Modera os relatos. A tela usa só para mostrar a caixa de moderação; quem
+    # decide o acesso é o servidor, em cada rota de /relatos.
+    is_moderator: bool = False
     # Se ha foto, e nao a foto em si: os bytes saem por GET /profile/avatar.
     # Embutir a imagem aqui engordaria toda resposta de sessao com algo que a
     # tela so precisa uma vez.

@@ -20,6 +20,8 @@ export interface User {
   theme: string;
   /** O @ da pessoa, sem o @. É por ele que as outras contas a encontram. */
   username: string;
+  /** Modera os relatos. Só decide o que a tela MOSTRA; o acesso é do servidor. */
+  is_moderator?: boolean;
   /** Se ha foto. Os bytes vem por GET /profile/avatar. */
   has_avatar: boolean;
 }
@@ -50,6 +52,28 @@ export interface Amizades {
   amigos: PessoaCartao[];
   recebidos: PessoaCartao[];
   enviados: PessoaCartao[];
+}
+
+export type TipoRelato = "reclamacao" | "sugestao";
+export type StatusRelato = "aberto" | "em_analise" | "resolvido";
+
+export interface Relato {
+  id: string;
+  kind: TipoRelato;
+  message: string;
+  page: string | null;
+  has_attachment: boolean;
+  status: StatusRelato;
+  moderator_note: string | null;
+  created_at: string;
+  updated_at: string | null;
+  /** Quando o relato foi salvo mas a foto não. */
+  aviso?: string;
+}
+
+/** Na moderação, com quem relatou. Só a conta moderadora recebe isto. */
+export interface RelatoModeracao extends Relato {
+  author: { name: string | null; username: string | null; email: string | null };
 }
 
 export interface DisponibilidadeUsername {

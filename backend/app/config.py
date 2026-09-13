@@ -58,6 +58,12 @@ class Settings(BaseSettings):
     # Bucket das fotos de perfil. Separado do de currículos porque o ciclo de
     # vida é outro: a foto é substituída no lugar, o currículo se acumula.
     avatar_bucket: str = "pathr-avatars"
+    # Fotos anexadas a relatos (reclamação/sugestão). Privado como os outros:
+    # a imagem só sai pela API, para o autor e para a moderação.
+    report_bucket: str = "pathr-reports"
+    # Quem modera os relatos, pelo e-mail da conta. Lista para caber mais de
+    # um moderador sem mudar código; comparado sem distinção de caixa.
+    moderator_emails: list[str] = ["rodgoocode@hotmail.com"]
 
     # --- Origens e cookies ---
     # O app vive em pathr.notter.com.br e a API em api.pathr.notter.com.br:

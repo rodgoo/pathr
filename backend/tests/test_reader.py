@@ -387,3 +387,17 @@ def test_redirecionamento_para_endereco_interno_e_barrado_antes_de_sair(monkeypa
     with pytest.raises(leitor.LeituraIndisponivel):
         leitor._baixar("https://publico.exemplo/vaga")
     assert pedidos == ["https://publico.exemplo/vaga"]
+
+
+def test_link_javascript_no_artigo_perde_o_href():
+    """O HTML do artigo vai para a tela com `dangerouslySetInnerHTML`; o nh3
+    precisa tirar esquemas que executam, ou um link do artigo rodaria script."""
+    import nh3
+
+    limpo = nh3.clean(
+        '<p><a href="javascript:alert(1)">x</a> <a href="https://ok.com">y</a></p>',
+        tags=reader._TAGS,
+        attributes=reader._ATRIBUTOS,
+    )
+    assert "javascript" not in limpo
+    assert 'href="https://ok.com"' in limpo

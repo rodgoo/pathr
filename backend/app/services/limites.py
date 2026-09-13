@@ -61,6 +61,7 @@ BUSCA_POR_USUARIO = Regra("busca-pessoas", 60, timedelta(minutes=10), "Muitas bu
 CONVITE_POR_USUARIO = Regra("convite-amizade", 40, timedelta(days=1), "Limite de convites de amizade de hoje atingido.")
 # Chamadas ao modelo, não requisições: gerar um quiz pode custar duas. 150 por
 # dia cobre um dia inteiro de estudo pesado com folga.
+RELATO_POR_USUARIO = Regra("relato", 10, timedelta(days=1), "Limite de relatos de hoje atingido. Obrigado por insistir — tente amanhã.")
 IA_POR_USUARIO = Regra("ia", 150, timedelta(days=1), "Você atingiu o limite diário de uso da IA. Ele volta amanhã.")
 
 

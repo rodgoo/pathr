@@ -28,6 +28,7 @@ import { Meter, SCREEN_IN } from "@/components/ui/primitives";
 import { ResourceViewer } from "@/components/library/ResourceViewer";
 import { formatarTempo, idDoYoutube } from "@/components/library/VideoPlayer";
 
+import { linkExterno } from "@/lib/linkExterno";
 const ICON_BY_KIND: Record<string, IconName> = {
   video: "play",
   article: "article",
@@ -199,7 +200,7 @@ function Conteudo({
           lugar, um embaixo do outro, é ruído. */}
       {temConteudoAqui ? (
         <a
-          href={resource.url}
+          href={linkExterno(resource.url)}
           target="_blank"
           rel="noreferrer noopener"
           style={{ fontSize: SIZE.apoio, color: TEXT.muted, alignSelf: "flex-start" }}

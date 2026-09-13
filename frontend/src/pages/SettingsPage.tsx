@@ -18,6 +18,7 @@ import { ApiStatusTab } from "@/components/profile/ApiStatusTab";
 import { NoticesTab } from "@/components/profile/NoticesTab";
 import { ObjectiveTab } from "@/components/profile/ObjectiveTab";
 import { SkillsTab } from "@/components/profile/SkillsTab";
+import { RelatarTab } from "@/components/relatos/RelatarTab";
 
 const TABS: readonly { value: SettingsTab; label: string; icon: IconName }[] = [
   { value: "conta", label: "Conta", icon: "user" },
@@ -26,6 +27,7 @@ const TABS: readonly { value: SettingsTab; label: string; icon: IconName }[] = [
   { value: "idiomas", label: "Idiomas", icon: "globe" },
   { value: "avisos", label: "Avisos e privacidade", icon: "cog" },
   { value: "integracoes", label: "Status das APIs", icon: "server" },
+  { value: "relatar", label: "Relatar", icon: "flag" },
 ];
 
 export function SettingsPage() {
@@ -75,6 +77,7 @@ export function SettingsPage() {
       {tab === "idiomas" ? <LanguageSettings /> : null}
       {tab === "avisos" ? <NoticesTab /> : null}
       {tab === "integracoes" ? <ApiStatusTab /> : null}
+      {tab === "relatar" ? <RelatarTab /> : null}
 
       {/* A licença dos ícones (CC BY 4.0) pede crédito visível — um
           comentário no código não conta, porque quem usa o app nunca o lê. */}

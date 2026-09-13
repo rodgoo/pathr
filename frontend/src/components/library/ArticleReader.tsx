@@ -23,6 +23,7 @@ import { useEffect, useRef, useState } from "react";
 import type { ReaderContent } from "@/api/types";
 import { ACC, ACC3, HAIRLINE, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
+import { linkExterno } from "@/lib/linkExterno";
 
 /** Palavras por minuto de leitura técnica — mais devagar que prosa, porque
  * bloco de código se lê parando. */
@@ -205,7 +206,7 @@ export function ArticleReader({
         {/* A fonte, sempre. O modo leitura não substitui o original: quem
             escreveu merece o crédito e a visita. */}
         <a
-          href={conteudo.url}
+          href={linkExterno(conteudo.url)}
           target="_blank"
           rel="noreferrer noopener"
           style={{ marginLeft: "auto", color: ACC3 }}
@@ -325,7 +326,7 @@ function LeituraIndisponivel({ conteudo }: { conteudo: ReaderContent }) {
       </p>
       <a
         className="btn btn-secondary"
-        href={conteudo.url}
+        href={linkExterno(conteudo.url)}
         target="_blank"
         rel="noreferrer noopener"
         style={{ textDecoration: "none" }}

@@ -31,6 +31,7 @@ import {
   formatarTempo,
   idDoYoutube,
 } from "@/components/library/VideoPlayer";
+import { linkExterno } from "@/lib/linkExterno";
 
 /** Só grava quando o progresso andou este tanto desde a última escrita. */
 const PASSO_MINIMO = 0.03;
@@ -116,7 +117,7 @@ export function ResourceViewer({
           </p>
           <a
             className="btn btn-secondary"
-            href={resource.url}
+            href={linkExterno(resource.url)}
             target="_blank"
             rel="noreferrer noopener"
             style={{ textDecoration: "none" }}

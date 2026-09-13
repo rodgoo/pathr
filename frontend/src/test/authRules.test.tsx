@@ -76,6 +76,10 @@ describe("confirmação de e-mail", () => {
 });
 
 describe("cadastro", () => {
+  // O formulário é digitado campo a campo, e o @ consulta o servidor a cada
+  // pausa. Com a suíte inteira em paralelo, os 5s padrão ficam no limite.
+  vi.setConfig({ testTimeout: 15_000 });
+
   it("exige nascimento e residência antes de deixar enviar", async () => {
     const server = mockServer({ "GET /auth/me": semSessao });
     const { user } = renderApp(server, "/cadastro");

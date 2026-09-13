@@ -42,6 +42,7 @@ import { Segmented } from "@/components/ui/Segmented";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
 
+import { linkExterno } from "@/lib/linkExterno";
 type Filtro = "todas" | "remotas";
 type Alcance = "todas" | "nacionais" | "internacionais";
 
@@ -420,7 +421,7 @@ function CartaoDaVaga({ vaga, cursos }: { vaga: Job; cursos: Record<string, JobC
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8.4, marginTop: 11.2 }}>
           <a
             className="btn btn-primary"
-            href={vaga.url}
+            href={linkExterno(vaga.url)}
             target="_blank"
             rel="noreferrer noopener"
             style={{ textDecoration: "none" }}
@@ -602,7 +603,7 @@ function LacunaCompacta({ lacuna, cursos }: { lacuna: JobListGap; cursos: JobCou
       </span>
       {curso ? (
         <a
-          href={curso.url}
+          href={linkExterno(curso.url)}
           target="_blank"
           rel="noreferrer noopener"
           style={{ fontSize: 12, color: ACC, display: "inline-flex", alignItems: "center", gap: 4, minWidth: 0 }}
@@ -870,7 +871,7 @@ function Lacuna({ lacuna }: { lacuna: JobGap }) {
           {lacuna.cursos.map((curso) => (
             <li key={curso.id} style={{ fontSize: 12.5, display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
               <Icon name="award" size={13} style={{ color: curso.gratuito ? C.verde : C.ambar }} />
-              <a href={curso.url} target="_blank" rel="noreferrer noopener" style={{ color: ACC }}>
+              <a href={linkExterno(curso.url)} target="_blank" rel="noreferrer noopener" style={{ color: ACC }}>
                 {curso.titulo}
               </a>
               <span style={{ color: TEXT.faint }}>

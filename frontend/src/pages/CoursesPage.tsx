@@ -40,6 +40,7 @@ import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
 
+import { linkExterno } from "@/lib/linkExterno";
 type Filtro = "todos" | "gratuitos" | "pagos";
 type Escopo = "voce" | "catalogo";
 type Ordem = "relevancia" | "mais_procurados" | "menos_procurados";
@@ -447,7 +448,7 @@ function CartaoDoCurso({ curso }: { curso: Course }) {
         >
           <a
             className="btn btn-primary"
-            href={curso.url}
+            href={linkExterno(curso.url)}
             target="_blank"
             rel="noreferrer noopener"
             style={{ textDecoration: "none" }}

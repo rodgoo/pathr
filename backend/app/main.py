@@ -19,6 +19,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.ai_providers import AiProviderError
 from app.config import settings
 from app.middleware_usuario import UsuarioDaRequisicao
+from app.seguranca_http import CabecalhosDeSeguranca
 from app.services import eventos
 
 logger = logging.getLogger("pathr")
@@ -126,6 +127,9 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 # middlewares de `call_next` copiam esse contexto para a rota. A cota de IA
 # por usuário depende disso (services/limites.py).
 app.add_middleware(UsuarioDaRequisicao)
+# Cabeçalhos de segurança em TODA resposta, inclusive erro e 429 — por isso
+# por fora dos middlewares que respondem sozinhos. Ver app/seguranca_http.py.
+app.add_middleware(CabecalhosDeSeguranca)
 
 app.add_middleware(
     CORSMiddleware,
@@ -185,6 +189,7 @@ from app.routers import (  # noqa: E402
     profile,
     quizzes,
     resumes,
+    relatos,
     roadmap,
     social,
     status_apis,
@@ -211,6 +216,7 @@ app.include_router(health.router)
 app.include_router(eventos_router.router)
 app.include_router(auth.router)
 app.include_router(social.router)
+app.include_router(relatos.router)
 app.include_router(profile.router)
 app.include_router(resumes.router)
 app.include_router(tags.router)

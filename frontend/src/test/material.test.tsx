@@ -102,12 +102,15 @@ function abrirApp(estado: Partial<AppState> = {}) {
   };
 }
 
+// Espera de 3s, e não o 1s padrão: estes testes montam o app inteiro (barra
+// lateral, plano, biblioteca, convites), e com a suíte toda rodando em
+// paralelo a primeira pintura passa de 1s sem nada estar errado.
 afterEach(() => vi.unstubAllGlobals());
 
 it("abre o material numa tela, com o progresso no topo", async () => {
   const { user } = abrirApp({ screen: "modulo" });
 
-  await user.click(await screen.findByRole("button", { name: /Idempotência/ }));
+  await user.click(await screen.findByRole("button", { name: /Idempotência/ }, { timeout: 3000 }));
 
   // O título vira o assunto da tela — um `h1`, não mais um `h3` dentro de uma
   // linha de lista.
@@ -121,7 +124,7 @@ it("abre o material numa tela, com o progresso no topo", async () => {
 it("o voltar devolve para a trilha", async () => {
   const { user } = abrirApp({ screen: "modulo" });
 
-  await user.click(await screen.findByRole("button", { name: /Idempotência/ }));
+  await user.click(await screen.findByRole("button", { name: /Idempotência/ }, { timeout: 3000 }));
   await screen.findByRole("heading", { level: 1, name: /Idempotência/ });
   await user.click(screen.getByRole("button", { name: "Voltar para Trilha" }));
 
@@ -133,7 +136,7 @@ it("o voltar devolve para a trilha", async () => {
 it("mantém acesa a aba de onde o material foi aberto", async () => {
   const { user } = abrirApp({ screen: "modulo" });
 
-  await user.click(await screen.findByRole("button", { name: /Idempotência/ }));
+  await user.click(await screen.findByRole("button", { name: /Idempotência/ }, { timeout: 3000 }));
   await screen.findByRole("heading", { level: 1, name: /Idempotência/ });
 
   // A tela de material não tem aba própria. Apagar a barra inteira enquanto

@@ -62,6 +62,7 @@ from app.security import (
     verify_totp_code,
 )
 from app.services import limites, usernames
+from app.services.moderacao import e_moderador
 from app.services.email import send_password_reset, send_verification_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -89,6 +90,7 @@ def _user_out(user: dict[str, Any]) -> UserOut:
         timezone_name=user.get("timezone_name") or "America/Sao_Paulo",
         theme=user.get("theme") or "system",
         username=user.get("username") or "",
+        is_moderator=e_moderador(user),
         has_avatar=bool(user.get("avatar_path")),
     )
 

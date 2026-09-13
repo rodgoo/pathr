@@ -139,7 +139,7 @@ def ensure_bucket(dry: bool) -> Step:
     """
     from app.config import settings
 
-    alvos = (settings.resume_bucket, settings.avatar_bucket)
+    alvos = (settings.resume_bucket, settings.avatar_bucket, settings.report_bucket)
     step = Step("buckets " + ", ".join(alvos))
     try:
         from app.database import get_supabase

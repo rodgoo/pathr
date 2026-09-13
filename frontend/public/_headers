@@ -1,8 +1,26 @@
 # Mesmos cabeçalhos declarados no render.yaml, para o site se comportar igual
 # nos dois hosts enquanto a migração não termina.
+#
+# Content-Security-Policy: a segunda barreira contra XSS. O app mostra HTML
+# de artigo de terceiro (limpo no servidor com nh3); se algum dia a limpeza
+# deixar passar um script, a política impede que ele rode ou mande dados
+# para fora. Cada origem listada tem motivo:
+#   script/frame youtube.com  o player de vídeo (iframe_api + iframe)
+#   img-src https:            imagens dos artigos, de qualquer site
+#   connect-src api.pathr...  a API e o canal de avisos (SSE)
+#   style 'unsafe-inline'     estilos de componente; estilo não executa código
+#   fonts.googleapis/gstatic  a fonte Inter, importada pelo CSS
+# frame-ancestors 'none' + X-Frame-Options: ninguém põe o PathR dentro de um
+# quadro invisível para induzir clique em "excluir conta" (clickjacking).
+# Permissions-Policy: o app não usa câmera, microfone nem localização; a chave
+# de acesso (publickey-credentials) continua liberada para o próprio site.
 /*
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: DENY
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.youtube.com; frame-src https://www.youtube.com https://www.youtube-nocookie.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.pathr.notter.com.br; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; media-src 'self' blob: data:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
 
 # O sw.js sabe quais arquivos existem nesta versão. Servir uma cópia velha
 # dele faz o deploy não chegar a quem instalou o app na tela de início — e

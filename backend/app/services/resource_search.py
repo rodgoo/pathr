@@ -794,6 +794,12 @@ async def _keep_reachable(candidates: list[Candidate]) -> list[Candidate]:
     seen: set[str] = set()
     unique: list[Candidate] = []
     for candidate in candidates:
+        # Só http(s) entra no catálogo, venha de onde vier. A tela mostra esta
+        # URL num link, e `javascript:` ou `data:` vindos de um resultado de
+        # busca executariam no PathR no clique. A tela também filtra
+        # (frontend/src/lib/linkExterno.ts); o banco não deve nem guardar.
+        if not candidate.url.strip().lower().startswith(("http://", "https://")):
+            continue
         key = canonica(candidate.url)
         if key in seen:
             continue

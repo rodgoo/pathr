@@ -413,3 +413,19 @@ def test_enderecos_da_mesma_pagina_tem_a_mesma_identidade(outra):
 )
 def test_paginas_diferentes_continuam_diferentes(outra):
     assert rs.canonica("https://exemplo.com/guia") != rs.canonica(outra)
+
+
+async def test_url_que_nao_e_http_nao_entra_no_catalogo(monkeypatch):
+    """`javascript:` num resultado de busca viraria link executável na tela."""
+
+    async def sempre_ok(client, url):
+        return True
+
+    monkeypatch.setattr(rs, "_reachable", sempre_ok)
+    entrada = [
+        rs.Candidate(kind="article", title="ok", url="https://exemplo.com/guia"),
+        rs.Candidate(kind="article", title="xss", url="javascript:alert(document.cookie)"),
+        rs.Candidate(kind="article", title="data", url="data:text/html,<script>1</script>"),
+    ]
+    saida = await rs._keep_reachable(entrada)
+    assert [c.title for c in saida] == ["ok"]
