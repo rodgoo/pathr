@@ -91,6 +91,7 @@ export function ProfilePage() {
               className="btn btn-primary"
               onClick={() => dispatch({ type: "navigate", screen: "cv" })}
             >
+              <Icon name="upload" size={15} />
               Enviar currículo
             </button>
           }
@@ -162,6 +163,7 @@ function Certificados({
             style={{ marginLeft: "auto", fontSize: 12.5 }}
             onClick={onVerCursos}
           >
+            <Icon name="award" size={15} />
             Ver cursos
           </button>
         </div>
@@ -258,6 +260,7 @@ function IdentityCard({
             style={{ marginLeft: "auto", fontSize: 12.5 }}
             onClick={onEdit}
           >
+            <Icon name="pencil" size={15} />
             Editar perfil
           </button>
         </div>

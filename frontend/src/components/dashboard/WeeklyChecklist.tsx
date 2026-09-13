@@ -26,6 +26,7 @@ import { useAppState } from "@/hooks/useAppState";
 import { useQuery } from "@/hooks/useApi";
 import type { ModuleTab } from "@/types";
 import { ACC, ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
+import { IconButton } from "@/components/ui/IconButton";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel } from "@/components/ui/primitives";
 
@@ -180,10 +181,9 @@ export function WeeklyChecklist() {
                 ) : null}
               </div>
               {!item.feito ? (
-                <button
-                  type="button"
-                  className="btn btn-ghost"
-                  style={{ flex: "none", fontSize: 12 }}
+                <IconButton
+                  icon="arrowRight"
+                  label="Abrir"
                   onClick={() =>
                     dispatch({
                       type: "navigate",
@@ -192,9 +192,7 @@ export function WeeklyChecklist() {
                       nodeId: item.node_id,
                     })
                   }
-                >
-                  Abrir
-                </button>
+                />
               ) : null}
             </li>
           ))}

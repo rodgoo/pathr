@@ -246,9 +246,11 @@ function Parse({
         ) : (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8.4, alignItems: "center" }}>
             <button type="button" className="btn btn-primary" onClick={run}>
+              <Icon name="file" size={15} />
               Ler currículo
             </button>
             <button type="button" className="btn btn-ghost" onClick={onRestart}>
+              <Icon name="upload" size={15} />
               Enviar outro arquivo
             </button>
           </div>

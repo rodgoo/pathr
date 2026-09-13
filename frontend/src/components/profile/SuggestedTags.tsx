@@ -22,6 +22,7 @@ import { tags as tagsApi } from "@/api/endpoints";
 import type { TagSuggestion, UserTag } from "@/api/types";
 import { useQuery } from "@/hooks/useApi";
 import { ACC, C, HAIRLINE, TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
 import { ErrorState } from "@/components/ui/States";
 import { Kicker, Panel } from "@/components/ui/primitives";
 
@@ -135,6 +136,7 @@ export function SuggestedTags({ onAdicionada }: { onAdicionada: (nova: UserTag) 
                 disabled={ocupada === sugestao.name}
                 onClick={() => void adicionar(sugestao)}
               >
+                <Icon name="plus" size={15} />
                 {ocupada === sugestao.name ? "Adicionando…" : "Adicionar ao plano"}
               </button>
             </div>

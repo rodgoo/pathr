@@ -20,6 +20,7 @@ import type { Profile } from "@/api/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@/hooks/useApi";
 import { C, TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel } from "@/components/ui/primitives";
 
@@ -225,6 +226,7 @@ export function NoticesTab() {
                 className="btn btn-secondary"
                 onClick={() => setConfirmando(false)}
               >
+                <Icon name="x" size={15} />
                 Cancelar
               </button>
               <button

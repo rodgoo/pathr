@@ -22,6 +22,7 @@ import { library as libraryApi } from "@/api/endpoints";
 import type { Resource, ResourceState } from "@/api/types";
 import { useQuery } from "@/hooks/useApi";
 import { TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { ArticleReader } from "@/components/library/ArticleReader";
 import {
@@ -120,6 +121,7 @@ export function ResourceViewer({
             rel="noreferrer noopener"
             style={{ textDecoration: "none" }}
           >
+            <Icon name="externalLink" size={15} />
             Abrir no site original
           </a>
         </div>

@@ -85,7 +85,18 @@ async def listar_vagas(
     user_id = str(current_user["id"])
     minhas = list_mine(current_user, supabase)
     perfil = _perfil(supabase, user_id)
-    termos = [q.strip()[:60]] if q.strip() else servico.termos_de_busca(minhas, _objetivo_de(perfil))
+    catalogo = _catalogo(supabase)
+    # O objetivo inteiro das Configurações: o cargo e as metas escritas. É ele
+    # que decide o que a busca procura primeiro e que vaga "tem a cara" dela.
+    texto_do_objetivo = " ".join(
+        [_objetivo_de(perfil), *[str(meta) for meta in (perfil.get("goals") or [])]]
+    ).strip()
+    objetivo = servico.ler_objetivo(texto_do_objetivo, catalogo)
+    termos = (
+        [q.strip()[:60]]
+        if q.strip()
+        else servico.termos_de_busca(minhas, _objetivo_de(perfil), objetivo.slugs)
+    )
     if not termos:
         return {"termos": [], "vagas": [], "fontes": {}, "sem_perfil": True}
 
@@ -93,13 +104,14 @@ async def listar_vagas(
     nivel_ingles = _nivel_de_ingles(supabase, user_id)
     lista = servico.para_tela(
         encontradas,
-        _catalogo(supabase),
+        catalogo,
         _minhas_por_slug(minhas),
         senioridade=_senioridade(perfil),
         estado_uf=perfil.get("state"),
         so_remotas=remotas,
         alcance=alcance,
         nivel_ingles=nivel_ingles,
+        objetivo=objetivo,
     )
     return {
         "termos": termos,

@@ -51,6 +51,7 @@ const CATEGORIAS: readonly { slug: string; label: string }[] = [
   { slug: "mobile", label: "Mobile" },
   { slug: "ferramenta", label: "Ferramentas" },
   { slug: "metodologia", label: "Metodologia" },
+  { slug: "dominio", label: "Domínio de negócio" },
   { slug: "soft-skill", label: "Comportamental" },
   { slug: "idioma", label: "Idiomas" },
 ];
@@ -63,8 +64,8 @@ export function SkillsTab() {
   const { state, dispatch } = useAppState();
   const termo = state.skillSearch.trim().toLowerCase();
 
-  // O catálogo inteiro de uma vez. São 91 linhas — pedir por categoria seriam
-  // quinze requisições para montar uma tela só.
+  // O catálogo inteiro de uma vez. São algumas centenas de linhas — pedir por
+  // categoria seriam dezessete requisições para montar uma tela só.
   const catalogo = useQuery(() => tagsApi.catalog("", ""), []);
   const minhas = useQuery(() => tagsApi.mine(), []);
   const [ocupada, setOcupada] = useState<string | null>(null);
@@ -213,8 +214,8 @@ export function SkillsTab() {
       {grupos.length === 0 ? (
         <Panel pad={16.8}>
           <p style={{ fontSize: 13, color: TEXT.muted, margin: 0 }}>
-            Nenhuma tecnologia com “{state.skillSearch}”. Tente outro termo — o catálogo tem 91
-            entradas.
+            Nenhuma tecnologia com “{state.skillSearch}”. Tente outro termo, ou adicione pelo
+            currículo — o que ele citar e faltar aqui entra no catálogo.
           </p>
         </Panel>
       ) : null}

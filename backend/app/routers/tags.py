@@ -45,7 +45,7 @@ def _now() -> datetime:
 def list_catalog(
     q: str = "",
     category: str = "",
-    limit: int = 200,
+    limit: int = 500,
     supabase: Client = Depends(get_supabase),
     _current_user: dict = Depends(get_current_user),
 ):

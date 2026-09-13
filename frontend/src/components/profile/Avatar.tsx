@@ -17,6 +17,8 @@ import { useEffect, useState } from "react";
 import { profile as profileApi } from "@/api/endpoints";
 import { useAuth } from "@/hooks/useAuth";
 import { ACC3, TEXT } from "@/lib/tokens";
+import { IconButton } from "@/components/ui/IconButton";
+import { Icon } from "@/components/ui/icons";
 
 const LADO = 64;
 
@@ -133,12 +135,15 @@ export function Avatar({ nome, editavel = false }: { nome: string; editavel?: bo
             input por código: assim o seletor de arquivo abre por clique e
             por teclado sem nenhum script no meio. */}
         <label
+          className="btn btn-ghost btn-icon"
+          aria-label={ocupado ? "Enviando foto" : temFoto ? "Trocar foto" : "Enviar foto"}
+          title={ocupado ? "Enviando…" : temFoto ? "Trocar foto" : "Enviar foto"}
           style={{
             cursor: ocupado ? "default" : "pointer",
             color: ocupado ? TEXT.faint : ACC3,
           }}
         >
-          {ocupado ? "enviando…" : temFoto ? "trocar" : "enviar foto"}
+          <Icon name={temFoto ? "camera" : "upload"} size={16} />
           <input
             type="file"
             accept={ACEITOS}
@@ -154,22 +159,13 @@ export function Avatar({ nome, editavel = false }: { nome: string; editavel?: bo
           />
         </label>
         {temFoto ? (
-          <button
-            type="button"
+          <IconButton
+            icon="trash"
+            label="Remover foto"
             onClick={() => void remover()}
             disabled={ocupado}
-            style={{
-              border: "none",
-              background: "transparent",
-              padding: 0,
-              font: "inherit",
-              fontSize: 11.5,
-              cursor: ocupado ? "default" : "pointer",
-              color: TEXT.muted,
-            }}
-          >
-            remover
-          </button>
+            color={TEXT.muted}
+          />
         ) : null}
       </div>
 

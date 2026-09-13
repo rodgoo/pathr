@@ -14,6 +14,7 @@ import { english as englishApi } from "@/api/endpoints";
 import type { EnglishAssessment, LanguageImprovements, PracticeSession } from "@/api/types";
 import { useMutation, useQuery } from "@/hooks/useApi";
 import { ACC, ACC4, C, HAIRLINE, RING, TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
 import { Placement } from "@/components/english/Placement";
@@ -338,6 +339,7 @@ function Retomar({
         </div>
       </div>
       <button type="button" className="btn btn-primary btn-block" onClick={onContinuar}>
+        <Icon name="playSolid" size={15} />
         Continuar de onde parei
       </button>
       <button
@@ -347,6 +349,7 @@ function Retomar({
         disabled={recomecando}
         onClick={onRecomecar}
       >
+        <Icon name="undo" size={15} />
         {recomecando ? "Preparando o teste…" : "Recomeçar do zero"}
       </button>
     </div>

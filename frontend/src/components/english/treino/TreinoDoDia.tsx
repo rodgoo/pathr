@@ -31,6 +31,8 @@ import type {
   PracticeSummary,
 } from "@/api/types";
 import { ACC, ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
+import { IconButton } from "@/components/ui/IconButton";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
 import { NOME_DA_HABILIDADE } from "@/components/english/QuadroDeHabilidades";
 import { Exercicio, NOME_DO_FORMATO } from "./Exercicios";
@@ -118,9 +120,7 @@ export function TreinoDoDia({
   return (
     <div style={{ ...SCREEN_IN, maxWidth: 680 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 11.2, marginBottom: 11.2 }}>
-        <button type="button" className="btn btn-ghost" onClick={onSair} style={{ fontSize: 12.5 }}>
-          Sair
-        </button>
+        <IconButton icon="arrowLeft" label="Sair do treino" onClick={onSair} />
         <div
           role="progressbar"
           aria-label="Progresso do treino de hoje"
@@ -146,6 +146,7 @@ export function TreinoDoDia({
         <Panel>
           <p style={{ fontSize: 13, color: C.ambar, margin: "0 0 8px" }}>{erro}</p>
           <button type="button" className="btn btn-secondary" onClick={() => buscarProximos(sessao.id)}>
+            <Icon name="refresh" size={15} />
             Tentar de novo
           </button>
         </Panel>
@@ -163,6 +164,7 @@ export function TreinoDoDia({
               style={{ marginTop: 10 }}
               onClick={() => buscarProximos(sessao.id)}
             >
+              <Icon name="refresh" size={15} />
               Carregar os próximos
             </button>
           ) : null}
@@ -240,6 +242,7 @@ function Correcao({
       ) : null}
       {/* O foco vai para o botão: quem responde pelo teclado segue com Enter. */}
       <button type="button" className="btn btn-primary" autoFocus onClick={onContinuar}>
+        <Icon name="arrowRight" size={15} />
         Continuar
       </button>
     </div>
@@ -308,6 +311,7 @@ function Resumo({ resumo, onSair }: { resumo: PracticeSummary; onSair: () => voi
         ) : null}
 
         <button type="button" className="btn btn-primary" style={{ marginTop: 18 }} onClick={onSair}>
+          <Icon name="arrowLeft" size={15} />
           Voltar ao idioma
         </button>
       </Panel>
@@ -345,6 +349,7 @@ export function CartaoDoTreino({
             reforço.
           </p>
           <button type="button" className="btn btn-secondary btn-block" onClick={onComecar}>
+            <Icon name="arrowRight" size={15} />
             Ver o resumo
           </button>
         </>

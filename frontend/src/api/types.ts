@@ -777,6 +777,8 @@ export interface Job {
   ingles: JobEnglish;
   resumo: string | null;
   compatibilidade: JobCompatibility;
+  /** Por que a vaga tem a cara da pessoa: a stack que ela cita e o objetivo. */
+  afinidade?: { stack_em_comum: string[]; objetivo: boolean };
 }
 
 export type JobSourceState = "ok" | "erro" | "sem_chave";

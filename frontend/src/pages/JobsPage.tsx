@@ -91,8 +91,8 @@ export function JobsPage() {
       <header style={{ marginBottom: 16.8 }}>
         <h1 style={{ fontSize: 28, margin: 0 }}>Vagas para você</h1>
         <p style={{ margin: "5.6px 0 0", fontSize: SIZE.corpo, color: TEXT.strong, maxWidth: "72ch" }}>
-          Vagas reais de fontes confiáveis, ordenadas pelo quanto combinam com as suas competências. Em
-          cada uma, veja o que falta e como chegar lá.
+          Vagas reais de fontes confiáveis, escolhidas pelo seu objetivo e ordenadas pelo quanto da sua
+          stack elas pedem. Em cada uma, veja o que falta e como chegar lá.
         </p>
       </header>
 
@@ -123,6 +123,7 @@ export function JobsPage() {
               setTermo("");
             }}
           >
+            <Icon name="arrowLeft" size={15} />
             Voltar ao meu perfil
           </button>
         ) : null}
@@ -153,6 +154,7 @@ function Resultado({ dados }: { dados: JobList }) {
             className="btn btn-primary"
             onClick={() => dispatch({ type: "navigate", screen: "config", settingsTab: "skills" })}
           >
+            <Icon name="plus" size={15} />
             Cadastrar tecnologias
           </button>
         }
@@ -247,6 +249,7 @@ function CartaoDaVaga({ vaga }: { vaga: Job }) {
           <Nota nota={nota} />
         </div>
 
+        <Afinidade afinidade={vaga.afinidade} />
         <SeloDeIngles ingles={vaga.ingles} />
 
         {nota !== null ? (
@@ -281,6 +284,7 @@ function CartaoDaVaga({ vaga }: { vaga: Job }) {
             <Icon name="externalLink" size={14} />
           </a>
           <button type="button" className="btn btn-secondary" aria-expanded={aberta} onClick={() => void oQueFalta()}>
+            <Icon name="search" size={15} />
             {aberta ? "Esconder análise" : "O que falta para esta vaga"}
           </button>
         </div>
@@ -303,6 +307,29 @@ const INGLES: Record<NonNullable<JobEnglish["situacao"]>, { cor: string; texto: 
   falta: { cor: C.rosa, texto: (i) => `Inglês ${i.exigido} pedido · você ${i.seu}` },
   sem_nivel: { cor: C.azul, texto: (i) => `Inglês ${i.exigido} pedido · faça o nivelamento para comparar` },
 };
+
+/** Por que esta vaga está na lista: a stack que ela pede e o objetivo. */
+function Afinidade({ afinidade }: { afinidade?: Job["afinidade"] }) {
+  if (!afinidade) return null;
+  const quantas = afinidade.stack_em_comum.length;
+  if (!quantas && !afinidade.objetivo) return null;
+  return (
+    <div style={{ marginTop: 8.4, fontSize: 12, color: TEXT.strong, display: "flex", flexWrap: "wrap", gap: "4px 12px" }}>
+      {quantas ? (
+        <span title={afinidade.stack_em_comum.join(", ")} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <Icon name="code" size={13} style={{ color: C.verde }} />
+          {quantas} {quantas === 1 ? "tecnologia" : "tecnologias"} da sua stack
+        </span>
+      ) : null}
+      {afinidade.objetivo ? (
+        <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
+          <Icon name="flag" size={13} style={{ color: ACC4 }} />
+          combina com seu objetivo
+        </span>
+      ) : null}
+    </div>
+  );
+}
 
 function SeloDeIngles({ ingles }: { ingles: JobEnglish }) {
   if (!ingles.situacao) return null;
@@ -395,6 +422,7 @@ function AnalisarVaga() {
         />
         <div>
           <button type="submit" className="btn btn-primary" disabled={analise.pending || entrada.trim().length < 8}>
+            <Icon name="search" size={15} />
             {analise.pending ? "Analisando…" : "Ver o que falta"}
           </button>
         </div>
@@ -464,6 +492,7 @@ function Analise({ analise, mostrarTitulo }: { analise: JobAnalysis; mostrarTitu
           style={{ marginTop: 8.4, fontSize: SIZE.apoio }}
           onClick={() => dispatch({ type: "navigate", screen: "cursos" })}
         >
+          <Icon name="award" size={15} />
           Ver todos os cursos com certificado
         </button>
       ) : null}
@@ -542,6 +571,7 @@ function Lacuna({ lacuna }: { lacuna: JobGap }) {
                 if (feito) setMeta(true);
               }}
             >
+              <Icon name="flag" size={15} />
               {marcar.pending ? "Marcando…" : "Marcar como meta"}
             </button>
           ) : null}

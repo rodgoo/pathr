@@ -133,7 +133,8 @@ Regras que não podem ser quebradas:
    Não traduza nomes próprios de tecnologia.
 5. `categoria` deve ser uma destas: linguagem, framework, banco, cloud, devops,
    dados, ia, arquitetura, testes, seguranca, mobile, frontend, backend,
-   ferramenta, metodologia, soft-skill, idioma.
+   ferramenta, metodologia, soft-skill, idioma, dominio (setor de negócio em que
+   a pessoa trabalhou: bancário e financeiro, varejo, saúde, e-commerce...).
 6. Não inclua como tecnologia: nome de empresa, cargo, cidade, faculdade, nem
    habilidade genérica ("proatividade") — exceto se for claramente uma
    soft-skill relevante, e aí use categoria "soft-skill".

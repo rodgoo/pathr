@@ -203,14 +203,23 @@ def compatibilidade(
     }
 
 
-def termos_de_busca(minhas: Iterable[dict[str, Any]], objetivo: str = "") -> list[str]:
+def termos_de_busca(
+    minhas: Iterable[dict[str, Any]], objetivo: str = "", objetivo_slugs: Iterable[str] = ()
+) -> list[str]:
     """Até três tecnologias que descrevem o que a pessoa faz ou quer fazer.
 
-    Metas primeiro, depois o que ela mais domina. Sem nenhuma tag de stack, o
-    próprio objetivo vira o termo.
+    Primeiro o que o OBJETIVO cita ("Desenvolvedor Java fullstack" põe Java na
+    frente), depois as metas, depois o que ela mais domina. Sem nenhuma tag de
+    stack, o próprio objetivo vira o termo.
     """
+    do_objetivo = set(objetivo_slugs)
     candidatas = [t for t in minhas if t.get("category") in _CATEGORIAS_DE_BUSCA]
-    candidatas.sort(key=lambda t: (not t.get("is_target"), -int(t.get("proficiency") or 0), t.get("name") or ""))
+    candidatas.sort(key=lambda t: (
+        str(t.get("slug") or "") not in do_objetivo,
+        not t.get("is_target"),
+        -int(t.get("proficiency") or 0),
+        t.get("name") or "",
+    ))
     termos: list[str] = []
     for tag in candidatas:
         nome = str(tag.get("name") or "").strip()
@@ -608,6 +617,46 @@ def _dias_desde(quando: Optional[str], agora: Optional[datetime] = None) -> Opti
     return max(0, ((agora or datetime.now(timezone.utc)) - data).days)
 
 
+# Nem idioma nem comportamental entram na conta técnica. O inglês tem régua
+# própria (CEFR); contá-lo como tecnologia fazia uma vaga de atendimento que só
+# pedia inglês parecer 100% compatível com um dev que tem inglês no currículo.
+_FORA_DA_CONTA_TECNICA = {"idioma", "soft-skill"}
+
+# O papel que o objetivo descreve, lido no título da vaga.
+_PAPEIS: dict[str, re.Pattern[str]] = {
+    "backend": re.compile(r"back[- ]?end", re.I),
+    "frontend": re.compile(r"front[- ]?end", re.I),
+    "fullstack": re.compile(r"full[- ]?stack", re.I),
+    "dados": re.compile(r"\bdados\b|\bdata (engineer|scientist|analyst)|engenheir[oa] de dados|cientista de dados", re.I),
+    "devops": re.compile(r"devops|\bsre\b|engenheir[oa] de plataforma|platform engineer|cloud engineer", re.I),
+    "mobile": re.compile(r"\bmobile\b|android|\bios\b", re.I),
+    "qa": re.compile(r"\bqa\b|quality assurance|analista de testes|\btester\b", re.I),
+    "ia": re.compile(r"machine learning|\bml engineer|intelig[eê]ncia artificial|\bai engineer", re.I),
+}
+
+
+@dataclass
+class Objetivo:
+    """O que o objetivo das Configurações diz, já casado com o catálogo."""
+
+    slugs: set[str] = field(default_factory=set)
+    papeis: set[str] = field(default_factory=set)
+
+
+def ler_objetivo(texto: str, catalogo: Iterable[dict[str, Any]]) -> Objetivo:
+    citadas = tags_citadas(texto or "", catalogo)
+    return Objetivo(
+        slugs={slug for slug, tag in citadas.items() if tag.get("category") not in _FORA_DA_CONTA_TECNICA},
+        papeis={papel for papel, padrao in _PAPEIS.items() if padrao.search(texto or "")},
+    )
+
+
+# Quantas tecnologias em comum contam para a afinidade. A partir daí a vaga já
+# "tem a cara" da pessoa, e mais uma não deveria passar na frente de uma vaga
+# que também bate o objetivo.
+_TETO_STACK = 6
+
+
 def para_tela(
     vagas: list[Vaga],
     catalogo: list[dict[str, Any]],
@@ -618,7 +667,21 @@ def para_tela(
     limite: int = 100,
     alcance: str = "todas",
     nivel_ingles: Optional[str] = None,
+    objetivo: Optional[Objetivo] = None,
 ) -> list[dict[str, Any]]:
+    """As vagas que têm a ver com a pessoa, da que mais tem a cara dela.
+
+    Afinidade = stack em comum (quanto mais, mais perto) + o objetivo (a vaga
+    cita o que ele pede, ou o título é do papel que ele descreve) + a cobertura
+    dos requisitos. Vaga que não cita NADA da stack e não bate o objetivo sai
+    da lista: aparecer só porque o anúncio pede inglês não é sugestão, é ruído.
+    """
+    objetivo = objetivo or Objetivo()
+    minha_stack = {
+        slug for slug, tag in minhas.items()
+        if situacao(slug, minhas) in ("tem", "parcial") and tag.get("category") not in _FORA_DA_CONTA_TECNICA
+    }
+    catalogo_por_slug = {str(tag["slug"]): tag for tag in catalogo}
     linhas = []
     for vaga in vagas:
         if so_remotas and vaga.remota is not True:
@@ -633,12 +696,36 @@ def para_tela(
         # Resultado de busca e Adzuna trazem só um trecho do anúncio. Uma nota
         # tirada dali diria "100%" para a vaga cujo trecho só citou "Java".
         citadas = {} if (so_link or so_trecho) else tags_citadas(f"{vaga.titulo}\n{vaga.descricao}", catalogo)
-        compat = compatibilidade(((s, t["name"], True) for s, t in citadas.items()), minhas)
+        tecnicas = {s: t for s, t in citadas.items() if t.get("category") not in _FORA_DA_CONTA_TECNICA}
+        compat = compatibilidade(((s, t["name"], True) for s, t in tecnicas.items()), minhas)
+
+        # Sem o anúncio lido, o título é tudo o que há: é nele que se procura a
+        # stack e o objetivo.
+        no_titulo = {
+            s for s in tags_citadas(vaga.titulo, catalogo)
+            if catalogo_por_slug.get(s, {}).get("category") not in _FORA_DA_CONTA_TECNICA
+        }
+        em_comum = sorted(
+            (tecnicas.get(s) or catalogo_por_slug.get(s) or {"name": s})["name"]
+            for s in (set(tecnicas) | no_titulo) & minha_stack
+        )
+        objetivo_na_vaga = (set(tecnicas) | no_titulo) & objetivo.slugs
+        papel_no_titulo = any(_PAPEIS[p].search(vaga.titulo) for p in objetivo.papeis)
+        bate_objetivo = bool(objetivo_na_vaga) or papel_no_titulo
+        if not em_comum and not bate_objetivo:
+            continue
+
         nivel = nivel_do_titulo(vaga.titulo)
         regiao = bool(estado_uf and (vaga.extra.get("estado") or "").upper() == estado_uf.upper())
-        # Ordem: compatibilidade manda; nível certo, região e vaga recente
-        # desempatam. Vaga só-link (sem descrição lida) vai para o fim.
-        pontos = compat["nota"] if compat["nota"] is not None else -50
+        # Ordem: stack em comum e objetivo mandam, a cobertura dos requisitos
+        # pesa junto; nível certo, região e vaga recente desempatam. Vaga sem
+        # anúncio lido perde a parte da cobertura.
+        pontos = (
+            8 * min(len(em_comum), _TETO_STACK)
+            + 10 * min(len(objetivo_na_vaga), 3)
+            + (15 if papel_no_titulo else 0)
+            + (0.5 * compat["nota"] if compat["nota"] is not None else -20)
+        )
         if senioridade and nivel:
             pontos += 10 if nivel == senioridade else -15
         if regiao or vaga.remota:
@@ -672,6 +759,7 @@ def para_tela(
                     "ingles": {"exigido": exigido, "seu": nivel_ingles, "situacao": estado_ingles},
                     "resumo": vaga.descricao[:280] or None,
                     "compatibilidade": compat,
+                    "afinidade": {"stack_em_comum": em_comum, "objetivo": bate_objetivo},
                 },
             )
         )

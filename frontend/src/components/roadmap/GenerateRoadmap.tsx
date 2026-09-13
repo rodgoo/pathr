@@ -16,6 +16,7 @@ import { useAppState } from "@/hooks/useAppState";
 import { curarModulo } from "@/lib/curadoria";
 import { useMutation, useQuery } from "@/hooks/useApi";
 import { ACC, TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
 import { Segmented } from "@/components/ui/Segmented";
 import { EmptyState, ErrorState } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
@@ -143,10 +144,12 @@ export function GenerateRoadmap({
               className="btn btn-primary"
               disabled={generate.pending || objective.trim().length < 5}
             >
+              <Icon name="plus" size={15} />
               {generate.pending ? "Montando o plano…" : "Gerar plano"}
             </button>
             {onCancel ? (
               <button type="button" className="btn btn-ghost" onClick={onCancel}>
+                <Icon name="x" size={15} />
                 Cancelar
               </button>
             ) : null}
@@ -178,6 +181,7 @@ function NeedsSkills({ dispatch }: { dispatch: ReturnType<typeof useAppState>["d
               className="btn btn-primary"
               onClick={() => dispatch({ type: "navigate", screen: "cv" })}
             >
+              <Icon name="upload" size={15} />
               Enviar currículo
             </button>
             <button

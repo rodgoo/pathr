@@ -21,6 +21,7 @@ import { explanations as explanationsApi, roadmap as roadmapApi } from "@/api/en
 import type { ExplanationResult } from "@/api/types";
 import type { RoadmapNode } from "@/api/types";
 import { ACC3, C, TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
 import { Kicker, Panel } from "@/components/ui/primitives";
 
 /** Quanto tempo sem digitar antes de gravar. Curto o bastante para não perder
@@ -151,6 +152,7 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
           disabled={enviando || answer.trim().length < 40}
           onClick={() => void corrigir()}
         >
+          <Icon name="send" size={15} />
           {enviando ? "Lendo sua explicação…" : "Enviar para correção"}
         </button>
         {answer.trim().length < 40 ? (

@@ -16,6 +16,7 @@ import type { Passkey } from "@/api/types";
 import { useQuery } from "@/hooks/useApi";
 import { chaveSuportada, esquecerChave, lembrarChave, mensagemDeErroDaChave } from "@/lib/passkeys";
 import { C, HAIRLINE, TEXT } from "@/lib/tokens";
+import { IconButton } from "@/components/ui/IconButton";
 import { Kicker, Panel } from "@/components/ui/primitives";
 
 type OpcoesDeCadastro = Parameters<typeof startRegistration>[0]["optionsJSON"];
@@ -102,15 +103,13 @@ export function PasskeysPanel() {
                   {chave.backed_up ? " · sincronizada entre aparelhos" : ""}
                 </div>
               </div>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                style={{ fontSize: 12, color: C.ambar }}
+              <IconButton
+                icon="trash"
+                label={ocupado === chave.id ? "Removendo…" : "Remover"}
+                color={C.ambar}
                 disabled={ocupado === chave.id}
                 onClick={() => void remover(chave)}
-              >
-                {ocupado === chave.id ? "Removendo…" : "Remover"}
-              </button>
+              />
             </li>
           ))}
         </ul>

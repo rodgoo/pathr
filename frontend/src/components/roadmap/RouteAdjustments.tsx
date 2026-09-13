@@ -15,6 +15,7 @@ import { plan as planApi } from "@/api/endpoints";
 import type { RouteChange } from "@/api/types";
 import { useQuery } from "@/hooks/useApi";
 import { ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
 import { ErrorState } from "@/components/ui/States";
 import { Kicker, Panel } from "@/components/ui/primitives";
 
@@ -70,6 +71,7 @@ export function RouteAdjustments({ onAjustado }: { onAjustado?: () => void }) {
           onClick={() => void ajustar()}
           disabled={ajustando}
         >
+          <Icon name="refresh" size={15} />
           {ajustando ? "Conferindo…" : "Reajustar agora"}
         </button>
       </div>

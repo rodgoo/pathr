@@ -23,6 +23,7 @@
 import { useEffect, useRef, useState } from "react";
 import { locucao, SEM_VOZ_DO_IDIOMA, vozesDoIdioma } from "@/lib/fala";
 import { ACC, ACC3, HAIRLINE, TEXT } from "@/lib/tokens";
+import { IconButton } from "@/components/ui/IconButton";
 
 /** Uma fala do diálogo: quem fala e o que diz. */
 interface Fala {
@@ -163,35 +164,25 @@ export function ListeningPlayer({
     >
       <div style={{ display: "flex", alignItems: "center", gap: 11.2, flexWrap: "wrap" }}>
         {suportado ? (
-          <button
-            type="button"
-            className="btn btn-secondary"
+          <IconButton
+            icon={tocando ? "stop" : "playSolid"}
+            label={tocando ? "Parar" : atual === -1 ? "Ouvir o diálogo" : "Ouvir de novo"}
+            tone="secondary"
             onClick={() => (tocando ? parar() : tocar())}
-            style={{ fontSize: 12.5 }}
-          >
-            {tocando ? "parar" : atual === -1 ? "ouvir o diálogo" : "ouvir de novo"}
-          </button>
+          />
         ) : (
           <span style={{ fontSize: 11.5, color: TEXT.muted }}>
             Este navegador não tem voz para reproduzir o diálogo.
           </span>
         )}
 
-        <button
-          type="button"
+        <IconButton
+          icon={mostrarTexto ? "eyeOff" : "eye"}
+          label={mostrarTexto ? "Esconder transcrição" : "Ver transcrição"}
+          pressed={mostrarTexto}
+          color={ACC3}
           onClick={() => setMostrarTexto((atual) => !atual)}
-          style={{
-            border: "none",
-            background: "transparent",
-            padding: 0,
-            font: "inherit",
-            fontSize: 11.5,
-            color: ACC3,
-            cursor: "pointer",
-          }}
-        >
-          {mostrarTexto ? "esconder transcrição" : "ver transcrição"}
-        </button>
+        />
 
         <span style={{ fontSize: 11, color: TEXT.faint, marginLeft: "auto" }}>
           {falas.length} falas

@@ -7,12 +7,20 @@ apelidos. Na prática isso significa que o primeiro currículo que escreve
 assunto, e a curadoria de um não serve para o outro. É por isso que a semente
 existe: ela chega com os apelidos que as pessoas realmente escrevem.
 
-Idempotente: reexecutar não duplica nem sobrescreve o que foi editado à mão.
-Uma tag já existente (mesmo slug) é deixada como está — inclusive a
-popularidade, que pode ter sido ajustada depois.
+Idempotente: reexecutar não duplica. Sem `--sincronizar`, uma tag já existente
+(mesmo slug) é deixada como está — inclusive a popularidade, que pode ter sido
+ajustada depois.
 
-    python -m scripts.seed_tags            # insere o que falta
-    python -m scripts.seed_tags --dry-run  # só mostra o que faria
+`--sincronizar` também corrige as tags que já existem: apelidos, categoria e
+cor passam a ser os da semente. Foi preciso quando os apelidos deixaram de
+fundir tecnologias diferentes (`tdd` em "Testes automatizados", `kanban` em
+"Scrum"): sem reescrever a linha no banco, a tag nova "TDD" existiria mas o
+casamento continuaria mandando "tdd" para a antiga. A popularidade não é
+tocada.
+
+    python -m scripts.seed_tags                          # insere o que falta
+    python -m scripts.seed_tags --sincronizar            # e corrige as existentes
+    python -m scripts.seed_tags --sincronizar --dry-run  # só mostra o que faria
 """
 
 import argparse
@@ -27,23 +35,50 @@ def main() -> int:
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="lista o que seria inserido, sem escrever nada",
+        help="lista o que seria feito, sem escrever nada",
+    )
+    parser.add_argument(
+        "--sincronizar",
+        action="store_true",
+        help="também corrige apelidos, categoria e cor das tags existentes",
     )
     args = parser.parse_args()
 
     rows = seed_rows()
     supabase = get_supabase()
 
-    existing = {
-        row["slug"]
-        for row in (supabase.table("pathr_tag").select("slug").execute().data or [])
+    atuais = {
+        row["slug"]: row
+        for row in (
+            supabase.table("pathr_tag").select("id,slug,aliases,category,color").execute().data or []
+        )
     }
+    existing = set(atuais)
     missing = [row for row in rows if row["slug"] not in existing]
 
     print(f"catálogo: {len(rows)} tags na semente, {len(existing)} já no banco")
 
+    if args.sincronizar:
+        mudar = []
+        for row in rows:
+            atual = atuais.get(row["slug"])
+            if not atual:
+                continue
+            novo = {"aliases": row["aliases"], "category": row["category"], "color": row["color"]}
+            if (sorted(atual.get("aliases") or []), atual.get("category"), atual.get("color")) != (
+                sorted(novo["aliases"]), novo["category"], novo["color"]
+            ):
+                mudar.append((atual, novo))
+        print(f"a corrigir: {len(mudar)}")
+        for atual, novo in mudar:
+            print(f"  ~ {atual['slug']:<24} apelidos {sorted(atual.get('aliases') or [])} -> {sorted(novo['aliases'])}")
+        if mudar and not args.dry_run:
+            for atual, novo in mudar:
+                supabase.table("pathr_tag").update(novo).eq("id", atual["id"]).execute()
+            print(f"corrigidas {len(mudar)} tags.")
+
     if not missing:
-        print("nada a fazer — o catálogo já está completo.")
+        print("nada a inserir — todas as tags da semente já estão no banco.")
         return 0
 
     print(f"faltando: {len(missing)}")

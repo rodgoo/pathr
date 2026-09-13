@@ -15,6 +15,7 @@ import { english as englishApi } from "@/api/endpoints";
 import type { EnglishAnswerResult, EnglishAssessment } from "@/api/types";
 import { useMutation } from "@/hooks/useApi";
 import { ACC, ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
 import { ListeningPlayer } from "@/components/english/ListeningPlayer";
 import { TextoConsultavel } from "@/components/english/TextoConsultavel";
 import { ChoiceList } from "@/components/ui/ChoiceList";
@@ -182,6 +183,7 @@ export function Placement({
               onClick={next}
               disabled={reload.pending}
             >
+              <Icon name="arrowRight" size={15} />
               {reload.pending ? "Carregando…" : "Próxima"}
             </button>
           </div>
@@ -209,6 +211,7 @@ function Result({ result, onDone }: { result: EnglishAnswerResult; onDone: () =>
           Este é o seu nível medido. Ele passa a valer para o plano diário e para o prazo da meta.
         </p>
         <button type="button" className="btn btn-primary" onClick={onDone}>
+          <Icon name="arrowRight" size={15} />
           Ver meu nível
         </button>
       </Panel>

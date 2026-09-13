@@ -18,6 +18,8 @@ import { quizzes as quizzesApi } from "@/api/endpoints";
 import type { Quiz, QuizResult } from "@/api/types";
 import { useMutation } from "@/hooks/useApi";
 import { ACC, ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
+import { IconButton } from "@/components/ui/IconButton";
 import { ChoiceList } from "@/components/ui/ChoiceList";
 import { ErrorState } from "@/components/ui/States";
 import { Panel } from "@/components/ui/primitives";
@@ -166,13 +168,12 @@ export function QuizRunner({
         style={{ display: "flex", gap: 8.4, marginTop: 16.8, alignItems: "center", flexWrap: "wrap" }}
       >
         {index > 0 ? (
-          <button
-            type="button"
-            className="btn btn-secondary"
+          <IconButton
+            icon="arrowLeft"
+            label="Voltar"
+            tone="secondary"
             onClick={() => setIndex((current) => current - 1)}
-          >
-            Voltar
-          </button>
+          />
         ) : null}
         <button
           type="button"
@@ -180,6 +181,7 @@ export function QuizRunner({
           onClick={advance}
           disabled={picked === undefined || submit.pending}
         >
+          <Icon name="send" size={15} />
           {submit.pending ? "Corrigindo…" : last ? "Enviar respostas" : "Próxima"}
         </button>
         {picked === undefined ? (
@@ -277,6 +279,7 @@ function Review({
           style={{ marginTop: 16.8 }}
           onClick={onRestart}
         >
+          <Icon name="refresh" size={15} />
           Gerar outro quiz
         </button>
       ) : null}

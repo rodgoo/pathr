@@ -30,6 +30,9 @@ CATEGORIES = {
     "linguagem", "framework", "banco", "cloud", "devops", "dados", "ia",
     "arquitetura", "testes", "seguranca", "mobile", "frontend", "backend",
     "ferramenta", "metodologia", "soft-skill", "idioma",
+    # Setor de negócio ("bancário", "varejo"): a vaga cobra, e sem categoria
+    # própria virava ferramenta.
+    "dominio",
 }
 
 # Cor default por categoria — o app pinta a tag por família quando a tag não
@@ -52,6 +55,7 @@ CATEGORY_COLORS = {
     "metodologia": "#9397ab",
     "soft-skill": "#9397ab",
     "idioma": "#d189ab",
+    "dominio": "#63b48f",
 }
 
 

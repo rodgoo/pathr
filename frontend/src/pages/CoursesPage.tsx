@@ -146,6 +146,7 @@ export function CoursesPage() {
                 className="btn btn-secondary"
                 onClick={() => dispatch({ type: "navigate", screen: "config", settingsTab: "skills" })}
               >
+                <Icon name="code" size={15} />
                 Escolher tecnologias
               </button>
             }
@@ -160,6 +161,7 @@ export function CoursesPage() {
                 className="btn btn-primary"
                 onClick={() => dispatch({ type: "navigate", screen: "config", settingsTab: "objetivo" })}
               >
+                <Icon name="flag" size={15} />
                 Definir objetivo
               </button>
             }
@@ -321,6 +323,7 @@ function CartaoDoCurso({ curso }: { curso: Course }) {
             title="Depois de receber o certificado"
             style={{ textDecoration: "none", fontSize: SIZE.apoio }}
           >
+            <Icon name="externalLink" size={15} />
             Adicionar ao LinkedIn
           </a>
         </div>

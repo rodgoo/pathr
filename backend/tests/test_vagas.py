@@ -151,7 +151,8 @@ def test_listagem_ordena_por_compatibilidade_e_nao_da_nota_a_link_de_busca():
     ]
     minhas = _minhas(java=3, **{"spring-boot": 2, "sql": 2})
     lista = V.para_tela(vagas, CATALOGO, minhas)
-    assert [linha["id"] for linha in lista] == ["b", "a", "c"]
+    # "a" não cita nada da stack nem do objetivo: sai.
+    assert [linha["id"] for linha in lista] == ["b", "c"]
     assert lista[0]["compatibilidade"]["nota"] == 100
     assert lista[-1]["compatibilidade"]["nota"] is None
 
@@ -166,7 +167,7 @@ def test_trecho_da_adzuna_nao_ganha_nota():
 
 def test_so_remotas():
     vagas = [_vaga("a", "Dev", "Java", remota=True), _vaga("b", "Dev", "Java", remota=False)]
-    assert [l["id"] for l in V.para_tela(vagas, CATALOGO, {}, so_remotas=True)] == ["a"]
+    assert [l["id"] for l in V.para_tela(vagas, CATALOGO, _minhas(java=3), so_remotas=True)] == ["a"]
 
 
 def test_nivel_diferente_do_perfil_desce():
@@ -366,3 +367,54 @@ def test_adzuna_marca_remota_pelo_anuncio(monkeypatch):
     assert vagas["adzuna:1"].remota is True and vagas["adzuna:1"].local == "Remoto · Belo Horizonte, Minas Gerais"
     assert vagas["adzuna:2"].remota is None
     assert len(vagas) == 2
+
+
+
+# ── Objetivo e stack: a vaga tem a cara da pessoa? ──────────────────────────
+
+
+def test_vaga_que_so_pede_ingles_nao_aparece_para_dev():
+    """Caso real: vagas sem nada a ver apareciam porque o currículo tinha inglês."""
+    minhas = _minhas(java=3, **{"spring-boot": 3, "ingles": 4})
+    for tag in minhas.values():
+        tag["category"] = "idioma" if tag["slug"] == "ingles" else "linguagem"
+    vagas = [
+        _vaga("atendimento", "Analista de Customer Success", "Inglês fluente e boa comunicação."),
+        _vaga("java", "Desenvolvedor Java", "Java, Spring Boot e inglês avançado."),
+    ]
+    lista = V.para_tela(vagas, CATALOGO, minhas)
+    assert [l["id"] for l in lista] == ["java"]
+    assert lista[0]["compatibilidade"]["tem"] == ["Java", "Spring Boot"]
+
+
+def test_mais_stack_em_comum_vem_antes():
+    minhas = _minhas(java=3, **{"spring-boot": 3, "oracle": 2, "mongodb": 2, "kafka": 2, "docker": 2})
+    vagas = [
+        _vaga("pouca", "Desenvolvedor", "Java e mais dez coisas: Go, Rust, Elixir, Scala, PHP."),
+        _vaga("muita", "Desenvolvedor", "Java, Spring Boot, Oracle, MongoDB, Kafka e Docker; também Go."),
+    ]
+    lista = V.para_tela(vagas, CATALOGO, minhas)
+    assert [l["id"] for l in lista] == ["muita", "pouca"]
+    assert len(lista[0]["afinidade"]["stack_em_comum"]) == 6
+
+
+def test_objetivo_traz_a_vaga_do_papel_e_da_tecnologia_pedida():
+    objetivo = V.ler_objetivo("Quero ser desenvolvedor backend Java com Quarkus", CATALOGO)
+    assert {"java", "quarkus"} <= objetivo.slugs and "backend" in objetivo.papeis
+
+    vagas = [
+        # Nada da stack atual, mas é exatamente o que o objetivo pede.
+        _vaga("objetivo", "Engenheiro Backend", "Quarkus e Kotlin."),
+        _vaga("fora", "Designer", "Figma e Illustrator."),
+    ]
+    lista = V.para_tela(vagas, CATALOGO, _minhas(python=3), objetivo=objetivo)
+    assert [l["id"] for l in lista] == ["objetivo"]
+    assert lista[0]["afinidade"]["objetivo"] is True
+
+
+def test_busca_comeca_pelo_que_o_objetivo_cita():
+    minhas = [
+        {"slug": "python", "name": "Python", "category": "linguagem", "proficiency": 5, "is_target": True},
+        {"slug": "java", "name": "Java", "category": "linguagem", "proficiency": 2, "is_target": False},
+    ]
+    assert V.termos_de_busca(minhas, objetivo_slugs={"java"})[0] == "Java"

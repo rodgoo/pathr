@@ -22,6 +22,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { ReaderContent } from "@/api/types";
 import { ACC, ACC3, HAIRLINE, TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
 
 /** Palavras por minuto de leitura técnica — mais devagar que prosa, porque
  * bloco de código se lê parando. */
@@ -329,6 +330,7 @@ function LeituraIndisponivel({ conteudo }: { conteudo: ReaderContent }) {
         rel="noreferrer noopener"
         style={{ textDecoration: "none" }}
       >
+        <Icon name="externalLink" size={15} />
         Abrir no site original
       </a>
     </div>

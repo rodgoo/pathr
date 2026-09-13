@@ -11,6 +11,7 @@ import type { Quiz, RoadmapNode } from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
 import { useMutation } from "@/hooks/useApi";
 import { TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
 import { EmptyState, ErrorState } from "@/components/ui/States";
 import { Panel } from "@/components/ui/primitives";
 import { QuizRunner } from "./QuizRunner";
@@ -124,6 +125,7 @@ export function QuizTab({ node }: { node: RoadmapNode | null }) {
 
       <div style={{ display: "flex", gap: 8.4, alignItems: "center", marginTop: 14, flexWrap: "wrap" }}>
         <button type="button" className="btn btn-primary" onClick={start} disabled={generate.pending}>
+          <Icon name="playSolid" size={15} />
           {generate.pending ? "Escrevendo as questões…" : "Começar quiz"}
         </button>
         <span style={{ fontSize: 11.5, color: TEXT.faint }}>

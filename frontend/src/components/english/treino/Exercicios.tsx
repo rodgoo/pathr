@@ -19,6 +19,8 @@
 import { useEffect, useMemo, useState } from "react";
 import type { PracticeAnswer, PracticeAnswerResult, PracticeItem } from "@/api/types";
 import { ACC, ACC3, C, HAIRLINE, PANEL, TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
+import { IconButton } from "@/components/ui/IconButton";
 import { ChoiceList } from "@/components/ui/ChoiceList";
 import { ListeningPlayer, useVozes } from "@/components/english/ListeningPlayer";
 import { locucao, SEM_VOZ_DO_IDIOMA } from "@/lib/fala";
@@ -226,6 +228,7 @@ function MontarFrase({ item, travado, resultado, onResponder }: ExercicioProps) 
           disabled={!completa}
           onClick={() => onResponder({ tokens: usadas.map((i) => pecas[i]) })}
         >
+          <Icon name="check" size={15} />
           Conferir
         </button>
       ) : null}
@@ -357,12 +360,11 @@ function AssociarPares({ item, travado, resultado, onResponder }: ExercicioProps
             disabled={!completo}
             onClick={() => onResponder({ pares })}
           >
+            <Icon name="check" size={15} />
             Conferir
           </button>
           {Object.keys(pares).length > 0 ? (
-            <button type="button" className="btn btn-ghost" onClick={() => setPares({})}>
-              Recomeçar
-            </button>
+            <IconButton icon="undo" label="Recomeçar" onClick={() => setPares({})} />
           ) : (
             <span style={{ fontSize: 12, color: TEXT.faint }}>
               Toque num termo à esquerda e depois na tradução.
@@ -422,7 +424,8 @@ function OuvirFrase({ texto, idioma }: { texto: string; idioma: string }) {
   return (
     <div style={{ display: "flex", gap: 8, margin: "4px 0 14px", flexWrap: "wrap" }}>
       <button type="button" className="btn btn-secondary" onClick={() => tocar(0.92)}>
-        {tocando ? "Tocando…" : "▶ Ouvir"}
+        <Icon name="playSolid" size={14} />
+        {tocando ? "Tocando…" : "Ouvir"}
       </button>
       <button type="button" className="btn btn-ghost" onClick={() => tocar(0.6)}>
         Mais devagar
@@ -555,11 +558,13 @@ function Fala({ item, idioma, travado, resultado, onResponder }: ExercicioProps)
       {!travado ? (
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <button type="button" className="btn btn-ghost" onClick={ouvirModelo}>
-            ▶ Ouvir como se diz
+            <Icon name="playSolid" size={14} />
+            Ouvir como se diz
           </button>
           {reconhecimento ? (
             <button type="button" className="btn btn-primary" disabled={ouvindo} onClick={gravar}>
-              {ouvindo ? "Ouvindo… fale agora" : "🎙 Falar"}
+              <Icon name="mic" size={15} />
+              {ouvindo ? "Ouvindo… fale agora" : "Falar"}
             </button>
           ) : (
             <span style={{ fontSize: 12.5, color: TEXT.muted }}>

@@ -27,6 +27,7 @@ import { walkthroughs as walkthroughsApi } from "@/api/endpoints";
 import type { Walkthrough } from "@/api/types";
 import { useMutation, useQuery } from "@/hooks/useApi";
 import { ACC, ACC4, C, HAIRLINE, PANEL, TEXT } from "@/lib/tokens";
+import { IconButton } from "@/components/ui/IconButton";
 import { CodeBlock } from "@/components/quiz/CodeBlock";
 import { Icon } from "@/components/ui/icons";
 import { Segmented } from "@/components/ui/Segmented";
@@ -236,6 +237,7 @@ function Gerador({
             style={{ marginLeft: "auto" }}
             disabled={criar.pending || topic.trim().length < 2}
           >
+            <Icon name="plus" size={15} />
             {criar.pending ? "Escrevendo o exemplo…" : "Gerar exemplo"}
           </button>
         </div>
@@ -461,30 +463,21 @@ function Controles({
         marginTop: 11.2,
       }}
     >
-      <button
-        type="button"
-        className="btn btn-secondary"
-        onClick={() => onIr(0)}
-        disabled={indice === 0}
-      >
-        Início
-      </button>
-      <button
-        type="button"
-        className="btn btn-secondary"
+      <IconButton icon="undo" label="Voltar ao início" tone="secondary" onClick={() => onIr(0)} disabled={indice === 0} />
+      <IconButton
+        icon="arrowLeft"
+        label="Passo anterior"
+        tone="secondary"
         onClick={() => onIr(indice - 1)}
         disabled={indice === 0}
-      >
-        ← Anterior
-      </button>
-      <button
-        type="button"
-        className="btn btn-primary"
+      />
+      <IconButton
+        icon="arrowRight"
+        label="Próximo passo"
+        tone="primary"
         onClick={() => onIr(indice + 1)}
         disabled={indice >= total - 1}
-      >
-        Próximo →
-      </button>
+      />
       <button
         type="button"
         className="btn btn-ghost"
@@ -707,15 +700,13 @@ function Biblioteca({
                   </span>
                 </span>
               </button>
-              <button
-                type="button"
-                className="btn btn-ghost"
-                style={{ fontSize: 12, color: C.ambar }}
+              <IconButton
+                icon="trash"
+                label={removendo === item.id ? "Removendo…" : "Remover"}
+                color={C.ambar}
                 disabled={removendo === item.id}
                 onClick={() => void remover(item)}
-              >
-                {removendo === item.id ? "Removendo…" : "Remover"}
-              </button>
+              />
             </li>
           );
         })}

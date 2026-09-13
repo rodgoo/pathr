@@ -11,6 +11,7 @@ import { auth as authApi, profile as profileApi } from "@/api/endpoints";
 import { useAuth } from "@/hooks/useAuth";
 import { useMutation, useQuery } from "@/hooks/useApi";
 import { C, TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { PasswordField } from "@/components/auth/AuthShell";
 import { Kicker, Panel } from "@/components/ui/primitives";
@@ -173,6 +174,7 @@ export function AccountTab() {
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8.4, marginTop: 14, alignItems: "center" }}>
           <button type="submit" className="btn btn-primary" disabled={save.pending}>
+            <Icon name="check" size={15} />
             {save.pending ? "Salvando…" : "Salvar alterações"}
           </button>
           {saved ? <span style={{ fontSize: 12.5, color: C.verde }}>Salvo.</span> : null}
