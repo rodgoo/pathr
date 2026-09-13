@@ -159,14 +159,18 @@ a,
      que dá curso ao movimento. */
   background: linear-gradient(
     90deg,
-    rgba(233, 233, 237, 0.3) 20%,
+    rgba(233, 233, 237, 0.3) 38%,
     var(--color-text) 50%,
-    rgba(233, 233, 237, 0.3) 80%
+    rgba(233, 233, 237, 0.3) 62%
   );
-  /* 250%: o período de repetição do fundo (2,5× a largura) é maior que o
-     curso da luz, então só UMA faixa clara aparece por vez — com 220% a
-     cópia seguinte entrava pela esquerda e parecia o brilho recomeçando. */
-  background-size: 250% 100%;
+  /* A conta que faz a luz SAIR da palavra: fundo de 300% da largura e faixa
+     clara de 24% dele (0,72 da palavra). Em `background-position: 100%` a
+     faixa inteira está à esquerda da palavra; em `0%`, inteira à direita — e
+     o fundo cobre a palavra nos dois extremos, então o texto nunca some.
+     Antes a faixa ocupava 60% do fundo e parava EM CIMA do "R": o ciclo
+     reiniciava com a luz ainda acesa, e parecia travar e voltar. */
+  background-size: 300% 100%;
+  background-repeat: no-repeat;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -174,12 +178,14 @@ a,
   letter-spacing: 0.01em;
 }
 
+/* Parada com a luz FORA dos dois lados: o salto do fim para o começo do ciclo
+   acontece no escuro, e o olho só vê a luz entrar, atravessar e sumir. */
 @keyframes noc-nome {
   0%, 32% {
-    background-position: 105% 0;
+    background-position: 100% 0;
   }
   78%, 100% {
-    background-position: -5% 0;
+    background-position: 0% 0;
   }
 }
 
