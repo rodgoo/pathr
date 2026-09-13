@@ -16,6 +16,9 @@ import type {
   Relacao,
   Relato,
   RelatoModeracao,
+  ListaUsuariosAdmin,
+  UsuarioAdmin,
+  AssinaturaAdmin,
   StatusRelato,
   TipoRelato,
   City,
@@ -75,6 +78,24 @@ function depoisDeMudarOPerfil<T>(resposta: T): T {
  * URL enviada pelo cliente e mostrada na tela de quem modera seria XSS na
  * conta com mais poder do app.
  */
+/**
+ * Administração de contas (só o super admin). Banir e desbanir levam a
+ * assinatura NOVA da chave de acesso, pedida por `confirmacao`.
+ */
+export const admin = {
+  // Sem cache offline: são os e-mails de todas as contas.
+  usuarios: (busca = "", situacao: "todos" | "ativos" | "banidos" = "todos") =>
+    api.getSemCache<ListaUsuariosAdmin>(
+      `/admin/usuarios?busca=${encodeURIComponent(busca)}&situacao=${situacao}`,
+    ),
+  avatar: (id: string) => api.blob(`/admin/usuarios/${encodeURIComponent(id)}/avatar`),
+  confirmacao: () => api.post<PasskeyOptions>("/admin/confirmacao"),
+  banir: (id: string, corpo: AssinaturaAdmin & { motivo: string }) =>
+    api.post<UsuarioAdmin>(`/admin/usuarios/${encodeURIComponent(id)}/banir`, corpo),
+  desbanir: (id: string, corpo: AssinaturaAdmin) =>
+    api.post<UsuarioAdmin>(`/admin/usuarios/${encodeURIComponent(id)}/desbanir`, corpo),
+};
+
 export const relatos = {
   enviar: (dados: { tipo: TipoRelato; mensagem: string; pagina?: string; foto?: File | null }) => {
     const form = new FormData();

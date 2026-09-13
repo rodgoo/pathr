@@ -195,6 +195,7 @@ async def validation_error_handler(_request: Request, exc: RequestValidationErro
 
 from app import health  # noqa: E402
 from app.routers import (  # noqa: E402
+    admin,
     auth,
     courses,
     eventos as eventos_router,
@@ -238,6 +239,7 @@ app.include_router(eventos_router.router)
 app.include_router(auth.router)
 app.include_router(social.router)
 app.include_router(relatos.router)
+app.include_router(admin.router)
 app.include_router(profile.router)
 app.include_router(resumes.router)
 app.include_router(tags.router)

@@ -62,7 +62,7 @@ from app.security import (
     verify_totp_code,
 )
 from app.services import cifra, geo, limites, usernames
-from app.services.moderacao import e_moderador
+from app.services.moderacao import CONTA_SUSPENSA, e_moderador, e_super_admin, esta_banido
 from app.services.email import send_password_reset, send_verification_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -91,6 +91,7 @@ def _user_out(user: dict[str, Any]) -> UserOut:
         theme=user.get("theme") or "system",
         username=user.get("username") or "",
         is_moderator=e_moderador(user),
+        is_super_admin=e_super_admin(user),
         has_avatar=bool(user.get("avatar_path")),
     )
 
@@ -186,7 +187,15 @@ def _issue_session(
     `family_id` é o LOGIN a que o token pertence: nasce igual ao id no login e
     é herdado a cada rotação. É por ele que um reuso suspeito derruba só aquele
     aparelho, e não todos os lugares onde a conta está aberta.
+
+    Conta banida não recebe sessão, venha de onde vier (senha, chave de acesso
+    ou renovação): todos os caminhos passam por aqui. Chega DEPOIS da senha ou
+    da assinatura conferida, então não conta a quem sonda que a conta existe.
     """
+    if esta_banido(user):
+        if response is not None:
+            _clear_session_cookies(response)
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=CONTA_SUSPENSA)
     session_id = str(uuid.uuid4())
     refresh_token = new_token()
     supabase.table("pathr_refresh_token").insert(

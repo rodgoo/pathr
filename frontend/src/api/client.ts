@@ -76,6 +76,8 @@ interface RequestOptions<T = unknown> {
   formData?: FormData;
   signal?: AbortSignal;
   offline?: OfflineWrite<T>;
+  /** GET que NÃO vai para o cache offline nem sai dele — dado de outras contas. */
+  semCache?: boolean;
 }
 
 async function parseError(response: Response): Promise<ApiError> {
@@ -190,7 +192,7 @@ export async function request<T>(path: string, options: RequestOptions<T> = {}):
     marcaOnline();
     if (response.status === 204) return undefined as T;
     const body = (await response.json()) as T;
-    if (method === "GET") {
+    if (method === "GET" && !options.semCache) {
       void saveRead(path, body).then(() => offlineStatus.patch({ lastSyncAt: Date.now() }));
     }
     return body;
@@ -198,7 +200,7 @@ export async function request<T>(path: string, options: RequestOptions<T> = {}):
     if (!isNetworkError(erro)) throw erro;
     marcaOffline();
 
-    if (method === "GET") {
+    if (method === "GET" && !options.semCache) {
       const guardado = await readCached(path);
       if (guardado) {
         offlineStatus.patch({ servingCache: true, lastSyncAt: guardado.savedAt });
@@ -228,6 +230,7 @@ export async function sendPending(entry: PendingWrite): Promise<void> {
 
 export const api = {
   get: <T>(path: string, signal?: AbortSignal) => request<T>(path, { method: "GET", signal }),
+  getSemCache: <T>(path: string) => request<T>(path, { method: "GET", semCache: true }),
   post: <T>(path: string, body?: unknown) => request<T>(path, { method: "POST", body }),
   patch: <T>(path: string, body: unknown, offline?: OfflineWrite<T>) =>
     request<T>(path, { method: "PATCH", body, offline }),

@@ -81,6 +81,9 @@ class UserOut(BaseModel):
     # Modera os relatos. A tela usa só para mostrar a caixa de moderação; quem
     # decide o acesso é o servidor, em cada rota de /relatos.
     is_moderator: bool = False
+    # Administra contas (lista de usuários, banir). Mesma regra: a tela só
+    # decide o que mostra; quem decide o acesso é o servidor, em /admin.
+    is_super_admin: bool = False
     # Se ha foto, e nao a foto em si: os bytes saem por GET /profile/avatar.
     # Embutir a imagem aqui engordaria toda resposta de sessao com algo que a
     # tela so precisa uma vez.

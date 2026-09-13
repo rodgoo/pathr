@@ -19,6 +19,7 @@ from fastapi import Depends, HTTPException, Request, status
 from supabase import Client
 
 from app.database import get_supabase
+from app.services.moderacao import CONTA_SUSPENSA, esta_banido
 from app.security import decode_access_token
 
 ACCESS_COOKIE = "pathr_access"
@@ -164,6 +165,11 @@ def _resolve_user(request: Request, supabase: Client) -> dict[str, Any]:
         raise _unauthorized()
 
     user = rows[0]
+    # Banida: fora de TODA rota, mesmo com um access token ainda válido. As
+    # sessões já foram revogadas ao banir; isto cobre o intervalo até a
+    # revogação ser lida, e qualquer sessão que tenha escapado dela.
+    if esta_banido(user):
+        raise _unauthorized(CONTA_SUSPENSA)
     user["session_id"] = session_id
     request.state.pathr_user_id = str(user["id"])
     return user

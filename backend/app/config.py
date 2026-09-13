@@ -64,6 +64,9 @@ class Settings(BaseSettings):
     # Quem modera os relatos, pelo e-mail da conta. Lista para caber mais de
     # um moderador sem mudar código; comparado sem distinção de caixa.
     moderator_emails: list[str] = ["rodgoocode@hotmail.com"]
+    # Quem administra CONTAS (ver a lista de usuários, banir). Separado de
+    # moderar: responder relatos não deve dar o poder de tirar alguém do app.
+    super_admin_emails: list[str] = ["rodgoocode@hotmail.com"]
 
     # --- Origens e cookies ---
     # O app vive em pathr.notter.com.br e a API em api.pathr.notter.com.br:

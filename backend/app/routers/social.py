@@ -243,10 +243,14 @@ def _cartoes(
     ids = list(dict.fromkeys(user_ids))
     if not ids:
         return {}
-    usuarios = (
-        supabase.table("pathr_user").select("id,name,username,avatar_path")
-        .in_("id", ids).execute().data or []
-    )
+    # Conta banida não vira cartão: some da busca, das sugestões e dos amigos.
+    usuarios = [
+        u for u in (
+            supabase.table("pathr_user").select("id,name,username,avatar_path,banned_at")
+            .in_("id", ids).execute().data or []
+        )
+        if not u.get("banned_at")
+    ]
     perfis = {
         str(p["user_id"]): p
         for p in (
@@ -439,10 +443,10 @@ def buscar(
 
 def _id_por_username(supabase: Client, username: str) -> str:
     linhas = (
-        supabase.table("pathr_user").select("id")
+        supabase.table("pathr_user").select("id,banned_at")
         .eq("username", usernames.normalizar(username)).limit(1).execute().data or []
     )
-    if not linhas:
+    if not linhas or linhas[0].get("banned_at"):
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Pessoa não encontrada.")
     return str(linhas[0]["id"])
 

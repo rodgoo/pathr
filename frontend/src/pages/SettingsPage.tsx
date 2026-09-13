@@ -19,6 +19,7 @@ import { NoticesTab } from "@/components/profile/NoticesTab";
 import { ObjectiveTab } from "@/components/profile/ObjectiveTab";
 import { SkillsTab } from "@/components/profile/SkillsTab";
 import { ModeracaoRelatos } from "@/components/relatos/ModeracaoRelatos";
+import { ModeracaoUsuarios } from "@/components/moderacao/ModeracaoUsuarios";
 import { useAuth } from "@/hooks/useAuth";
 
 const ABAS: readonly { value: SettingsTab; label: string; icon: IconName }[] = [
@@ -40,7 +41,7 @@ const ABA_MODERACAO = { value: "moderacao" as const, label: "Moderação", icon:
 export function SettingsPage() {
   const { state, dispatch } = useAppState();
   const { user } = useAuth();
-  const TABS = user?.is_moderator ? [...ABAS, ABA_MODERACAO] : ABAS;
+  const TABS = user?.is_moderator || user?.is_super_admin ? [...ABAS, ABA_MODERACAO] : ABAS;
   // As cinco abas do desenho têm tela. "objetivo" e "avisos" ficaram meses
   // caindo aqui em "conta" por não terem uma — era por isso que a pessoa
   // clicava e nada mudava.
@@ -86,7 +87,9 @@ export function SettingsPage() {
       {tab === "idiomas" ? <LanguageSettings /> : null}
       {tab === "avisos" ? <NoticesTab /> : null}
       {tab === "integracoes" ? <ApiStatusTab /> : null}
-      {tab === "moderacao" ? <ModeracaoRelatos /> : null}
+      {/* Contas primeiro (só o super admin), relatos depois (quem modera). */}
+      {tab === "moderacao" && user?.is_super_admin ? <ModeracaoUsuarios /> : null}
+      {tab === "moderacao" && user?.is_moderator ? <ModeracaoRelatos /> : null}
 
       {/* Em aba nova: o documento é longo, e voltar dele não deve custar a
           posição em que a pessoa estava nas configurações. */}

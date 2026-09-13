@@ -102,6 +102,12 @@ class PathrUser(SQLModel, table=True):
     theme: str = Field(default="system")  # 'light' | 'dark' | 'system'
     onboarding_completed: bool = Field(default=False)
 
+    # -- Banimento (migração 0028). Nulo = conta ativa. Quem baniu e quando
+    # desbaniu ficam na trilha de auditoria; aqui só o estado de agora.
+    banned_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
+    banned_reason: Optional[str] = Field(default=None)
+    banned_by: Optional[uuid.UUID] = Field(default=None, sa_type=PGUUID(as_uuid=True))
+
 
 class PathrRefreshToken(SQLModel, table=True):
     __tablename__ = "pathr_refresh_token"

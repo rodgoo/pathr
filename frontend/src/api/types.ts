@@ -22,6 +22,8 @@ export interface User {
   username: string;
   /** Modera os relatos. Só decide o que a tela MOSTRA; o acesso é do servidor. */
   is_moderator?: boolean;
+  /** Administra contas (lista de usuarios, banir). Mesma regra: so decide o que a tela mostra. */
+  is_super_admin?: boolean;
   /** Se ha foto. Os bytes vem por GET /profile/avatar. */
   has_avatar: boolean;
 }
@@ -486,6 +488,34 @@ export interface Passkey {
 }
 
 /** As opções de uma cerimônia WebAuthn, no JSON padrão do @simplewebauthn/browser. */
+/** Uma conta na lista da moderacao (so o super admin recebe). */
+export interface UsuarioAdmin {
+  id: string;
+  name: string;
+  username: string;
+  email: string;
+  has_avatar: boolean;
+  created_at: string | null;
+  email_verified: boolean;
+  banned_at: string | null;
+  banned_reason: string | null;
+  is_super_admin: boolean;
+  /** A propria conta de quem esta vendo. */
+  voce: boolean;
+}
+
+export interface ListaUsuariosAdmin {
+  usuarios: UsuarioAdmin[];
+  /** Quantas contas a lista traz no maximo; chegar nele pede refinar a busca. */
+  limite: number;
+}
+
+/** A assinatura da chave de acesso que confirma banir ou desbanir. */
+export interface AssinaturaAdmin {
+  challenge_id: string;
+  credential: unknown;
+}
+
 export interface PasskeyOptions {
   challenge_id: string;
   options: Record<string, unknown>;
