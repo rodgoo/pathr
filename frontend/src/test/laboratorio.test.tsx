@@ -53,7 +53,7 @@ const gerado: Walkthrough = {
   summary: "",
   code: "SELECT 1;",
   lines: ["SELECT 1;"],
-  steps: [{ linha: 1, acao: "seleciona 1", estado: [] }],
+  steps: [{ linha: 1, acao: "seleciona 1", estado: [], saida: "" }],
   concepts: [],
   created_at: null,
 };
