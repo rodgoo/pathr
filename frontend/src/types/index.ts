@@ -17,6 +17,8 @@ export type Screen =
   | "perfil"
   | "codigo"
   | "material"
+  | "cursos"
+  | "vagas"
   | "config";
 
 /** Idioma do material curado. "both" é ausência de filtro, não um terceiro. */

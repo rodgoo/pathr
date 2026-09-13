@@ -190,11 +190,22 @@ def _baixar(url: str) -> tuple[str, str]:
     """
     if not _url_permitida(url):
         raise LeituraIndisponivel("Endereço não permitido para leitura.")
+
+    def cada_salto(pedido: httpx.Request) -> None:
+        # Antes de CADA envio, redirecionamentos inclusive. Checar só o destino
+        # final deixava um link público redirecionar para um endereço interno
+        # (o metadata da máquina, um serviço da rede privada) e o pedido já
+        # tinha saído quando a checagem recusava. A análise de vaga aceita link
+        # de qualquer pessoa, o que tornou isso alcançável.
+        if not _url_permitida(str(pedido.url)):
+            raise LeituraIndisponivel("Endereço não permitido para leitura.")
+
     try:
         with httpx.Client(
             headers={"User-Agent": _AGENTE, "Accept": "text/html,application/xhtml+xml"},
             follow_redirects=True,
             timeout=_TIMEOUT,
+            event_hooks={"request": [cada_salto]},
         ) as cliente:
             with cliente.stream("GET", url) as resposta:
                 if resposta.status_code != 200:

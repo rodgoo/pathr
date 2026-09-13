@@ -52,6 +52,8 @@ export function Sidebar() {
           badge: plan ? String(plan.total_nodes) : undefined,
         },
         { label: "Trilha atual", screen: "modulo", icon: "book" },
+        { label: "Cursos", screen: "cursos", icon: "award" },
+        { label: "Vagas", screen: "vagas", icon: "suitcase" },
       ],
     },
     {

@@ -94,7 +94,11 @@ export function SettingsPage() {
         >
           CC BY 4.0
         </a>
-        .
+        ; chama e medalha do{" "}
+        <a href="https://lucide.dev" target="_blank" rel="noreferrer noopener" style={{ color: "inherit" }}>
+          Lucide
+        </a>
+        , sob licença ISC.
       </p>
     </div>
   );

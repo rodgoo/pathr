@@ -27,6 +27,11 @@
  * aproximado na unha aparece inteira. (Foi esse o motivo de os ícones feitos à
  * mão terem saído daqui duas versões atrás.)
  *
+ * Quando o coolicons não tem o símbolo de jeito nenhum — chama e medalha —, o
+ * segundo pacote é o **Lucide** (ISC, https://lucide.dev): mesma grade de 24,
+ * mesmo traço de 2, pontas arredondadas. `<circle>` vira caminho de dois arcos
+ * para caber no formato abaixo. O crédito também aparece em Configurações.
+ *
  * ## "Estou aqui" sem versão cheia
  *
  * O coolicons não tem variante preenchida. O item ativo da navegação ganha um
@@ -203,6 +208,24 @@ const ICONES = {
   /** `Play` */
   playSolid: [
     "M5 17.3336V6.66698C5 5.78742 5 5.34715 5.18509 5.08691C5.34664 4.85977 5.59564 4.71064 5.87207 4.67499C6.18868 4.63415 6.57701 4.84126 7.35254 5.25487L17.3525 10.5882L17.3562 10.5898C18.2132 11.0469 18.642 11.2756 18.7826 11.5803C18.9053 11.8462 18.9053 12.1531 18.7826 12.4189C18.6418 12.7241 18.212 12.9537 17.3525 13.4121L7.35254 18.7454C6.57645 19.1593 6.1888 19.3657 5.87207 19.3248C5.59564 19.2891 5.34664 19.1401 5.18509 18.9129C5 18.6527 5 18.2132 5 17.3336Z",
+  ],
+  /** `External_Link — abre fora do app` */
+  externalLink: [
+    "M10.0002 5H8.2002C7.08009 5 6.51962 5 6.0918 5.21799C5.71547 5.40973 5.40973 5.71547 5.21799 6.0918C5 6.51962 5 7.08009 5 8.2002V15.8002C5 16.9203 5 17.4801 5.21799 17.9079C5.40973 18.2842 5.71547 18.5905 6.0918 18.7822C6.5192 19 7.07899 19 8.19691 19H15.8031C16.921 19 17.48 19 17.9074 18.7822C18.2837 18.5905 18.5905 18.2839 18.7822 17.9076C19 17.4802 19 16.921 19 15.8031V14M20 9V4M20 4H15M20 4L13 11",
+  ],
+  /** `Suitcase` — vagas */
+  suitcase: [
+    "M8 8H6.2002C5.08009 8 4.51962 8 4.0918 8.21799C3.71547 8.40973 3.40973 8.71547 3.21799 9.0918C3 9.51962 3 10.0801 3 11.2002V16.8002C3 17.9203 3 18.4801 3.21799 18.9079C3.40973 19.2842 3.71547 19.5905 4.0918 19.7822C4.5192 20 5.07899 20 6.19691 20H17.8031C18.921 20 19.48 20 19.9074 19.7822C20.2837 19.5905 20.5905 19.2842 20.7822 18.9079C21 18.4805 21 17.9215 21 16.8036V11.1969C21 10.079 21 9.5192 20.7822 9.0918C20.5905 8.71547 20.2837 8.40973 19.9074 8.21799C19.4796 8 18.9203 8 17.8002 8H16M8 8H16M8 8C8 5.79086 9.79086 4 12 4C14.2091 4 16 5.79086 16 8",
+  ],
+  /** Lucide `award` — os cursos com certificado. O coolicons não tem medalha. */
+  award: [
+    "m15.477 12.89 1.515 8.526a.5.5 0 0 1-.81.47l-3.58-2.687a1 1 0 0 0-1.197 0l-3.586 2.686a.5.5 0 0 1-.81-.469l1.514-8.526",
+    "M6 8a6 6 0 1 0 12 0a6 6 0 1 0 -12 0",
+  ],
+  /** Lucide `flame` — a demanda de um curso. O `flame` acima é a sequência, e
+   *  continua um calendário: trocar o desenho mudaria uma tela que não pediu. */
+  fogo: [
+    "M12 3q1 4 4 6.5t3 5.5a1 1 0 0 1-14 0 5 5 0 0 1 1-3 1 1 0 0 0 5 0c0-2-1.5-3-1.5-5q0-2 2.5-4",
   ],
   /** `File_Upload — enviar currículo` */
   upload: [

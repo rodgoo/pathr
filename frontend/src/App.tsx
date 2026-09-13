@@ -18,6 +18,8 @@ import { SignupPage } from "@/pages/auth/SignupPage";
 import { ForgotPasswordPage, ResetPasswordPage } from "@/pages/auth/PasswordPages";
 import { VerifyEmailPage } from "@/pages/auth/VerifyEmailPage";
 import { CodeLabPage } from "@/pages/CodeLabPage";
+import { CoursesPage } from "@/pages/CoursesPage";
+import { JobsPage } from "@/pages/JobsPage";
 import { CvPage } from "@/pages/CvPage";
 import { EnglishPage } from "@/pages/EnglishPage";
 import { HomePage } from "@/pages/HomePage";
@@ -39,6 +41,8 @@ const SCREENS: Record<Screen, () => JSX.Element | null> = {
   perfil: ProfilePage,
   codigo: CodeLabPage,
   material: ResourcePage,
+  cursos: CoursesPage,
+  vagas: JobsPage,
   config: SettingsPage,
 };
 

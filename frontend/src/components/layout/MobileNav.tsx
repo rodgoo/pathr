@@ -6,8 +6,8 @@
  * demais para ler. Embaixo, ela some do caminho e cai onde o polegar alcança.
  *
  * São três destinos e um "Mais". Os três são os que se visita várias vezes
- * por sessão; código, idiomas, conta, currículo e ajustes ficam na folha que
- * o "Mais" abre. A alternativa — oito ícones de 40px — daria uma
+ * por sessão; cursos, vagas, código, idiomas, conta, currículo e ajustes ficam na
+ * folha que o "Mais" abre. A alternativa — oito ícones de 40px — daria uma
  * barra em que ninguém acerta o que quer.
  *
  * Cada alvo tem 58px de altura de propósito: a diretriz da Apple põe o piso
@@ -42,6 +42,8 @@ const BARRA: Destino[] = [
 ];
 
 const FOLHA: Destino[] = [
+  { label: "Cursos", screen: "cursos", icon: "award" },
+  { label: "Vagas", screen: "vagas", icon: "suitcase" },
   { label: "Código", screen: "codigo", icon: "code" },
   { label: "Idiomas", screen: "ingles", icon: "flag" },
   { label: "Perfil e tags", screen: "perfil", icon: "user" },

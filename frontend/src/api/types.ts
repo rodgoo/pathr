@@ -667,6 +667,97 @@ export type PracticeAnswer =
   | { pares: Record<string, number> }
   | { texto: string };
 
+/** Da barra de chama: de "pegando fogo" (muito procurado) a "chama apagada" (o básico). */
+export type DemandBand = "pegando_fogo" | "em_alta" | "procurado" | "comum" | "basico";
+
+export interface Course {
+  id: string;
+  titulo: string;
+  emissor: string;
+  url: string;
+  tags: string[];
+  nivel: "iniciante" | "intermediario" | "avancado";
+  idioma: "pt" | "en";
+  horas: number | null;
+  /** O CERTIFICADO, não só as aulas. */
+  certificado: { gratuito: boolean; detalhe: string };
+  demanda: { nota: number; faixa: DemandBand; rotulo: string; motivo: string | null };
+  /** Por que o curso apareceu: qual configuração pediu qual tag. */
+  motivos: { tipo: "meta" | "quero_aprender" | "roadmap" | "objetivo"; tag: string }[];
+  relevancia: number;
+}
+
+export interface CourseList {
+  /** Já ordenada: todo gratuito antes de qualquer pago. */
+  cursos: Course[];
+  /** "AAAA-MM" em que preços e gratuidade foram conferidos. */
+  conferido_em: string;
+  /** Se a pessoa disse o que quer aprender — separa os dois vazios. */
+  tem_pedido: boolean;
+}
+
+export interface JobCompatibility {
+  /** 0 a 100; null quando o anúncio não foi lido (resultado de busca). */
+  nota: number | null;
+  tem: string[];
+  parcial: string[];
+  falta: string[];
+}
+
+export interface Job {
+  id: string;
+  titulo: string;
+  empresa: string | null;
+  url: string;
+  fonte: string;
+  local: string | null;
+  remota: boolean | null;
+  publicada_ha_dias: number | null;
+  nivel: "junior" | "pleno" | "senior" | null;
+  na_sua_regiao: boolean;
+  /** Veio de um buscador: só o link, sem o anúncio lido. */
+  so_link: boolean;
+  resumo: string | null;
+  compatibilidade: JobCompatibility;
+}
+
+export type JobSourceState = "ok" | "erro" | "sem_chave";
+
+export interface JobList {
+  termos: string[];
+  vagas: Job[];
+  fontes: Partial<Record<"gupy" | "remotive" | "adzuna" | "busca", JobSourceState>>;
+  /** Sem competências nem objetivo: não há por onde buscar. */
+  sem_perfil: boolean;
+}
+
+export interface JobRequirement {
+  nome: string;
+  obrigatorio: boolean;
+  situacao: "tem" | "parcial" | "falta" | "desconhecido";
+  tag_id: string | null;
+  user_tag_id: string | null;
+  e_meta: boolean;
+}
+
+export interface JobGap extends JobRequirement {
+  no_roadmap: boolean;
+  cursos: { id: string; titulo: string; emissor: string; url: string; gratuito: boolean }[];
+}
+
+export interface JobAnalysis {
+  titulo: string;
+  empresa: string | null;
+  senioridade: string | null;
+  resumo: string | null;
+  url: string | null;
+  usou_ia: boolean;
+  nota: number | null;
+  requisitos: JobRequirement[];
+  /** Obrigatórias primeiro. */
+  lacunas: JobGap[];
+}
+
 export interface PracticeAnswerResult {
   is_correct: boolean;
   /** Fala sem microfone: nao conta como erro. */

@@ -7,6 +7,9 @@
 
 import { api } from "./client";
 import type {
+  CourseList,
+  JobAnalysis,
+  JobList,
   EnglishAnswerResult,
   EnglishAssessment,
   ExplanationResult,
@@ -162,6 +165,27 @@ export const roadmap = {
       { content },
       { optimistic: () => ({ content, updated_at: new Date().toISOString() }) },
     ),
+};
+
+/** Cursos com certificado, pelo que a pessoa quer aprender. O catálogo é
+ * curado no servidor (services/courses.py) e chega já ordenado. */
+export const courses = {
+  list: () => api.get<CourseList>("/courses"),
+};
+
+/** Vagas reais de fontes confiáveis (Gupy, Remotive, Adzuna, sites de vaga),
+ * e o que falta para cada uma. Ver services/vagas.py. */
+export const jobs = {
+  list: (params: { q?: string; remotas?: boolean } = {}) => {
+    const query = new URLSearchParams();
+    if (params.q) query.set("q", params.q);
+    if (params.remotas) query.set("remotas", "true");
+    return api.get<JobList>(`/vagas?${query}`);
+  },
+  /** Um dos três: a vaga da listagem, o link de uma vaga ou o texto do anúncio.
+   * Chama a IA na primeira vez de cada anúncio — leva alguns segundos. */
+  analyze: (body: { vaga_id?: string; url?: string; texto?: string }) =>
+    api.post<JobAnalysis>("/vagas/analise", body),
 };
 
 export const library = {

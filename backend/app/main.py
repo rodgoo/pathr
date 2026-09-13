@@ -162,6 +162,7 @@ async def validation_error_handler(_request: Request, exc: RequestValidationErro
 from app import health  # noqa: E402
 from app.routers import (  # noqa: E402
     auth,
+    courses,
     eventos as eventos_router,
     explanations,
     jobs,
@@ -176,6 +177,7 @@ from app.routers import (  # noqa: E402
     resumes,
     roadmap,
     tags,
+    vagas,
 )
 
 
@@ -198,6 +200,8 @@ app.include_router(auth.router)
 app.include_router(profile.router)
 app.include_router(resumes.router)
 app.include_router(tags.router)
+app.include_router(courses.router)
+app.include_router(vagas.router)
 app.include_router(roadmap.router)
 app.include_router(library.router)
 app.include_router(quizzes.router)

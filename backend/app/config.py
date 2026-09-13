@@ -149,6 +149,13 @@ class Settings(BaseSettings):
     tavily_api_key: str = ""  # https://app.tavily.com
     brave_api_key: str = ""  # https://brave.com/search/api
 
+    # --- Vagas ---
+    # Gupy e Remotive não pedem chave. A Adzuna (agregador com API oficial para
+    # o Brasil) pede as duas; vazias, a fonte fica de fora. O Tavily/Brave de
+    # cima também procura vagas em sites confiáveis. Ver services/vagas.py.
+    adzuna_app_id: str = ""  # https://developer.adzuna.com
+    adzuna_app_key: str = ""
+
     # --- Tradução (módulo de idioma) ---
     # Vazio desliga o DeepL e a tradução do modelo de IA vale sozinha. Chave
     # terminada em ":fx" é do plano Free (api-free.deepl.com). Ver

@@ -94,7 +94,7 @@ describe("moldura do celular", () => {
     // Os quatro destinos que não cabem na barra, e a saída. O "Sair" ficava
     // atrás da barra fixa e existia sem dar para tocar.
     const folha = screen.getByRole("dialog", { name: "Mais destinos" });
-    for (const destino of ["Idiomas", "Perfil e tags", "Currículo", "Configurações", "Sair"]) {
+    for (const destino of ["Cursos", "Vagas", "Idiomas", "Perfil e tags", "Currículo", "Configurações", "Sair"]) {
       expect(within(folha).getByRole("button", { name: destino })).toBeInTheDocument();
     }
   });

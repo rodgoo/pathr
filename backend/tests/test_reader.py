@@ -357,3 +357,33 @@ def test_sinonimos_da_mesma_opcao_viram_um_subtitulo(doc_git):
     ]
     assert "-v, --version" in titulos, titulos[:6]
     assert "-v" not in titulos
+
+
+def test_redirecionamento_para_endereco_interno_e_barrado_antes_de_sair(monkeypatch):
+    """Um link público que redireciona para a rede interna não pode chegar a
+    ser requisitado: a checagem vale para cada salto, não só para o destino."""
+    import httpx
+
+    from app.services import reader as leitor
+
+    pedidos = []
+
+    def transporte(pedido: httpx.Request) -> httpx.Response:
+        pedidos.append(str(pedido.url))
+        if pedido.url.host == "publico.exemplo":
+            return httpx.Response(302, headers={"location": "http://169.254.169.254/latest/meta-data/"})
+        return httpx.Response(200, text="<html>segredo</html>", headers={"content-type": "text/html"})
+
+    original = httpx.Client
+
+    def cliente(**argumentos):
+        return original(transport=httpx.MockTransport(transporte), **argumentos)
+
+    monkeypatch.setattr(leitor.httpx, "Client", cliente)
+    monkeypatch.setattr(leitor, "_endereco_publico", lambda host: host == "publico.exemplo")
+
+    import pytest
+
+    with pytest.raises(leitor.LeituraIndisponivel):
+        leitor._baixar("https://publico.exemplo/vaga")
+    assert pedidos == ["https://publico.exemplo/vaga"]
