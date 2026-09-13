@@ -57,17 +57,14 @@ export function EnglishPage() {
   if (!profile.data) return null;
 
   const data = profile.data;
-  // O nível de agora sai de todas as respostas, e não só do último
-  // nivelamento: é assim que o treino diário aparece no número grande. Mas só
-  // quando essa estimativa já firmou. Com poucas respostas por habilidade ela
-  // é "inicial" e oscila — mostrava B1 para quem o nivelamento mediu B2, e o
-  // selo da barra lateral (que é o do nivelamento) dizia outra coisa.
-  const estimativaFirme = Boolean(
-    quadro.data?.overall.answered &&
-      (quadro.data.overall.confidence === "alta" || quadro.data.overall.confidence === "media"),
-  );
-  const nivelAtual =
-    (estimativaFirme ? quadro.data?.overall.level : null) ?? data.cefr_level ?? quadro.data?.overall.level ?? null;
+  // O número grande é o do NIVELAMENTO, sempre que houver um. É a medida feita
+  // para isso, e a mesma do selo da barra lateral e da comparação de inglês
+  // nas vagas. A estimativa dos treinos é outra conta — mistura habilidades
+  // com poucas respostas cada — e deixá-la trocar o número fazia a pessoa
+  // medida B2 ler B1 aqui e B2 no resto do app. Ela continua dita embaixo.
+  const nivelDosTreinos = quadro.data?.overall.answered ? quadro.data.overall.level : null;
+  const nivelAtual = data.cefr_level ?? nivelDosTreinos ?? null;
+  const treinosDivergem = Boolean(data.cefr_level && nivelDosTreinos && nivelDosTreinos !== data.cefr_level);
   const reached = nivelAtual ? BANDS.indexOf(nivelAtual as (typeof BANDS)[number]) + 1 : 0;
   // Um nivelamento aberto só vale como retomada se ainda faltar responder.
   const emAndamento =
@@ -245,10 +242,10 @@ export function EnglishPage() {
             </div>
             <p style={{ fontSize: 11.5, color: "rgba(233,233,237,.65)", margin: "8.4px 0 14px" }}>
               {data.cefr_level
-                ? estimativaFirme
-                  ? `Estimado com o nivelamento (${data.cefr_level}) e os treinos. Refaça o nivelamento quando quiser uma medida nova.`
-                  : "Medido no nivelamento. Os treinos passam a ajustar este número quando tiverem respostas suficientes."
-                : "Sem nivelamento ainda. O teste leva cerca de 12 minutos — dá para treinar antes, e o nível se ajusta com as respostas."}
+                ? treinosDivergem
+                  ? `Medido no nivelamento. Nos treinos você está rendendo como ${nivelDosTreinos} — o quadro por habilidade mostra o que puxa para baixo. Refaça o nivelamento quando quiser atualizar este número.`
+                  : "Medido no nivelamento, e os treinos confirmam. Refaça o nivelamento quando quiser uma medida nova."
+                : "Sem nivelamento ainda. O número vem dos treinos; o teste leva cerca de 12 minutos e dá a medida de referência."}
             </p>
             {emAndamento ? (
               <Retomar
