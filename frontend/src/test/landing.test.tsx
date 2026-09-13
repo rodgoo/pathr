@@ -74,3 +74,10 @@ it("rodapé leva aos termos, à privacidade e à segurança", async () => {
     expect(within(rodape).getByRole("link", { name: nome })).toBeInTheDocument();
   }
 });
+
+it("clicar em Privacidade no rodapé abre a política", async () => {
+  abrir("/");
+  const rodape = await screen.findByRole("navigation", { name: "Termos e políticas" });
+  await userEvent.click(within(rodape).getByRole("link", { name: "Privacidade" }));
+  expect(await screen.findByRole("heading", { level: 1, name: "Política de privacidade" })).toBeInTheDocument();
+});

@@ -252,6 +252,14 @@ export function NoticesTab() {
             </div>
           </div>
         ) : null}
+
+        <p style={{ margin: "11.2px 0 0", fontSize: 12, color: TEXT.faint, lineHeight: 1.55 }}>
+          O que coletamos, com quem compartilhamos e por quanto tempo guardamos está na{" "}
+          <a href="/privacidade" target="_blank" rel="noopener" style={{ color: "inherit" }}>
+            Política de privacidade
+          </a>
+          .
+        </p>
       </Panel>
 
       {erro ? <ErrorState message={erro} /> : null}

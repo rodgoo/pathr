@@ -88,9 +88,26 @@ export function SettingsPage() {
       {tab === "integracoes" ? <ApiStatusTab /> : null}
       {tab === "moderacao" ? <ModeracaoRelatos /> : null}
 
+      {/* Em aba nova: o documento é longo, e voltar dele não deve custar a
+          posição em que a pessoa estava nas configurações. */}
+      <nav
+        aria-label="Documentos legais"
+        style={{ margin: "28px 0 0", display: "flex", flexWrap: "wrap", gap: "6px 16px", fontSize: 12.5 }}
+      >
+        {[
+          ["/termos", "Termos de uso"],
+          ["/privacidade", "Política de privacidade"],
+          ["/seguranca", "Segurança"],
+        ].map(([href, rotulo]) => (
+          <a key={href} href={href} target="_blank" rel="noopener" style={{ color: "rgba(233,233,237,.6)" }}>
+            {rotulo}
+          </a>
+        ))}
+      </nav>
+
       {/* A licença dos ícones (CC BY 4.0) pede crédito visível — um
           comentário no código não conta, porque quem usa o app nunca o lê. */}
-      <p style={{ margin: "28px 0 0", fontSize: 11.5, color: "rgba(233,233,237,.4)" }}>
+      <p style={{ margin: "12px 0 0", fontSize: 11.5, color: "rgba(233,233,237,.4)" }}>
         Ícones:{" "}
         <a
           href="https://github.com/krystonschwarze/coolicons"

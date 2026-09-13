@@ -18,6 +18,7 @@ import { LandingPage } from "@/pages/LandingPage";
 import { SignupPage } from "@/pages/auth/SignupPage";
 import { ForgotPasswordPage, ResetPasswordPage } from "@/pages/auth/PasswordPages";
 import { VerifyEmailPage } from "@/pages/auth/VerifyEmailPage";
+import { LegalPage, ehPaginaLegal } from "@/pages/legal/LegalPage";
 import { CodeLabPage } from "@/pages/CodeLabPage";
 import { CoursesPage } from "@/pages/CoursesPage";
 import { JobsPage } from "@/pages/JobsPage";
@@ -61,6 +62,10 @@ export function App() {
   }
   if (location.path === "/nova-senha") {
     return <ResetPasswordPage token={location.token} onNavigate={navigate} />;
+  }
+  // Termos, privacidade e segurança: texto público, com ou sem sessão.
+  if (ehPaginaLegal(location.path)) {
+    return <LegalPage path={location.path} onNavigate={navigate} />;
   }
 
   if (status === "checking") return <Booting />;
