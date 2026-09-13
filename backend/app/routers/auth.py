@@ -416,6 +416,47 @@ def _consume_backup_code(supabase: Client, user_id: str, code: str) -> bool:
     return False
 
 
+# Quanto tempo depois de uma troca um token antigo ainda conta como corrida da
+# mesma tela, e não como cookie roubado. Cobre a rede lenta do celular; roubo
+# de verdade usa o cookie bem depois disso.
+JANELA_DE_CORRIDA = timedelta(seconds=60)
+
+
+def _reuso(supabase: Client, session: dict) -> Optional[str]:
+    """O que significa usar este token já revogado.
+
+    - "corrida": ele foi TROCADO há instantes (tem sucessor recente).
+    - "roubo": foi trocado há tempo — alguém guardou o cookie velho.
+    - None: não tem sucessor — saiu por logout ou já foi derrubado. Não há
+      token novo para um invasor estar usando, então não é sinal de roubo.
+    """
+    sucessores = (
+        supabase.table("pathr_refresh_token")
+        .select("id,created_at")
+        .eq("rotated_from", str(session["id"]))
+        .limit(1)
+        .execute()
+        .data
+        or []
+    )
+    if not sucessores:
+        return None
+    revogado_em = _parse_momento(session.get("revoked_at"))
+    if revogado_em and _now() - revogado_em <= JANELA_DE_CORRIDA:
+        return "corrida"
+    return "roubo"
+
+
+def _parse_momento(valor: Any) -> Optional[datetime]:
+    if not valor:
+        return None
+    try:
+        momento = datetime.fromisoformat(str(valor).replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return momento if momento.tzinfo else momento.replace(tzinfo=timezone.utc)
+
+
 @router.post("/refresh", response_model=SessionOut)
 def refresh(
     request: Request,
@@ -448,14 +489,34 @@ def refresh(
     user_id = str(session["user_id"])
 
     if session.get("revoked_at"):
-        supabase.table("pathr_refresh_token").update({"revoked_at": _now().isoformat()}).eq(
-            "user_id", user_id
-        ).is_("revoked_at", "null").execute()
-        _log_event(supabase, "refresh_reuse", user_id=user_id, request=request)
+        tipo = _reuso(supabase, session)
+        if tipo == "corrida":
+            # Duas renovações do MESMO cliente ao mesmo tempo: a primeira
+            # trocou o token, a segunda chegou com o anterior. Não é roubo — é
+            # a tela disparando várias chamadas que expiraram juntas. Tratar
+            # como roubo derrubava todas as sessões no meio de um clique: a
+            # ação era desfeita e a conta, desconectada.
+            users = supabase.table("pathr_user").select("*").eq("id", user_id).limit(1).execute().data
+            if users:
+                return _issue_session(supabase, users[0], response, request, rotated_from=str(session["id"]))
+        if tipo == "roubo":
+            supabase.table("pathr_refresh_token").update({"revoked_at": _now().isoformat()}).eq(
+                "user_id", user_id
+            ).is_("revoked_at", "null").execute()
+            _log_event(supabase, "refresh_reuse", user_id=user_id, request=request)
+            _clear_session_cookies(response)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Sessão encerrada por segurança. Entre novamente.",
+            )
+        # Sem sucessor: a sessão saiu por logout ou já tinha sido derrubada.
+        # Pedir para entrar de novo basta. Revogar tudo aqui era o que fazia
+        # dois aparelhos se derrubarem em cadeia — cada 401 de um virava
+        # "roubo" contra o outro.
         _clear_session_cookies(response)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Sessão encerrada por segurança. Entre novamente.",
+            detail="Sessão encerrada. Entre novamente.",
         )
 
     expires_at = datetime.fromisoformat(str(session["expires_at"]).replace("Z", "+00:00"))

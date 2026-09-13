@@ -242,3 +242,84 @@ def test_reenvio_publico_responde_igual_em_todos_os_casos(cliente, banco, cenari
         "Se houver uma conta com este e-mail aguardando confirmação, enviamos um novo link."
     )
     assert banco.linhas("pathr_email_token") == []
+
+
+# ---------------------------------------------------------------------------
+# Renovação de sessão: corrida não é roubo
+# ---------------------------------------------------------------------------
+#
+# Caso de produção: duas renovações quase simultâneas (várias chamadas da
+# mesma tela expirando juntas) faziam a segunda cair em "reuso de token" e
+# revogar TODAS as sessões. A pessoa clicava em desmarcar uma skill e era
+# desconectada; e um aparelho derrubado derrubava o outro em cadeia.
+
+
+from datetime import datetime, timezone  # noqa: E402
+
+from app.deps import REFRESH_COOKIE  # noqa: E402
+from app.security import hash_token  # noqa: E402
+
+
+def _sessao(id_, token, *, revogada_ha=None, rotated_from=None, user_id="11111111-1111-1111-1111-111111111111"):
+    agora = datetime.now(timezone.utc)
+    return {
+        "id": id_,
+        "user_id": user_id,
+        "token_hash": hash_token(token),
+        "expires_at": (agora + timedelta(days=30)).isoformat(),
+        "revoked_at": (agora - revogada_ha).isoformat() if revogada_ha is not None else None,
+        "rotated_from": rotated_from,
+        "created_at": agora.isoformat(),
+    }
+
+
+def _renova(cliente, token):
+    cliente.cookies.set(REFRESH_COOKIE, token)
+    return cliente.post("/auth/refresh")
+
+
+def test_renovacao_concorrente_nao_derruba_as_sessoes(banco, cliente):
+    banco.tabelas["pathr_user"] = [usuario(email_verified_at="2026-01-01T00:00:00+00:00")]
+    banco.tabelas["pathr_refresh_token"] = [
+        # O token velho acabou de ser trocado por outra renovação da mesma tela.
+        _sessao("velha", "token-velho", revogada_ha=timedelta(seconds=2)),
+        _sessao("nova", "token-novo", rotated_from="velha"),
+        _sessao("celular", "token-celular"),
+    ]
+
+    resposta = _renova(cliente, "token-velho")
+
+    assert resposta.status_code == 200
+    vivas = [s["id"] for s in banco.linhas("pathr_refresh_token") if not s.get("revoked_at")]
+    assert {"nova", "celular"} <= set(vivas)
+    assert "refresh_reuse" not in banco.eventos()
+
+
+def test_token_de_sessao_ja_derrubada_nao_derruba_os_outros_aparelhos(banco, cliente):
+    banco.tabelas["pathr_user"] = [usuario(email_verified_at="2026-01-01T00:00:00+00:00")]
+    banco.tabelas["pathr_refresh_token"] = [
+        # Derrubada (logout/revogação geral): não tem sucessor.
+        _sessao("pc", "token-pc", revogada_ha=timedelta(minutes=5)),
+        _sessao("celular", "token-celular"),
+    ]
+
+    resposta = _renova(cliente, "token-pc")
+
+    assert resposta.status_code == 401
+    celular = next(s for s in banco.linhas("pathr_refresh_token") if s["id"] == "celular")
+    assert celular.get("revoked_at") is None
+
+
+def test_reuso_de_token_trocado_ha_tempo_continua_sendo_roubo(banco, cliente):
+    banco.tabelas["pathr_user"] = [usuario(email_verified_at="2026-01-01T00:00:00+00:00")]
+    banco.tabelas["pathr_refresh_token"] = [
+        _sessao("velha", "token-roubado", revogada_ha=timedelta(hours=2)),
+        _sessao("nova", "token-atual", rotated_from="velha"),
+        _sessao("celular", "token-celular"),
+    ]
+
+    resposta = _renova(cliente, "token-roubado")
+
+    assert resposta.status_code == 401
+    assert all(s.get("revoked_at") for s in banco.linhas("pathr_refresh_token"))
+    assert "refresh_reuse" in banco.eventos()
