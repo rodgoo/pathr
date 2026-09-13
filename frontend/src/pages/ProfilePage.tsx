@@ -22,6 +22,7 @@ import { MASTERY_LABELS } from "@/components/profile/TechnologyRow";
 import { Icon } from "@/components/ui/icons";
 import { linkParaLinkedIn } from "@/pages/CoursesPage";
 
+import { CATEGORIAS_FORA_DAS_SKILLS } from "@/components/profile/SkillsTab";
 import { linkExterno } from "@/lib/linkExterno";
 export function ProfilePage() {
   const { user } = useAuth();
@@ -46,7 +47,8 @@ export function ProfilePage() {
   // ensino; de N3 para cima é revisão curta. A ordem abaixo é a ordem em que
   // o plano ataca os assuntos.
   // O idioma tem nível próprio (CEFR), medido e mostrado no módulo de Idiomas.
-  const tecnicas = tags.data.filter((tag) => tag.category !== "idioma");
+  // As mesmas categorias que a aba Skills esconde (idioma e domínio de negócio).
+  const tecnicas = tags.data.filter((tag) => !CATEGORIAS_FORA_DAS_SKILLS.has(tag.category));
   const dominadas = tecnicas.filter((tag) => tag.proficiency >= 3);
   const parciais = tecnicas.filter((tag) => tag.proficiency > 0 && tag.proficiency < 3);
   const doZero = tecnicas.filter((tag) => tag.proficiency === 0);
