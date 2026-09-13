@@ -170,7 +170,7 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
             marginTop: 11.2,
             padding: "11.2px 14px",
             borderRadius: 8,
-            background: "#1b1d2b",
+            background: "#0c0c10",
             borderLeft: `2px solid ${C.ambar}`,
             fontSize: 12.5,
             color: "rgba(233,233,237,.75)",
@@ -220,7 +220,7 @@ function Correcao({ resultado }: { resultado: ExplanationResult }) {
         marginTop: 14,
         padding: 14,
         borderRadius: 8,
-        background: "#1b1d2b",
+        background: "#0c0c10",
         borderLeft: `2px solid ${bom ? C.verde : C.ambar}`,
       }}
     >

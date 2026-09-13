@@ -188,7 +188,7 @@ function Topo({ onNavigate }: { onNavigate: Navegar }) {
         position: "sticky", top: 0, zIndex: 10,
         display: "flex", alignItems: "center", gap: 12,
         padding: "14px clamp(16px, 4vw, 40px)",
-        background: "rgba(22,24,38,.82)", backdropFilter: "blur(10px)",
+        background: "rgba(0,0,0,.8)", backdropFilter: "blur(10px)",
         borderBottom: `1px solid ${HAIRLINE}`,
       }}
     >

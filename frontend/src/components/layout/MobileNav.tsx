@@ -112,7 +112,7 @@ export function MobileNav() {
               overflowY: "auto",
               background: PANEL,
               borderRadius: "14px 14px 0 0",
-              boxShadow: "0 -1px 0 0 #2b2e3d",
+              boxShadow: "0 -1px 0 0 #222228",
               display: "flex",
               flexDirection: "column",
               gap: 2.8,
@@ -152,7 +152,7 @@ export function MobileNav() {
           // uma coluna vazia sempre que um destino mudava para a folha.
           gridTemplateColumns: `repeat(${BARRA.length + 1},1fr)`,
           background: PANEL,
-          boxShadow: "0 -1px 0 0 #2b2e3d",
+          boxShadow: "0 -1px 0 0 #222228",
           // O indicador de gestos do iPhone mora aqui embaixo; em paisagem, a
           // Dynamic Island come uma das laterais. Os tres `env` sao o que
           // impede um botao de cair debaixo de qualquer um dos dois.

@@ -57,7 +57,7 @@ export function PhaseColumns({ roadmap }: { roadmap: Roadmap }) {
                     padding: 11.2,
                     borderRadius: 8,
                     border: 0,
-                    background: "#1b1d2b",
+                    background: "#0c0c10",
                     boxShadow: `0 0 0 1px ${style.border}`,
                     color: "inherit",
                     font: "inherit",

@@ -91,7 +91,7 @@ export function Sidebar() {
         padding: "14px 11.2px",
         borderRadius: 14,
         background: PANEL,
-        boxShadow: "0 0 0 1px #2b2e3d",
+        boxShadow: "0 0 0 1px #222228",
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8.4 }}>

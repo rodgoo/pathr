@@ -2,8 +2,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
-  --color-bg: #161826;
-  --color-surface: #232532;
+  --color-bg: #000000;
+  --color-surface: #16161b;
   --color-text: #e9e9ed;
   --color-accent: #9184d9; /* review round 7 (Barron): the accent moves to
      the product's blurple — OKLCH hue 289.2, the hue of the app's own Pro
@@ -54,7 +54,7 @@
      round-7 blurple raised it past the ground's) with a lighter bloom and
      a ghost tint of the same hue, while the slide grounds stay
      desaturated. Deck-scale fills only — not interface colors. */
-  --color-section: #262a60;
+  --color-section: #17151f;
   --color-section-glow: #353b80;
   --color-section-ghost: #4c5397;
 
@@ -370,7 +370,7 @@ textarea.input { min-height: 90px; resize: vertical; }
   margin: 0 0 1.2em;
   padding: 12px 14px;
   border-radius: 8px;
-  background: #161826;
+  background: #000000;
   box-shadow: inset 0 0 0 1px rgba(233, 233, 237, 0.1);
   overflow-x: auto;
   font-size: 0.88em;
@@ -568,7 +568,7 @@ textarea.input { min-height: 90px; resize: vertical; }
   padding: 4px;
   list-style: none;
   overflow-y: auto;
-  background: #1b1d2b;
+  background: #0c0c10;
   border-radius: var(--radius-md);
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.45), 0 0 0 1px var(--color-divider);
   animation: sel-entra 0.12s ease-out;
@@ -726,7 +726,7 @@ input[type="checkbox"]:disabled {
   pointer-events: none;
   padding: 10px 12px;
   border-radius: var(--radius-md);
-  background: #1b1d2b;
+  background: #0c0c10;
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5), 0 0 0 1px var(--color-divider);
   font-size: 12px;
   line-height: 1.45;

@@ -235,12 +235,12 @@ export function monthGrid(activity: ActivitySummary | null, today = new Date()):
         : future
           ? "rgba(233,233,237,.3)"
           : dark
-            ? "#161826"
+            ? "#000000"
             : "#e9e9ed",
       minutesColor: outside
         ? "transparent"
         : dark
-          ? "#161826"
+          ? "#000000"
           : idle
             ? "rgba(233,233,237,.6)"
             : "#e9e9ed",

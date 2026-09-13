@@ -52,7 +52,7 @@ export function AuthShell({
             padding: 22.4,
             borderRadius: 14,
             background: PANEL,
-            boxShadow: "0 0 0 1px #2b2e3d",
+            boxShadow: "0 0 0 1px #222228",
           }}
         >
           <h1 style={{ fontSize: 24, margin: "0 0 5.6px" }}>{title}</h1>

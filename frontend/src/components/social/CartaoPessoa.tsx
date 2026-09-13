@@ -139,7 +139,7 @@ export function CartaoPessoa({
         gap: 11.2,
         padding: 14,
         borderRadius: 12,
-        background: "#1b1d2b",
+        background: "#0c0c10",
         boxShadow: `inset 0 0 0 1px ${HAIRLINE}`,
         minWidth: 0,
       }}

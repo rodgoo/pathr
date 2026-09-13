@@ -169,7 +169,7 @@ export function Placement({
               marginTop: 16.8,
               padding: 14,
               borderRadius: 8,
-              background: "#1b1d2b",
+              background: "#0c0c10",
               borderLeft: `2px solid ${feedback.is_correct ? C.verde : ACC}`,
             }}
           >

@@ -206,7 +206,7 @@ function Balao({
         zIndex: 2,
         padding: "11.2px 14px",
         borderRadius: 8,
-        background: "#1b1d2b",
+        background: "#0c0c10",
         boxShadow: `0 8px 24px rgba(0,0,0,.45), 0 0 0 1px ${HAIRLINE}`,
         fontSize: 12.5,
         lineHeight: 1.5,

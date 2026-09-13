@@ -145,7 +145,7 @@ export function NoticesTab() {
                 alignItems: "flex-start",
                 padding: "11.2px 14px",
                 borderRadius: 8,
-                background: "#1b1d2b",
+                background: "#0c0c10",
                 cursor: "pointer",
               }}
             >

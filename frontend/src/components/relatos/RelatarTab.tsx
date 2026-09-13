@@ -161,7 +161,7 @@ export function RelatarTab() {
           <Kicker style={{ display: "block", marginBottom: 11.2 }}>Seus relatos</Kicker>
           <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8.4 }}>
             {meus.data.map((relato) => (
-              <li key={relato.id} style={{ padding: "10px 12px", borderRadius: 8, background: "#1b1d2b" }}>
+              <li key={relato.id} style={{ padding: "10px 12px", borderRadius: 8, background: "#0c0c10" }}>
                 <div style={{ display: "flex", gap: 8.4, alignItems: "baseline", flexWrap: "wrap" }}>
                   <span style={{ fontSize: 12, color: TEXT.faint }}>
                     {relato.kind === "reclamacao" ? "Reclamação" : "Sugestão"} ·{" "}

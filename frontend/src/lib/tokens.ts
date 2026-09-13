@@ -15,11 +15,11 @@ export const ACC4 = "#b5abfc";
 /** `--color-accent-300`, the step readable at paragraph size. */
 export const ACC3 = "#d2cefd";
 /** `--color-surface` */
-export const SURF = "#232532";
+export const SURF = "#16161b";
 /** `--color-bg` */
-export const BG = "#161826";
+export const BG = "#000000";
 /** The panel ground: one step above `--color-bg`, below `--color-surface`. */
-export const PANEL = "#1b1d2b";
+export const PANEL = "#0c0c10";
 /** The 1px inset ring the segmented control paints when selected. */
 export const RING = `inset 0 0 0 1px ${ACC}`;
 
@@ -89,8 +89,8 @@ export const HEAT = [
 export const tint = (hex: string, pct: number): string =>
   `color-mix(in srgb, ${hex} ${pct}%, transparent)`;
 
-/** The section ground: the one saturated field the system allows. */
-export const SECTION_GRADIENT = "linear-gradient(135deg,#262a60,#232532)";
+/** The section ground: a near-black with a trace of the accent — AMOLED, sem o lilás de antes. */
+export const SECTION_GRADIENT = "linear-gradient(135deg,#17151f,#0c0c10)";
 
 /**
  * A linear congruential generator.

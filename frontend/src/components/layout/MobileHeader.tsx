@@ -56,7 +56,7 @@ export function MobileHeader() {
         // precisa. Num navegador de desktop o `--safe-top` é zero, e é o 22
         // que sustenta o respiro sozinho.
         padding: `calc(var(--safe-top) + 22px) calc(11.2px + var(--safe-right)) 10px calc(11.2px + var(--safe-left))`,
-        background: "rgba(22,24,38,.78)",
+        background: "rgba(0,0,0,.78)",
         backdropFilter: "saturate(180%) blur(18px)",
         WebkitBackdropFilter: "saturate(180%) blur(18px)",
         boxShadow: "inset 0 -1px 0 0 rgba(233,233,237,.10)",

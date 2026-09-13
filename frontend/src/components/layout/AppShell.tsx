@@ -40,7 +40,7 @@ const PAINEL: React.CSSProperties = {
   gap: 11.2,
   borderRadius: 14,
   background: PANEL,
-  boxShadow: "0 0 0 1px #2b2e3d",
+  boxShadow: "0 0 0 1px #222228",
 };
 
 export function AppShell({ children }: { children: ReactNode }) {

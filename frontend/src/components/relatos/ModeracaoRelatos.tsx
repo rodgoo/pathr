@@ -83,7 +83,7 @@ function ItemModeracao({ relato, onSalvo }: { relato: RelatoModeracao; onSalvo: 
 
   const autor = relato.author;
   return (
-    <li style={{ padding: 14, borderRadius: 10, background: "#1b1d2b", display: "flex", flexDirection: "column", gap: 10 }}>
+    <li style={{ padding: 14, borderRadius: 10, background: "#0c0c10", display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8.4, alignItems: "baseline" }}>
         <span style={{ fontSize: 12, color: relato.kind === "reclamacao" ? C.ambar : C.verde }}>
           {relato.kind === "reclamacao" ? "Reclamação" : "Sugestão"}

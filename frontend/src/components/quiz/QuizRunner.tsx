@@ -236,7 +236,7 @@ function Review({
               style={{
                 padding: 14,
                 borderRadius: 8,
-                background: "#1b1d2b",
+                background: "#0c0c10",
                 borderLeft: `2px solid ${item.is_correct ? C.verde : C.ambar}`,
               }}
             >

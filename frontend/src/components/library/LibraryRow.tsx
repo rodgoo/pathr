@@ -75,7 +75,7 @@ export function LibraryRow({
         gap: 11.2,
         padding: 12,
         borderRadius: 8,
-        background: "#232532",
+        background: "#16161b",
         boxShadow: "0 0 0 1px #3f424d",
       }}
     >
