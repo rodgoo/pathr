@@ -74,6 +74,12 @@ def slugify(name: str) -> str:
 
 def normalize_category(raw: Optional[str]) -> str:
     value = (raw or "").strip().lower()
+    # O catálogo agrupa framework pelo lado em que ele roda (Spring Boot em
+    # backend, React em frontend). Uma tag nova "framework" abria um grupo com
+    # um item só na tela de competências; backend é o lado mais comum no que os
+    # currículos chamam de framework.
+    if value == "framework":
+        return "backend"
     return value if value in CATEGORIES else "ferramenta"
 
 

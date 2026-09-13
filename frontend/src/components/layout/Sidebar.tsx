@@ -7,7 +7,7 @@
  * um plano ainda não gerado.
  */
 
-import { english as englishApi, roadmap as roadmapApi } from "@/api/endpoints";
+import { english as englishApi, roadmap as roadmapApi, social } from "@/api/endpoints";
 import { useAppState } from "@/hooks/useAppState";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@/hooks/useApi";
@@ -30,6 +30,8 @@ export function Sidebar() {
 
   const roadmap = useQuery(() => roadmapApi.current(), []);
   const english = useQuery(() => englishApi.profile(), []);
+  const amizades = useQuery(() => social.amigos(), []);
+  const convites = amizades.data?.recebidos.length ?? 0;
 
   // O material aberto pertence à tela de onde veio — ver MobileNav.
   const telaAtiva = state.screen === "material" ? state.resourceReturn : state.screen;
@@ -54,6 +56,9 @@ export function Sidebar() {
         { label: "Trilha atual", screen: "modulo", icon: "book" },
         { label: "Cursos", screen: "cursos", icon: "award" },
         { label: "Vagas", screen: "vagas", icon: "suitcase" },
+        // O contador é de convites RECEBIDOS: é o único número aqui que pede
+        // uma ação, e sem ele o convite ficaria esperando alguém abrir a aba.
+        { label: "Amigos", screen: "amigos", icon: "user", badge: convites ? String(convites) : undefined },
       ],
     },
     {

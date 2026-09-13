@@ -96,7 +96,7 @@ SEED: list[tuple[str, str, int, list[str]]] = [
     ("Quarkus", "backend", 35, []),
     ("Micronaut", "backend", 15, []),
     ("Jakarta EE", "backend", 30, ["java ee", "j2ee", "jee"]),
-    ("JPA", "backend", 60, ["spring data jpa", "jakarta persistence"]),
+    ("JPA", "backend", 60, ["spring data jpa", "jakarta persistence", "jpa/hibernate", "jpa hibernate"]),
     ("Hibernate", "backend", 50, []),
     ("JDBC", "backend", 25, []),
     ("Maven", "ferramenta", 45, []),

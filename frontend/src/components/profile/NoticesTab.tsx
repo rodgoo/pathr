@@ -23,6 +23,7 @@ import { C, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel } from "@/components/ui/primitives";
+import { PrivacidadeSocial } from "@/components/social/PrivacidadeSocial";
 
 const AVISOS: readonly { chave: string; titulo: string; detalhe: string }[] = [
   {
@@ -164,6 +165,8 @@ export function NoticesTab() {
           ))}
         </div>
       </Panel>
+
+      <PrivacidadeSocial />
 
       <Panel pad={16.8}>
         <Kicker style={{ display: "block", marginBottom: 11.2 }}>Conta</Kicker>

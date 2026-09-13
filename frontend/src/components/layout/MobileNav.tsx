@@ -46,6 +46,7 @@ const FOLHA: Destino[] = [
   { label: "Vagas", screen: "vagas", icon: "suitcase" },
   { label: "Código", screen: "codigo", icon: "code" },
   { label: "Idiomas", screen: "ingles", icon: "flag" },
+  { label: "Amigos", screen: "amigos", icon: "user" },
   { label: "Perfil e tags", screen: "perfil", icon: "user" },
   { label: "Currículo", screen: "cv", icon: "file" },
   { label: "Configurações", screen: "config", icon: "cog" },

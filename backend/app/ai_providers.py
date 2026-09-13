@@ -760,6 +760,15 @@ async def _rotate(candidates: list[_Candidate], system_prompt: str, user_prompt:
     if not candidates:
         raise AiProviderError(empty_message)
 
+    # A cota gratuita dos provedores é do app inteiro. Contar aqui, no ponto
+    # por onde TODA chamada ao modelo passa, é o que impede uma rota nova de
+    # esquecer o limite — e uma pessoa gerando quiz em laço de derrubar a IA
+    # de todos. Ver services/limites.py.
+    from app.database import get_supabase
+    from app.services.limites import consumir_ia
+
+    consumir_ia(get_supabase)
+
     winner: dict[str, Any] = {}
 
     async def record(candidate: _Candidate, result: tuple[dict, int]) -> None:

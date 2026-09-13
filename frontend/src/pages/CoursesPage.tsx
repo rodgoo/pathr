@@ -27,23 +27,50 @@
  */
 
 import { useState } from "react";
+import { api } from "@/api/client";
 import { courses as coursesApi } from "@/api/endpoints";
-import type { Course, DemandBand } from "@/api/types";
+import type { Course, CourseList, DemandBand } from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
 import { useQuery } from "@/hooks/useApi";
 import { C, HAIRLINE, SIZE, TEXT, tint } from "@/lib/tokens";
+import { CATEGORIAS } from "@/components/profile/SkillsTab";
 import { Icon } from "@/components/ui/icons";
 import { Segmented } from "@/components/ui/Segmented";
+import { Select } from "@/components/ui/Select";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
 
 type Filtro = "todos" | "gratuitos" | "pagos";
+type Escopo = "voce" | "catalogo";
+type Ordem = "relevancia" | "mais_procurados" | "menos_procurados";
+
+/** O curso com as categorias das suas tecnologias (backend, cloud…), para o filtro. */
+type Curso = Course & { categorias?: string[] };
 
 const FILTROS: readonly { value: Filtro; label: string }[] = [
   { value: "todos", label: "Todos" },
   { value: "gratuitos", label: "Gratuitos" },
   { value: "pagos", label: "Pagos" },
 ];
+
+const ESCOPOS: readonly { value: Escopo; label: string }[] = [
+  { value: "voce", label: "Para você" },
+  { value: "catalogo", label: "Catálogo inteiro" },
+];
+
+const ORDENS: readonly { value: Ordem; label: string }[] = [
+  { value: "relevancia", label: "Mais relevantes para você" },
+  { value: "mais_procurados", label: "Mais procurados primeiro" },
+  { value: "menos_procurados", label: "Menos procurados primeiro" },
+];
+
+const TODAS = "todas";
+
+const NOME_DA_CATEGORIA = new Map(CATEGORIAS.map((categoria) => [categoria.slug, categoria.label]));
+
+function semAcento(texto: string): string {
+  return texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+}
 
 const NIVEL: Record<Course["nivel"], string> = {
   iniciante: "Iniciante",
@@ -97,16 +124,57 @@ export function linkParaLinkedIn(
 
 export function CoursesPage() {
   const { dispatch } = useAppState();
-  const lista = useQuery(() => coursesApi.list(), []);
+  const [escopo, setEscopo] = useState<Escopo>("voce");
+  const lista = useQuery(
+    () => (escopo === "catalogo" ? api.get<CourseList>("/courses?todos=true") : coursesApi.list()),
+    [escopo],
+  );
   const [filtro, setFiltro] = useState<Filtro>("todos");
+  const [busca, setBusca] = useState("");
+  const [categoria, setCategoria] = useState<string>(TODAS);
+  const [stack, setStack] = useState<string>(TODAS);
+  const [ordem, setOrdem] = useState<Ordem>("relevancia");
 
   if (lista.loading) return <Loading label="Procurando cursos com certificado…" />;
   if (lista.error) return <ErrorState message={lista.error} onRetry={lista.reload} />;
   if (!lista.data) return null;
 
-  const { cursos, conferido_em, tem_pedido } = lista.data;
-  const gratuitos = cursos.filter((curso) => curso.certificado.gratuito);
-  const pagos = cursos.filter((curso) => !curso.certificado.gratuito);
+  const { conferido_em, tem_pedido } = lista.data;
+  const cursos = lista.data.cursos as Curso[];
+
+  // As opções dos filtros saem da lista que chegou: filtrar por uma categoria
+  // que não tem curso nenhum só levaria a uma tela vazia.
+  const categorias = [...new Set(cursos.flatMap((curso) => curso.categorias ?? []))].sort((a, b) =>
+    (NOME_DA_CATEGORIA.get(a) ?? a).localeCompare(NOME_DA_CATEGORIA.get(b) ?? b, "pt-BR"),
+  );
+  const tecnologias = [...new Set(cursos.flatMap((curso) => curso.tags))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+
+  const termo = semAcento(busca.trim());
+  const filtrados = cursos
+    .filter(
+      (curso) =>
+        (!termo || semAcento([curso.titulo, curso.emissor, ...curso.tags].join(" ")).includes(termo)) &&
+        (categoria === TODAS || (curso.categorias ?? []).includes(categoria)) &&
+        (stack === TODAS || curso.tags.includes(stack)),
+    )
+    // Gratuito primeiro continua valendo: a divisão em blocos abaixo garante.
+    // Aqui só muda a ordem dentro de cada bloco.
+    .sort((a, b) =>
+      ordem === "mais_procurados"
+        ? b.demanda.nota - a.demanda.nota
+        : ordem === "menos_procurados"
+          ? a.demanda.nota - b.demanda.nota
+          : 0,
+    );
+  const gratuitos = filtrados.filter((curso) => curso.certificado.gratuito);
+  const pagos = filtrados.filter((curso) => !curso.certificado.gratuito);
+  const filtrando = Boolean(termo) || categoria !== TODAS || stack !== TODAS;
+
+  function limpar() {
+    setBusca("");
+    setCategoria(TODAS);
+    setStack(TODAS);
+  }
 
   return (
     <div style={SCREEN_IN}>
@@ -115,7 +183,7 @@ export function CoursesPage() {
       >
         <div style={{ flex: 1, minWidth: 250 }}>
           <div style={{ fontSize: SIZE.apoio, color: TEXT.muted }}>
-            {cursos.length} {cursos.length === 1 ? "curso" : "cursos"} · {gratuitos.length} com certificado
+            {filtrados.length} {filtrados.length === 1 ? "curso" : "cursos"} · {gratuitos.length} com certificado
             gratuito
           </div>
           <h1 style={{ fontSize: 28, margin: 0 }}>Cursos com certificado</h1>
@@ -124,16 +192,100 @@ export function CoursesPage() {
             certificado, e os gratuitos vêm sempre primeiro.
           </p>
         </div>
-        {cursos.length > 0 ? (
-          <Segmented
-            name="cursos-filtro"
-            label="Tipo de certificado"
-            value={filtro}
-            options={FILTROS}
-            onChange={setFiltro}
-          />
-        ) : null}
+        <Segmented name="cursos-escopo" label="Quais cursos" value={escopo} options={ESCOPOS} onChange={setEscopo} />
       </header>
+
+      {cursos.length > 0 ? (
+        <Panel pad={14} style={{ marginBottom: 16.8 }}>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 200px), 1fr))",
+              gap: 8.4,
+              alignItems: "end",
+            }}
+          >
+            <div className="field" style={{ margin: 0 }}>
+              <label htmlFor="cursos-busca">Buscar</label>
+              <input
+                id="cursos-busca"
+                className="input"
+                type="search"
+                placeholder="Curso, emissor ou tecnologia"
+                value={busca}
+                onChange={(evento) => setBusca(evento.target.value)}
+              />
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label htmlFor="cursos-categoria">Categoria</label>
+              <Select
+                id="cursos-categoria"
+                value={categoria}
+                onChange={setCategoria}
+                options={[
+                  { value: TODAS, label: "Todas as categorias" },
+                  ...categorias.map((slug) => ({ value: slug, label: NOME_DA_CATEGORIA.get(slug) ?? slug })),
+                ]}
+              />
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label htmlFor="cursos-stack">Stack</label>
+              <Select
+                id="cursos-stack"
+                value={stack}
+                onChange={setStack}
+                options={[
+                  { value: TODAS, label: "Todas as tecnologias" },
+                  ...tecnologias.map((nome) => ({ value: nome, label: nome })),
+                ]}
+              />
+            </div>
+            <div className="field" style={{ margin: 0 }}>
+              <label htmlFor="cursos-ordem">Ordenar</label>
+              <Select id="cursos-ordem" value={ordem} onChange={setOrdem} options={ORDENS} />
+            </div>
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8.4, marginTop: 10 }}>
+            <Segmented
+              name="cursos-filtro"
+              label="Tipo de certificado"
+              value={filtro}
+              options={FILTROS}
+              onChange={setFiltro}
+            />
+            {filtrando ? (
+              <button type="button" className="btn btn-ghost" style={{ fontSize: 12 }} onClick={limpar}>
+                <Icon name="x" size={14} />
+                Limpar filtros
+              </button>
+            ) : null}
+          </div>
+        </Panel>
+      ) : null}
+
+      {cursos.length > 0 && filtrados.length === 0 ? (
+        <EmptyState
+          title="Nenhum curso com estes filtros"
+          description={
+            escopo === "voce"
+              ? "Tente outra busca ou procure no catálogo inteiro, que traz também o que você ainda não pediu."
+              : "Tente outra busca, categoria ou tecnologia."
+          }
+          action={
+            escopo === "voce" ? (
+              <button type="button" className="btn btn-secondary" onClick={() => setEscopo("catalogo")}>
+                <Icon name="search" size={15} />
+                Buscar no catálogo inteiro
+              </button>
+            ) : (
+              <button type="button" className="btn btn-secondary" onClick={limpar}>
+                <Icon name="x" size={15} />
+                Limpar filtros
+              </button>
+            )
+          }
+        />
+      ) : null}
 
       {cursos.length === 0 ? (
         tem_pedido ? (
@@ -167,7 +319,7 @@ export function CoursesPage() {
             }
           />
         )
-      ) : (
+      ) : filtrados.length === 0 ? null : (
         <>
           {filtro !== "pagos" ? (
             <Bloco titulo="Certificado gratuito" cursos={gratuitos} vazio="Nenhum curso gratuito para o que você pediu." />

@@ -144,3 +144,73 @@ describe("cursos com certificado", () => {
     expect(url.searchParams.get("issueMonth")).toBe("9");
   });
 });
+
+describe("buscar, filtrar e ordenar cursos", () => {
+  const variada: CourseList = {
+    conferido_em: "2026-05",
+    tem_pedido: true,
+    cursos: [
+      { ...curso("aws", "AWS Cloud Practitioner Essentials"), categorias: ["cloud"] } as Course,
+      {
+        ...curso("docker", "Docker Foundations", {
+          tags: ["Docker"],
+          demanda: { nota: 40, faixa: "comum", rotulo: "Comum", motivo: null },
+        }),
+        categorias: ["devops"],
+      } as Course,
+      {
+        ...curso("spring", "Spring Boot Essentials", {
+          tags: ["Spring Boot"],
+          demanda: { nota: 70, faixa: "em_alta", rotulo: "Em alta", motivo: null },
+        }),
+        categorias: ["backend"],
+      } as Course,
+    ],
+  };
+
+  const titulos = () => screen.getAllByRole("heading", { level: 2 }).map((h) => h.textContent);
+
+  it("busca por nome, emissor ou tecnologia, sem acento", async () => {
+    const { user } = monta(variada);
+    await user.type(await screen.findByLabelText("Buscar"), "spring");
+    expect(titulos()).toEqual(["Spring Boot Essentials"]);
+    await user.click(screen.getByRole("button", { name: "Limpar filtros" }));
+    expect(titulos()).toHaveLength(3);
+  });
+
+  it("filtra por categoria e por stack", async () => {
+    const { user } = monta(variada);
+    await user.click(await screen.findByLabelText("Categoria"));
+    await user.click(screen.getByRole("option", { name: "DevOps" }));
+    expect(titulos()).toEqual(["Docker Foundations"]);
+
+    await user.click(screen.getByRole("button", { name: "Limpar filtros" }));
+    await user.click(screen.getByLabelText("Stack"));
+    await user.click(screen.getByRole("option", { name: "AWS" }));
+    expect(titulos()).toEqual(["AWS Cloud Practitioner Essentials"]);
+  });
+
+  it("ordena pelo quanto é procurado, nos dois sentidos", async () => {
+    const { user } = monta(variada);
+    await user.click(await screen.findByLabelText("Ordenar"));
+    await user.click(screen.getByRole("option", { name: "Mais procurados primeiro" }));
+    expect(titulos()).toEqual(["AWS Cloud Practitioner Essentials", "Spring Boot Essentials", "Docker Foundations"]);
+
+    await user.click(screen.getByLabelText("Ordenar"));
+    await user.click(screen.getByRole("option", { name: "Menos procurados primeiro" }));
+    expect(titulos()).toEqual(["Docker Foundations", "Spring Boot Essentials", "AWS Cloud Practitioner Essentials"]);
+  });
+
+  it("o catálogo inteiro pede todos os cursos ao servidor", async () => {
+    const servidor = mockServer({ "GET /courses": () => ({ body: variada }) });
+    const user = userEvent.setup();
+    render(
+      <AppStateProvider>
+        <CoursesPage />
+      </AppStateProvider>,
+    );
+    await user.click(await screen.findByRole("radio", { name: "Catálogo inteiro" }));
+    await screen.findAllByRole("heading", { level: 2 });
+    expect(servidor.calls.some((c) => c.url === "/courses?todos=true")).toBe(true);
+  });
+});

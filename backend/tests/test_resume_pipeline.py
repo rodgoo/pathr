@@ -92,6 +92,8 @@ class TestCatalogoDeTags:
     def test_categoria_desconhecida_vira_ferramenta(self):
         assert normalize_category("Frontend") == "frontend"
         assert normalize_category("inventada") == "ferramenta"
+        # "framework" abria um grupo de um item só na tela de competências.
+        assert normalize_category("Framework") == "backend"
         assert normalize_category(None) == "ferramenta"
 
     def test_semente_nao_tem_slug_duplicado(self):

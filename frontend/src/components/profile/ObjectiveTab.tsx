@@ -27,6 +27,7 @@ import { useQuery } from "@/hooks/useApi";
 import { ACC, ACC4, C, SIZE, TEXT } from "@/lib/tokens";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel } from "@/components/ui/primitives";
+import { RegiaoDasVagas } from "./RegiaoDasVagas";
 
 /** Destinos prontos. O título vira `target_role`; o detalhe explica o recorte,
  * porque "Fullstack Java pleno" quer dizer coisas diferentes para quem foca em
@@ -76,7 +77,7 @@ const HORAS = [4, 6, 8, 10, 15, 20];
 
 /** Os campos que salvam sozinhos. O estado de salvamento nomeia um deles para
  * a confirmação aparecer no painel certo. */
-type Campo = "destino" | "contexto" | "horas";
+type Campo = "destino" | "contexto" | "horas" | "regiao";
 
 type Salvamento =
   | { campo: Campo; estado: "salvando" }
@@ -345,6 +346,12 @@ export function ObjectiveTab() {
           })}
         </div>
       </Panel>
+
+      <RegiaoDasVagas
+        perfil={perfil}
+        salvar={(mudanca) => void salvar(mudanca, "regiao")}
+        estado={<Estado salvamento={salvamento} campo="regiao" />}
+      />
     </div>
   );
 }

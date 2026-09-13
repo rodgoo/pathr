@@ -68,6 +68,10 @@ class PathrUser(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     email: str = Field(unique=True, index=True)
     name: str
+    # O @ da pessoa, sem o @. Único sem distinção de caixa — o índice é em
+    # lower(username), criado na migração 0020. Quem não escolhe no cadastro
+    # ganha um derivado do nome (services/usernames.py).
+    username: str
     password_hash: str  # Argon2id
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
@@ -275,6 +279,9 @@ class PathrProfile(SQLModel, table=True):
     birth_date: Optional[date] = Field(default=None, sa_type=sa.Date)
     city: Optional[str] = Field(default=None)
     state: Optional[str] = Field(default=None)  # UF, duas letras no Brasil
+    # Até onde a pessoa vai numa vaga presencial ou híbrida. Nulo = padrão
+    # (50 km); 0 = só remotas. Ver services/vagas.py.
+    job_radius_km: Optional[int] = Field(default=None)
     country: str = Field(default="BR")  # ISO 3166-1 alfa-2
 
     headline: Optional[str] = Field(default=None)
@@ -296,6 +303,9 @@ class PathrProfile(SQLModel, table=True):
         default=None, sa_type=sa.DateTime(timezone=True)
     )
     tech_suggestions_for: Optional[str] = Field(default=None)
+    # Aparecer nas sugestões e na busca parcial de outras contas. O @ exato
+    # continua achando a pessoa — ver routers/social.py.
+    discoverable: bool = Field(default=True)
     bio: Optional[str] = Field(default=None)
     linkedin_url: Optional[str] = Field(default=None)
     github_url: Optional[str] = Field(default=None)
@@ -1082,6 +1092,36 @@ def _mirror_defaults_to_database() -> None:
             literal = _sql_literal(column.default.arg)
             if literal is not None:
                 column.server_default = sa.DefaultClause(sa.text(literal))
+
+
+
+class PathrFriendship(SQLModel, table=True):
+    """Uma amizade ou um convite, uma linha por par de pessoas.
+
+    O par é único independente de quem convidou (índice em least/greatest,
+    migração 0020): convites cruzados viram uma amizade, não duas pela metade.
+    Recusar apaga a linha — ver o topo de routers/social.py.
+    """
+
+    __tablename__ = "pathr_friendship"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    requester_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id"))
+    addressee_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id"))
+    status: str = Field(default="pending")  # pending | accepted
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+    responded_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
+
+
+class PathrRateEvent(SQLModel, table=True):
+    """Um uso contado por um limite (services/limites.py). Faxina própria."""
+
+    __tablename__ = "pathr_rate_event"
+
+    id: Optional[int] = Field(default=None, primary_key=True)
+    action: str
+    key: str
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
 
 _mirror_defaults_to_database()

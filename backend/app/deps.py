@@ -11,6 +11,7 @@ guardam cookie (um app nativo, um script). O cookie continua sendo o caminho
 do navegador, porque é o único que o JavaScript da página não consegue ler.
 """
 
+import os
 from datetime import datetime, timezone
 from typing import Any, Optional
 
@@ -27,14 +28,25 @@ REFRESH_COOKIE = "pathr_refresh"
 def client_ip(request: Optional[Request]) -> Optional[str]:
     """O IP real do chamador.
 
-    Confia em `cf-connecting-ip` e depois no PRIMEIRO item de
-    `x-forwarded-for` porque em produção existe exatamente um proxy à frente
-    (o Caddy de deploy/Caddyfile), que reescreve os dois headers a partir do
-    endereço TCP observado. Sem essa reescrita na borda, qualquer um poderia
-    forjar o header e cegar o bloqueio por tentativas.
+    **Na Fly, só `fly-client-ip` é confiável.** A API recebe o tráfego direto
+    do proxy da Fly — sem Cloudflare e sem o Caddy que este código supunha à
+    frente (verificado em 2026-09-13: `server: Fly`, sem `cf-ray`). O proxy da
+    Fly sobrescreve `fly-client-ip` com o endereço TCP que ele observou; já
+    `cf-connecting-ip` e o começo de `x-forwarded-for` chegam exatamente como
+    o cliente mandou. Confiar neles deixava qualquer um escolher o próprio IP
+    a cada requisição: o log de segurança registrava o endereço inventado, e
+    qualquer limite por IP virava enfeite.
+
+    Fora da Fly (desenvolvimento, outro host com proxy próprio à frente)
+    vale a ordem antiga.
     """
     if request is None:
         return None
+    if os.environ.get("FLY_APP_NAME"):
+        fly = request.headers.get("fly-client-ip")
+        if fly:
+            return fly.strip()
+        return request.client.host if request.client else None
     cloudflare = request.headers.get("cf-connecting-ip")
     if cloudflare:
         return cloudflare.strip()

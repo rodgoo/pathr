@@ -20,6 +20,7 @@ import { VerifyEmailPage } from "@/pages/auth/VerifyEmailPage";
 import { CodeLabPage } from "@/pages/CodeLabPage";
 import { CoursesPage } from "@/pages/CoursesPage";
 import { JobsPage } from "@/pages/JobsPage";
+import { AmigosPage } from "@/pages/AmigosPage";
 import { CvPage } from "@/pages/CvPage";
 import { EnglishPage } from "@/pages/EnglishPage";
 import { HomePage } from "@/pages/HomePage";
@@ -40,6 +41,7 @@ const SCREENS: Record<Screen, () => JSX.Element | null> = {
   ingles: EnglishPage,
   perfil: ProfilePage,
   codigo: CodeLabPage,
+  amigos: AmigosPage,
   material: ResourcePage,
   cursos: CoursesPage,
   vagas: JobsPage,

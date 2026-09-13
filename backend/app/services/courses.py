@@ -40,6 +40,12 @@ from dataclasses import dataclass
 from typing import Any, Iterable, Optional
 
 from app.services.tag_catalog import slugify
+from app.services.tag_seed import SEED
+
+# A categoria de cada tecnologia, pelo catálogo de tags: é o que a tela de
+# cursos usa para filtrar ("Cloud", "Dados"), sem uma segunda classificação
+# para manter em sincronia.
+_CATEGORIA_DA_TAG = {slugify(nome): categoria for nome, categoria, _pop, _apelidos in SEED}
 
 CONFERIDO_EM = "2026-05"
 
@@ -375,12 +381,15 @@ def recomendar(
     user_tags: Iterable[dict[str, Any]],
     slugs_do_roadmap: Iterable[str] = (),
     objetivo: str = "",
+    todos: bool = False,
 ) -> list[dict[str, Any]]:
     """Os cursos que servem ao que a pessoa quer aprender, já ordenados.
 
     `user_tags` tem a forma de `GET /tags/mine` (slug, name, proficiency,
     is_target). Só entram cursos com pelo menos uma tag pedida: esta tela
-    responde "o que eu quero aprender", não "tudo que existe".
+    responde "o que eu quero aprender", não "tudo que existe" — a não ser com
+    `todos`, que é a busca no catálogo inteiro. Ali o curso sem pedido entra
+    com relevância zero e sem motivo, depois dos pedidos.
     """
     pesos: dict[str, int] = {}
     motivos: dict[str, str] = {}
@@ -415,7 +424,7 @@ def recomendar(
     resultado = []
     for curso in CURSOS:
         casadas = [slugify(nome) for nome in curso.tags if slugify(nome) in pesos]
-        if not casadas:
+        if not casadas and not todos:
             continue
         relevancia = sum(pesos[slug] for slug in casadas)
         chave, rotulo = faixa_de(curso.demanda)
@@ -427,6 +436,9 @@ def recomendar(
                 "emissor": curso.emissor,
                 "url": curso.url,
                 "tags": list(curso.tags),
+                "categorias": sorted(
+                    {_CATEGORIA_DA_TAG[slugify(nome)] for nome in curso.tags if slugify(nome) in _CATEGORIA_DA_TAG}
+                ),
                 "nivel": curso.nivel,
                 "idioma": curso.idioma,
                 "horas": curso.horas,

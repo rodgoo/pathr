@@ -87,6 +87,7 @@ export const aUser = (overrides: Partial<User> = {}): User => ({
   locale: "pt-BR",
   timezone_name: "America/Sao_Paulo",
   theme: "system",
+  username: "lucasmartins",
   has_avatar: false,
   ...overrides,
 });

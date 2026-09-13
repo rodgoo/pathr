@@ -3,25 +3,39 @@
  *
  * ## O que a tela promete
  *
- * - **Vaga real, de fonte confiável, com a fonte dita.** Gupy, Remotive,
- *   Adzuna e sites de vaga encontrados por buscador. O nome da fonte vai em
- *   cada cartão — é também o crédito que a Remotive pede.
- * - **A nota só existe quando o anúncio foi lido.** Resultado de buscador traz
- *   só o título; ali a tela diz "anúncio não lido" em vez de inventar número.
- * - **Toda lacuna tem um caminho.** "O que falta" separa obrigatório de
- *   desejável e, para cada lacuna, oferece curso com certificado (gratuito
- *   primeiro) e o botão de marcá-la como meta — o que alimenta Cursos e o
- *   ajuste do roadmap.
+ * - **A de cima é a que mais combina.** O número do cartão ("combina com
+ *   você") e a ordem da lista são a mesma conta: stack em comum, cobertura dos
+ *   requisitos, objetivo e nível.
+ * - **Só vaga que dá para aceitar.** Presencial e híbrida dentro do raio da
+ *   cidade escolhida em Configurações; remota de qualquer lugar.
+ * - **O que falta aparece sozinho.** Cada cartão já traz as lacunas, com curso
+ *   com certificado (gratuito primeiro) e o botão de marcar como meta — sem
+ *   clique, sem esperar IA. A leitura por IA fica para a vaga cujo anúncio a
+ *   fonte não mandou inteiro.
+ * - **Voltar à tela não busca de novo.** A lista fica guardada; "Atualizar"
+ *   vai às fontes quando a pessoa quer vagas novas.
+ * - **Vaga real, de fonte confiável, com a fonte dita** em cada cartão — é
+ *   também o crédito que a Remotive pede.
  *
  * O LinkedIn não entra por integração: não há API de vagas para terceiros. A
  * vaga do LinkedIn aparece quando o buscador a encontra, ou colando o texto.
  */
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 import { jobs as jobsApi, tags as tagsApi } from "@/api/endpoints";
-import type { Job, JobAnalysis, JobEnglish, JobGap, JobList, JobRequirement } from "@/api/types";
+import type {
+  Job,
+  JobAnalysis,
+  JobCourse,
+  JobEnglish,
+  JobGap,
+  JobList,
+  JobListGap,
+  JobRequirement,
+} from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
-import { useMutation, useQuery } from "@/hooks/useApi";
+import { messageFor, useMutation, useQuery } from "@/hooks/useApi";
+import { vagasGuardadas } from "@/lib/vagasGuardadas";
 import { ACC, ACC4, C, HAIRLINE, SIZE, TEXT, tint } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { Segmented } from "@/components/ui/Segmented";
@@ -61,6 +75,9 @@ const SITUACAO: Record<JobRequirement["situacao"], { rotulo: string; cor: string
   desconhecido: { rotulo: "fora do catálogo", cor: TEXT.faint },
 };
 
+/** Quantas lacunas o cartão mostra antes do "ver todas". */
+const LACUNAS_VISIVEIS = 4;
+
 function corDaNota(nota: number): string {
   return nota >= 70 ? C.verde : nota >= 40 ? C.ambar : C.rosa;
 }
@@ -71,15 +88,52 @@ function haQuanto(dias: number | null): string | null {
   return dias === 1 ? "há 1 dia" : `há ${dias} dias`;
 }
 
+function minutosDesde(iso?: string): string | null {
+  if (!iso) return null;
+  const minutos = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
+  if (minutos < 1) return "agora";
+  if (minutos < 60) return `há ${minutos} min`;
+  const horas = Math.round(minutos / 60);
+  return horas === 1 ? "há 1 hora" : `há ${horas} horas`;
+}
+
+function juntar(nomes: string[]): string {
+  if (nomes.length <= 1) return nomes.join("");
+  return `${nomes.slice(0, -1).join(", ")} e ${nomes[nomes.length - 1]}`;
+}
+
 export function JobsPage() {
   const [filtro, setFiltro] = useState<Filtro>("todas");
   const [alcance, setAlcance] = useState<Alcance>("todas");
   const [busca, setBusca] = useState("");
   const [termo, setTermo] = useState("");
-  const lista = useQuery(
-    () => jobsApi.list({ q: termo, remotas: filtro === "remotas", alcance }),
-    [termo, filtro, alcance],
-  );
+  const [atualizando, setAtualizando] = useState(false);
+  const [erroAoAtualizar, setErroAoAtualizar] = useState<string | null>(null);
+
+  // Guardada: voltar à tela devolve a lista que estava aqui, sem ir às fontes.
+  // Os filtros de "onde" e "tipo" filtram esta mesma lista — trocar de aba
+  // não é uma busca nova.
+  const lista = useQuery(async () => {
+    const guardada = vagasGuardadas.get(termo);
+    if (guardada) return guardada;
+    const dados = await jobsApi.list({ q: termo });
+    vagasGuardadas.set(termo, dados);
+    return dados;
+  }, [termo]);
+
+  async function atualizar() {
+    setAtualizando(true);
+    setErroAoAtualizar(null);
+    try {
+      const dados = await jobsApi.list({ q: termo, atualizar: true });
+      vagasGuardadas.set(termo, dados);
+      lista.set(() => dados);
+    } catch (caught) {
+      setErroAoAtualizar(messageFor(caught));
+    } finally {
+      setAtualizando(false);
+    }
+  }
 
   function buscar(evento: FormEvent) {
     evento.preventDefault();
@@ -91,16 +145,14 @@ export function JobsPage() {
       <header style={{ marginBottom: 16.8 }}>
         <h1 style={{ fontSize: 28, margin: 0 }}>Vagas para você</h1>
         <p style={{ margin: "5.6px 0 0", fontSize: SIZE.corpo, color: TEXT.strong, maxWidth: "72ch" }}>
-          Vagas reais de fontes confiáveis, escolhidas pelo seu objetivo e ordenadas pelo quanto da sua
-          stack elas pedem. Em cada uma, veja o que falta e como chegar lá.
+          Vagas reais de fontes confiáveis, na sua região ou remotas, da que mais tem a cara da sua stack e do
+          seu objetivo para a que menos. Em cada uma, o que falta e como chegar lá.
         </p>
       </header>
 
-      <AnalisarVaga />
-
       <form
         onSubmit={buscar}
-        style={{ display: "flex", flexWrap: "wrap", gap: 8.4, alignItems: "center", margin: "22.4px 0 8.4px" }}
+        style={{ display: "flex", flexWrap: "wrap", gap: 8.4, alignItems: "center", margin: "0 0 8.4px" }}
       >
         <input
           className="input"
@@ -128,19 +180,39 @@ export function JobsPage() {
           </button>
         ) : null}
       </form>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 8.4, marginBottom: 11.2 }}>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: 8.4, marginBottom: 11.2, alignItems: "center" }}>
         <Segmented name="vagas-alcance" label="Onde" value={alcance} options={ALCANCES} onChange={setAlcance} />
         <Segmented name="vagas-filtro" label="Tipo de vaga" value={filtro} options={FILTROS} onChange={setFiltro} />
+        {lista.data && !lista.data.sem_perfil ? (
+          <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 8.4 }}>
+            <span style={{ fontSize: 11.5, color: TEXT.faint }}>
+              {atualizando ? "procurando vagas novas…" : `atualizado ${minutosDesde(lista.data.buscado_em) ?? ""}`}
+            </span>
+            <button type="button" className="btn btn-secondary" onClick={() => void atualizar()} disabled={atualizando}>
+              <Icon name="refresh" size={15} />
+              {atualizando ? "Atualizando…" : "Atualizar"}
+            </button>
+          </span>
+        ) : null}
       </div>
+      {erroAoAtualizar ? (
+        <p role="alert" style={{ margin: "0 0 11.2px", fontSize: 12.5, color: C.ambar }}>
+          Não consegui atualizar agora ({erroAoAtualizar}). A lista abaixo é a anterior.
+        </p>
+      ) : null}
 
       {lista.loading ? <Loading label="Procurando vagas nas fontes…" /> : null}
       {lista.error ? <ErrorState message={lista.error} onRetry={lista.reload} /> : null}
-      {lista.data && !lista.loading ? <Resultado dados={lista.data} /> : null}
+      {lista.data && !lista.loading ? <Resultado dados={lista.data} filtro={filtro} alcance={alcance} /> : null}
+
+      <div style={{ marginTop: 22.4 }}>
+        <AnalisarVaga />
+      </div>
     </div>
   );
 }
 
-function Resultado({ dados }: { dados: JobList }) {
+function Resultado({ dados, filtro, alcance }: { dados: JobList; filtro: Filtro; alcance: Alcance }) {
   const { dispatch } = useAppState();
 
   if (dados.sem_perfil) {
@@ -163,12 +235,17 @@ function Resultado({ dados }: { dados: JobList }) {
   }
 
   const fontes = Object.keys(dados.fontes) as (keyof JobList["fontes"])[];
+  const visiveis = dados.vagas.filter(
+    (vaga) =>
+      (filtro === "todas" || vaga.remota === true) &&
+      (alcance === "todas" || (alcance === "internacionais") === vaga.internacional),
+  );
 
   return (
     <>
       <div style={{ fontSize: 12, color: TEXT.muted, marginBottom: 11.2, lineHeight: 1.6 }}>
         Buscando por <span style={{ color: TEXT.full }}>{dados.termos.join(" · ")}</span> ·{" "}
-        {dados.vagas.length} {dados.vagas.length === 1 ? "vaga" : "vagas"} · seu inglês:{" "}
+        {visiveis.length} {visiveis.length === 1 ? "vaga" : "vagas"} · seu inglês:{" "}
         {dados.nivel_ingles ? (
           <span style={{ color: TEXT.full }}>{dados.nivel_ingles}</span>
         ) : (
@@ -181,6 +258,7 @@ function Resultado({ dados }: { dados: JobList }) {
             sem nivelamento — fazer agora
           </button>
         )}
+        <Regiao regiao={dados.regiao} />
         <div style={{ color: TEXT.faint }}>
           Fontes:{" "}
           {fontes.map((fonte, posicao) => {
@@ -196,15 +274,15 @@ function Resultado({ dados }: { dados: JobList }) {
         </div>
       </div>
 
-      {dados.vagas.length === 0 ? (
+      {visiveis.length === 0 ? (
         <EmptyState
           title="Nenhuma vaga encontrada agora"
-          description="As fontes não trouxeram vagas para estes termos. Tente outro cargo ou tecnologia na busca."
+          description="As fontes não trouxeram vagas para estes termos e filtros. Tente outro cargo ou tecnologia, aumente o raio da sua região ou aperte Atualizar."
         />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
-          {dados.vagas.map((vaga) => (
-            <CartaoDaVaga key={vaga.id} vaga={vaga} />
+          {visiveis.map((vaga) => (
+            <CartaoDaVaga key={vaga.id} vaga={vaga} cursos={dados.cursos ?? {}} />
           ))}
         </div>
       )}
@@ -212,13 +290,46 @@ function Resultado({ dados }: { dados: JobList }) {
   );
 }
 
-function CartaoDaVaga({ vaga }: { vaga: Job }) {
+/** Onde as vagas presenciais podem estar, e o atalho para mudar. */
+function Regiao({ regiao }: { regiao: JobList["regiao"] }) {
+  const { dispatch } = useAppState();
+  let texto: string;
+  if (!regiao) {
+    texto = "Sem cidade no perfil: vagas presenciais de todo o Brasil aparecem.";
+  } else if (regiao.raio_km === 0) {
+    texto = "Só vagas remotas.";
+  } else if (regiao.cidade) {
+    texto = `Presenciais e híbridas até ${regiao.raio_km} km de ${regiao.cidade} - ${regiao.uf} · remotas de qualquer lugar.`;
+  } else {
+    texto = `Presenciais e híbridas em ${regiao.uf} · remotas de qualquer lugar.`;
+  }
+  return (
+    <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
+      <Icon name="mapPin" size={13} style={{ color: ACC4 }} />
+      <span>{texto}</span>
+      <button
+        type="button"
+        className="btn btn-ghost"
+        style={{ fontSize: 12, padding: "0 4px", minHeight: 0 }}
+        onClick={() => dispatch({ type: "navigate", screen: "config", settingsTab: "objetivo" })}
+      >
+        <Icon name="pencil" size={13} />
+        {regiao ? "Mudar região" : "Definir região"}
+      </button>
+    </div>
+  );
+}
+
+function CartaoDaVaga({ vaga, cursos }: { vaga: Job; cursos: Record<string, JobCourse[]> }) {
   const [aberta, setAberta] = useState(false);
+  const [descricao, setDescricao] = useState(false);
   const analise = useMutation(() => jobsApi.analyze({ vaga_id: vaga.id }));
   const [resultado, setResultado] = useState<JobAnalysis | null>(null);
-  const { nota, tem, falta, parcial } = vaga.compatibilidade;
+  const { tem, parcial, falta } = vaga.compatibilidade;
+  const lido = !vaga.so_link && !vaga.so_trecho;
+  const nota = vaga.combina ?? vaga.compatibilidade.nota;
 
-  async function oQueFalta() {
+  async function lerAnuncio() {
     if (aberta) {
       setAberta(false);
       return;
@@ -230,9 +341,15 @@ function CartaoDaVaga({ vaga }: { vaga: Job }) {
     }
   }
 
-  const detalhes = [vaga.empresa, vaga.local, vaga.nivel ? NIVEL[vaga.nivel] : null, haQuanto(vaga.publicada_ha_dias)]
+  const onde = vaga.distancia_km !== null && vaga.distancia_km !== undefined && vaga.remota !== true
+    ? `${vaga.local ?? "Presencial"} · a ${vaga.distancia_km} km`
+    : vaga.local;
+  const detalhes = [vaga.empresa, onde, vaga.nivel ? NIVEL[vaga.nivel] : null, haQuanto(vaga.publicada_ha_dias)]
     .filter(Boolean)
     .join(" · ");
+  const pedidas = [...tem, ...parcial, ...falta];
+  const sobre = vaga.sobre;
+  const temDescricao = Boolean(sobre && (sobre.faz.length || sobre.pede.length || sobre.diferenciais.length));
 
   return (
     <Panel pad={16.8}>
@@ -246,29 +363,57 @@ function CartaoDaVaga({ vaga }: { vaga: Job }) {
               {vaga.na_sua_regiao ? <span style={{ color: C.verde }}> · na sua região</span> : null}
             </div>
           </div>
-          <Nota nota={nota} />
+          <Nota nota={nota} estimada={!lido} />
         </div>
+
+        {/* O que é a vaga e para quem: a apresentação do anúncio e a frase
+            montada com o nível e as tecnologias que ele pede. */}
+        {sobre?.apresentacao ? (
+          <p style={{ margin: "8.4px 0 0", fontSize: 12.5, color: TEXT.strong, lineHeight: 1.55, maxWidth: "95ch" }}>
+            {sobre.apresentacao}
+          </p>
+        ) : null}
+        {pedidas.length ? (
+          <p style={{ margin: "5.6px 0 0", fontSize: 12.5, color: TEXT.muted }}>
+            <span style={{ color: TEXT.faint }}>Para quem: </span>
+            {vaga.nivel ? `nível ${NIVEL[vaga.nivel]}, ` : ""}
+            com {juntar(pedidas.slice(0, 6))}
+            {pedidas.length > 6 ? ` e mais ${pedidas.length - 6}` : ""}.
+          </p>
+        ) : null}
 
         <Afinidade afinidade={vaga.afinidade} />
         <SeloDeIngles ingles={vaga.ingles} />
 
-        {nota !== null ? (
+        {tem.length ? (
           <div style={{ display: "flex", flexWrap: "wrap", gap: 5.6, marginTop: 11.2 }}>
-            {tem.slice(0, 6).map((nome) => (
+            {tem.slice(0, 8).map((nome) => (
               <Pilula key={`t-${nome}`} cor={C.verde} texto={nome} comCheck />
             ))}
-            {parcial.slice(0, 4).map((nome) => (
-              <Pilula key={`p-${nome}`} cor={C.ambar} texto={nome} />
-            ))}
-            {falta.slice(0, 6).map((nome) => (
-              <Pilula key={`f-${nome}`} cor={C.rosa} texto={`falta ${nome}`} />
-            ))}
           </div>
+        ) : null}
+
+        {temDescricao ? (
+          <button
+            type="button"
+            className="btn btn-ghost"
+            aria-expanded={descricao}
+            onClick={() => setDescricao((valor) => !valor)}
+            style={{ fontSize: 12, marginTop: 8.4, padding: "2px 4px" }}
+          >
+            <Icon name="chevronDown" size={14} style={{ transform: descricao ? "rotate(180deg)" : undefined }} />
+            {descricao ? "Esconder descrição" : "Ver descrição da vaga"}
+          </button>
+        ) : null}
+        {descricao && sobre ? <Descricao sobre={sobre} /> : null}
+
+        {lido ? (
+          <OQueFalta lacunas={vaga.lacunas ?? []} cursos={cursos} />
         ) : (
-          <p style={{ margin: "8.4px 0 0", fontSize: 12, color: TEXT.faint }}>
+          <p style={{ margin: "11.2px 0 0", fontSize: 12, color: TEXT.faint }}>
             {vaga.so_trecho
-              ? "A fonte mandou só um trecho do anúncio. Peça a análise para lermos a vaga inteira."
-              : "Encontrada por buscador: o anúncio não foi lido aqui. Abra a vaga, ou peça a análise para lermos a página."}
+              ? "A fonte mandou só um trecho do anúncio: a nota é estimada pelo título. Leia o anúncio completo para ver o que falta."
+              : "Encontrada por buscador: o anúncio não foi lido aqui, e a nota é estimada pelo título."}
           </p>
         )}
 
@@ -283,10 +428,12 @@ function CartaoDaVaga({ vaga }: { vaga: Job }) {
             Ver vaga
             <Icon name="externalLink" size={14} />
           </a>
-          <button type="button" className="btn btn-secondary" aria-expanded={aberta} onClick={() => void oQueFalta()}>
-            <Icon name="search" size={15} />
-            {aberta ? "Esconder análise" : "O que falta para esta vaga"}
-          </button>
+          {!lido ? (
+            <button type="button" className="btn btn-secondary" aria-expanded={aberta} onClick={() => void lerAnuncio()}>
+              <Icon name="search" size={15} />
+              {aberta ? "Esconder análise" : "Ler o anúncio completo"}
+            </button>
+          ) : null}
         </div>
 
         {aberta ? (
@@ -298,6 +445,178 @@ function CartaoDaVaga({ vaga }: { vaga: Job }) {
         ) : null}
       </article>
     </Panel>
+  );
+}
+
+function Descricao({ sobre }: { sobre: NonNullable<Job["sobre"]> }) {
+  const partes: [string, string[]][] = [
+    ["O que você vai fazer", sobre.faz],
+    ["O que pede", sobre.pede],
+    ["Diferenciais", sobre.diferenciais],
+  ];
+  return (
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fit, minmax(240px, 1fr))",
+        gap: "8.4px 16.8px",
+        marginTop: 8.4,
+        padding: "11.2px 12.6px",
+        borderRadius: 8,
+        background: "rgba(233,233,237,.04)",
+      }}
+    >
+      {partes
+        .filter(([, itens]) => itens.length)
+        .map(([titulo, itens]) => (
+          <div key={titulo}>
+            <div style={{ fontSize: 11.5, color: TEXT.faint, marginBottom: 4 }}>{titulo}</div>
+            <ul style={{ margin: 0, paddingLeft: 16, fontSize: 12.5, color: TEXT.strong, lineHeight: 1.5 }}>
+              {itens.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          </div>
+        ))}
+    </div>
+  );
+}
+
+/** As lacunas da vaga, já calculadas na listagem. */
+function OQueFalta({ lacunas, cursos }: { lacunas: JobListGap[]; cursos: Record<string, JobCourse[]> }) {
+  const [todas, setTodas] = useState(false);
+  if (!lacunas.length) {
+    return (
+      <p style={{ margin: "11.2px 0 0", fontSize: 12.5, color: C.verde, display: "flex", alignItems: "center", gap: 5 }}>
+        <Icon name="check" size={14} />
+        Você tem tudo o que o anúncio cita do catálogo.
+      </p>
+    );
+  }
+  const obrigatorias = lacunas.filter((l) => l.obrigatorio).length;
+  const mostradas = todas ? lacunas : lacunas.slice(0, LACUNAS_VISIVEIS);
+  return (
+    <section aria-label="O que falta para a vaga" style={{ marginTop: 11.2 }}>
+      <div style={{ fontSize: 11.5, color: TEXT.faint, marginBottom: 5.6 }}>
+        O que falta · {lacunas.length} {lacunas.length === 1 ? "item" : "itens"}
+        {obrigatorias ? `, ${obrigatorias} ${obrigatorias === 1 ? "obrigatório" : "obrigatórios"}` : ""}
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 5.6 }}>
+        {mostradas.map((lacuna) => (
+          <LacunaCompacta key={lacuna.slug} lacuna={lacuna} cursos={cursos[lacuna.slug] ?? []} />
+        ))}
+      </div>
+      {lacunas.length > LACUNAS_VISIVEIS ? (
+        <button
+          type="button"
+          className="btn btn-ghost"
+          aria-expanded={todas}
+          onClick={() => setTodas((valor) => !valor)}
+          style={{ fontSize: 12, marginTop: 4, padding: "2px 4px" }}
+        >
+          <Icon name="chevronDown" size={14} style={{ transform: todas ? "rotate(180deg)" : undefined }} />
+          {todas ? "Mostrar menos" : `Ver todas as ${lacunas.length}`}
+        </button>
+      ) : null}
+    </section>
+  );
+}
+
+/** Marca a lacuna como meta. Quem já estava começando continua no nível que
+ * tinha: só vira meta, sem proficiência nova. */
+function useMarcarMeta(lacuna: { user_tag_id: string | null; tag_id: string | null; e_meta: boolean }) {
+  const [meta, setMeta] = useState(lacuna.e_meta);
+  const marcar = useMutation(async () => {
+    if (lacuna.user_tag_id) return tagsApi.update(lacuna.user_tag_id, { is_target: true });
+    if (lacuna.tag_id) return tagsApi.add({ tag_id: lacuna.tag_id, proficiency: 0, is_target: true });
+    return null;
+  });
+  useEffect(() => setMeta(lacuna.e_meta), [lacuna.e_meta]);
+  async function executar() {
+    const feito = await marcar.run();
+    if (feito) setMeta(true);
+  }
+  return { meta, executar, pending: marcar.pending, error: marcar.error };
+}
+
+function AcaoDaLacuna({
+  lacuna,
+}: {
+  lacuna: { idioma?: boolean; situacao: string; no_roadmap: boolean; tag_id: string | null; user_tag_id: string | null; e_meta: boolean };
+}) {
+  const { dispatch } = useAppState();
+  const { meta, executar, pending, error } = useMarcarMeta(lacuna);
+  if (lacuna.idioma) {
+    return (
+      <button
+        type="button"
+        className="btn btn-ghost"
+        style={{ fontSize: 12 }}
+        onClick={() => dispatch({ type: "navigate", screen: "ingles" })}
+      >
+        <Icon name="globe" size={14} />
+        {lacuna.situacao === "sem_nivel" ? "Fazer o nivelamento" : "Treinar inglês"}
+      </button>
+    );
+  }
+  if (lacuna.no_roadmap) return <span style={{ color: ACC4, fontSize: 12 }}>já está no seu roadmap</span>;
+  if (meta) {
+    return (
+      <span style={{ color: C.verde, fontSize: 12, display: "inline-flex", alignItems: "center", gap: 4 }}>
+        <Icon name="check" size={13} />
+        meta marcada
+      </span>
+    );
+  }
+  if (!lacuna.tag_id) return null;
+  return (
+    <span style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
+      {error ? <span style={{ fontSize: 11.5, color: C.ambar }}>{error}</span> : null}
+      <button type="button" className="btn btn-ghost" disabled={pending} style={{ fontSize: 12 }} onClick={() => void executar()}>
+        <Icon name="flag" size={14} />
+        {pending ? "Marcando…" : "Marcar como meta"}
+      </button>
+    </span>
+  );
+}
+
+function LacunaCompacta({ lacuna, cursos }: { lacuna: JobListGap; cursos: JobCourse[] }) {
+  const curso = cursos[0];
+  return (
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        alignItems: "center",
+        gap: "4px 10px",
+        padding: "6px 10px",
+        borderRadius: 7,
+        background: "rgba(233,233,237,.04)",
+      }}
+    >
+      <span style={{ fontSize: 13, color: lacuna.situacao === "falta" ? C.rosa : C.ambar }}>{lacuna.nome}</span>
+      <span style={{ fontSize: 11, color: lacuna.obrigatorio ? TEXT.muted : TEXT.faint }}>
+        {lacuna.obrigatorio ? "obrigatório" : "diferencial"}
+        {lacuna.situacao === "parcial" ? (lacuna.idioma ? " · um degrau abaixo" : " · você está começando") : ""}
+        {lacuna.situacao === "sem_nivel" ? " · sem nivelamento" : ""}
+      </span>
+      {curso ? (
+        <a
+          href={curso.url}
+          target="_blank"
+          rel="noreferrer noopener"
+          style={{ fontSize: 12, color: ACC, display: "inline-flex", alignItems: "center", gap: 4, minWidth: 0 }}
+          title={`${curso.emissor} · certificado ${curso.gratuito ? "gratuito" : "pago"}`}
+        >
+          <Icon name="award" size={13} style={{ color: curso.gratuito ? C.verde : C.ambar, flex: "none" }} />
+          {curso.titulo}
+          <span style={{ color: TEXT.faint }}>· {curso.gratuito ? "gratuito" : "pago"}</span>
+        </a>
+      ) : null}
+      <span style={{ marginLeft: "auto" }}>
+        <AcaoDaLacuna lacuna={lacuna} />
+      </span>
+    </div>
   );
 }
 
@@ -336,14 +655,14 @@ function SeloDeIngles({ ingles }: { ingles: JobEnglish }) {
   const { cor, texto } = INGLES[ingles.situacao];
   return (
     <div style={{ marginTop: 8.4, fontSize: 12, color: cor, display: "flex", alignItems: "center", gap: 5 }}>
-      <Icon name="flag" size={13} />
+      <Icon name="globe" size={13} />
       {texto(ingles)}
     </div>
   );
 }
 
-function Nota({ nota }: { nota: number | null }) {
-  if (nota === null) {
+function Nota({ nota, estimada }: { nota: number | null | undefined; estimada?: boolean }) {
+  if (nota === null || nota === undefined) {
     return <span style={{ fontSize: 11.5, color: TEXT.faint, whiteSpace: "nowrap" }}>anúncio não lido</span>;
   }
   const cor = corDaNota(nota);
@@ -357,7 +676,9 @@ function Nota({ nota }: { nota: number | null }) {
       style={{ minWidth: 120, textAlign: "right" }}
     >
       <div style={{ fontSize: 20, lineHeight: 1, color: cor }}>{nota}%</div>
-      <div style={{ fontSize: 11, color: TEXT.faint, margin: "3px 0 5px" }}>combina com você</div>
+      <div style={{ fontSize: 11, color: TEXT.faint, margin: "3px 0 5px" }}>
+        {estimada ? "estimado pelo título" : "combina com você"}
+      </div>
       <div style={{ height: 5, borderRadius: 3, background: "rgba(233,233,237,.1)" }}>
         <div style={{ width: `${nota}%`, height: "100%", borderRadius: 3, background: cor }} />
       </div>
@@ -407,8 +728,8 @@ function AnalisarVaga() {
     <Panel pad={16.8}>
       <Kicker style={{ display: "block", marginBottom: 5.6 }}>Analisar uma vaga específica</Kicker>
       <p style={{ margin: "0 0 11.2px", fontSize: 12.5, color: TEXT.muted }}>
-        Cole o link ou o texto do anúncio. Vaga do LinkedIn costuma pedir login para abrir — nesse caso, cole o
-        texto.
+        Achou uma vaga fora desta lista? Cole o link ou o texto do anúncio. Vaga do LinkedIn costuma pedir login
+        para abrir — nesse caso, cole o texto.
       </p>
       <form onSubmit={analisar} style={{ display: "flex", flexDirection: "column", gap: 8.4 }}>
         <textarea
@@ -442,7 +763,7 @@ function AnalisarVaga() {
 }
 
 // ---------------------------------------------------------------------------
-// O resultado da análise
+// O resultado da análise por IA
 // ---------------------------------------------------------------------------
 
 function Analise({ analise, mostrarTitulo }: { analise: JobAnalysis; mostrarTitulo?: boolean }) {
@@ -451,7 +772,7 @@ function Analise({ analise, mostrarTitulo }: { analise: JobAnalysis; mostrarTitu
   const desejaveis = analise.requisitos.filter((r) => !r.obrigatorio);
 
   return (
-    <section aria-label="O que falta para a vaga">
+    <section aria-label="Análise completa da vaga">
       <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-start" }}>
         <div style={{ flex: "1 1 280px" }}>
           {mostrarTitulo ? (
@@ -529,14 +850,6 @@ function Requisitos({ titulo, lista }: { titulo: string; lista: JobRequirement[]
 }
 
 function Lacuna({ lacuna }: { lacuna: JobGap }) {
-  const { dispatch } = useAppState();
-  const [meta, setMeta] = useState(lacuna.e_meta);
-  const marcar = useMutation(async () => {
-    if (lacuna.user_tag_id) return tagsApi.update(lacuna.user_tag_id, { is_target: true });
-    if (lacuna.tag_id) return tagsApi.add({ tag_id: lacuna.tag_id, proficiency: 0, is_target: true });
-    return null;
-  });
-
   return (
     <div style={{ padding: "11.2px 12.6px", borderRadius: 8, background: "rgba(233,233,237,.04)" }}>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8.4 }}>
@@ -547,37 +860,9 @@ function Lacuna({ lacuna }: { lacuna: JobGap }) {
           {lacuna.situacao === "sem_nivel" ? " · sem nivelamento para comparar" : ""}
         </span>
         <span style={{ marginLeft: "auto", fontSize: 12 }}>
-          {lacuna.idioma ? (
-            <button
-              type="button"
-              className="btn btn-ghost"
-              style={{ fontSize: 12 }}
-              onClick={() => dispatch({ type: "navigate", screen: "ingles" })}
-            >
-              {lacuna.situacao === "sem_nivel" ? "Fazer o nivelamento" : "Treinar inglês"}
-            </button>
-          ) : lacuna.no_roadmap ? (
-            <span style={{ color: ACC4 }}>já está no seu roadmap</span>
-          ) : meta ? (
-            <span style={{ color: C.verde }}>meta marcada</span>
-          ) : lacuna.tag_id ? (
-            <button
-              type="button"
-              className="btn btn-ghost"
-              disabled={marcar.pending}
-              style={{ fontSize: 12 }}
-              onClick={async () => {
-                const feito = await marcar.run();
-                if (feito) setMeta(true);
-              }}
-            >
-              <Icon name="flag" size={15} />
-              {marcar.pending ? "Marcando…" : "Marcar como meta"}
-            </button>
-          ) : null}
+          <AcaoDaLacuna lacuna={lacuna} />
         </span>
       </div>
-      {marcar.error ? <div style={{ fontSize: 12, color: C.ambar, marginTop: 4 }}>{marcar.error}</div> : null}
       {lacuna.cursos.length ? (
         <ul
           style={{ listStyle: "none", margin: "8.4px 0 0", padding: 0, display: "flex", flexDirection: "column", gap: 4 }}

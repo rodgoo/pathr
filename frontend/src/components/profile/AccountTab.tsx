@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { auth as authApi, profile as profileApi } from "@/api/endpoints";
+import { auth as authApi, profile as profileApi, social } from "@/api/endpoints";
 import { useAuth } from "@/hooks/useAuth";
 import { useMutation, useQuery } from "@/hooks/useApi";
 import { C, TEXT } from "@/lib/tokens";
@@ -17,6 +17,7 @@ import { PasswordField } from "@/components/auth/AuthShell";
 import { Kicker, Panel } from "@/components/ui/primitives";
 import { Select } from "@/components/ui/Select";
 import { PasskeysPanel } from "./PasskeysPanel";
+import { CampoUsername } from "@/components/social/CampoUsername";
 
 /**
  * Os degraus de senioridade que o app entende.
@@ -43,6 +44,8 @@ export function AccountTab() {
   const { user, refresh } = useAuth();
   const profile = useQuery(() => profileApi.get(), []);
   const [name, setName] = useState(user?.name ?? "");
+  const [username, setUsername] = useState(user?.username ?? "");
+  const [usernameOk, setUsernameOk] = useState(true);
   const [role, setRole] = useState("");
   const [seniority, setSeniority] = useState("");
   const [years, setYears] = useState("");
@@ -52,6 +55,12 @@ export function AccountTab() {
   const save = useMutation(async () => {
     await authApi.me();
     await profileApi.updateAccount({ name: name.trim() });
+    const novoUsername = username.trim().replace(/^@+/, "").toLowerCase();
+    // Só quando mudou: regravar o mesmo @ gastaria uma consulta e, se outra
+    // pessoa tivesse o nome parecido, ainda poderia falhar à toa.
+    if (novoUsername && novoUsername !== user?.username) {
+      await social.trocarUsername(novoUsername);
+    }
     await profileApi.update({
       current_role: role.trim() || null,
       seniority: seniority.trim() || null,
@@ -113,6 +122,14 @@ export function AccountTab() {
               onChange={(event) => setName(event.target.value)}
             />
           </div>
+          <CampoUsername
+            id="account-username"
+            value={username}
+            onChange={setUsername}
+            nome={name}
+            atual={user?.username}
+            onEstado={setUsernameOk}
+          />
           <div className="field">
             <label htmlFor="account-email">E-mail</label>
             <input id="account-email" className="input" value={user?.email ?? ""} disabled />
@@ -173,7 +190,7 @@ export function AccountTab() {
         {save.error ? <ErrorState message={save.error} /> : null}
 
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8.4, marginTop: 14, alignItems: "center" }}>
-          <button type="submit" className="btn btn-primary" disabled={save.pending}>
+          <button type="submit" className="btn btn-primary" disabled={save.pending || !usernameOk}>
             <Icon name="check" size={15} />
             {save.pending ? "Salvando…" : "Salvar alterações"}
           </button>

@@ -108,10 +108,10 @@ def _vaga(id_, titulo, descricao="", fonte="Gupy", **extra):
 
 
 def test_fonte_fora_do_ar_nao_derruba_as_outras(monkeypatch):
-    async def gupy(_termo):
+    async def gupy(_termo, _regiao=None):
         return [_vaga("gupy:1", "Dev Java", "Java e SQL")]
 
-    async def remotive(_termo):
+    async def remotive(_termo, _regiao=None):
         raise RuntimeError("fora")
 
     monkeypatch.setattr(V, "_gupy", gupy)
@@ -124,11 +124,11 @@ def test_fonte_fora_do_ar_nao_derruba_as_outras(monkeypatch):
 def test_mesma_vaga_por_dois_termos_aparece_uma_vez_e_cache_evita_nova_chamada(monkeypatch):
     chamadas = []
 
-    async def gupy(termo):
+    async def gupy(termo, _regiao=None):
         chamadas.append(termo)
         return [_vaga("gupy:1", "Dev Java Spring", "Java")]
 
-    async def vazio(_termo):
+    async def vazio(_termo, _regiao=None):
         return []
 
     monkeypatch.setattr(V, "_gupy", gupy)
@@ -225,10 +225,10 @@ def _banco():
 
 
 def test_endpoint_lista_pelos_termos_do_perfil(monkeypatch):
-    async def gupy(_termo):
+    async def gupy(_termo, _regiao=None):
         return [_vaga("gupy:9", "Dev Java Pleno", "Java e Docker", remota=True)]
 
-    async def vazio(_termo):
+    async def vazio(_termo, _regiao=None):
         return []
 
     monkeypatch.setattr(V, "_gupy", gupy)
@@ -418,3 +418,120 @@ def test_busca_comeca_pelo_que_o_objetivo_cita():
         {"slug": "java", "name": "Java", "category": "linguagem", "proficiency": 2, "is_target": False},
     ]
     assert V.termos_de_busca(minhas, objetivo_slugs={"java"})[0] == "Java"
+
+
+# ── Região: presencial só no raio, remota sempre ────────────────────────────
+
+
+def test_presencial_so_no_raio_e_remota_de_qualquer_lugar():
+    """Caso real: quem mora em Vitória via vaga presencial em São Paulo."""
+    regiao = V.regiao_do_perfil("Vitoria", "ES", 50)  # sem acento, como no cadastro
+    assert regiao and regiao.cidade and regiao.cidade.nome == "Vitória"
+    vagas = [
+        _vaga("sp", "Dev Java", "Java.", remota=False, extra={"cidade": "São Paulo", "estado": "São Paulo"}),
+        _vaga("serra", "Dev Java", "Java.", remota=False, extra={"cidade": "Serra", "estado": "Espírito Santo"}),
+        _vaga("remota", "Dev Java", "Java.", remota=True),
+        _vaga("sem-local", "Dev Java", "Java.", remota=None),
+    ]
+    lista = V.para_tela(vagas, CATALOGO, _minhas(java=3), regiao=regiao)
+    assert {l["id"] for l in lista} == {"serra", "remota"}
+    serra = next(l for l in lista if l["id"] == "serra")
+    assert 15 <= serra["distancia_km"] <= 30 and serra["na_sua_regiao"] is True
+
+
+def test_raio_zero_e_so_remotas_e_adzuna_localiza_pelas_coordenadas():
+    vagas = [
+        _vaga("perto", "Dev Java", "Java.", fonte="Adzuna", extra={"so_trecho": True, "lat": -20.14, "lon": -40.18}),
+        _vaga("remota", "Dev Java", "Java.", remota=True),
+    ]
+    perto = V.para_tela(vagas, CATALOGO, _minhas(java=3), regiao=V.regiao_do_perfil("Vitória", "ES", 50))
+    assert {l["id"] for l in perto} == {"perto", "remota"}
+    so_remotas = V.para_tela(vagas, CATALOGO, _minhas(java=3), regiao=V.regiao_do_perfil("Vitória", "ES", 0))
+    assert [l["id"] for l in so_remotas] == ["remota"]
+
+
+def test_resultado_de_buscador_entra_quando_cita_cidade_do_raio():
+    regiao = V.regiao_do_perfil("Vitória", "ES", 50)
+    vagas = [
+        _vaga("vv", "Desenvolvedor Java - Vila Velha", "", fonte="LinkedIn", extra={"so_link": True}),
+        _vaga("poa", "Desenvolvedor Java - Porto Alegre", "", fonte="LinkedIn", extra={"so_link": True}),
+    ]
+    assert [l["id"] for l in V.para_tela(vagas, CATALOGO, _minhas(java=3), regiao=regiao)] == ["vv"]
+
+
+def test_sugere_cidades_pelo_comeco_do_nome():
+    from app.services import geo
+
+    assert geo.sugerir("vit")[0].nome == "Vitória"
+    # "pa" aqui é o começo de Paulo, não o Pará.
+    assert geo.sugerir("sao pa")[0].nome == "São Paulo"
+    assert [c.uf for c in geo.sugerir("Serra - ES")] == ["ES"]
+
+
+# ── A nota que ordena, o anúncio em partes e o que falta ────────────────────
+
+
+def test_a_de_cima_e_a_que_mais_combina():
+    minhas = _minhas(java=3, **{"spring-boot": 3, "postgresql": 2, "docker": 2})
+    vagas = [
+        _vaga("fraca", "Analista", "Java, Go, Rust, Elixir, Scala, PHP, Ruby."),
+        _vaga("forte", "Desenvolvedor Java Pleno", "Java, Spring Boot, PostgreSQL e Docker."),
+        _vaga("media", "Desenvolvedor", "Java, Spring Boot e Kubernetes."),
+    ]
+    lista = V.para_tela(vagas, CATALOGO, minhas, senioridade="pleno")
+    assert [l["id"] for l in lista] == ["forte", "media", "fraca"]
+    notas = [l["combina"] for l in lista]
+    assert notas == sorted(notas, reverse=True)
+
+
+def test_plano_de_saude_nao_vira_setor_nem_lacuna():
+    """Caso real: "falta Saúde" numa vaga de dev por causa do plano de saúde."""
+    vagas = [_vaga("v", "Desenvolvedor Java", "Java e React. Benefícios: plano de saúde e banco de horas.")]
+    lista = V.para_tela(vagas, CATALOGO, _minhas(java=3))
+    nomes = [l["nome"] for l in lista[0]["lacunas"]]
+    assert "Saúde" not in nomes and "Saúde" not in lista[0]["compatibilidade"]["falta"]
+    assert "React" in nomes
+
+
+def test_anuncio_em_partes_e_diferencial_vira_desejavel():
+    texto = (
+        "Somos uma fintech que cresce rápido.Responsabilidades e atribuiçõesDesenvolver APIs em Java."
+        "Revisar código do time.Requisitos e qualificaçõesExperiência com Java;Spring Boot;"
+        "Diferenciais:Kafka e React.Informações adicionaisVale-refeição."
+    )
+    sobre = V.sobre_a_vaga(texto)
+    assert sobre["apresentacao"].startswith("Somos uma fintech")
+    assert sobre["faz"] == ["Desenvolver APIs em Java", "Revisar código do time"]
+    assert "Experiência com Java" in sobre["pede"]
+    assert sobre["diferenciais"] == ["Kafka e React"]
+
+    lista = V.para_tela(
+        [_vaga("v", "Desenvolvedor Java", texto)], CATALOGO, _minhas(java=3), slugs_do_roadmap={"kafka"}
+    )
+    lacunas = {l["nome"]: l for l in lista[0]["lacunas"]}
+    assert lacunas["Spring Boot"]["obrigatorio"] is True
+    assert lacunas["Kafka"]["obrigatorio"] is False and lacunas["Kafka"]["no_roadmap"] is True
+    # Obrigatório vem antes na lista do que falta.
+    assert lista[0]["lacunas"][0]["nome"] == "Spring Boot"
+    assert set(V.cursos_das_lacunas(lista)) >= {"spring-boot", "kafka"}
+
+
+def test_atualizar_ignora_a_validade_mas_nao_martela_a_fonte(monkeypatch):
+    chamadas = []
+
+    async def gupy(termo, _regiao=None):
+        chamadas.append(termo)
+        return []
+
+    async def vazio(_termo, _regiao=None):
+        return []
+
+    monkeypatch.setattr(V, "_gupy", gupy)
+    monkeypatch.setattr(V, "_remotive", vazio)
+    asyncio.run(V.buscar(["Java"]))
+    asyncio.run(V.buscar(["Java"], atualizar=True))  # acabou de buscar: não vai de novo
+    assert chamadas == ["Java"]
+    chave = next(k for k in V._cache if k[0] == "gupy")
+    V._cache[chave] = (V._cache[chave][0] - V._INTERVALO_MINIMO_S - 1, [])
+    asyncio.run(V.buscar(["Java"], atualizar=True))
+    assert chamadas == ["Java", "Java"]

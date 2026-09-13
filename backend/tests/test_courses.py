@@ -83,6 +83,21 @@ def test_so_aparece_curso_do_que_foi_pedido():
     assert [item["id"] for item in lista] == ["terraform-associate"]
 
 
+def test_catalogo_inteiro_traz_tudo_com_o_pedido_na_frente_e_categoria():
+    """A busca da tela de cursos: todos os cursos, e cada um com as categorias
+    das suas tecnologias para filtrar."""
+    lista = courses.recomendar([_tag("Terraform", is_target=True)], todos=True)
+    assert len(lista) == len(courses.CURSOS)
+    gratuitos = [item for item in lista if item["certificado"]["gratuito"]]
+    pagos = [item for item in lista if not item["certificado"]["gratuito"]]
+    assert lista == gratuitos + pagos
+    terraform = next(item for item in lista if item["id"] == "terraform-associate")
+    assert terraform["relevancia"] > 0 and "devops" in terraform["categorias"]
+    assert all(item["categorias"] for item in lista)
+    # Sem `todos`, continua só o pedido.
+    assert [i["id"] for i in courses.recomendar([_tag("Terraform", is_target=True)])] == ["terraform-associate"]
+
+
 def test_competencia_ja_dominada_e_sem_meta_nao_puxa_curso():
     assert courses.recomendar([_tag("Docker", proficiency=4)]) == []
 

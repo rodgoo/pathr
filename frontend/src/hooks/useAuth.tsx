@@ -25,6 +25,7 @@ import { ApiError } from "@/api/client";
 import { clearReads } from "@/offline/cache";
 import type { User } from "@/api/types";
 import { limparEstadoGuardado } from "./useAppState";
+import { esquecerVagas } from "@/lib/vagasGuardadas";
 import { lembrarChave } from "@/lib/passkeys";
 
 type Status = "checking" | "authenticated" | "anonymous";
@@ -40,6 +41,7 @@ interface AuthContextValue {
     birth_date: string;
     city: string;
     state: string;
+    username?: string;
   }) => Promise<string>;
   /** Entra pela chave de acesso do aparelho. Não pede e-mail: a chave diz quem é. */
   loginWithPasskey: () => Promise<void>;
@@ -103,6 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       birth_date: string;
       city: string;
       state: string;
+      username?: string;
     }) => {
       const { detail } = await authApi.signup(body);
       return detail;
@@ -122,6 +125,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // app no módulo de quem saiu já é informação demais — e o proximo login
       // deve começar na tela inicial, não no meio do estudo de outra pessoa.
       limparEstadoGuardado();
+      esquecerVagas();
       setUser(null);
       setStatus("anonymous");
       // O conteúdo guardado para uso offline sai do aparelho junto. A FILA de

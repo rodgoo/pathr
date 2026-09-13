@@ -58,7 +58,8 @@ export function SuggestedTags({ onAdicionada }: { onAdicionada: (nova: UserTag) 
   const dados = sugestoes.data;
   if (!dados || !dados.objetivo || dados.sugestoes.length === 0) return null;
 
-  const visiveis = dados.sugestoes.filter((item) => !adicionadas.includes(item.name));
+  // Idioma se trata no módulo de Idiomas, não como skill (ver SkillsTab).
+  const visiveis = dados.sugestoes.filter((item) => !adicionadas.includes(item.name) && item.category !== "idioma");
   if (visiveis.length === 0) return null;
 
   async function adicionar(sugestao: TagSuggestion) {

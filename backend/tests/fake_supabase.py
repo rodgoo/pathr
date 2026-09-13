@@ -51,6 +51,50 @@ class _Consulta:
         )
         return self
 
+    def gte(self, coluna: str, valor: Any) -> "_Consulta":
+        self._predicados.append(
+            lambda linha: linha.get(coluna) is not None and str(linha.get(coluna)) >= str(valor)
+        )
+        return self
+
+    def lt(self, coluna: str, valor: Any) -> "_Consulta":
+        self._predicados.append(
+            lambda linha: linha.get(coluna) is not None and str(linha.get(coluna)) < str(valor)
+        )
+        return self
+
+    def neq(self, coluna: str, valor: Any) -> "_Consulta":
+        self._predicados.append(lambda linha: str(linha.get(coluna)) != str(valor))
+        return self
+
+    def ilike(self, coluna: str, padrao: str) -> "_Consulta":
+        self._predicados.append(lambda linha: _casa_ilike(linha.get(coluna), padrao))
+        return self
+
+    def or_(self, filtros: str) -> "_Consulta":
+        """O subconjunto do `or=(...)` do PostgREST que o app usa: `eq` e `ilike`.
+
+        Um operador fora dele falha alto: um duplo que ignorasse o filtro
+        devolveria linhas demais e aprovaria um vazamento entre contas.
+        """
+        clausulas = []
+        for pedaco in filtros.split(","):
+            coluna, operador, valor = pedaco.split(".", 2)
+            if operador not in ("eq", "ilike"):
+                raise AssertionError(f"operador de or_ não suportado pelo duplo: {operador}")
+            clausulas.append((coluna, operador, valor))
+
+        def casa(linha: dict) -> bool:
+            for coluna, operador, valor in clausulas:
+                if operador == "eq" and str(linha.get(coluna)) == valor:
+                    return True
+                if operador == "ilike" and _casa_ilike(linha.get(coluna), valor.replace("*", "%")):
+                    return True
+            return False
+
+        self._predicados.append(casa)
+        return self
+
     # -- construção da consulta -------------------------------------------
     def select(self, *_args: Any, **_kwargs: Any) -> "_Consulta":
         self._operacao = "select"
@@ -129,9 +173,13 @@ class _Consulta:
                                    if isinstance(l.get(coluna), int) else str(l.get(coluna) or "")),
                     reverse=desc,
                 )
+            # `count` é o total ANTES do limite, como o PostgREST faz com
+            # count="exact". Contar depois faria toda contagem com `.limit(1)`
+            # valer no máximo 1 — e nenhum teste de limite veria o 429.
+            total = len(achadas)
             if self._limite is not None:
                 achadas = achadas[: self._limite]
-            return _Resultado([dict(l) for l in achadas], count=len(achadas))
+            return _Resultado([dict(l) for l in achadas], count=total)
 
         if self._operacao == "insert":
             novas = self._payload if isinstance(self._payload, list) else [self._payload]
@@ -164,6 +212,16 @@ class _Consulta:
             return _Resultado([])
 
         raise AssertionError(f"operação não suportada pelo duplo: {self._operacao}")
+
+
+def _casa_ilike(atual: Any, padrao: str) -> bool:
+    """`%` casa qualquer trecho, sem distinguir caixa — o ILIKE do Postgres."""
+    if atual is None:
+        return False
+    import re as _re
+
+    regex = "^" + ".*".join(_re.escape(parte) for parte in padrao.lower().split("%")) + "$"
+    return _re.match(regex, str(atual).lower()) is not None
 
 
 class _Negacao:

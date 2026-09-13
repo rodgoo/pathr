@@ -44,9 +44,11 @@ export function ProfilePage() {
   // Nenhum nível fica de fora: o que muda é a FORMA do módulo. Até N2 é
   // ensino; de N3 para cima é revisão curta. A ordem abaixo é a ordem em que
   // o plano ataca os assuntos.
-  const dominadas = tags.data.filter((tag) => tag.proficiency >= 3);
-  const parciais = tags.data.filter((tag) => tag.proficiency > 0 && tag.proficiency < 3);
-  const doZero = tags.data.filter((tag) => tag.proficiency === 0);
+  // O idioma tem nível próprio (CEFR), medido e mostrado no módulo de Idiomas.
+  const tecnicas = tags.data.filter((tag) => tag.category !== "idioma");
+  const dominadas = tecnicas.filter((tag) => tag.proficiency >= 3);
+  const parciais = tecnicas.filter((tag) => tag.proficiency > 0 && tag.proficiency < 3);
+  const doZero = tecnicas.filter((tag) => tag.proficiency === 0);
 
   const toggle = async (tagId: string, next: boolean) => {
     // Atualiza a tela antes da resposta: a escrita é pequena e previsível, e
@@ -81,7 +83,7 @@ export function ProfilePage() {
         onEdit={() => dispatch({ type: "navigate", screen: "config", settingsTab: "conta" })}
       />
 
-      {tags.data.length === 0 ? (
+      {tecnicas.length === 0 ? (
         <EmptyState
           title="Nenhuma competência ainda"
           description="Envie seu currículo para eu extrair as tecnologias, ou adicione uma a uma em Configurações, aba Skills."

@@ -12,11 +12,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.ai_providers import AiProviderError
 from app.config import settings
+from app.middleware_usuario import UsuarioDaRequisicao
 from app.services import eventos
 
 logger = logging.getLogger("pathr")
@@ -116,6 +118,14 @@ class AvisaOutrasTelas(BaseHTTPMiddleware):
 # carimbar o cabeçalho na resposta que ele devolve.
 app.add_middleware(ErroInterno)
 app.add_middleware(AvisaOutrasTelas)
+# Listagens grandes (vagas: ~300 KB de JSON) chegam num quinto do tamanho.
+# Abaixo de 1 KB comprimir custa mais do que economiza.
+app.add_middleware(GZipMiddleware, minimum_size=1000)
+
+# Por fora dos dois acima: é aqui que se anota quem fez a requisição, e os
+# middlewares de `call_next` copiam esse contexto para a rota. A cota de IA
+# por usuário depende disso (services/limites.py).
+app.add_middleware(UsuarioDaRequisicao)
 
 app.add_middleware(
     CORSMiddleware,
@@ -176,7 +186,9 @@ from app.routers import (  # noqa: E402
     quizzes,
     resumes,
     roadmap,
+    social,
     status_apis,
+    geo,
     tags,
     vagas,
 )
@@ -198,11 +210,13 @@ async def _fecha_canal_de_avisos() -> None:
 app.include_router(health.router)
 app.include_router(eventos_router.router)
 app.include_router(auth.router)
+app.include_router(social.router)
 app.include_router(profile.router)
 app.include_router(resumes.router)
 app.include_router(tags.router)
 app.include_router(courses.router)
 app.include_router(vagas.router)
+app.include_router(geo.router)
 app.include_router(status_apis.router)
 app.include_router(roadmap.router)
 app.include_router(library.router)

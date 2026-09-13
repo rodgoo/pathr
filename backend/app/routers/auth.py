@@ -61,6 +61,7 @@ from app.security import (
     verify_password,
     verify_totp_code,
 )
+from app.services import limites, usernames
 from app.services.email import send_password_reset, send_verification_email
 
 router = APIRouter(prefix="/auth", tags=["auth"])
@@ -87,6 +88,7 @@ def _user_out(user: dict[str, Any]) -> UserOut:
         locale=user.get("locale") or "pt-BR",
         timezone_name=user.get("timezone_name") or "America/Sao_Paulo",
         theme=user.get("theme") or "system",
+        username=user.get("username") or "",
         has_avatar=bool(user.get("avatar_path")),
     )
 
@@ -266,12 +268,28 @@ def signup(
     endereço é o que usamos para recuperar senha. O custo é uma ida à caixa
     de entrada antes do primeiro acesso.
     """
+    limites.consumir(supabase, limites.CADASTRO_POR_IP, client_ip(request))
     problems = password_problems(payload.password)
     if problems:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Senha fraca: " + ", ".join(problems) + ".",
         )
+
+    # Import tardio: social importa `deps`, que este módulo também usa, e
+    # no topo os dois routers se importariam em círculo.
+    from app.routers.social import gerar_para, ocupados
+
+    desejado = usernames.normalizar(payload.username)
+    if desejado:
+        motivo = usernames.problema(desejado)
+        if motivo:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Nome de usuário: {motivo}")
+        if ocupados(supabase, [desejado]):
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Este nome de usuário já está em uso. Escolha outro ou deixe em branco.",
+            )
 
     email = payload.email.strip().lower()
     if _find_user_by_email(supabase, email):
@@ -284,18 +302,34 @@ def signup(
             detail="Já existe uma conta com este e-mail. Tente entrar ou recuperar a senha.",
         )
 
-    created = (
-        supabase.table("pathr_user")
-        .insert(
-            {
-                "email": email,
-                "name": payload.name.strip(),
-                "password_hash": hash_password(payload.password),
-            }
+    base = {
+        "email": email,
+        "name": payload.name.strip(),
+        "password_hash": hash_password(payload.password),
+    }
+    # O índice único é quem garante o @: duas pessoas "Ana Souza" no mesmo
+    # segundo passam as duas pela checagem, e só a segunda é recusada. Para
+    # quem não escolheu, tenta de novo com o próximo nome livre; para quem
+    # escolheu, a resposta certa é dizer que o nome acabou de ser pego.
+    created = None
+    for _tentativa in range(3):
+        username = desejado or gerar_para(supabase, payload.name)
+        try:
+            created = supabase.table("pathr_user").insert({**base, "username": username}).execute().data[0]
+            break
+        except Exception as exc:  # noqa: BLE001
+            if "username" not in str(exc).lower():
+                raise
+            if desejado:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Este nome de usuário acabou de ser escolhido. Escolha outro.",
+                ) from exc
+    if created is None:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Não consegui reservar um nome de usuário. Tente de novo.",
         )
-        .execute()
-        .data[0]
-    )
 
     # Perfil, streak e módulo de idioma nascem junto: toda rota depois disto
     # assume que existem, e criá-los sob demanda espalharia esse "se não
@@ -330,6 +364,9 @@ def login(
     supabase: Client = Depends(get_supabase),
 ):
     """Entrada por e-mail e senha, com segundo fator quando ativo."""
+    # Por IP, além do bloqueio por conta: o bloqueio segura quem martela UMA
+    # conta; este segura quem tenta uma senha comum em mil contas diferentes.
+    limites.consumir(supabase, limites.LOGIN_POR_IP, client_ip(request))
     user = _find_user_by_email(supabase, payload.email)
 
     # Mesma resposta para e-mail inexistente e senha errada: dizer qual dos
@@ -600,6 +637,7 @@ def resend_verification(
 ):
     if current_user.get("email_verified_at"):
         return MessageOut(detail="Seu e-mail já está confirmado.")
+    limites.consumir(supabase, limites.EMAIL_POR_DESTINO, current_user.get("email"))
     token = _issue_email_token(supabase, str(current_user["id"]), "verify_email", _VERIFY_TTL)
     send_verification_email(current_user["email"], current_user.get("name") or "", token)
     return MessageOut(detail="Enviamos um novo link de confirmação.")
@@ -623,6 +661,8 @@ def resend_verification_public(
     generica = MessageOut(
         detail="Se houver uma conta com este e-mail aguardando confirmação, enviamos um novo link."
     )
+    limites.consumir(supabase, limites.EMAIL_POR_IP, client_ip(request))
+    limites.consumir(supabase, limites.EMAIL_POR_DESTINO, payload.email)
     user = _find_user_by_email(supabase, payload.email)
     if not user or user.get("email_verified_at"):
         return generica
@@ -641,6 +681,10 @@ def forgot_password(
 ):
     """Sempre responde igual, exista a conta ou não — a resposta não pode ser
     usada para descobrir quem tem cadastro."""
+    # Os dois limites valem exista a conta ou não: limitar só quando existe
+    # faria o 429 revelar quais e-mails têm cadastro.
+    limites.consumir(supabase, limites.EMAIL_POR_IP, client_ip(request))
+    limites.consumir(supabase, limites.EMAIL_POR_DESTINO, payload.email)
     user = _find_user_by_email(supabase, payload.email)
     if user:
         token = _issue_email_token(supabase, str(user["id"]), "reset_password", _RESET_TTL)

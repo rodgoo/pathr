@@ -15,6 +15,11 @@ IDADE_MAXIMA = 110
 
 class SignupRequest(BaseModel):
     name: str = Field(min_length=2, max_length=120)
+    # O @ que a pessoa escolheu. Vazio não recusa o cadastro: a conta nasce
+    # com um derivado do nome (routers/social.gerar_para), e a pessoa troca
+    # depois se quiser — travar a criação de conta por causa de um apelido
+    # seria perder gente no último passo.
+    username: str = Field(default="", max_length=40)
     email: EmailStr
     password: str = Field(min_length=10, max_length=256)
     birth_date: date
@@ -72,6 +77,7 @@ class UserOut(BaseModel):
     locale: str
     timezone_name: str
     theme: str
+    username: str = ""
     # Se ha foto, e nao a foto em si: os bytes saem por GET /profile/avatar.
     # Embutir a imagem aqui engordaria toda resposta de sessao com algo que a
     # tela so precisa uma vez.

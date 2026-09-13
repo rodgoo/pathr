@@ -21,6 +21,7 @@ import {
   SelectField,
 } from "@/components/auth/AuthShell";
 import { UFS } from "@/lib/ufs";
+import { CampoUsername } from "@/components/social/CampoUsername";
 import { C, TEXT } from "@/lib/tokens";
 
 /** Idade mínima, igual à do servidor (backend/app/schemas/auth.py). */
@@ -44,6 +45,9 @@ function maxBirthDate(): string {
 export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void }) {
   const { signup } = useAuth();
   const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
+  // O @ digitado pode ser enviado? Vazio pode: o servidor escolhe um.
+  const [usernameOk, setUsernameOk] = useState(true);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [birthDate, setBirthDate] = useState("");
@@ -60,7 +64,8 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
     missing.length === 0 &&
     birthDate !== "" &&
     city.trim().length >= 2 &&
-    state !== "";
+    state !== "" &&
+    usernameOk;
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -75,6 +80,7 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
         birth_date: birthDate,
         city: city.trim(),
         state,
+        username: username.trim().replace(/^@+/, ""),
       });
       setDone(detail);
     } catch (caught) {
@@ -126,6 +132,15 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
           required
           value={name}
           onChange={(event) => setName(event.target.value)}
+        />
+        {/* Logo depois do nome: é dele que sai a sugestão de @, e a pessoa vê a
+            ligação entre os dois enquanto ainda está olhando para o nome. */}
+        <CampoUsername
+          id="signup-username"
+          value={username}
+          onChange={setUsername}
+          nome={name}
+          onEstado={setUsernameOk}
         />
         <Field
           id="signup-email"

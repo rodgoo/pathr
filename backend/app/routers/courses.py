@@ -92,7 +92,9 @@ def unmark_owned(
 def list_courses(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
+    todos: bool = False,
 ):
+    """Os cursos do que a pessoa pediu; com `todos`, o catálogo inteiro para buscar."""
     user_id = str(current_user["id"])
     minhas = list_mine(current_user, supabase)
     perfil = (
@@ -103,7 +105,7 @@ def list_courses(
         [_objetivo_de(perfil), *[str(meta) for meta in (perfil.get("goals") or [])]]
     ).strip()
 
-    cursos = courses.recomendar(minhas, _slugs_do_roadmap(supabase, user_id), objetivo)
+    cursos = courses.recomendar(minhas, _slugs_do_roadmap(supabase, user_id), objetivo, todos=todos)
     possuidos = {linha["course_id"] for linha in _meus(supabase, user_id)}
     for curso in cursos:
         curso["possuo"] = curso["id"] in possuidos

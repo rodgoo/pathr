@@ -18,8 +18,45 @@ export interface User {
   locale: string;
   timezone_name: string;
   theme: string;
+  /** O @ da pessoa, sem o @. É por ele que as outras contas a encontram. */
+  username: string;
   /** Se ha foto. Os bytes vem por GET /profile/avatar. */
   has_avatar: boolean;
+}
+
+/** A relação entre quem está logado e a pessoa do cartão. */
+export type Relacao = "nenhuma" | "enviado" | "recebido" | "amigos";
+
+/**
+ * O que uma conta vê de outra. Nunca e-mail nem nascimento: o servidor não
+ * manda, e por isso o tipo não tem onde guardar.
+ */
+export interface PessoaCartao {
+  username: string;
+  name: string;
+  has_avatar: boolean;
+  city: string | null;
+  state: string | null;
+  objetivo: string | null;
+  cargo: string | null;
+  senioridade: string | null;
+  stack: string[];
+  relacao: Relacao;
+  /** O convite ou a amizade, para aceitar, recusar ou desfazer. */
+  friendship_id: string | null;
+}
+
+export interface Amizades {
+  amigos: PessoaCartao[];
+  recebidos: PessoaCartao[];
+  enviados: PessoaCartao[];
+}
+
+export interface DisponibilidadeUsername {
+  username: string;
+  disponivel: boolean;
+  problema: string | null;
+  sugestoes: string[];
 }
 
 export interface Session {
@@ -30,6 +67,11 @@ export interface Session {
 
 export interface Profile {
   user_id: string;
+  city?: string | null;
+  /** UF, duas letras. */
+  state?: string | null;
+  /** Raio das vagas presenciais e híbridas; 0 = só remotas; null = padrão (50 km). */
+  job_radius_km?: number | null;
   headline: string | null;
   current_role: string | null;
   target_role: string | null;
@@ -779,6 +821,48 @@ export interface Job {
   compatibilidade: JobCompatibility;
   /** Por que a vaga tem a cara da pessoa: a stack que ela cita e o objetivo. */
   afinidade?: { stack_em_comum: string[]; objetivo: boolean };
+  /** 0 a 100: o quanto a vaga tem a cara da pessoa. A lista vem nesta ordem. */
+  combina?: number;
+  /** Em linha reta, da cidade do perfil. null para remota ou local desconhecido. */
+  distancia_km?: number | null;
+  /** O anúncio em partes, lido dos títulos de seção. null quando não foi lido. */
+  sobre?: JobAbout | null;
+  /** O que falta para a vaga, já calculado — obrigatórias primeiro. */
+  lacunas?: JobListGap[];
+}
+
+export interface JobAbout {
+  apresentacao: string | null;
+  faz: string[];
+  pede: string[];
+  diferenciais: string[];
+}
+
+export interface JobListGap {
+  nome: string;
+  slug: string;
+  obrigatorio: boolean;
+  situacao: "falta" | "parcial" | "sem_nivel";
+  tag_id: string | null;
+  user_tag_id: string | null;
+  e_meta: boolean;
+  no_roadmap: boolean;
+  idioma?: boolean;
+}
+
+export interface JobCourse {
+  id: string;
+  titulo: string;
+  emissor: string;
+  url: string;
+  gratuito: boolean;
+}
+
+export interface City {
+  ibge: string;
+  nome: string;
+  uf: string;
+  capital: boolean;
 }
 
 export type JobSourceState = "ok" | "erro" | "sem_chave";
@@ -786,6 +870,12 @@ export type JobSourceState = "ok" | "erro" | "sem_chave";
 export interface JobList {
   termos: string[];
   vagas: Job[];
+  /** Os cursos de cada lacuna, por slug — uma lista por tecnologia, não por vaga. */
+  cursos?: Record<string, JobCourse[]>;
+  /** A região usada no filtro; null sem cidade nem UF no perfil. */
+  regiao?: { cidade: string | null; uf: string | null; raio_km: number } | null;
+  /** Quando esta lista foi montada (ISO). */
+  buscado_em?: string;
   fontes: Partial<Record<"gupy" | "remotive" | "adzuna" | "busca", JobSourceState>>;
   /** Sem competências nem objetivo: não há por onde buscar. */
   sem_perfil: boolean;

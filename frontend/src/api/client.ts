@@ -83,6 +83,9 @@ async function parseError(response: Response): Promise<ApiError> {
   try {
     const body = await response.json();
     if (typeof body?.detail === "string") detail = body.detail;
+    // Algumas recusas trazem, além da frase, o que fazer em seguida — o @
+    // ocupado vem com sugestões. A frase continua sendo o que se mostra.
+    else if (typeof body?.detail?.mensagem === "string") detail = body.detail.mensagem;
   } catch {
     // Resposta sem corpo JSON (502 de gateway, por exemplo). A mensagem
     // genérica acima já serve.

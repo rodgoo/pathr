@@ -36,7 +36,7 @@ import { SuggestedTags } from "./SuggestedTags";
  * definir. Categoria que exista no banco e não esteja aqui aparece no fim, com
  * o próprio slug — sumir da tela é pior que sair fora de ordem.
  */
-const CATEGORIAS: readonly { slug: string; label: string }[] = [
+export const CATEGORIAS: readonly { slug: string; label: string }[] = [
   { slug: "linguagem", label: "Linguagens" },
   { slug: "frontend", label: "Frontend" },
   { slug: "backend", label: "Backend" },
@@ -53,8 +53,11 @@ const CATEGORIAS: readonly { slug: string; label: string }[] = [
   { slug: "metodologia", label: "Metodologia" },
   { slug: "dominio", label: "Domínio de negócio" },
   { slug: "soft-skill", label: "Comportamental" },
-  { slug: "idioma", label: "Idiomas" },
 ];
+
+/** Idioma não é competência que se marca com N0–N5 aqui: o nível é medido no
+ * módulo de Idiomas (nivelamento e treinos), e é de lá que o resto do app lê. */
+export const CATEGORIAS_FORA_DAS_SKILLS = new Set(["idioma"]);
 
 /** A partir de que nível o plano para de ensinar o assunto. Vem do gerador de
  * roadmap, que cobre o caminho até N3 — acima disso, ensinar seria repetir. */
@@ -77,7 +80,8 @@ export function SkillsTab() {
 
   const porTag = new Map((minhas.data ?? []).map((item) => [item.tag_id, item]));
   const visiveis = (catalogo.data ?? []).filter(
-    (tag) => !termo || tag.name.toLowerCase().includes(termo),
+    (tag) =>
+      !CATEGORIAS_FORA_DAS_SKILLS.has(tag.category) && (!termo || tag.name.toLowerCase().includes(termo)),
   );
 
   const conhecidas = new Set(CATEGORIAS.map((categoria) => categoria.slug));
@@ -140,7 +144,7 @@ export function SkillsTab() {
     }
   }
 
-  const total = (minhas.data ?? []).length;
+  const total = (minhas.data ?? []).filter((item) => !CATEGORIAS_FORA_DAS_SKILLS.has(item.category)).length;
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>

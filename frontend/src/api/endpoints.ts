@@ -6,8 +6,14 @@
  */
 
 import { api } from "./client";
+import { esquecerVagas } from "@/lib/vagasGuardadas";
 import type {
+  Amizades,
   ApiStatusReport,
+  DisponibilidadeUsername,
+  PessoaCartao,
+  Relacao,
+  City,
   CourseList,
   OwnedCourse,
   JobAnalysis,
@@ -46,6 +52,44 @@ import type {
   WordMeaning,
 } from "./types";
 
+/** A stack, o objetivo e a região decidem que vagas aparecem e em que ordem.
+ * Mudou algum deles, a lista guardada da tela de Vagas é de outra pessoa. */
+function depoisDeMudarOPerfil<T>(resposta: T): T {
+  esquecerVagas();
+  return resposta;
+}
+
+/**
+ * Pessoas: o @ de cada um, amizades e sugestões.
+ *
+ * O @ vai sem o símbolo: o servidor normaliza de qualquer jeito, e mandar
+ * limpo evita que "@rodgoo" e "rodgoo" pareçam dois nomes na tela.
+ */
+export const social = {
+  disponivel: (username: string, nome = "") =>
+    api.get<DisponibilidadeUsername>(
+      `/social/username/disponivel?username=${encodeURIComponent(username)}&nome=${encodeURIComponent(nome)}`,
+    ),
+  trocarUsername: (username: string) =>
+    api.put<DisponibilidadeUsername>("/social/username", { username }),
+  privacidade: () => api.get<{ discoverable: boolean }>("/social/privacidade"),
+  gravarPrivacidade: (discoverable: boolean) =>
+    api.put<{ discoverable: boolean }>("/social/privacidade", { discoverable }),
+  sugestoes: () => api.get<PessoaCartao[]>("/social/pessoas/sugestoes"),
+  buscar: (q: string) =>
+    api.get<PessoaCartao[]>(`/social/pessoas/busca?q=${encodeURIComponent(q)}`),
+  amigos: () => api.get<Amizades>("/social/amigos"),
+  convidar: (username: string) =>
+    api.post<{ relacao: Relacao }>(`/social/amigos/${encodeURIComponent(username)}`),
+  aceitar: (friendshipId: string) =>
+    api.post<{ relacao: Relacao }>(`/social/convites/${encodeURIComponent(friendshipId)}/aceitar`),
+  /** Recusa, cancela ou desfaz — o servidor sabe qual pelo lado de quem pede. */
+  desfazer: (friendshipId: string) =>
+    api.del<void>(`/social/convites/${encodeURIComponent(friendshipId)}`),
+  avatar: (username: string) =>
+    api.blob(`/social/pessoas/${encodeURIComponent(username)}/avatar`),
+};
+
 export const auth = {
   // Não devolve sessão: a entrada exige e-mail confirmado, então o cadastro
   // termina numa mensagem, não num login.
@@ -56,6 +100,8 @@ export const auth = {
     birth_date: string;
     city: string;
     state: string;
+    /** Vazio: o servidor escolhe um a partir do nome. */
+    username?: string;
     country?: string;
   }) => api.post<{ detail: string }>("/auth/signup", body),
   login: (body: { email: string; password: string; mfa_code?: string }) =>
@@ -99,7 +145,9 @@ export const passkeys = {
 export const profile = {
   overview: (signal?: AbortSignal) => api.get<Overview>("/profile/overview", signal),
   get: () => api.get<Profile>("/profile"),
-  update: (body: Partial<Profile>) => api.patch<Profile>("/profile", body),
+  // Região, objetivo e senioridade mudam que vagas combinam: a lista guardada
+  // da tela de Vagas deixa de valer.
+  update: (body: Partial<Profile>) => api.patch<Profile>("/profile", body).then(depoisDeMudarOPerfil),
   updateAccount: (body: Partial<Pick<User, "name" | "locale" | "timezone_name" | "theme" | "onboarding_completed">>) =>
     api.patch<User>("/profile/account", body),
   activity: (limit = 30) => api.get(`/profile/activity?limit=${limit}`),
@@ -121,7 +169,7 @@ export const resumes = {
   parse: (id: string) => api.post<Resume>(`/resumes/${id}/parse`),
   /** Importa as competências REVISADAS. Sem corpo, importa o que a IA leu. */
   apply: (id: string, body?: { tecnologias?: unknown[]; aplicar_perfil?: boolean }) =>
-    api.post<{ imported: number; tags: unknown[] }>(`/resumes/${id}/apply`, body ?? {}),
+    api.post<{ imported: number; tags: unknown[] }>(`/resumes/${id}/apply`, body ?? {}).then(depoisDeMudarOPerfil),
   remove: (id: string) => api.del<void>(`/resumes/${id}`),
 };
 
@@ -130,16 +178,16 @@ export const tags = {
     api.get<Tag[]>(`/tags?q=${encodeURIComponent(q)}&category=${encodeURIComponent(category)}`),
   mine: () => api.get<UserTag[]>("/tags/mine"),
   add: (body: { tag_id?: string; name?: string; category?: string; proficiency: number; is_target: boolean }) =>
-    api.post<UserTag>("/tags/mine", body),
+    api.post<UserTag>("/tags/mine", body).then(depoisDeMudarOPerfil),
   update: (id: string, body: { proficiency?: number; is_target?: boolean }) =>
-    api.patch<UserTag>(`/tags/mine/${id}`, body),
+    api.patch<UserTag>(`/tags/mine/${id}`, body).then(depoisDeMudarOPerfil),
   /** O que aprender a seguir, a partir do objetivo — com o motivo de cada um.
    *
    * `refresh` refaz a lista mesmo dentro da validade: é o botão de quem
    * acabou de mudar o objetivo e não quer esperar o prazo. */
   suggestions: (refresh = false) =>
     api.get<TagSuggestions>(`/tags/suggestions?refresh=${refresh}`),
-  remove: (id: string) => api.del<void>(`/tags/mine/${id}`),
+  remove: (id: string) => api.del<void>(`/tags/mine/${id}`).then(depoisDeMudarOPerfil),
 };
 
 export const roadmap = {
@@ -182,17 +230,31 @@ export const courses = {
 /** Vagas reais de fontes confiáveis (Gupy, Remotive, Adzuna, sites de vaga),
  * e o que falta para cada uma. Ver services/vagas.py. */
 export const jobs = {
-  list: (params: { q?: string; remotas?: boolean; alcance?: "todas" | "nacionais" | "internacionais" } = {}) => {
+  list: (
+    params: {
+      q?: string;
+      remotas?: boolean;
+      alcance?: "todas" | "nacionais" | "internacionais";
+      /** Busca de novo nas fontes em vez de usar o que foi buscado há pouco. */
+      atualizar?: boolean;
+    } = {},
+  ) => {
     const query = new URLSearchParams();
     if (params.q) query.set("q", params.q);
     if (params.remotas) query.set("remotas", "true");
     if (params.alcance && params.alcance !== "todas") query.set("alcance", params.alcance);
+    if (params.atualizar) query.set("atualizar", "true");
     return api.get<JobList>(`/vagas?${query}`);
   },
   /** Um dos três: a vaga da listagem, o link de uma vaga ou o texto do anúncio.
    * Chama a IA na primeira vez de cada anúncio — leva alguns segundos. */
   analyze: (body: { vaga_id?: string; url?: string; texto?: string }) =>
     api.post<JobAnalysis>("/vagas/analise", body),
+};
+
+/** Cidades do Brasil pelo começo do nome, para o campo de região. */
+export const geo = {
+  cidades: (q: string) => api.get<City[]>(`/geo/cidades?q=${encodeURIComponent(q)}`),
 };
 
 /** O estado das integrações externas. A chave nunca vem junto. */

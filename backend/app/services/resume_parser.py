@@ -131,8 +131,10 @@ Regras que não podem ser quebradas:
    "react.js"/"ReactJS" -> "React"; "postgres"/"psql" -> "PostgreSQL";
    "node"/"nodejs" -> "Node.js"; "js" -> "JavaScript"; "k8s" -> "Kubernetes".
    Não traduza nomes próprios de tecnologia.
-5. `categoria` deve ser uma destas: linguagem, framework, banco, cloud, devops,
-   dados, ia, arquitetura, testes, seguranca, mobile, frontend, backend,
+5. `categoria` deve ser uma destas: linguagem, banco, cloud, devops,
+   dados, ia, arquitetura, testes, seguranca, mobile, frontend, backend
+   (framework vai no lado em que roda: Spring Boot e Django em backend, React e
+   Angular em frontend, Flutter em mobile),
    ferramenta, metodologia, soft-skill, idioma, dominio (setor de negócio em que
    a pessoa trabalhou: bancário e financeiro, varejo, saúde, e-commerce...).
 6. Não inclua como tecnologia: nome de empresa, cargo, cidade, faculdade, nem

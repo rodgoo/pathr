@@ -133,10 +133,10 @@ def test_resumo_conta_por_estado():
 
 
 def test_busca_de_vagas_registra_o_ultimo_uso(monkeypatch):
-    async def gupy(_termo):
+    async def gupy(_termo, _regiao=None):
         return []
 
-    async def remotive(_termo):
+    async def remotive(_termo, _regiao=None):
         raise RuntimeError("fora")
 
     monkeypatch.setattr(vagas, "_gupy", gupy)

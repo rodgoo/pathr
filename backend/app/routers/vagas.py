@@ -10,6 +10,7 @@ e-mails (routers/jobs.py).
 
 import asyncio
 import hashlib
+from datetime import datetime, timezone
 from typing import Any, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
@@ -75,12 +76,16 @@ async def listar_vagas(
     q: str = "",
     remotas: bool = False,
     alcance: str = Query(default="todas", pattern="^(todas|nacionais|internacionais)$"),
+    atualizar: bool = False,
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
 ):
     """Vagas das fontes confiáveis, ordenadas pelo quanto combinam com a pessoa.
 
     Sem `q`, os termos saem das competências (metas primeiro) e do objetivo.
+    Presencial e híbrida só no raio da cidade do perfil; remota sempre.
+    `atualizar` busca de novo nas fontes em vez de usar o que foi buscado há
+    pouco.
     """
     user_id = str(current_user["id"])
     minhas = list_mine(current_user, supabase)
@@ -100,7 +105,8 @@ async def listar_vagas(
     if not termos:
         return {"termos": [], "vagas": [], "fontes": {}, "sem_perfil": True}
 
-    encontradas, fontes = await servico.buscar(termos)
+    regiao = servico.regiao_do_perfil(perfil.get("city"), perfil.get("state"), perfil.get("job_radius_km"))
+    encontradas, fontes = await servico.buscar(termos, regiao, atualizar)
     nivel_ingles = _nivel_de_ingles(supabase, user_id)
     lista = servico.para_tela(
         encontradas,
@@ -112,13 +118,26 @@ async def listar_vagas(
         alcance=alcance,
         nivel_ingles=nivel_ingles,
         objetivo=objetivo,
+        regiao=regiao,
+        slugs_do_roadmap=set(_slugs_do_roadmap(supabase, user_id)),
     )
     return {
         "termos": termos,
         "vagas": lista,
+        "cursos": servico.cursos_das_lacunas(lista),
         "fontes": fontes,
         "sem_perfil": False,
         "nivel_ingles": nivel_ingles,
+        "regiao": (
+            {
+                "cidade": regiao.cidade.nome if regiao.cidade else None,
+                "uf": regiao.uf,
+                "raio_km": regiao.raio_km,
+            }
+            if regiao
+            else None
+        ),
+        "buscado_em": datetime.now(timezone.utc).isoformat(),
     }
 
 

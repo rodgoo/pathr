@@ -43,7 +43,7 @@ from urllib.parse import urlparse
 import httpx
 
 from app.config import settings
-from app.services import courses
+from app.services import courses, geo
 
 logger = logging.getLogger("pathr.vagas")
 
@@ -134,22 +134,57 @@ _AMBIGUAS = {
 }
 
 
+# Benefício não é requisito: "plano de saúde" acendia a tag Saúde (o setor), e
+# "banco de horas" não tem nada de banco de dados.
+_BENEFICIOS = re.compile(
+    r"plano de sa[uú]de|seguro[- ]sa[uú]de|assist[eê]ncia m[eé]dica|conv[eê]nio m[eé]dico|"
+    r"banco de horas|previd[eê]ncia privada|seguro de vida|aux[ií]lio educa[cç][aã]o",
+    re.I,
+)
+
+# As chaves normalizadas de cada catálogo, montadas uma vez: a listagem casa
+# tags em centenas de textos, e normalizar mil apelidos por texto custava
+# segundos.
+_chaves_preparadas: dict[tuple, list[tuple[dict[str, Any], list[tuple[str, bool]]]]] = {}
+
+
+def _preparar(catalogo: Iterable[dict[str, Any]]) -> list[tuple[dict[str, Any], list[tuple[str, bool]]]]:
+    tags = list(catalogo)
+    assinatura = tuple(
+        (t.get("id"), t.get("slug"), t.get("name"), t.get("category"), tuple(t.get("aliases") or ()))
+        for t in tags
+    )
+    pronto = _chaves_preparadas.get(assinatura)
+    if pronto is None:
+        pronto = []
+        for tag in tags:
+            nome = str(tag.get("name") or "")
+            chaves = []
+            for escrita, e_nome in [(nome, True)] + [(str(a), False) for a in (tag.get("aliases") or []) if a]:
+                chave = _normaliza(escrita).strip()
+                if not chave or (len(chave) < 3 and chave.isalnum() and chave not in _AMBIGUAS):
+                    continue
+                chaves.append((chave, e_nome))
+            pronto.append((tag, chaves))
+        if len(_chaves_preparadas) > 8:
+            _chaves_preparadas.clear()
+        _chaves_preparadas[assinatura] = pronto
+    return pronto
+
+
 def tags_citadas(texto: str, catalogo: Iterable[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     """As tags do catálogo que o texto cita, por slug.
 
     Casa por palavra inteira ("Java" não acende em "JavaScript"), sem acento e
     sem caixa — menos nas palavras ambíguas, que exigem a grafia da tecnologia.
     """
+    texto = _BENEFICIOS.sub(" ", texto or "")
     alvo = _normaliza(texto)
     original = f" {texto} "
     achadas: dict[str, dict[str, Any]] = {}
-    for tag in catalogo:
+    for tag, chaves in _preparar(catalogo):
         nome = str(tag.get("name") or "")
-        chaves = [(nome, True)] + [(str(a), False) for a in (tag.get("aliases") or []) if a]
-        for escrita, e_nome in chaves:
-            chave = _normaliza(escrita).strip()
-            if not chave or (len(chave) < 3 and chave.isalnum() and chave not in _AMBIGUAS):
-                continue
+        for chave, e_nome in chaves:
             if chave in _AMBIGUAS:
                 if e_nome and re.search(rf"(?<![\w.#+]){re.escape(nome)}(?![\w#+])", original):
                     achadas[str(tag["slug"])] = tag
@@ -159,6 +194,110 @@ def tags_citadas(texto: str, catalogo: Iterable[dict[str, Any]]) -> dict[str, di
                 achadas[str(tag["slug"])] = tag
                 break
     return achadas
+
+
+# ---------------------------------------------------------------------------
+# O anúncio em partes: o que a vaga é, o que faz, o que pede
+# ---------------------------------------------------------------------------
+
+# Títulos de seção, com a primeira letra maiúscula: "atender aos requisitos do
+# cliente" no meio de uma frase não abre seção. Os mais longos primeiro —
+# "Requisitos desejáveis" é diferencial, não requisito.
+_TITULOS_DE_SECAO: dict[str, tuple[str, ...]] = {
+    "faz": (
+        "Responsabilidades e atribuições", "Principais responsabilidades", "Principais atividades",
+        "Suas responsabilidades", "O que você vai fazer", "O que você fará", "Seus desafios",
+        "Responsabilidades", "Atribuições", "Atividades", "Desafios", "Responsibilities",
+        "What you'll do", "What you will do", "Your role",
+    ),
+    "pede": (
+        "Requisitos e qualificações", "Requisitos obrigatórios", "O que esperamos de você",
+        "O que buscamos", "O que precisamos", "Conhecimentos necessários", "Pré-requisitos",
+        "Requisitos", "Qualificações", "Requirements", "Qualifications",
+        "What we're looking for", "What you'll need", "Must have",
+    ),
+    "diferenciais": (
+        "Requisitos desejáveis", "Conhecimentos desejáveis", "Preferred qualifications",
+        "Será um diferencial", "Serão diferenciais", "Diferenciais", "Desejáveis", "Desejável",
+        "Nice to have", "Bonus points",
+    ),
+    "fim": (
+        "Informações adicionais", "Nossos benefícios", "O que oferecemos", "Etapas do processo",
+        "Benefícios", "Benefits", "Perks",
+    ),
+}
+
+
+def _titulo_regex(titulo: str) -> str:
+    return re.escape(titulo[0]) + "(?i:" + re.escape(titulo[1:]).replace(r"\ ", r"\s+") + ")"
+
+
+_SECAO = re.compile(
+    # Começo, quebra ou pontuação antes; ou colado numa minúscula ("diasResponsabilidades",
+    # como a Gupy entrega o texto sem parágrafos).
+    r"(?:(?<=^)|(?<=[\n.!?;:)\]])|(?<=[a-zà-ú]))\s*("
+    + "|".join(
+        f"(?P<{secao}_{i}>{_titulo_regex(t)})"
+        for secao, titulos in _TITULOS_DE_SECAO.items()
+        for i, t in enumerate(sorted(titulos, key=len, reverse=True))
+    )
+    # Depois: dois-pontos, quebra, ou o começo colado do conteúdo.
+    + r")(?=\s*[:\n]|[A-ZÀ-Ú•·*\-–]|[^\w\s,.])",
+)
+
+_ITEM = re.compile(r"\n+|[•·▪●]|;\s*|(?<=[.!?])\s*(?=[A-ZÀ-Ú])")
+
+
+def _itens(trecho: str, limite: int) -> list[str]:
+    itens = []
+    for bruto in _ITEM.split(trecho):
+        item = re.sub(r"^[\s:\-–*]+", "", bruto or "").strip().rstrip(".;")
+        if len(item) < 4:
+            continue
+        itens.append(item if len(item) <= 160 else item[:157].rstrip() + "…")
+        if len(itens) == limite:
+            break
+    return itens
+
+
+def _ate_a_frase(texto: str, limite: int) -> str:
+    texto = re.sub(r"\s+", " ", texto).strip()
+    if len(texto) <= limite:
+        return texto
+    corte = texto[:limite]
+    fim = max(corte.rfind(". "), corte.rfind("! "))
+    return (corte[: fim + 1] if fim > limite // 2 else corte.rstrip() + "…").strip()
+
+
+def secoes(texto: str) -> dict[str, str]:
+    """intro, faz, pede, diferenciais — o texto de cada parte do anúncio."""
+    partes: dict[str, str] = {}
+    marcos = []
+    for achado in _SECAO.finditer(texto or ""):
+        nome = next(chave for chave, valor in achado.groupdict().items() if valor).rsplit("_", 1)[0]
+        marcos.append((achado.start(1), achado.end(1), nome))
+    partes["intro"] = (texto or "")[: marcos[0][0]] if marcos else (texto or "")
+    for posicao, (_inicio, fim, nome) in enumerate(marcos):
+        proximo = marcos[posicao + 1][0] if posicao + 1 < len(marcos) else len(texto)
+        if nome != "fim":
+            partes[nome] = (partes.get(nome, "") + "\n" + texto[fim:proximo]).strip()
+    return partes
+
+
+def sobre_a_vaga(texto: str) -> dict[str, Any]:
+    """O que a vaga é, o que a pessoa vai fazer, o que pede e o que conta a mais.
+
+    Lido dos títulos de seção do anúncio, sem IA: a listagem inteira sai na
+    hora. Anúncio sem seções vira só a apresentação.
+    """
+    partes = secoes(texto)
+    apresentacao = _ate_a_frase(partes.get("intro", ""), 260)
+    return {
+        "apresentacao": apresentacao if len(apresentacao) >= 20 else None,
+        "faz": _itens(partes.get("faz", ""), 4),
+        "pede": _itens(partes.get("pede", ""), 6),
+        "diferenciais": _itens(partes.get("diferenciais", ""), 4),
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -323,7 +462,7 @@ def nivel_do_titulo(titulo: str) -> Optional[str]:
 # Fontes
 # ---------------------------------------------------------------------------
 
-_cache: dict[tuple[str, str], tuple[float, list[Vaga]]] = {}
+_cache: dict[tuple[str, str, str], tuple[float, list[Vaga]]] = {}
 # O resultado do último uso REAL de cada fonte. A página de status lê daqui as
 # fontes que não se chama só para checar (Remotive, buscadores pagos).
 ultimo_estado: dict[str, tuple[str, datetime]] = {}
@@ -334,31 +473,55 @@ _por_id: dict[str, Vaga] = {}
 def limpar_cache() -> None:
     _cache.clear()
     _por_id.clear()
+    _pausada_ate.clear()
 
 
 def vaga_guardada(vaga_id: str) -> Optional[Vaga]:
     return _por_id.get(vaga_id)
 
 
-async def _com_cache(fonte: str, termo: str, buscar: Callable[[str], Awaitable[list[Vaga]]]) -> list[Vaga]:
-    chave = (fonte, termo.lower())
+# Fonte que respondeu 429 descansa: insistir a cada listagem só estende o
+# bloqueio, e cada tentativa atrasa a tela.
+_PAUSA_APOS_LIMITE_S = 600
+_pausada_ate: dict[str, float] = {}
+
+# "Atualizar" ignora a validade, mas não martela a fonte: dois cliques seguidos
+# devolvem o que acabou de chegar.
+_INTERVALO_MINIMO_S = 120
+
+
+async def _com_cache(
+    fonte: str,
+    termo: str,
+    buscar: Callable[[str, Optional["Regiao"]], Awaitable[list[Vaga]]],
+    regiao: Optional["Regiao"] = None,
+    atualizar: bool = False,
+) -> list[Vaga]:
+    # Só a Adzuna e os buscadores procuram pela cidade; nas outras fontes a
+    # região filtra depois, e a mesma busca serve para todo mundo.
+    local = regiao.chave if regiao and fonte in ("adzuna", "busca") else ""
+    chave = (fonte, termo.lower(), local)
     guardado = _cache.get(chave)
-    if guardado and time.monotonic() - guardado[0] < _VALIDADE_S[fonte]:
-        return guardado[1]
-    vagas = await buscar(termo)
+    if guardado:
+        idade = time.monotonic() - guardado[0]
+        if idade < (_INTERVALO_MINIMO_S if atualizar else _VALIDADE_S[fonte]):
+            return guardado[1]
+    vagas = await buscar(termo, regiao)
     _cache[chave] = (time.monotonic(), vagas)
     for vaga in vagas:
         _por_id[vaga.id] = vaga
     return vagas
 
 
-async def _gupy(termo: str) -> list[Vaga]:
+async def _gupy(termo: str, _regiao: Optional["Regiao"] = None) -> list[Vaga]:
     # Duas páginas: a busca comum e a só de remotas. Numa só, as 30 primeiras
     # vêm misturadas e a maior parte das remotas fica de fora — "java" tem 95
     # remotas na Gupy, e a busca comum trazia 27.
     async with httpx.AsyncClient(timeout=_TIMEOUT, headers={"User-Agent": _UA}) as cliente:
         respostas = await asyncio.gather(
-            cliente.get(GUPY, params={"jobName": termo, "limit": 30}),
+            # 100 na busca comum: as presenciais fora das capitais ficavam
+            # depois das 30 primeiras.
+            cliente.get(GUPY, params={"jobName": termo, "limit": 100}),
             cliente.get(GUPY, params={"jobName": termo, "limit": 30, "workplaceType": "remote"}),
         )
     itens: dict[Any, dict[str, Any]] = {}
@@ -384,7 +547,7 @@ async def _gupy(termo: str) -> list[Vaga]:
                 remota=remota,
                 publicada_em=item.get("publishedDate"),
                 descricao=texto_puro(str(item.get("description") or "")),
-                extra={"estado": item.get("state")},
+                extra={"estado": item.get("state"), "cidade": item.get("city")},
             )
         )
     return [v for v in vagas if v.titulo and v.url]
@@ -403,7 +566,7 @@ def cita_o_termo(termo: str, titulo: str, tags: Iterable[str], descricao: str) -
     return len(padrao.findall(texto_puro(descricao))) >= 2
 
 
-async def _remotive(termo: str) -> list[Vaga]:
+async def _remotive(termo: str, _regiao: Optional["Regiao"] = None) -> list[Vaga]:
     # A busca por termo acha pouco; a categoria de desenvolvimento inteira,
     # filtrada pelo termo aqui, acha as vagas que não repetem o termo no título.
     async with httpx.AsyncClient(timeout=_TIMEOUT, headers={"User-Agent": _UA}) as cliente:
@@ -443,7 +606,7 @@ async def _remotive(termo: str) -> list[Vaga]:
 _CITA_REMOTO = re.compile(r"remot[oa]|home[ -]?office|100% remote|fully remote|trabalho remoto|anywhere", re.I)
 
 
-async def _adzuna(termo: str) -> list[Vaga]:
+async def _adzuna(termo: str, regiao: Optional["Regiao"] = None) -> list[Vaga]:
     chaves = {
         "app_id": settings.adzuna_app_id.strip(),
         "app_key": settings.adzuna_app_key.strip(),
@@ -452,11 +615,13 @@ async def _adzuna(termo: str) -> list[Vaga]:
     }
     # A segunda busca é a das remotas: sem ela, as remotas vêm diluídas entre
     # as presenciais das capitais.
+    pedidos = [{**chaves, "what": termo}, {**chaves, "what": termo, "what_or": "remoto remota home office"}]
+    # A terceira é a da cidade da pessoa, no raio dela: sem ela, a Adzuna
+    # devolve as capitais grandes e a vaga da cidade vizinha nunca aparece.
+    if regiao and regiao.cidade and regiao.raio_km > 0:
+        pedidos.append({**chaves, "what": termo, "where": regiao.cidade.nome, "distance": regiao.raio_km})
     async with httpx.AsyncClient(timeout=_TIMEOUT, headers={"User-Agent": _UA}) as cliente:
-        respostas = await asyncio.gather(
-            cliente.get(ADZUNA, params={**chaves, "what": termo}),
-            cliente.get(ADZUNA, params={**chaves, "what": termo, "what_or": "remoto remota home office"}),
-        )
+        respostas = await asyncio.gather(*(cliente.get(ADZUNA, params=p) for p in pedidos))
     itens: dict[Any, dict[str, Any]] = {}
     for resposta in respostas:
         resposta.raise_for_status()
@@ -467,6 +632,7 @@ async def _adzuna(termo: str) -> list[Vaga]:
         titulo = texto_puro(str(item.get("title") or ""))
         descricao = texto_puro(str(item.get("description") or ""))
         local = (item.get("location") or {}).get("display_name")
+        area = (item.get("location") or {}).get("area") or []
         remota = bool(_CITA_REMOTO.search(f"{titulo} {descricao} {local or ''}"))
         vagas.append(
             Vaga(
@@ -483,7 +649,13 @@ async def _adzuna(termo: str) -> list[Vaga]:
                 # A Adzuna devolve só um trecho da descrição; a análise
                 # completa lê a página.
                 descricao=descricao,
-                extra={"so_trecho": True},
+                extra={
+                    "so_trecho": True,
+                    "lat": item.get("latitude"),
+                    "lon": item.get("longitude"),
+                    "cidade": area[3] if len(area) > 3 else None,
+                    "estado": area[2] if len(area) > 2 else None,
+                },
             )
         )
     return [v for v in vagas if v.titulo and v.url]
@@ -503,8 +675,9 @@ def site_de_vaga(url: str) -> Optional[str]:
     return None
 
 
-async def _busca_em_sites(termo: str) -> list[Vaga]:
-    consulta = f"vaga {termo} Brasil"
+async def _busca_em_sites(termo: str, regiao: Optional["Regiao"] = None) -> list[Vaga]:
+    onde = f"({regiao.cidade.nome} OR remoto)" if regiao and regiao.cidade and regiao.raio_km > 0 else "Brasil"
+    consulta = f"vaga {termo} {onde}"
     resultados: list[tuple[str, str, str]] = []  # (url, título, trecho)
     async with httpx.AsyncClient(timeout=_TIMEOUT, headers={"User-Agent": _UA}) as cliente:
         if settings.tavily_api_key.strip():
@@ -546,6 +719,7 @@ async def _busca_em_sites(termo: str) -> list[Vaga]:
                 url=url,
                 fonte=NOME_DO_SITE[dominio],
                 descricao=texto_puro(trecho),
+                remota=True if _CITA_REMOTO.search(f"{titulo} {trecho}") else None,
                 extra={"so_link": True},
             )
         )
@@ -561,20 +735,33 @@ def fontes_disponiveis() -> dict[str, bool]:
     }
 
 
-def _buscador(fonte: str) -> Callable[[str], Awaitable[list[Vaga]]]:
+def _buscador(fonte: str) -> Callable[[str, Optional["Regiao"]], Awaitable[list[Vaga]]]:
     # Resolvido na hora da chamada, e não num dicionário no import: é o que
     # deixa o teste trocar uma fonte sem tocar a rede.
     return {"gupy": _gupy, "remotive": _remotive, "adzuna": _adzuna, "busca": _busca_em_sites}[fonte]
 
 
-async def buscar(termos: list[str]) -> tuple[list[Vaga], dict[str, str]]:
+async def buscar(
+    termos: list[str], regiao: Optional["Regiao"] = None, atualizar: bool = False
+) -> tuple[list[Vaga], dict[str, str]]:
     """Todas as fontes, todos os termos, ao mesmo tempo. Uma fonte fora do ar
     não derruba as outras: o estado de cada uma volta para a tela."""
     disponiveis = fontes_disponiveis()
     estado: dict[str, str] = {nome: ("ok" if ativa else "sem_chave") for nome, ativa in disponiveis.items()}
-    pedidos = [(fonte, termo) for fonte, ativa in disponiveis.items() if ativa for termo in termos]
+    agora_s = time.monotonic()
+    pedidos = []
+    for fonte, ativa in disponiveis.items():
+        if not ativa:
+            continue
+        if _pausada_ate.get(fonte, 0) > agora_s:
+            estado[fonte] = "erro"
+            continue
+        # A Adzuna gratuita aceita poucas chamadas por minuto, e cada termo lá
+        # custa três (comum, remotas, cidade). Dois termos bastam.
+        for termo in termos[:2] if fonte == "adzuna" else termos:
+            pedidos.append((fonte, termo))
     respostas = await asyncio.gather(
-        *(_com_cache(fonte, termo, _buscador(fonte)) for fonte, termo in pedidos),
+        *(_com_cache(fonte, termo, _buscador(fonte), regiao, atualizar) for fonte, termo in pedidos),
         return_exceptions=True,
     )
 
@@ -583,7 +770,12 @@ async def buscar(termos: list[str]) -> tuple[list[Vaga], dict[str, str]]:
     agora = datetime.now(timezone.utc)
     for (fonte, _), resposta in zip(pedidos, respostas):
         if isinstance(resposta, BaseException):
-            logger.warning("fonte de vagas %s falhou: %s", fonte, resposta)
+            # Nunca o texto do erro: o do httpx traz a URL, e a da Adzuna
+            # carrega a chave na query string.
+            codigo = resposta.response.status_code if isinstance(resposta, httpx.HTTPStatusError) else None
+            logger.warning("fonte de vagas %s falhou: %s %s", fonte, type(resposta).__name__, codigo or "")
+            if codigo == 429:
+                _pausada_ate[fonte] = time.monotonic() + _PAUSA_APOS_LIMITE_S
             estado[fonte] = "erro"
             ultimo_estado[fonte] = ("erro", agora)
             continue
@@ -617,10 +809,12 @@ def _dias_desde(quando: Optional[str], agora: Optional[datetime] = None) -> Opti
     return max(0, ((agora or datetime.now(timezone.utc)) - data).days)
 
 
-# Nem idioma nem comportamental entram na conta técnica. O inglês tem régua
-# própria (CEFR); contá-lo como tecnologia fazia uma vaga de atendimento que só
-# pedia inglês parecer 100% compatível com um dev que tem inglês no currículo.
-_FORA_DA_CONTA_TECNICA = {"idioma", "soft-skill"}
+# Nem idioma, nem comportamental, nem setor entram na conta técnica. O inglês
+# tem régua própria (CEFR); contá-lo como tecnologia fazia uma vaga de
+# atendimento que só pedia inglês parecer 100% compatível com um dev que tem
+# inglês no currículo. O setor ("Saúde", "Varejo") é contexto da empresa, não
+# algo que falte à pessoa — e o anúncio o cita até nos benefícios.
+_FORA_DA_CONTA_TECNICA = {"idioma", "soft-skill", "dominio"}
 
 # O papel que o objetivo descreve, lido no título da vaga.
 _PAPEIS: dict[str, re.Pattern[str]] = {
@@ -651,10 +845,149 @@ def ler_objetivo(texto: str, catalogo: Iterable[dict[str, Any]]) -> Objetivo:
     )
 
 
+# ---------------------------------------------------------------------------
+# Região
+# ---------------------------------------------------------------------------
+
+# Sem raio escolhido: a região metropolitana de uma capital cabe em 50 km.
+RAIO_PADRAO_KM = 50
+
+
+@dataclass
+class Regiao:
+    """Onde a pessoa mora e até onde vai numa vaga presencial ou híbrida.
+
+    Remota entra sempre. Presencial e híbrida só dentro do raio — quem não
+    pode se mudar de estado não tem o que fazer com a vaga a 900 km.
+    """
+
+    cidade: Optional[geo.Cidade]
+    uf: Optional[str]
+    raio_km: int = RAIO_PADRAO_KM
+    perto: list[tuple[geo.Cidade, float]] = field(default_factory=list)
+
+    @property
+    def chave(self) -> str:
+        return f"{self.cidade.ibge if self.cidade else self.uf}:{self.raio_km}"
+
+
+def regiao_do_perfil(cidade: Optional[str], estado: Optional[str], raio_km: Optional[int]) -> Optional[Regiao]:
+    raio = RAIO_PADRAO_KM if raio_km is None else max(0, int(raio_km))
+    achada = geo.achar(cidade, estado)
+    uf = achada.uf if achada else geo.uf_de(estado)
+    if not achada and not uf:
+        return None
+    perto = geo.no_raio(achada, raio) if achada and raio > 0 else []
+    return Regiao(cidade=achada, uf=uf, raio_km=raio, perto=perto)
+
+
+def onde_fica(vaga: Vaga, regiao: Optional[Regiao]) -> tuple[bool, Optional[float]]:
+    """(a vaga entra?, a quantos km da pessoa)."""
+    if vaga.remota is True or regiao is None:
+        return True, None
+    if regiao.raio_km == 0:
+        return False, None
+    lat, lon = vaga.extra.get("lat"), vaga.extra.get("lon")
+    if lat is None or lon is None:
+        cidade = geo.achar(vaga.extra.get("cidade"), vaga.extra.get("estado"))
+        if cidade:
+            lat, lon = cidade.lat, cidade.lon
+    if regiao.cidade is None:
+        # Sem a cidade da pessoa, o estado é o que dá para garantir.
+        uf = geo.uf_de(vaga.extra.get("estado"))
+        return bool(uf and uf == regiao.uf), None
+    if lat is not None and lon is not None:
+        distancia = geo.distancia_km(regiao.cidade.lat, regiao.cidade.lon, float(lat), float(lon))
+        return distancia <= regiao.raio_km, distancia
+    # Sem local nos dados (resultado de buscador): vale a cidade citada no texto.
+    citada = geo.cidade_citada(f"{vaga.titulo} {vaga.local or ''} {vaga.descricao}", regiao.perto)
+    if citada:
+        return True, citada[1]
+    return False, None
+
+
+# ---------------------------------------------------------------------------
+# A nota e a lista
+# ---------------------------------------------------------------------------
+
 # Quantas tecnologias em comum contam para a afinidade. A partir daí a vaga já
-# "tem a cara" da pessoa, e mais uma não deveria passar na frente de uma vaga
-# que também bate o objetivo.
+# "tem a cara" da pessoa.
 _TETO_STACK = 6
+
+# O quanto cada parte vale na nota de 0 a 100. A cobertura dos requisitos pesa
+# mais — é o que a entrevista cobra —, a stack em comum logo atrás.
+_PESO_COBERTURA = 40
+_PESO_STACK = 30
+_PESO_OBJETIVO = 20
+_PESO_NIVEL = 10
+# Sem o anúncio lido (buscador, trecho da Adzuna), a cobertura é incerta: vale
+# um quarto, e a vaga lida com a mesma stack passa na frente.
+_COBERTURA_DESCONHECIDA = 0.25
+
+
+def combina(
+    nota: Optional[int],
+    stack_em_comum: int,
+    objetivo_citado: int,
+    papel_no_titulo: bool,
+    nivel: Optional[str],
+    senioridade: Optional[str],
+    estado_ingles: Optional[str],
+    dias: Optional[int],
+) -> int:
+    """O quanto a vaga tem a cara da pessoa, de 0 a 100. O número do cartão e
+    a ordem da lista são o mesmo: a de cima é sempre a que mais combina."""
+    cobertura = nota / 100 if nota is not None else _COBERTURA_DESCONHECIDA
+    stack = min(stack_em_comum, _TETO_STACK) / _TETO_STACK
+    objetivo = min(1.0, (0.6 if papel_no_titulo else 0.0) + 0.2 * min(objetivo_citado, 2))
+    if senioridade and nivel:
+        nivel_certo = 1.0 if nivel == senioridade else 0.0
+    else:
+        nivel_certo = 0.5
+    pontos = (
+        _PESO_COBERTURA * cobertura
+        + _PESO_STACK * stack
+        + _PESO_OBJETIVO * objetivo
+        + _PESO_NIVEL * nivel_certo
+    )
+    # Inglês abaixo do pedido barra a entrevista antes de qualquer tecnologia:
+    # desce, mas não some — dá para chegar lá.
+    if estado_ingles == "falta":
+        pontos *= 0.7
+    elif estado_ingles == "parcial":
+        pontos *= 0.9
+    if dias is not None and dias > 30:
+        pontos -= 5
+    return max(0, min(100, round(pontos)))
+
+
+def _lacunas(
+    tecnicas: dict[str, dict[str, Any]],
+    desejaveis: set[str],
+    minhas: dict[str, dict[str, Any]],
+    slugs_do_roadmap: set[str],
+) -> list[dict[str, Any]]:
+    lacunas = []
+    for slug, tag in tecnicas.items():
+        estado = situacao(slug, minhas)
+        if estado == "tem":
+            continue
+        minha = minhas.get(slug)
+        lacunas.append(
+            {
+                "nome": tag["name"],
+                "slug": slug,
+                "obrigatorio": slug not in desejaveis,
+                "situacao": estado,
+                "tag_id": str(tag["id"]) if tag.get("id") else None,
+                "user_tag_id": str(minha["id"]) if minha and minha.get("id") else None,
+                "e_meta": bool(minha and minha.get("is_target")),
+                "no_roadmap": slug in slugs_do_roadmap,
+            }
+        )
+    # Obrigatório primeiro, e o que falta de todo antes do que está começando.
+    lacunas.sort(key=lambda l: (not l["obrigatorio"], l["situacao"] != "falta", l["nome"]))
+    return lacunas
 
 
 def para_tela(
@@ -664,19 +997,22 @@ def para_tela(
     senioridade: Optional[str] = None,
     estado_uf: Optional[str] = None,
     so_remotas: bool = False,
-    limite: int = 100,
+    limite: int = 150,
     alcance: str = "todas",
     nivel_ingles: Optional[str] = None,
     objetivo: Optional[Objetivo] = None,
+    regiao: Optional[Regiao] = None,
+    slugs_do_roadmap: Optional[set[str]] = None,
 ) -> list[dict[str, Any]]:
-    """As vagas que têm a ver com a pessoa, da que mais tem a cara dela.
+    """As vagas que têm a ver com a pessoa, da que mais combina para a que menos.
 
-    Afinidade = stack em comum (quanto mais, mais perto) + o objetivo (a vaga
-    cita o que ele pede, ou o título é do papel que ele descreve) + a cobertura
-    dos requisitos. Vaga que não cita NADA da stack e não bate o objetivo sai
-    da lista: aparecer só porque o anúncio pede inglês não é sugestão, é ruído.
+    Sai da lista a vaga que não cita NADA da stack nem bate o objetivo
+    (aparecer só porque o anúncio pede inglês é ruído) e a presencial ou
+    híbrida fora do raio da pessoa. Cada vaga já vem com o que falta para ela
+    e com o anúncio em partes — sem clique, sem IA.
     """
     objetivo = objetivo or Objetivo()
+    slugs_do_roadmap = slugs_do_roadmap or set()
     minha_stack = {
         slug for slug, tag in minhas.items()
         if situacao(slug, minhas) in ("tem", "parcial") and tag.get("category") not in _FORA_DA_CONTA_TECNICA
@@ -689,15 +1025,28 @@ def para_tela(
         internacional = e_internacional(vaga)
         if (alcance == "nacionais" and internacional) or (alcance == "internacionais" and not internacional):
             continue
+        entra, distancia = onde_fica(vaga, regiao)
+        if not entra:
+            continue
         exigido = ingles_exigido(f"{vaga.titulo}\n{vaga.descricao}", internacional)
         estado_ingles = situacao_do_ingles(exigido, nivel_ingles)
         so_link = bool(vaga.extra.get("so_link"))
         so_trecho = bool(vaga.extra.get("so_trecho"))
         # Resultado de busca e Adzuna trazem só um trecho do anúncio. Uma nota
         # tirada dali diria "100%" para a vaga cujo trecho só citou "Java".
-        citadas = {} if (so_link or so_trecho) else tags_citadas(f"{vaga.titulo}\n{vaga.descricao}", catalogo)
+        lido = not (so_link or so_trecho)
+        citadas = tags_citadas(f"{vaga.titulo}\n{vaga.descricao}", catalogo) if lido else {}
         tecnicas = {s: t for s, t in citadas.items() if t.get("category") not in _FORA_DA_CONTA_TECNICA}
-        compat = compatibilidade(((s, t["name"], True) for s, t in tecnicas.items()), minhas)
+        partes = secoes(vaga.descricao) if lido else {}
+        # Citada só nos diferenciais: desejável, e pesa metade na nota.
+        desejaveis: set[str] = set()
+        if partes.get("diferenciais"):
+            fora_dos_diferenciais = set(tags_citadas(
+                "\n".join([vaga.titulo, partes.get("intro", ""), partes.get("faz", ""), partes.get("pede", "")]),
+                catalogo,
+            ))
+            desejaveis = set(tags_citadas(partes["diferenciais"], catalogo)) - fora_dos_diferenciais
+        compat = compatibilidade(((s, t["name"], s not in desejaveis) for s, t in tecnicas.items()), minhas)
 
         # Sem o anúncio lido, o título é tudo o que há: é nele que se procura a
         # stack e o objetivo.
@@ -716,32 +1065,31 @@ def para_tela(
             continue
 
         nivel = nivel_do_titulo(vaga.titulo)
-        regiao = bool(estado_uf and (vaga.extra.get("estado") or "").upper() == estado_uf.upper())
-        # Ordem: stack em comum e objetivo mandam, a cobertura dos requisitos
-        # pesa junto; nível certo, região e vaga recente desempatam. Vaga sem
-        # anúncio lido perde a parte da cobertura.
-        pontos = (
-            8 * min(len(em_comum), _TETO_STACK)
-            + 10 * min(len(objetivo_na_vaga), 3)
-            + (15 if papel_no_titulo else 0)
-            + (0.5 * compat["nota"] if compat["nota"] is not None else -20)
-        )
-        if senioridade and nivel:
-            pontos += 10 if nivel == senioridade else -15
-        if regiao or vaga.remota:
-            pontos += 5
         dias = _dias_desde(vaga.publicada_em)
-        if dias is not None and dias > 30:
-            pontos -= 10
-        # Inglês abaixo do pedido barra a entrevista antes de qualquer
-        # tecnologia: desce na lista, mas não some — dá para chegar lá.
-        if estado_ingles == "falta":
-            pontos -= 25
-        elif estado_ingles == "parcial":
-            pontos -= 10
+        nota_final = combina(
+            compat["nota"], len(em_comum), len(objetivo_na_vaga), papel_no_titulo,
+            nivel, senioridade, estado_ingles, dias,
+        )
+        lacunas = _lacunas(tecnicas, desejaveis, minhas, slugs_do_roadmap)
+        if estado_ingles in ("falta", "parcial", "sem_nivel"):
+            lacunas.append({
+                "nome": f"Inglês {exigido}",
+                "slug": "ingles",
+                "obrigatorio": True,
+                "situacao": estado_ingles,
+                "tag_id": None,
+                "user_tag_id": None,
+                "e_meta": False,
+                "no_roadmap": False,
+                "idioma": True,
+            })
+        na_regiao = vaga.remota is not True and (
+            distancia is not None
+            or bool(estado_uf and geo.uf_de(vaga.extra.get("estado")) == geo.uf_de(estado_uf))
+        )
         linhas.append(
             (
-                pontos,
+                (-nota_final, distancia if distancia is not None else 0, dias if dias is not None else 999),
                 {
                     "id": vaga.id,
                     "titulo": vaga.titulo,
@@ -752,19 +1100,39 @@ def para_tela(
                     "remota": vaga.remota,
                     "publicada_ha_dias": dias,
                     "nivel": nivel,
-                    "na_sua_regiao": regiao,
+                    "na_sua_regiao": na_regiao,
+                    "distancia_km": round(distancia) if distancia is not None else None,
                     "so_link": so_link,
                     "so_trecho": so_trecho,
                     "internacional": internacional,
                     "ingles": {"exigido": exigido, "seu": nivel_ingles, "situacao": estado_ingles},
                     "resumo": vaga.descricao[:280] or None,
+                    "sobre": sobre_a_vaga(vaga.descricao) if lido else None,
                     "compatibilidade": compat,
+                    "combina": nota_final,
+                    "lacunas": lacunas,
                     "afinidade": {"stack_em_comum": em_comum, "objetivo": bate_objetivo},
                 },
             )
         )
-    linhas.sort(key=lambda par: -par[0])
+    linhas.sort(key=lambda par: par[0])
     return [linha for _, linha in linhas[:limite]]
+
+
+def cursos_das_lacunas(linhas: Iterable[dict[str, Any]], por_tag: int = 2) -> dict[str, list[dict[str, Any]]]:
+    """Os cursos de cada tecnologia que falta em alguma vaga, uma vez por
+    tecnologia — a mesma lacuna em trinta vagas não repete trinta listas."""
+    nomes: dict[str, str] = {}
+    for linha in linhas:
+        for lacuna in linha.get("lacunas") or []:
+            nomes.setdefault(lacuna["slug"], "Inglês" if lacuna.get("idioma") else lacuna["nome"])
+    return {
+        slug: [
+            _curso_resumido(c)
+            for c in courses.recomendar([{"slug": slug, "name": nome, "is_target": True}])[:por_tag]
+        ]
+        for slug, nome in nomes.items()
+    }
 
 
 # ---------------------------------------------------------------------------

@@ -92,7 +92,8 @@ def test_opcoes_de_cadastro_exigem_chave_descobrivel_e_guardam_o_desafio():
 def test_opcoes_de_entrada_nao_listam_credenciais():
     """Pedir o e-mail antes contaria a quem sonda quais endereços têm chave."""
     banco = _banco()
-    resposta = router.opcoes_de_entrada(supabase=banco)
+    # Sem requisição não há IP, e sem IP o limite por endereço não se aplica.
+    resposta = router.opcoes_de_entrada(request=None, supabase=banco)
     assert not resposta["options"].get("allowCredentials")
     assert banco.linhas("pathr_webauthn_challenge")[0]["user_id"] is None
 

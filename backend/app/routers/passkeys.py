@@ -50,10 +50,11 @@ from webauthn.helpers.structs import (
 
 from app.config import settings
 from app.database import get_supabase
-from app.deps import get_current_user, user_agent
+from app.deps import client_ip, get_current_user, user_agent
 from app.routers.auth import _issue_session, _log_event
 from app.schemas.auth import SessionOut
 from app.security import is_locked, reset_failure_state
+from app.services import limites
 from app.services import passkeys as chaves
 
 router = APIRouter(prefix="/auth/passkeys", tags=["autenticação"])
@@ -290,9 +291,13 @@ def remover(
 
 
 @router.post("/login/options")
-def opcoes_de_entrada(supabase: Client = Depends(get_supabase)):
+def opcoes_de_entrada(request: Request, supabase: Client = Depends(get_supabase)):
     """Sem `allow_credentials`: a chave é descobrível, e é ela que diz quem é.
-    Pedir o e-mail antes contaria a quem sonda quais endereços têm chave."""
+    Pedir o e-mail antes contaria a quem sonda quais endereços têm chave.
+
+    Limitada por IP: sem sessão e gravando um desafio por chamada, era a rota
+    mais barata para encher uma tabela do banco em laço."""
+    limites.consumir(supabase, limites.LOGIN_POR_IP, client_ip(request))
     opcoes = generate_authentication_options(
         rp_id=chaves.rp_id(), user_verification=UserVerificationRequirement.REQUIRED
     )

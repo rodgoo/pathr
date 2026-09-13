@@ -32,6 +32,8 @@ class ProfileUpdate(BaseModel):
     city: Optional[str] = Field(default=None, max_length=120)
     state: Optional[str] = Field(default=None, max_length=60)
     country: Optional[str] = Field(default=None, min_length=2, max_length=2)
+    # Raio das vagas presenciais e híbridas; 0 = só remotas.
+    job_radius_km: Optional[int] = Field(default=None, ge=0, le=1000)
 
     headline: Optional[str] = Field(default=None, max_length=200)
     current_role: Optional[str] = Field(default=None, max_length=120)
