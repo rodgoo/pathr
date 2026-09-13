@@ -20,6 +20,7 @@ export type Screen =
   | "cursos"
   | "vagas"
   | "amigos"
+  | "relatar"
   | "config";
 
 /** Idioma do material curado. "both" é ausência de filtro, não um terceiro. */
@@ -38,4 +39,4 @@ export type ModuleTab = "material" | "quiz" | "atividade";
 export type ActivityMode = "escrever" | "revisar";
 
 /** Seções da tela de configurações. */
-export type SettingsTab = "conta" | "objetivo" | "skills" | "idiomas" | "avisos" | "integracoes" | "relatar";
+export type SettingsTab = "conta" | "objetivo" | "skills" | "idiomas" | "avisos" | "integracoes" | "moderacao";

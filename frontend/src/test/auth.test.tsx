@@ -14,7 +14,7 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { OfflineProvider } from "@/hooks/useOffline";
 import { aUser, anOverview, mockServer, type MockServer } from "./server";
 
-function renderApp(server: MockServer, path = "/") {
+function renderApp(server: MockServer, path = "/entrar") {
   window.history.pushState({}, "", path);
   return {
     server,

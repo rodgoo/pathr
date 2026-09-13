@@ -49,6 +49,7 @@ const FOLHA: Destino[] = [
   { label: "Amigos", screen: "amigos", icon: "user" },
   { label: "Perfil e tags", screen: "perfil", icon: "user" },
   { label: "Currículo", screen: "cv", icon: "file" },
+  { label: "Relatar", screen: "relatar", icon: "flag" },
   { label: "Configurações", screen: "config", icon: "cog" },
 ];
 

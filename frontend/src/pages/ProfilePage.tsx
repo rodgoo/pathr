@@ -78,6 +78,7 @@ export function ProfilePage() {
 
       <IdentityCard
         name={user?.name ?? ""}
+        username={user?.username ?? ""}
         profile={profile}
         streak={streak}
         roadmap={roadmap}
@@ -217,12 +218,14 @@ function Certificados({
 
 function IdentityCard({
   name,
+  username,
   profile,
   streak,
   roadmap,
   onEdit,
 }: {
   name: string;
+  username: string;
   profile: import("@/api/types").Profile;
   streak: import("@/api/types").Streak;
   roadmap: import("@/api/types").RoadmapSummary | null;
@@ -255,8 +258,15 @@ function IdentityCard({
       <Avatar nome={name} editavel />
 
       <div style={{ flex: 1, minWidth: 220, display: "flex", flexDirection: "column", gap: 11.2 }}>
-        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: 8.4 }}>
-          <span style={{ fontSize: 22 }}>{name}</span>
+        <div style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-start", gap: 8.4 }}>
+          {/* O @ embaixo do nome: é por ele que as outras contas te acham, e
+              ele precisa estar à vista no lugar onde a pessoa se reconhece. */}
+          <span style={{ display: "flex", flexDirection: "column", minWidth: 0 }}>
+            <span style={{ fontSize: 22, lineHeight: 1.2 }}>{name}</span>
+            {username ? (
+              <span style={{ fontSize: 13, color: ACC4, marginTop: 2 }}>@{username}</span>
+            ) : null}
+          </span>
           <button
             type="button"
             className="btn btn-ghost"

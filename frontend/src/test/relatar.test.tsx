@@ -1,17 +1,19 @@
 /**
  * Configurações › Relatar.
  *
- * A caixa de moderação só aparece para quem modera — mas o que protege os
+ * O Relatar mora na barra lateral; a moderação, em Configurações, só para quem modera — mas o que protege os
  * relatos é o servidor; estes testes seguram o que a TELA faz: mandar a foto
  * como arquivo, recusar o que não é imagem antes do envio e mostrar ao autor
  * em que pé está o relato.
  */
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import * as auth from "@/hooks/useAuth";
 import { RelatarTab } from "@/components/relatos/RelatarTab";
+import { AppStateProvider } from "@/hooks/useAppState";
+import { SettingsPage } from "@/pages/SettingsPage";
 import { aUser, mockServer } from "./server";
 
 afterEach(() => {
@@ -70,21 +72,29 @@ it("mostra ao autor o status e a resposta da moderação", async () => {
   expect(screen.getByText("Estamos vendo.")).toBeInTheDocument();
 });
 
-it("a caixa de moderação só aparece para a conta moderadora", async () => {
+it("a aba Moderação em Configurações só aparece para a conta moderadora", async () => {
   mockServer({
-    "GET /relatos/meus": () => ({ body: [] }),
     "GET /relatos/moderacao": () => ({
       body: [{ ...relato, author: { name: "Ana", username: "anasouza", email: "ana@exemplo.com" } }],
     }),
   });
   comoUsuario({ is_moderator: false });
-  const { unmount } = render(<RelatarTab />);
-  await waitFor(() => expect(screen.getByRole("button", { name: "Enviar relato" })).toBeInTheDocument());
-  expect(screen.queryByText("Moderação")).not.toBeInTheDocument();
+  const { unmount } = render(
+    <AppStateProvider>
+      <SettingsPage />
+    </AppStateProvider>,
+  );
+  expect(screen.getByRole("button", { name: /Conta/ })).toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /Moderação/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole("button", { name: /Relatar/ })).not.toBeInTheDocument();
   unmount();
 
   comoUsuario({ is_moderator: true });
-  render(<RelatarTab />);
-  expect(await screen.findByText("Moderação")).toBeInTheDocument();
+  render(
+    <AppStateProvider>
+      <SettingsPage />
+    </AppStateProvider>,
+  );
+  await userEvent.click(screen.getByRole("button", { name: /Moderação/ }));
   expect(await screen.findByText(/@anasouza/)).toBeInTheDocument();
 });

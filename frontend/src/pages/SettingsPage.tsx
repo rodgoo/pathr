@@ -18,20 +18,29 @@ import { ApiStatusTab } from "@/components/profile/ApiStatusTab";
 import { NoticesTab } from "@/components/profile/NoticesTab";
 import { ObjectiveTab } from "@/components/profile/ObjectiveTab";
 import { SkillsTab } from "@/components/profile/SkillsTab";
-import { RelatarTab } from "@/components/relatos/RelatarTab";
+import { ModeracaoRelatos } from "@/components/relatos/ModeracaoRelatos";
+import { useAuth } from "@/hooks/useAuth";
 
-const TABS: readonly { value: SettingsTab; label: string; icon: IconName }[] = [
+const ABAS: readonly { value: SettingsTab; label: string; icon: IconName }[] = [
   { value: "conta", label: "Conta", icon: "user" },
   { value: "objetivo", label: "Objetivo", icon: "flag" },
   { value: "skills", label: "Skills", icon: "code" },
   { value: "idiomas", label: "Idiomas", icon: "globe" },
   { value: "avisos", label: "Avisos e privacidade", icon: "cog" },
   { value: "integracoes", label: "Status das APIs", icon: "server" },
-  { value: "relatar", label: "Relatar", icon: "flag" },
 ];
+
+/**
+ * A aba de moderação só existe para quem modera. Esconder a aba não protege
+ * nada — o servidor responde 404 em /relatos/moderacao para qualquer outra
+ * conta —, mas mostrar uma aba vazia a todo mundo anunciaria que ela existe.
+ */
+const ABA_MODERACAO = { value: "moderacao" as const, label: "Moderação", icon: "flag" as IconName };
 
 export function SettingsPage() {
   const { state, dispatch } = useAppState();
+  const { user } = useAuth();
+  const TABS = user?.is_moderator ? [...ABAS, ABA_MODERACAO] : ABAS;
   // As cinco abas do desenho têm tela. "objetivo" e "avisos" ficaram meses
   // caindo aqui em "conta" por não terem uma — era por isso que a pessoa
   // clicava e nada mudava.
@@ -77,7 +86,7 @@ export function SettingsPage() {
       {tab === "idiomas" ? <LanguageSettings /> : null}
       {tab === "avisos" ? <NoticesTab /> : null}
       {tab === "integracoes" ? <ApiStatusTab /> : null}
-      {tab === "relatar" ? <RelatarTab /> : null}
+      {tab === "moderacao" ? <ModeracaoRelatos /> : null}
 
       {/* A licença dos ícones (CC BY 4.0) pede crédito visível — um
           comentário no código não conta, porque quem usa o app nunca o lê. */}

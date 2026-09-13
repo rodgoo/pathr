@@ -14,6 +14,7 @@ import { useLocation } from "@/hooks/useLocation";
 import { BG, TEXT } from "@/lib/tokens";
 import type { Screen } from "@/types";
 import { LoginPage } from "@/pages/auth/LoginPage";
+import { LandingPage } from "@/pages/LandingPage";
 import { SignupPage } from "@/pages/auth/SignupPage";
 import { ForgotPasswordPage, ResetPasswordPage } from "@/pages/auth/PasswordPages";
 import { VerifyEmailPage } from "@/pages/auth/VerifyEmailPage";
@@ -21,6 +22,7 @@ import { CodeLabPage } from "@/pages/CodeLabPage";
 import { CoursesPage } from "@/pages/CoursesPage";
 import { JobsPage } from "@/pages/JobsPage";
 import { AmigosPage } from "@/pages/AmigosPage";
+import { RelatarPage } from "@/pages/RelatarPage";
 import { CvPage } from "@/pages/CvPage";
 import { EnglishPage } from "@/pages/EnglishPage";
 import { HomePage } from "@/pages/HomePage";
@@ -42,6 +44,7 @@ const SCREENS: Record<Screen, () => JSX.Element | null> = {
   perfil: ProfilePage,
   codigo: CodeLabPage,
   amigos: AmigosPage,
+  relatar: RelatarPage,
   material: ResourcePage,
   cursos: CoursesPage,
   vagas: JobsPage,
@@ -65,10 +68,19 @@ export function App() {
   if (status === "anonymous") {
     if (location.path === "/cadastro") return <SignupPage onNavigate={navigate} />;
     if (location.path === "/recuperar-senha") return <ForgotPasswordPage onNavigate={navigate} />;
+    // A raiz apresenta o app a quem ainda não tem conta. Aberto como app
+    // instalado na tela de início, não: quem instalou já conhece o PathR, e
+    // ver a vitrine a cada abertura seria um passo a mais até o login.
+    if (location.path === "/" && !abertoComoAppInstalado()) return <LandingPage onNavigate={navigate} />;
     return <LoginPage onNavigate={navigate} />;
   }
 
   return <AuthenticatedApp />;
+}
+
+function abertoComoAppInstalado(): boolean {
+  if (typeof window === "undefined" || !window.matchMedia) return false;
+  return window.matchMedia("(display-mode: standalone)").matches;
 }
 
 function AuthenticatedApp() {

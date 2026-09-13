@@ -21,7 +21,8 @@ import { AuthProvider } from "@/hooks/useAuth";
 import { OfflineProvider } from "@/hooks/useOffline";
 import { mockServer, type MockServer } from "./server";
 
-function renderApp(server: MockServer, path = "/") {
+// A tela de entrada mora em /entrar desde que a raiz passou a apresentar o app.
+function renderApp(server: MockServer, path = "/entrar") {
   window.history.pushState({}, "", path);
   return {
     server,

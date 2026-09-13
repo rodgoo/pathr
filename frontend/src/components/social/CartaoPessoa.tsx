@@ -87,16 +87,24 @@ export function FotoDePessoa({ pessoa, lado = 48 }: { pessoa: PessoaCartao; lado
 export function CartaoPessoa({
   pessoa,
   onMudou,
+  somenteLeitura = false,
 }: {
   pessoa: PessoaCartao;
   /** A relação mudou no servidor: quem mostra a lista recarrega. */
   onMudou: () => void;
+  /**
+   * Cartão de exemplo (a página de apresentação): os botões aparecem, mas
+   * nenhum chama a API. Não confiar só no `inert` da moldura — navegador
+   * sem suporte a ele deixaria um visitante disparar um convite.
+   */
+  somenteLeitura?: boolean;
 }) {
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [confirmandoSaida, setConfirmandoSaida] = useState(false);
 
   async function agir(acao: () => Promise<unknown>) {
+    if (somenteLeitura) return;
     setOcupado(true);
     setErro(null);
     try {

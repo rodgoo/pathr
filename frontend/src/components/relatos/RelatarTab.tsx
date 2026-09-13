@@ -5,18 +5,19 @@
  * com a resposta de quem moderou. Um formulário que engole a mensagem sem
  * retorno ensina a não relatar de novo.
  *
- * Para a conta que modera, a mesma aba mostra por cima a caixa de moderação.
+ * Mora na barra lateral, ao alcance de qualquer tela: quem esbarra num
+ * problema não deveria precisar lembrar que o caminho passa por
+ * Configurações. A moderação dos relatos fica em Configurações, e só para
+ * quem modera (ver ModeracaoRelatos).
  */
 
 import { useState, type FormEvent } from "react";
 import { relatos } from "@/api/endpoints";
 import type { Relato, TipoRelato } from "@/api/types";
-import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@/hooks/useApi";
 import { C, TEXT } from "@/lib/tokens";
 import { Segmented } from "@/components/ui/Segmented";
 import { Kicker, Panel } from "@/components/ui/primitives";
-import { ModeracaoRelatos } from "./ModeracaoRelatos";
 
 const TIPOS: readonly { value: TipoRelato; label: string }[] = [
   { value: "reclamacao", label: "Reclamação" },
@@ -34,7 +35,6 @@ const FOTO_MAX_MB = 5;
 const ACEITOS = ["image/jpeg", "image/png", "image/webp"];
 
 export function RelatarTab() {
-  const { user } = useAuth();
   const meus = useQuery(() => relatos.meus(), []);
   const [tipo, setTipo] = useState<TipoRelato>("reclamacao");
   const [mensagem, setMensagem] = useState("");
@@ -88,8 +88,6 @@ export function RelatarTab() {
 
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
-      {user?.is_moderator ? <ModeracaoRelatos /> : null}
-
       <Panel pad={16.8}>
         <Kicker style={{ display: "block", marginBottom: 4 }}>Relatar</Kicker>
         <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 14px", maxWidth: "62ch" }}>

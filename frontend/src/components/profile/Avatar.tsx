@@ -17,10 +17,19 @@ import { useEffect, useState } from "react";
 import { profile as profileApi } from "@/api/endpoints";
 import { useAuth } from "@/hooks/useAuth";
 import { ACC3, TEXT } from "@/lib/tokens";
-import { IconButton } from "@/components/ui/IconButton";
 import { Icon } from "@/components/ui/icons";
 
 const LADO = 64;
+
+/** Botão de texto pequeno sob a foto: ícone e nome, sem a caixa de botão. */
+const ACAO = {
+  display: "inline-flex",
+  alignItems: "center",
+  gap: 5,
+  padding: "3px 2px",
+  minHeight: 0,
+  fontSize: 12,
+} as const;
 
 /** "Ana Paula Souza" -> "AP". Duas letras bastam para reconhecer. */
 function iniciais(nome: string): string {
@@ -130,20 +139,24 @@ export function Avatar({ nome, editavel = false }: { nome: string; editavel?: bo
     <div style={{ flex: "none", display: "flex", flexDirection: "column", gap: 5.6 }}>
       <div style={quadrado}>{figura}</div>
 
-      <div style={{ display: "flex", gap: 8.4, fontSize: 11.5 }}>
+      {/* Ícone COM o nome da ação, empilhados sob a foto. Só ícones lado a
+          lado pediam adivinhar o que cada um fazia — a câmera parecia "tirar
+          foto" — e, com a área de toque de 44px cada, ficavam mais largos que a
+          própria foto e longe um do outro. */}
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start", gap: 2 }}>
         {/* Um `label` com input escondido, e não um botão que dispara o
             input por código: assim o seletor de arquivo abre por clique e
             por teclado sem nenhum script no meio. */}
         <label
-          className="btn btn-ghost btn-icon"
-          aria-label={ocupado ? "Enviando foto" : temFoto ? "Trocar foto" : "Enviar foto"}
-          title={ocupado ? "Enviando…" : temFoto ? "Trocar foto" : "Enviar foto"}
+          className="btn btn-ghost"
           style={{
+            ...ACAO,
             cursor: ocupado ? "default" : "pointer",
             color: ocupado ? TEXT.faint : ACC3,
           }}
         >
-          <Icon name={temFoto ? "camera" : "upload"} size={16} />
+          <Icon name={temFoto ? "pencil" : "upload"} size={13} />
+          {ocupado ? "Enviando…" : temFoto ? "Alterar" : "Enviar foto"}
           <input
             type="file"
             accept={ACEITOS}
@@ -159,13 +172,16 @@ export function Avatar({ nome, editavel = false }: { nome: string; editavel?: bo
           />
         </label>
         {temFoto ? (
-          <IconButton
-            icon="trash"
-            label="Remover foto"
+          <button
+            type="button"
+            className="btn btn-ghost"
             onClick={() => void remover()}
             disabled={ocupado}
-            color={TEXT.muted}
-          />
+            style={{ ...ACAO, color: TEXT.muted }}
+          >
+            <Icon name="trash" size={13} />
+            Remover
+          </button>
         ) : null}
       </div>
 
