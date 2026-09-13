@@ -12,6 +12,9 @@
  *   gratuito vem em cima. A regra de ordem mora no servidor; a divisão aqui
  *   é o que a torna visível.
  * - **Só o que a pessoa pediu.** Cada cartão diz qual configuração o trouxe.
+ * - **O que a pessoa já tem sai da lista.** Marcou "já possuo", o cartão some
+ *   (com "Desfazer" para o clique errado) e passa a morar em Perfil e tags.
+ *   Um botão nos filtros mostra os escondidos, para desmarcar.
  *
  * ## A barra de chama
  *
@@ -26,7 +29,7 @@
  * próprio LinkedIn oferece a quem emite certificado.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "@/api/client";
 import { courses as coursesApi } from "@/api/endpoints";
 import type { Course, CourseList, DemandBand } from "@/api/types";
@@ -135,6 +138,22 @@ export function CoursesPage() {
   const [categoria, setCategoria] = useState<string>(TODAS);
   const [stack, setStack] = useState<string>(TODAS);
   const [ordem, setOrdem] = useState<Ordem>("relevancia");
+  // O que já possui, mantido aqui: marcar num cartão tira o cartão da lista na
+  // hora, sem esperar a lista voltar do servidor.
+  const [possuidos, setPossuidos] = useState<Set<string>>(new Set());
+  const [mostrarPossuidos, setMostrarPossuidos] = useState(false);
+  const [recemMarcado, setRecemMarcado] = useState<Course | null>(null);
+
+  useEffect(() => {
+    if (lista.data) setPossuidos(new Set(lista.data.cursos.filter((c) => c.possuo).map((c) => c.id)));
+  }, [lista.data]);
+
+  // O aviso "Desfazer" some sozinho depois de alguns segundos.
+  useEffect(() => {
+    if (!recemMarcado) return;
+    const timer = window.setTimeout(() => setRecemMarcado(null), 6000);
+    return () => window.clearTimeout(timer);
+  }, [recemMarcado]);
 
   if (lista.loading) return <Loading label="Procurando cursos com certificado…" />;
   if (lista.error) return <ErrorState message={lista.error} onRetry={lista.reload} />;
@@ -150,10 +169,31 @@ export function CoursesPage() {
   );
   const tecnologias = [...new Set(cursos.flatMap((curso) => curso.tags))].sort((a, b) => a.localeCompare(b, "pt-BR"));
 
+  function marcarPossuo(curso: Course, possuo: boolean) {
+    setPossuidos((atual) => {
+      const novo = new Set(atual);
+      if (possuo) novo.add(curso.id);
+      else novo.delete(curso.id);
+      return novo;
+    });
+    setRecemMarcado(possuo ? curso : null);
+  }
+
+  async function desfazer(curso: Course) {
+    marcarPossuo(curso, false);
+    try {
+      await coursesApi.disown(curso.id);
+    } catch {
+      marcarPossuo(curso, true);
+    }
+  }
+
+  const escondidos = cursos.filter((curso) => possuidos.has(curso.id)).length;
   const termo = semAcento(busca.trim());
   const filtrados = cursos
     .filter(
       (curso) =>
+        (mostrarPossuidos || !possuidos.has(curso.id)) &&
         (!termo || semAcento([curso.titulo, curso.emissor, ...curso.tags].join(" ")).includes(termo)) &&
         (categoria === TODAS || (curso.categorias ?? []).includes(categoria)) &&
         (stack === TODAS || curso.tags.includes(stack)),
@@ -260,11 +300,67 @@ export function CoursesPage() {
                 Limpar filtros
               </button>
             ) : null}
+            {escondidos > 0 ? (
+              <button
+                type="button"
+                className="btn btn-ghost"
+                style={{ fontSize: 12, marginLeft: "auto" }}
+                aria-pressed={mostrarPossuidos}
+                onClick={() => setMostrarPossuidos((valor) => !valor)}
+              >
+                <Icon name="check" size={14} />
+                {mostrarPossuidos ? "Esconder os que já possuo" : `Mostrar os que já possuo (${escondidos})`}
+              </button>
+            ) : null}
           </div>
         </Panel>
       ) : null}
 
-      {cursos.length > 0 && filtrados.length === 0 ? (
+      {recemMarcado && !mostrarPossuidos ? (
+        <div
+          role="status"
+          style={{
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            gap: 8.4,
+            padding: "8.4px 12px",
+            marginBottom: 16.8,
+            borderRadius: 9,
+            background: tint(C.verde, 10),
+            boxShadow: `inset 0 0 0 1px ${tint(C.verde, 35)}`,
+            fontSize: 12.5,
+            color: TEXT.strong,
+          }}
+        >
+          <Icon name="check" size={15} style={{ color: C.verde }} />
+          <span style={{ flex: 1, minWidth: 0 }}>
+            <strong>{recemMarcado.titulo}</strong> saiu da lista e foi para Perfil e tags.
+          </span>
+          <button type="button" className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => void desfazer(recemMarcado)}>
+            Desfazer
+          </button>
+        </div>
+      ) : null}
+
+      {cursos.length > 0 && filtrados.length === 0 && escondidos === cursos.length ? (
+        <EmptyState
+          title="Você já possui todos os cursos desta lista"
+          description={
+            escopo === "voce"
+              ? "Eles estão em Perfil e tags. Procure no catálogo inteiro para ver outros certificados."
+              : "Eles estão em Perfil e tags."
+          }
+          action={
+            escopo === "voce" ? (
+              <button type="button" className="btn btn-secondary" onClick={() => setEscopo("catalogo")}>
+                <Icon name="search" size={15} />
+                Buscar no catálogo inteiro
+              </button>
+            ) : undefined
+          }
+        />
+      ) : cursos.length > 0 && filtrados.length === 0 ? (
         <EmptyState
           title="Nenhum curso com estes filtros"
           description={
@@ -323,10 +419,22 @@ export function CoursesPage() {
       ) : filtrados.length === 0 ? null : (
         <>
           {filtro !== "pagos" ? (
-            <Bloco titulo="Certificado gratuito" cursos={gratuitos} vazio="Nenhum curso gratuito para o que você pediu." />
+            <Bloco
+              titulo="Certificado gratuito"
+              cursos={gratuitos}
+              possuidos={possuidos}
+              onPossuo={marcarPossuo}
+              vazio="Nenhum curso gratuito para o que você pediu."
+            />
           ) : null}
           {filtro !== "gratuitos" ? (
-            <Bloco titulo="Certificado pago" cursos={pagos} vazio="Nenhum curso pago para o que você pediu." />
+            <Bloco
+              titulo="Certificado pago"
+              cursos={pagos}
+              possuidos={possuidos}
+              onPossuo={marcarPossuo}
+              vazio="Nenhum curso pago para o que você pediu."
+            />
           ) : null}
           <p style={{ margin: "22.4px 0 0", fontSize: 11.5, color: TEXT.faint, maxWidth: "76ch" }}>
             Preços e gratuidade conferidos em {mesPorExtenso(conferido_em)}. Quem define é o emissor, e
@@ -338,7 +446,19 @@ export function CoursesPage() {
   );
 }
 
-function Bloco({ titulo, cursos, vazio }: { titulo: string; cursos: Course[]; vazio: string }) {
+function Bloco({
+  titulo,
+  cursos,
+  possuidos,
+  onPossuo,
+  vazio,
+}: {
+  titulo: string;
+  cursos: Course[];
+  possuidos: Set<string>;
+  onPossuo: (curso: Course, possuo: boolean) => void;
+  vazio: string;
+}) {
   return (
     <section aria-label={titulo} style={{ marginBottom: 28 }}>
       <Kicker style={{ display: "block", marginBottom: 11.2 }}>
@@ -355,7 +475,7 @@ function Bloco({ titulo, cursos, vazio }: { titulo: string; cursos: Course[]; va
           }}
         >
           {cursos.map((curso) => (
-            <CartaoDoCurso key={curso.id} curso={curso} />
+            <CartaoDoCurso key={curso.id} curso={curso} possuo={possuidos.has(curso.id)} onPossuo={onPossuo} />
           ))}
         </div>
       )}
@@ -363,23 +483,30 @@ function Bloco({ titulo, cursos, vazio }: { titulo: string; cursos: Course[]; va
   );
 }
 
-function CartaoDoCurso({ curso }: { curso: Course }) {
-  const [possuo, setPossuo] = useState(Boolean(curso.possuo));
+function CartaoDoCurso({
+  curso,
+  possuo,
+  onPossuo,
+}: {
+  curso: Course;
+  possuo: boolean;
+  onPossuo: (curso: Course, possuo: boolean) => void;
+}) {
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const { gratuito, detalhe } = curso.certificado;
 
-  // Otimista: o botão muda na hora e volta atrás se o servidor recusar.
+  // Otimista: o cartão sai da lista na hora e volta se o servidor recusar.
   async function alternarPossuo() {
     const antes = possuo;
-    setPossuo(!antes);
+    onPossuo(curso, !antes);
     setSalvando(true);
     setErro(null);
     try {
       if (antes) await coursesApi.disown(curso.id);
       else await coursesApi.own(curso.id);
     } catch (caught) {
-      setPossuo(antes);
+      onPossuo(curso, antes);
       setErro(caught instanceof Error ? caught.message : "Não consegui salvar.");
     } finally {
       setSalvando(false);

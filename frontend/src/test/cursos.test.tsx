@@ -59,7 +59,8 @@ const lista: CourseList = {
 
 describe("cursos com certificado", () => {
   it("mostra o bloco gratuito antes do pago, cada um com seu selo", async () => {
-    monta(lista);
+    const { user } = monta(lista);
+    await user.click(await screen.findByRole("button", { name: "Mostrar os que já possuo (1)" }));
 
     const gratuito = await screen.findByRole("region", { name: "Certificado gratuito" });
     const pago = screen.getByRole("region", { name: "Certificado pago" });
@@ -71,7 +72,8 @@ describe("cursos com certificado", () => {
   });
 
   it("a barra de chama diz em texto quanto o conteúdo é procurado", async () => {
-    monta(lista);
+    const { user } = monta(lista);
+    await user.click(await screen.findByRole("button", { name: "Mostrar os que já possuo (1)" }));
 
     const barras = await screen.findAllByRole("meter", { name: "Procura no mercado" });
     expect(barras.map((barra) => barra.getAttribute("aria-valuetext"))).toEqual([
@@ -82,14 +84,16 @@ describe("cursos com certificado", () => {
   });
 
   it("diz qual configuração trouxe o curso", async () => {
-    monta(lista);
+    const { user } = monta(lista);
+    await user.click(await screen.findByRole("button", { name: "Mostrar os que já possuo (1)" }));
     expect((await screen.findAllByText("Sua meta: AWS")).length).toBe(2);
   });
 
   it("filtra só os gratuitos", async () => {
     const { user } = monta(lista);
 
-    await user.click(await screen.findByRole("radio", { name: "Gratuitos" }));
+    await user.click(await screen.findByRole("button", { name: "Mostrar os que já possuo (1)" }));
+    await user.click(screen.getByRole("radio", { name: "Gratuitos" }));
 
     expect(screen.getByRole("region", { name: "Certificado gratuito" })).toBeInTheDocument();
     expect(screen.queryByRole("region", { name: "Certificado pago" })).not.toBeInTheDocument();
@@ -108,10 +112,11 @@ describe("cursos com certificado", () => {
     ).toBeInTheDocument();
   });
 
-  it("marca e desmarca 'já possuo', e volta atrás se o servidor recusar", async () => {
+  it("o que já possui sai da lista, com desfazer, e dá para mostrar de novo", async () => {
     const servidor = mockServer({
       "GET /courses": () => ({ body: lista }),
       "PUT /courses/mine/gratis": () => ({ body: { id: "gratis" } }),
+      "DELETE /courses/mine/gratis": () => ({ status: 204, body: null }),
       "DELETE /courses/mine/pago": () => ({ status: 500, body: { detail: "Falhou." } }),
     });
     const user = userEvent.setup();
@@ -121,17 +126,32 @@ describe("cursos com certificado", () => {
       </AppStateProvider>,
     );
 
-    const [primeiro, segundo] = await screen.findAllByRole("button", { name: /Já possuo/ });
-    expect(primeiro).toHaveAttribute("aria-pressed", "false");
-    await user.click(primeiro);
-    expect(primeiro).toHaveAttribute("aria-pressed", "true");
-    expect(servidor.calls.some((c) => c.method === "PUT" && c.url === "/courses/mine/gratis")).toBe(true);
+    // O pago já vinha marcado: nem aparece.
+    expect(await screen.findByRole("heading", { name: "AWS Cloud Practitioner Essentials" })).toBeInTheDocument();
+    expect(screen.queryByRole("heading", { name: "AWS Certified Cloud Practitioner" })).not.toBeInTheDocument();
 
-    // O segundo já vinha marcado; a remoção falha e o botão volta a marcado.
-    expect(segundo).toHaveAttribute("aria-pressed", "true");
-    await user.click(segundo);
+    await user.click(screen.getByRole("button", { name: "Já possuo?" }));
+    expect(servidor.calls.some((c) => c.method === "PUT" && c.url === "/courses/mine/gratis")).toBe(true);
+    expect(screen.queryByRole("heading", { name: "AWS Cloud Practitioner Essentials" })).not.toBeInTheDocument();
+    expect(screen.getByRole("status")).toHaveTextContent("saiu da lista");
+
+    // Clique errado: desfazer traz o cartão de volta e desmarca no servidor.
+    await user.click(screen.getByRole("button", { name: "Desfazer" }));
+    expect(await screen.findByRole("heading", { name: "AWS Cloud Practitioner Essentials" })).toBeInTheDocument();
+    expect(servidor.calls.some((c) => c.method === "DELETE" && c.url === "/courses/mine/gratis")).toBe(true);
+
+    // Mostrar os escondidos; desmarcar falha e o cartão continua marcado.
+    await user.click(screen.getByRole("button", { name: "Mostrar os que já possuo (1)" }));
+    const marcado = screen.getByRole("button", { name: /^Já possuo$/ });
+    expect(marcado).toHaveAttribute("aria-pressed", "true");
+    await user.click(marcado);
     expect(await screen.findByText("Falhou.")).toBeInTheDocument();
-    expect(segundo).toHaveAttribute("aria-pressed", "true");
+    expect(screen.getByRole("button", { name: /^Já possuo$/ })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("quando já possui tudo, diz isso em vez de uma lista vazia", async () => {
+    monta({ ...lista, cursos: lista.cursos.map((c) => ({ ...c, possuo: true })) });
+    expect(await screen.findByText("Você já possui todos os cursos desta lista")).toBeInTheDocument();
   });
 
   it("abre o formulário de certificação do LinkedIn já preenchido", () => {
