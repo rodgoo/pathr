@@ -379,15 +379,7 @@ const TOM_ACC = { "--tom": ACC } as CSSProperties;
 
 function Heroi({ onNavigate, panorama }: { onNavigate: Navegar; panorama: Overview }) {
   return (
-    <section style={{ textAlign: "center", paddingTop: "clamp(40px, 8vw, 96px)", position: "relative" }}>
-      {/* O brilho de fundo: a única cor que vaza no preto, atrás do título. */}
-      <div
-        aria-hidden
-        style={{
-          position: "absolute", left: "-20%", right: "-20%", top: -120, height: 560, zIndex: -1, pointerEvents: "none",
-          background: `radial-gradient(50% 55% at 50% 40%, ${tint(ACC, 26)}, transparent 70%), radial-gradient(30% 40% at 72% 30%, ${tint(C.verde, 12)}, transparent 70%)`,
-        }}
-      />
+    <section style={{ textAlign: "center", paddingTop: "clamp(40px, 8vw, 96px)" }}>
       <Revelar>
         <div
           style={{
