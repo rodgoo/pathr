@@ -20,6 +20,7 @@ from supabase import Client
 from app.ai_providers import AiProviderError, generate_json
 from app.database import get_supabase
 from app.deps import get_current_user
+from app.routers.tags import list_mine
 from app.services import code_lab
 from app.services.progress import log_activity
 
@@ -138,6 +139,62 @@ def linguagens():
     """O que dá para pedir. Lista fechada: o prompt promete código idiomático,
     e não dá para prometer isso em linguagem que ninguém pensou a respeito."""
     return {"languages": code_lab.catalogo(), "levels": list(code_lab.NIVEIS)}
+
+
+@router.get("/para-mim")
+def para_mim(
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """As linguagens do perfil e vários exemplos para abrir agora, pelo roadmap,
+    pelo nível em cada linguagem e pelo que a pessoa já gerou. Sem IA: a tela
+    abre com as sugestões na hora, e a IA só roda quando uma é escolhida.
+
+    Declarada antes de `/{walkthrough_id}`, senão "para-mim" viraria um id."""
+    user_id = str(current_user["id"])
+    gerados = (
+        supabase.table("pathr_walkthrough").select("topic").eq("user_id", user_id).execute().data or []
+    )
+    return code_lab.sugerir(
+        list_mine(current_user, supabase),
+        _modulos_do_plano(supabase, user_id),
+        {str(linha.get("topic") or "") for linha in gerados},
+    )
+
+
+def _modulos_do_plano(supabase: Client, user_id: str) -> list[dict[str, Any]]:
+    """Os módulos do plano principal, em ordem, com as tags já em slug."""
+    planos = (
+        supabase.table("pathr_roadmap").select("id").eq("user_id", user_id).eq("is_primary", True)
+        .limit(1).execute().data
+    )
+    if not planos:
+        return []
+    nos = (
+        supabase.table("pathr_roadmap_node")
+        .select("title,kind,status,objectives,tag_ids,order_index")
+        .eq("roadmap_id", str(planos[0]["id"]))
+        .order("order_index")
+        .execute()
+        .data
+        or []
+    )
+    nos = [no for no in nos if no.get("kind") != "phase"]
+    ids = list({str(tag_id) for no in nos for tag_id in (no.get("tag_ids") or [])})
+    slug_de = (
+        {str(t["id"]): str(t["slug"]) for t in supabase.table("pathr_tag").select("id,slug").in_("id", ids).execute().data or []}
+        if ids
+        else {}
+    )
+    return [
+        {
+            "titulo": no.get("title") or "",
+            "status": no.get("status"),
+            "objetivos": no.get("objectives") or [],
+            "tags": [slug_de[str(t)] for t in (no.get("tag_ids") or []) if str(t) in slug_de],
+        }
+        for no in nos
+    ]
 
 
 @router.get("")

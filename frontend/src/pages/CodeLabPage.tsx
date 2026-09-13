@@ -23,7 +23,9 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { api } from "@/api/client";
 import { walkthroughs as walkthroughsApi } from "@/api/endpoints";
+import { useAppState } from "@/hooks/useAppState";
 import type { Walkthrough } from "@/api/types";
 import { useMutation, useQuery } from "@/hooks/useApi";
 import { ACC, ACC4, C, HAIRLINE, PANEL, TEXT } from "@/lib/tokens";
@@ -54,6 +56,30 @@ const NIVEIS = [
   { value: "avancado", label: "Avançado" },
 ];
 
+const NOME_DO_NIVEL: Record<string, string> = {
+  iniciante: "Iniciante",
+  intermediario: "Intermediário",
+  avancado: "Avançado",
+};
+
+/** Um exemplo que vale abrir agora, escolhido pelo servidor sem IA. */
+interface Sugestao {
+  language: string;
+  language_label: string;
+  topic: string;
+  level: string;
+  motivo: string;
+  origem: "roadmap" | "trilha" | "proximo_nivel";
+}
+
+/** O laboratório desta pessoa (GET /walkthroughs/para-mim). */
+interface ParaMim {
+  /** Só as linguagens do perfil; todas quando o perfil não tem nenhuma. */
+  linguagens: { id: string; rotulo: string; realce: string }[];
+  do_perfil: boolean;
+  sugestoes: Sugestao[];
+}
+
 interface Guardado {
   id: string;
   passo: number;
@@ -80,7 +106,7 @@ function gravar(valor: Guardado | null) {
 }
 
 export function CodeLabPage() {
-  const catalogo = useQuery(() => walkthroughsApi.languages(), []);
+  const paraMim = useQuery(() => api.get<ParaMim>("/walkthroughs/para-mim"), []);
   const lista = useQuery(() => walkthroughsApi.list(), []);
 
   const [guardado] = useState(ler);
@@ -116,11 +142,24 @@ export function CodeLabPage() {
         </p>
       </header>
 
-      <Gerador
-        linguagens={catalogo.data?.languages ?? []}
-        carregando={catalogo.loading}
+      <Sugestoes
+        dados={paraMim.data}
+        carregando={paraMim.loading}
         onCriado={(novo) => {
           lista.reload();
+          paraMim.reload();
+          setAbertoId(novo.id);
+          gravar({ id: novo.id, passo: 0 });
+        }}
+      />
+
+      <Gerador
+        linguagens={paraMim.data?.linguagens ?? []}
+        doPerfil={paraMim.data?.do_perfil ?? true}
+        carregando={paraMim.loading}
+        onCriado={(novo) => {
+          lista.reload();
+          paraMim.reload();
           setAbertoId(novo.id);
           gravar({ id: novo.id, passo: 0 });
         }}
@@ -162,19 +201,148 @@ export function CodeLabPage() {
   );
 }
 
-/** O formulário que pede um exemplo novo. */
+/**
+ * Vários exemplos para abrir agora: o que o roadmap está pedindo, o nível da
+ * pessoa em cada linguagem e o próximo passo. Um clique gera — não é preciso
+ * saber o que pedir para começar.
+ */
+function Sugestoes({
+  dados,
+  carregando,
+  onCriado,
+}: {
+  dados: ParaMim | null;
+  carregando: boolean;
+  onCriado: (novo: Walkthrough) => void;
+}) {
+  const { dispatch } = useAppState();
+  const [gerando, setGerando] = useState<string | null>(null);
+  const criar = useMutation((sugestao: Sugestao) =>
+    walkthroughsApi.create(sugestao.language, sugestao.topic, sugestao.level),
+  );
+
+  if (carregando && !dados) return <Loading label="Montando sugestões para você…" />;
+  if (!dados) return null;
+
+  if (!dados.do_perfil) {
+    return (
+      <Panel pad={16.8}>
+        <EmptyState
+          title="Marque as linguagens que você estuda"
+          description="O laboratório mostra só as linguagens do seu perfil e sugere exemplos pelo seu nível e pelo seu roadmap. Por enquanto, todas aparecem no gerador abaixo."
+          action={
+            <button
+              type="button"
+              className="btn btn-secondary"
+              onClick={() => dispatch({ type: "navigate", screen: "config", settingsTab: "skills" })}
+            >
+              <Icon name="code" size={15} />
+              Escolher linguagens
+            </button>
+          }
+        />
+      </Panel>
+    );
+  }
+  if (!dados.sugestoes.length) return null;
+
+  async function gerar(sugestao: Sugestao) {
+    setGerando(sugestao.topic);
+    const novo = await criar.run(sugestao);
+    setGerando(null);
+    if (novo) onCriado(novo);
+  }
+
+  return (
+    <Panel pad={16.8}>
+      <Kicker style={{ display: "block", marginBottom: 5.6 }}>Sugestões para você</Kicker>
+      <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 11.2px", maxWidth: "72ch" }}>
+        Pelo seu roadmap, pelo seu nível em cada linguagem e pelo que você ainda não abriu. Um clique gera o
+        exemplo com o passo a passo.
+      </p>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 250px), 1fr))",
+          gap: 8.4,
+        }}
+      >
+        {dados.sugestoes.map((sugestao) => {
+          const esta = gerando === sugestao.topic;
+          return (
+            <button
+              key={`${sugestao.language}-${sugestao.topic}`}
+              type="button"
+              disabled={Boolean(gerando)}
+              onClick={() => void gerar(sugestao)}
+              aria-label={`Gerar exemplo: ${sugestao.topic} em ${sugestao.language_label}`}
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                gap: 6,
+                textAlign: "left",
+                padding: 11.2,
+                borderRadius: 8,
+                font: "inherit",
+                cursor: gerando ? "wait" : "pointer",
+                color: TEXT.full,
+                background: esta ? "rgba(145,132,217,.13)" : "rgba(233,233,237,.03)",
+                border: `1px solid ${sugestao.origem === "roadmap" ? ACC : "rgba(233,233,237,.12)"}`,
+                opacity: gerando && !esta ? 0.55 : 1,
+              }}
+            >
+              <span style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 11.5, color: TEXT.muted }}>
+                <span style={{ width: 16, height: 16, display: "inline-grid", placeItems: "center" }}>
+                  {iconeDaLinguagem(sugestao.language)}
+                </span>
+                {sugestao.language_label} · {NOME_DO_NIVEL[sugestao.level] ?? sugestao.level}
+              </span>
+              <span style={{ fontSize: 13.5, lineHeight: 1.35 }}>{sugestao.topic}</span>
+              <span
+                style={{
+                  fontSize: 11.5,
+                  color: sugestao.origem === "roadmap" ? ACC4 : TEXT.faint,
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 5,
+                }}
+              >
+                <Icon name={sugestao.origem === "roadmap" ? "road" : sugestao.origem === "proximo_nivel" ? "trend" : "flag"} size={13} />
+                {esta ? "Escrevendo o exemplo…" : sugestao.motivo}
+              </span>
+            </button>
+          );
+        })}
+      </div>
+      {criar.error ? <ErrorState message={criar.error} /> : null}
+    </Panel>
+  );
+}
+
+/** O formulário que pede um exemplo novo, com qualquer assunto. */
 function Gerador({
   linguagens,
+  doPerfil,
   carregando,
   onCriado,
 }: {
   linguagens: { id: string; rotulo: string }[];
+  doPerfil: boolean;
   carregando: boolean;
   onCriado: (novo: Walkthrough) => void;
 }) {
-  const [language, setLanguage] = useState("python");
+  const [language, setLanguage] = useState("");
   const [topic, setTopic] = useState("");
   const [level, setLevel] = useState("iniciante");
+
+  // A linguagem escolhida precisa estar entre as do perfil: começa pela
+  // primeira delas (a meta mais forte), e não por uma fixa que a pessoa
+  // talvez nem estude.
+  useEffect(() => {
+    if (linguagens.length && !linguagens.some((item) => item.id === language)) {
+      setLanguage(linguagens[0].id);
+    }
+  }, [linguagens, language]);
 
   const criar = useMutation(() => walkthroughsApi.create(language, topic.trim(), level));
 
@@ -194,7 +362,7 @@ function Gerador({
         <div style={{ display: "flex", gap: 11.2, flexWrap: "wrap", alignItems: "flex-end" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 190 }}>
             <label htmlFor="codelab-linguagem" style={{ fontSize: 11.5, color: TEXT.faint }}>
-              Linguagem
+              {doPerfil ? "Linguagem do seu perfil" : "Linguagem"}
             </label>
             <Select
               id="codelab-linguagem"

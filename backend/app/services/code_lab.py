@@ -33,6 +33,7 @@ impossível de conferir até rodando.
 
 from __future__ import annotations
 
+import unicodedata
 from typing import Any
 
 # As linguagens oferecidas. `rotulo` é o que aparece na tela; `realce` é o
@@ -174,3 +175,186 @@ def saida_acumulada(passos: list[dict[str, Any]], ate: int) -> str:
     """
     pedacos = [p["saida"] for p in passos[: ate + 1] if p.get("saida")]
     return "\n".join(pedacos)
+
+
+# ---------------------------------------------------------------------------
+# O laboratório de cada pessoa: as linguagens dela e o que abrir a seguir
+# ---------------------------------------------------------------------------
+
+# A tag do catálogo (slug) que corresponde a cada linguagem do laboratório.
+_LINGUAGEM_DA_TAG: dict[str, str] = {
+    "python": "python", "javascript": "javascript", "typescript": "typescript",
+    "java": "java", "c-sharp": "csharp", "go": "go", "rust": "rust", "c": "c",
+    "c-plus-plus": "cpp", "php": "php", "ruby": "ruby", "kotlin": "kotlin",
+    "swift": "swift", "dart": "dart", "sql": "sql", "shell-script": "bash",
+}
+
+# Tecnologia de um módulo do roadmap que se estuda em código de uma linguagem.
+# Mais de uma candidata: vale a primeira que a pessoa tem no perfil.
+_LINGUAGEM_DO_ASSUNTO: dict[str, tuple[str, ...]] = {
+    **{slug: ("java",) for slug in (
+        "spring-boot", "spring-security", "jpa", "hibernate", "junit", "mockito",
+        "maven", "gradle", "quarkus", "jakarta-ee",
+    )},
+    **{slug: ("typescript", "javascript") for slug in (
+        "node-js", "express", "nestjs", "jest", "react", "angular", "vue-js", "next-js",
+    )},
+    **{slug: ("python",) for slug in ("django", "flask", "fastapi", "pandas")},
+    **{slug: ("sql",) for slug in ("postgresql", "mysql", "oracle", "sql-server")},
+    "net": ("csharp",),
+    "laravel": ("php",),
+    "flutter": ("dart",),
+    "android": ("kotlin",),
+}
+
+# Uma trilha por linguagem, do básico ao avançado. Assuntos que cabem num
+# programa curto e determinístico — o formato do laboratório (ver o prompt em
+# routers/walkthroughs.py).
+_TRILHAS: dict[str, dict[str, tuple[str, ...]]] = {
+    "java": {
+        "iniciante": ("variáveis, tipos e operadores", "if/else e switch", "laços for e while", "arrays e percorrer com for-each", "métodos com parâmetros e retorno"),
+        "intermediario": ("classes, objetos e construtores", "herança e polimorfismo", "interfaces e classes abstratas", "List, Set e Map", "Streams: filter, map e collect", "tratamento de exceções com try/catch", "Optional sem NullPointerException"),
+        "avancado": ("generics com wildcards", "records e sealed interfaces", "equals, hashCode e coleções", "CompletableFuture encadeado", "padrão Strategy com lambdas"),
+    },
+    "javascript": {
+        "iniciante": ("let, const e tipos", "funções e arrow functions", "arrays: push, map e filter", "objetos e desestruturação", "laços for...of e for...in"),
+        "intermediario": ("closures", "this em funções e arrow functions", "Promises e async/await", "reduce na prática", "spread e rest", "classes e herança"),
+        "avancado": ("event loop: microtasks e macrotasks", "generators e iterators", "prototypes por baixo das classes", "memoização com Map", "debounce implementado do zero"),
+    },
+    "typescript": {
+        "iniciante": ("tipos básicos e inferência", "interfaces e type aliases", "funções tipadas", "union types e narrowing", "arrays e tuplas tipadas"),
+        "intermediario": ("generics em funções", "tipos utilitários: Partial, Pick e Record", "discriminated unions com switch", "classes com modificadores de acesso", "enums versus union de literais"),
+        "avancado": ("conditional types", "mapped types", "type guards personalizados", "infer em tipos condicionais", "generics com restrições (extends keyof)"),
+    },
+    "python": {
+        "iniciante": ("variáveis e tipos", "if/elif/else", "laços for e range", "listas e fatiamento", "funções com parâmetros padrão"),
+        "intermediario": ("list comprehension", "dicionários e sets", "classes e métodos especiais", "tratamento de exceções", "decorators simples"),
+        "avancado": ("generators e yield", "context managers", "dataclasses e ordenação", "recursão com memoização", "closures e nonlocal"),
+    },
+    "sql": {
+        "iniciante": ("SELECT com WHERE e ORDER BY", "INSERT, UPDATE e DELETE", "funções de agregação com GROUP BY"),
+        "intermediario": ("INNER JOIN e LEFT JOIN", "HAVING depois do GROUP BY", "subconsultas", "CASE WHEN"),
+        "avancado": ("window functions: ROW_NUMBER e SUM OVER", "CTE recursiva", "transações e níveis de isolamento"),
+    },
+    "csharp": {
+        "iniciante": ("variáveis e tipos", "laços e condicionais", "métodos"),
+        "intermediario": ("classes e propriedades", "LINQ: Where, Select e GroupBy", "interfaces", "exceções"),
+        "avancado": ("async/await com Task", "generics", "records e pattern matching"),
+    },
+}
+_TRILHA_GENERICA: dict[str, tuple[str, ...]] = {
+    "iniciante": ("variáveis e tipos", "condicionais", "laços", "funções"),
+    "intermediario": ("estruturas de dados da linguagem", "tratamento de erros", "recursão"),
+    "avancado": ("concorrência sem aleatoriedade", "tipos genéricos", "padrões de projeto"),
+}
+
+_NIVEL_PELA_PROFICIENCIA = {0: "iniciante", 1: "iniciante", 2: "intermediario", 3: "intermediario", 4: "avancado", 5: "avancado"}
+
+
+def _normaliza_assunto(texto: str) -> str:
+    sem_acento = unicodedata.normalize("NFKD", texto or "").encode("ascii", "ignore").decode().lower()
+    return " ".join(sem_acento.split())
+
+
+def linguagens_do_perfil(minhas: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """As linguagens do laboratório que a pessoa marcou no perfil, com o nível
+    que ela tem em cada uma. A que é meta vem primeiro, depois a mais forte."""
+    achadas = []
+    for tag in minhas:
+        linguagem = _LINGUAGEM_DA_TAG.get(str(tag.get("slug") or ""))
+        if linguagem:
+            achadas.append({
+                **_POR_ID[linguagem],
+                "proficiencia": int(tag.get("proficiency") or 0),
+                "meta": bool(tag.get("is_target")),
+            })
+    achadas.sort(key=lambda l: (not l["meta"], -l["proficiencia"], l["rotulo"]))
+    return achadas
+
+
+def sugerir(
+    minhas: list[dict[str, Any]],
+    modulos: list[dict[str, Any]],
+    ja_gerados: set[str],
+    limite: int = 12,
+) -> dict[str, Any]:
+    """O que o laboratório oferece a esta pessoa, sem IA.
+
+    - `linguagens`: só as do perfil. Sem nenhuma, todas — e a tela avisa.
+    - `sugestoes`: primeiro o que o roadmap está pedindo agora (o módulo em
+      andamento, depois os próximos), no nível da pessoa naquela linguagem;
+      depois a trilha de cada linguagem, no nível dela; e um "próximo passo",
+      um nível acima. O que ela já gerou não volta.
+
+    `modulos` são os do plano principal, em ordem, com `titulo`, `status`,
+    `objetivos` e `tags` (slugs).
+    """
+    do_perfil = linguagens_do_perfil(minhas)
+    ids = [l["id"] for l in do_perfil]
+    nivel_de = {l["id"]: _NIVEL_PELA_PROFICIENCIA[min(max(l["proficiencia"], 0), 5)] for l in do_perfil}
+    vistos = {_normaliza_assunto(t) for t in ja_gerados}
+    sugestoes: list[dict[str, Any]] = []
+
+    def acrescenta(linguagem: str, assunto: str, nivel: str, motivo: str, origem: str) -> bool:
+        chave = _normaliza_assunto(assunto)
+        if chave in vistos or len(sugestoes) >= limite:
+            return False
+        vistos.add(chave)
+        sugestoes.append({
+            "language": linguagem,
+            "language_label": rotulo(linguagem),
+            "topic": assunto[:120],
+            "level": nivel,
+            "motivo": motivo,
+            "origem": origem,
+        })
+        return True
+
+    # 1. O roadmap: o módulo em andamento antes dos que estão por fazer.
+    pendentes = [m for m in modulos if m.get("status") not in ("done", "skipped")]
+    pendentes.sort(key=lambda m: m.get("status") != "doing")
+    do_roadmap = 0
+    for modulo in pendentes:
+        if do_roadmap >= 3:
+            break
+        candidatas: list[str] = []
+        for slug in modulo.get("tags") or []:
+            if slug in _LINGUAGEM_DA_TAG:
+                candidatas.append(_LINGUAGEM_DA_TAG[slug])
+            candidatas.extend(_LINGUAGEM_DO_ASSUNTO.get(slug, ()))
+        linguagem = next((c for c in candidatas if c in ids), None)
+        if not linguagem:
+            continue  # Git, Docker, AWS: o laboratório não é o lugar
+        objetivo = next(iter(modulo.get("objetivos") or []), "")
+        titulo = str(modulo.get("titulo") or "").strip()
+        assunto = f"{titulo}: {objetivo.rstrip('.')}" if objetivo else titulo
+        situacao = "Em andamento" if modulo.get("status") == "doing" else "Próximo"
+        if acrescenta(linguagem, assunto, nivel_de[linguagem], f"{situacao} no seu roadmap: {titulo}", "roadmap"):
+            do_roadmap += 1
+
+    # 2. A trilha de cada linguagem, alternando entre elas. Sobra lugar para
+    # o próximo passo de cada uma.
+    trilhas = {l: list((_TRILHAS.get(l) or _TRILHA_GENERICA)[nivel_de[l]]) for l in ids}
+    while len(sugestoes) < limite - len(ids) and any(trilhas.values()):
+        for linguagem in ids:
+            if trilhas[linguagem] and len(sugestoes) < limite - len(ids):
+                assunto = trilhas[linguagem].pop(0)
+                acrescenta(linguagem, assunto, nivel_de[linguagem], f"Para o seu nível em {rotulo(linguagem)}", "trilha")
+
+    # 3. Um passo acima em cada linguagem: onde a pessoa chega a seguir.
+    for linguagem in ids:
+        atual = nivel_de[linguagem]
+        if atual == "avancado":
+            continue
+        proximo = NIVEIS[NIVEIS.index(atual) + 1]
+        for assunto in (_TRILHAS.get(linguagem) or _TRILHA_GENERICA)[proximo]:
+            if acrescenta(linguagem, assunto, proximo, f"Próximo passo em {rotulo(linguagem)}", "proximo_nivel"):
+                break
+
+    return {
+        "linguagens": [
+            {chave: valor for chave, valor in l.items() if chave in ("id", "rotulo", "realce")} for l in do_perfil
+        ] or catalogo(),
+        "do_perfil": bool(do_perfil),
+        "sugestoes": sugestoes,
+    }
