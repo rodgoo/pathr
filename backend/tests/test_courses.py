@@ -87,9 +87,14 @@ def test_competencia_ja_dominada_e_sem_meta_nao_puxa_curso():
     assert courses.recomendar([_tag("Docker", proficiency=4)]) == []
 
 
-def test_proficiencia_zero_conta_como_quero_aprender():
-    lista = courses.recomendar([_tag("Terraform", proficiency=0)])
-    assert lista and lista[0]["motivos"] == [{"tipo": "quero_aprender", "tag": "Terraform"}]
+def test_meta_desmarcada_some_dos_cursos():
+    """Desmarcar a meta é dizer "não é para agora": o curso some, mesmo que a
+    tecnologia esteja em N0 ou apareça no roadmap e no objetivo."""
+    desmarcada = [_tag("Terraform", proficiency=0, is_target=False)]
+    assert courses.recomendar(desmarcada) == []
+    assert courses.recomendar(desmarcada, slugs_do_roadmap=["terraform"], objetivo="Quero Terraform") == []
+    # Marcada de novo, volta.
+    assert courses.recomendar([_tag("Terraform", is_target=True)])[0]["id"] == "terraform-associate"
 
 
 def test_roadmap_e_objetivo_tambem_pedem():

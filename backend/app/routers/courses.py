@@ -39,9 +39,7 @@ def list_courses(
         "conferido_em": courses.CONFERIDO_EM,
         # A tela usa para dizer POR QUE está vazia: sem nada pedido, o caminho
         # é configurar o objetivo; com pedido e sem curso, é falta de catálogo.
-        "tem_pedido": bool(objetivo) or any(
-            tag["is_target"] or tag["proficiency"] == 0 for tag in minhas
-        ),
+        "tem_pedido": bool(objetivo) or any(tag["is_target"] for tag in minhas),
     }
 
 

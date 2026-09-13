@@ -333,11 +333,10 @@ FAIXAS: tuple[tuple[int, str, str], ...] = (
     (0, "basico", "Chama apagada"),
 )
 
-# Quanto cada sinal pesa. Meta declarada e "quero aprender" são a própria
-# pessoa dizendo o que quer; o roadmap é o plano que ela aceitou; o texto do
-# objetivo é a pista mais fraca, porque é casado por palavra.
+# Quanto cada sinal pesa. A meta declarada é a própria pessoa dizendo o que
+# quer; o roadmap é o plano que ela aceitou; o texto do objetivo é a pista mais
+# fraca, porque é casado por palavra.
 PESO_META = 3
-PESO_QUERO_APRENDER = 3
 PESO_ROADMAP = 2
 PESO_OBJETIVO = 1
 
@@ -392,6 +391,11 @@ def recomendar(
             pesos[slug] = peso
             motivos[slug] = motivo
 
+    # Tecnologia que está no perfil SEM ser meta foi uma decisão: "isto não é
+    # para agora". Ela não traz curso nem pelo roadmap nem pelo objetivo —
+    # desmarcar a meta e continuar vendo o curso dela era dizer que a escolha
+    # não valeu.
+    fora: set[str] = set()
     for tag in user_tags:
         slug = str(tag.get("slug") or slugify(str(tag.get("name") or "")))
         if not slug:
@@ -399,12 +403,14 @@ def recomendar(
         nomes[slug] = str(tag.get("name") or slug)
         if tag.get("is_target"):
             marca(slug, PESO_META, "meta")
-        elif int(tag.get("proficiency") or 0) == 0:
-            marca(slug, PESO_QUERO_APRENDER, "quero_aprender")
+        else:
+            fora.add(slug)
     for slug in slugs_do_roadmap:
-        marca(slug, PESO_ROADMAP, "roadmap")
+        if slug not in fora:
+            marca(slug, PESO_ROADMAP, "roadmap")
     for slug in tags_no_texto(objetivo):
-        marca(slug, PESO_OBJETIVO, "objetivo")
+        if slug not in fora:
+            marca(slug, PESO_OBJETIVO, "objetivo")
 
     resultado = []
     for curso in CURSOS:
