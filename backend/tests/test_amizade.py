@@ -171,3 +171,17 @@ def test_pontuacao_proximidade_pesa_mais_que_afinidade():
     vizinho_sem_nada_em_comum = {"city": "Vitória", "state": "ES", "objetivo": "Design", "_tag_ids": set()}
     distante_igualzinho = {"city": "Recife", "state": "PE", "objetivo": "Java", "_tag_ids": {"t1"}}
     assert pontuar(eu, vizinho_sem_nada_em_comum) > pontuar(eu, distante_igualzinho)
+
+
+def test_cartao_diz_o_que_as_duas_contas_tem_em_comum(como, banco):
+    bruno = next(c for c in como(ANA).get("/social/pessoas/sugestoes").json() if c["username"] == "brunolima")
+    # Ana tem Java; Bruno tem Java e React: em comum só Java, e a stack não é a mesma.
+    assert bruno["em_comum"] == ["Java"] and bruno["mesma_stack"] is False
+
+    banco.tabelas["pathr_user_tag"].append({"user_id": ANA, "tag_id": "t-react", "proficiency": 1})
+    bruno = como(ANA).get("/social/pessoas/busca", params={"q": "@brunolima"}).json()[0]
+    assert sorted(bruno["em_comum"]) == ["Java", "React"] and bruno["mesma_stack"] is True
+
+    # Quem não tem tecnologia nenhuma não "tem a mesma stack" de outra conta vazia.
+    carla = como(DAVI).get("/social/pessoas/busca", params={"q": "@carlareis"}).json()[0]
+    assert carla["em_comum"] == [] and carla["mesma_stack"] is False

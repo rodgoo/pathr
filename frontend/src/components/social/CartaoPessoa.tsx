@@ -11,10 +11,15 @@
  * fariam a pessoa se perguntar qual dos dois vale.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { social } from "@/api/endpoints";
 import type { PessoaCartao } from "@/api/types";
-import { ACC3, C, HAIRLINE, TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
+import { MarcaDaTecnologia, identidade } from "@/lib/tecnologias";
+import { ACC, ACC3, C, HAIRLINE, TEXT, tint } from "@/lib/tokens";
+
+/** O tom de um `.btn-tom`: a cor do significado da ação. */
+const tom = (cor: string) => ({ "--tom": cor }) as CSSProperties;
 
 const SENIORIDADE: Record<string, string> = {
   estagio: "Estágio",
@@ -123,6 +128,7 @@ export function CartaoPessoa({
     .filter(Boolean)
     .join(" · ");
   const id = pessoa.friendship_id;
+  const emComum = new Set(pessoa.em_comum ?? []);
 
   return (
     <article
@@ -162,31 +168,68 @@ export function CartaoPessoa({
       ) : null}
 
       {pessoa.stack.length > 0 ? (
-        <ul aria-label="Stack" style={{ display: "flex", flexWrap: "wrap", gap: 5, margin: 0, padding: 0, listStyle: "none" }}>
-          {pessoa.stack.map((tecnologia) => (
-            <li key={tecnologia} className="tag tag-outline" style={{ fontSize: 11 }}>
-              {tecnologia}
-            </li>
-          ))}
-        </ul>
+        <div style={{ display: "flex", flexDirection: "column", gap: 7 }}>
+          {pessoa.mesma_stack ? (
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: C.verde }}>
+              <Icon name="check" size={13} />
+              Vocês possuem a mesma stack
+            </div>
+          ) : emComum.size > 0 ? (
+            <div style={{ fontSize: 12, color: TEXT.faint }}>
+              {emComum.size === 1 ? "1 tecnologia em comum" : `${emComum.size} tecnologias em comum`}
+            </div>
+          ) : null}
+          <ul aria-label="Stack" style={{ display: "flex", flexWrap: "wrap", gap: 5, margin: 0, padding: 0, listStyle: "none" }}>
+            {pessoa.stack.map((tecnologia) => {
+              const { cor } = identidade(tecnologia);
+              // Em comum com quem olha: contorno mais forte e um ✓ — é o
+              // motivo mais concreto para adicionar alguém.
+              const comum = emComum.has(tecnologia);
+              return (
+                <li
+                  key={tecnologia}
+                  title={comum ? `${tecnologia} · vocês dois estudam` : tecnologia}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    gap: 5,
+                    padding: "3px 8px",
+                    borderRadius: 6,
+                    fontSize: 11.5,
+                    color: TEXT.full,
+                    background: tint(cor, comum ? 20 : 10),
+                    border: `1px solid ${tint(cor, comum ? 70 : 32)}`,
+                  }}
+                >
+                  <MarcaDaTecnologia nome={tecnologia} lado={13} />
+                  {tecnologia}
+                  {comum ? <Icon name="check" size={11} style={{ color: C.verde }} /> : null}
+                </li>
+              );
+            })}
+          </ul>
+        </div>
       ) : null}
 
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8.4, alignItems: "center", marginTop: "auto" }}>
         {pessoa.relacao === "nenhuma" ? (
-          <button type="button" className="btn btn-primary" disabled={ocupado}
+          <button type="button" className="btn btn-tom" style={tom(ACC)} disabled={ocupado}
             onClick={() => void agir(() => social.convidar(pessoa.username))}>
+            <Icon name="plus" size={15} />
             {ocupado ? "Enviando…" : "Adicionar"}
           </button>
         ) : null}
 
         {pessoa.relacao === "recebido" && id ? (
           <>
-            <button type="button" className="btn btn-primary" disabled={ocupado}
+            <button type="button" className="btn btn-tom" style={tom(C.verde)} disabled={ocupado}
               onClick={() => void agir(() => social.aceitar(id))}>
+              <Icon name="check" size={15} />
               Aceitar
             </button>
-            <button type="button" className="btn btn-ghost" disabled={ocupado}
+            <button type="button" className="btn btn-tom-leve" style={tom(C.rosa)} disabled={ocupado}
               onClick={() => void agir(() => social.desfazer(id))}>
+              <Icon name="x" size={15} />
               Recusar
             </button>
           </>
@@ -194,9 +237,13 @@ export function CartaoPessoa({
 
         {pessoa.relacao === "enviado" && id ? (
           <>
-            <span style={{ fontSize: 12.5, color: TEXT.faint }}>Convite enviado</span>
-            <button type="button" className="btn btn-ghost" disabled={ocupado}
+            <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, color: C.ambar }}>
+              <Icon name="clock" size={14} />
+              Convite enviado
+            </span>
+            <button type="button" className="btn btn-tom-leve" style={tom(C.rosa)} disabled={ocupado}
               onClick={() => void agir(() => social.desfazer(id))}>
+              <Icon name="x" size={14} />
               Cancelar
             </button>
           </>
@@ -206,8 +253,9 @@ export function CartaoPessoa({
           confirmandoSaida ? (
             <>
               <span style={{ fontSize: 12.5, color: TEXT.muted }}>Desfazer a amizade?</span>
-              <button type="button" className="btn btn-ghost" style={{ color: C.ambar }} disabled={ocupado}
+              <button type="button" className="btn btn-tom" style={tom(C.rosa)} disabled={ocupado}
                 onClick={() => void agir(() => social.desfazer(id))}>
+                <Icon name="trash" size={14} />
                 Desfazer
               </button>
               <button type="button" className="btn btn-ghost" onClick={() => setConfirmandoSaida(false)}>
@@ -216,7 +264,10 @@ export function CartaoPessoa({
             </>
           ) : (
             <>
-              <span style={{ fontSize: 12.5, color: C.verde }}>Amigos</span>
+              <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, color: C.verde }}>
+                <Icon name="user" size={14} />
+                Amigos
+              </span>
               <button type="button" className="btn btn-ghost" style={{ fontSize: 12, color: TEXT.faint }}
                 onClick={() => setConfirmandoSaida(true)}>
                 Desfazer amizade

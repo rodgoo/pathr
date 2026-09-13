@@ -89,11 +89,13 @@ const PESSOAS: PessoaCartao[] = [
     username: "marinacosta", name: "Marina Costa", has_avatar: false, city: "Vitória", state: "ES",
     objetivo: "Backend Java com Spring", cargo: "Desenvolvedora", senioridade: "pleno",
     stack: ["Java", "Spring Boot", "PostgreSQL", "Docker"], relacao: "nenhuma", friendship_id: null,
+    em_comum: ["Java", "Spring Boot"],
   },
   {
     username: "lucas_rocha", name: "Lucas Rocha", has_avatar: false, city: "Vila Velha", state: "ES",
     objetivo: "Fullstack TypeScript", cargo: null, senioridade: "junior",
     stack: ["React", "TypeScript", "Node.js"], relacao: "recebido", friendship_id: "exemplo",
+    em_comum: ["React", "TypeScript", "Node.js"], mesma_stack: true,
   },
 ];
 

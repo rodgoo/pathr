@@ -156,6 +156,17 @@ figcaption {
 .btn-ghost:hover { background: color-mix(in srgb, var(--color-accent) 10%, transparent); }
 .btn-ghost:active { background: color-mix(in srgb, var(--color-accent) 18%, transparent); }
 .btn-icon { width: 36px; height: 36px; padding: 0; }
+/* Botão com cor de significado (aceitar = verde, recusar = rosa). A cor vem
+   de `--tom` no style do elemento: uma classe só, e o tom decide a ação. */
+.btn-tom {
+  color: color-mix(in srgb, var(--tom) 80%, white);
+  border-color: color-mix(in srgb, var(--tom) 50%, transparent);
+  background: color-mix(in srgb, var(--tom) 14%, transparent);
+}
+.btn-tom:hover { background: color-mix(in srgb, var(--tom) 24%, transparent); }
+.btn-tom:active { background: color-mix(in srgb, var(--tom) 32%, transparent); }
+.btn-tom-leve { color: color-mix(in srgb, var(--tom) 85%, white); border-color: transparent; background: transparent; }
+.btn-tom-leve:hover { background: color-mix(in srgb, var(--tom) 12%, transparent); }
 .btn-block { width: 100%; margin-top: var(--space-2); }
 
 /* — forms — */

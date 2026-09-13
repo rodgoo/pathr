@@ -46,6 +46,10 @@ export interface PessoaCartao {
   relacao: Relacao;
   /** O convite ou a amizade, para aceitar, recusar ou desfazer. */
   friendship_id: string | null;
+  /** Tecnologias do `stack` que quem olha também tem. */
+  em_comum?: string[];
+  /** Os dois têm exatamente as mesmas tecnologias. */
+  mesma_stack?: boolean;
 }
 
 export interface Amizades {

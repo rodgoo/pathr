@@ -7,7 +7,8 @@
  */
 
 import type { UserTag } from "@/api/types";
-import { ACC, TEXT } from "@/lib/tokens";
+import { MarcaDaTecnologia, identidade } from "@/lib/tecnologias";
+import { TEXT, tint } from "@/lib/tokens";
 
 const SOURCE_LABEL: Record<string, string> = {
   cv: "do currículo",
@@ -27,6 +28,10 @@ export function TagButton({
   dashed?: boolean;
 }) {
   const source = SOURCE_LABEL[tag.source] ?? tag.source;
+  // A cor é da tecnologia (Java laranja, React ciano): marcada, ela preenche;
+  // desmarcada, fica só no contorno — a diferença entre "está no plano" e
+  // "não está" continua sendo de intensidade, como antes, só que colorida.
+  const { cor } = identidade(tag.name);
   return (
     <button
       type="button"
@@ -42,11 +47,12 @@ export function TagButton({
         font: "inherit",
         fontSize: 12.5,
         cursor: "pointer",
-        border: `1px ${dashed ? "dashed" : "solid"} ${tag.is_target ? ACC : "rgba(233,233,237,.18)"}`,
-        background: tag.is_target ? "rgba(145,132,217,.14)" : "transparent",
-        color: tag.is_target ? "#e7e5fe" : TEXT.muted,
+        border: `1px ${dashed ? "dashed" : "solid"} ${tint(cor, tag.is_target ? 62 : 30)}`,
+        background: tag.is_target ? tint(cor, 15) : tint(cor, 4),
+        color: tag.is_target ? TEXT.full : TEXT.muted,
       }}
     >
+      <MarcaDaTecnologia nome={tag.name} />
       {tag.name}
       <span
         style={{
@@ -54,7 +60,7 @@ export function TagButton({
           fontFamily: "ui-monospace, Menlo, monospace",
           padding: "1px 4px",
           borderRadius: 4,
-          background: "rgba(233,233,237,.10)",
+          background: tint(cor, tag.is_target ? 26 : 12),
         }}
       >
         N{tag.proficiency}

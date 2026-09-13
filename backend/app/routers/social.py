@@ -291,12 +291,37 @@ def _cartoes(
             "relacao": relacao.get("relacao", "nenhuma"),
             "friendship_id": relacao.get("friendship_id"),
             "_tag_ids": {str(t["tag_id"]) for t in tags},
+            "_ids_por_nome": {
+                nomes_de_tag[str(t["tag_id"])]: str(t["tag_id"]) for t in tags if str(t["tag_id"]) in nomes_de_tag
+            },
         }
     return cartoes
 
 
-def _publico(cartao: dict[str, Any]) -> dict[str, Any]:
-    return {k: v for k, v in cartao.items() if not k.startswith("_")}
+def _publico(cartao: dict[str, Any], minhas_tags: set[str] | None = None) -> dict[str, Any]:
+    """O cartão sem os campos internos, com o que as duas contas têm em comum.
+
+    `em_comum` são os nomes do `stack` do cartão que quem olha também tem;
+    `mesma_stack` diz se os dois conjuntos de tecnologias são iguais. Sai
+    daqui, e não da tela, porque só o servidor sabe as tags de quem olha sem
+    uma consulta a mais.
+    """
+    publico = {k: v for k, v in cartao.items() if not k.startswith("_")}
+    minhas = minhas_tags or set()
+    dele = cartao.get("_tag_ids") or set()
+    comuns = dele & minhas
+    publico["em_comum"] = [
+        nome for nome in cartao.get("stack") or [] if cartao.get("_ids_por_nome", {}).get(nome) in comuns
+    ]
+    publico["mesma_stack"] = bool(dele) and dele == minhas
+    return publico
+
+
+def _minhas_tags(supabase: Client, user_id: str) -> set[str]:
+    return {
+        str(linha["tag_id"])
+        for linha in supabase.table("pathr_user_tag").select("tag_id").eq("user_id", user_id).execute().data or []
+    }
 
 
 def _palavras(texto: Optional[str]) -> set[str]:
@@ -363,7 +388,7 @@ def sugestoes(
         (cartoes[c] for c in candidatos[:300] if c in cartoes),
         key=lambda cartao: -pontuar(eu, cartao),
     )
-    return [_publico(c) for c in ordenados[:limit]]
+    return [_publico(c, eu.get("_tag_ids")) for c in ordenados[:limit]]
 
 
 @router.get("/pessoas/busca")
@@ -402,7 +427,8 @@ def buscar(
     ids = [str(linha["id"]) for linha in exatos] + [i for i in ids_parciais if i in encontraveis]
     ids = [i for i in dict.fromkeys(ids) if i != user_id][:20]
     cartoes = _cartoes(supabase, ids, _relacoes(supabase, user_id))
-    return [_publico(cartoes[i]) for i in ids if i in cartoes]
+    minhas = _minhas_tags(supabase, user_id)
+    return [_publico(cartoes[i], minhas) for i in ids if i in cartoes]
 
 
 # ---------------------------------------------------------------------------
@@ -429,11 +455,12 @@ def listar_amigos(
     user_id = str(current_user["id"])
     relacoes = _relacoes(supabase, user_id)
     cartoes = _cartoes(supabase, list(relacoes), relacoes)
+    minhas = _minhas_tags(supabase, user_id)
     grupos: dict[str, list[dict[str, Any]]] = {"amigos": [], "recebidos": [], "enviados": []}
     chave = {"amigos": "amigos", "recebido": "recebidos", "enviado": "enviados"}
     for outro, relacao in relacoes.items():
         if outro in cartoes:
-            grupos[chave[relacao["relacao"]]].append(_publico(cartoes[outro]))
+            grupos[chave[relacao["relacao"]]].append(_publico(cartoes[outro], minhas))
     for lista in grupos.values():
         lista.sort(key=lambda c: (c.get("name") or "").lower())
     return grupos

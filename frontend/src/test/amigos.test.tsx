@@ -105,3 +105,15 @@ it("desfazer amizade pede confirmação antes de apagar", async () => {
   await userEvent.click(screen.getByRole("button", { name: "Desfazer" }));
   await waitFor(() => expect(servidor.calls.some((c) => c.method === "DELETE")).toBe(true));
 });
+
+it("stack igual avisa, e o que é em comum ganha destaque", () => {
+  const { rerender } = render(
+    <CartaoPessoa pessoa={pessoa({ em_comum: ["Java"], mesma_stack: false })} onMudou={() => {}} />,
+  );
+  expect(screen.getByText("1 tecnologia em comum")).toBeInTheDocument();
+  expect(screen.getByTitle("Java · vocês dois estudam")).toBeInTheDocument();
+  expect(screen.queryByText("Vocês possuem a mesma stack")).not.toBeInTheDocument();
+
+  rerender(<CartaoPessoa pessoa={pessoa({ em_comum: ["Java", "Spring Boot"], mesma_stack: true })} onMudou={() => {}} />);
+  expect(screen.getByText("Vocês possuem a mesma stack")).toBeInTheDocument();
+});

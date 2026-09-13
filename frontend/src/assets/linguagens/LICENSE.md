@@ -43,3 +43,11 @@ depende de um caminho interno que muda entre versões.
 - SQL não tem ícone aqui: o Devicon só tem os de bancos específicos (MySQL,
   PostgreSQL…), e usar um deles para "SQL" diria uma coisa que não é. A tela
   usa o ícone genérico de banco de dados do próprio app.
+
+
+## assets/tecnologias
+
+Os logos de frameworks, bancos e ferramentas em `../tecnologias` vêm do mesmo
+Devicon 2.17.0, sob a mesma licença MIT acima, sem alteração. Ficaram de fora
+os quase pretos (Kafka, Express, Next.js, Django, Flask, Linux), ilegíveis no
+fundo escuro do app. O mapa de nome → logo e cor está em `src/lib/tecnologias.tsx`.
