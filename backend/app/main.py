@@ -24,6 +24,7 @@ from app.seguranca_http import CabecalhosDeSeguranca
 from app.services import eventos
 from app.database import get_supabase
 from app.services.erros import registrar as registrar_erro
+from app.services import validacao_pt
 
 logger = logging.getLogger("pathr")
 
@@ -182,12 +183,13 @@ async def ai_provider_error_handler(_request: Request, exc: AiProviderError):
 async def validation_error_handler(_request: Request, exc: RequestValidationError):
     """Uma frase em português no lugar do array de erros do Pydantic — o
     frontend mostra `detail` direto, sem ter que interpretar o formato."""
+    # O texto do Pydantic é inglês ("value is not a valid email address…") e
+    # chegava assim na tela de entrar. services/validacao_pt traduz pelo TIPO
+    # do erro e troca o nome técnico do campo pelo rótulo do formulário.
     first = exc.errors()[0] if exc.errors() else {}
-    field = ".".join(str(part) for part in first.get("loc", ()) if part not in ("body", "query"))
-    message = first.get("msg", "dados inválidos")
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-        content={"detail": f"{field}: {message}" if field else message},
+        content={"detail": validacao_pt.mensagem(first) if first else "Dados inválidos."},
     )
 
 

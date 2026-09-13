@@ -162,6 +162,22 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 22%, transparent);
 }
 .auth .input:disabled { opacity: .6; }
+/* Preenchimento automático nas telas de conta. A regra global de nocturne.css
+   pinta o campo por uma sombra interna — mas o anel de foco acima TROCA o
+   box-shadow inteiro, e ao clicar no campo preenchido a sombra escura sumia e
+   o fundo branco do navegador aparecia. Aqui as duas sombras vão juntas. */
+.auth .input:-webkit-autofill,
+.auth .input:-webkit-autofill:hover {
+  -webkit-text-fill-color: var(--color-text);
+  caret-color: var(--color-text);
+  box-shadow: inset 0 0 0 1000px #0d0d12;
+  transition: background-color 9999s ease-out 0s;
+}
+.auth .input:-webkit-autofill:focus,
+.auth .input:-webkit-autofill:focus-visible {
+  -webkit-text-fill-color: var(--color-text);
+  box-shadow: inset 0 0 0 1000px #0d0d12, 0 0 0 3px color-mix(in srgb, var(--color-accent) 22%, transparent);
+}
 
 .campo-icone { position: relative; }
 .campo-icone > .campo-icone-simbolo {
