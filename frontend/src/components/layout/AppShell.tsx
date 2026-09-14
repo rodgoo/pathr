@@ -51,53 +51,55 @@ export function AppShell({ children }: { children: ReactNode }) {
   // continua desenhada e dá para sair dela.
   const conteudo = <ScreenBoundary resetKey={state.screen}>{children}</ScreenBoundary>;
 
-  if (compacto) {
-    return (
-      <div
-        style={{
-          ...FUNDO,
-          display: "flex",
-          flexDirection: "column",
-          // Sem recuo lateral nem no topo AQUI: a barra do topo é fixa e
-          // precisa pintar de borda a borda, senão o conteúdo aparece rolando
-          // pelas frestas ao lado dela. O respiro é do bloco de baixo.
-          paddingBottom: `calc(${ALTURA_DA_BARRA}px + 8.4px + var(--safe-bottom))`,
-        }}
-      >
-        <MobileHeader />
-        <div
-          style={{
-            flex: 1,
-            display: "flex",
-            flexDirection: "column",
-            gap: 8.4,
-            padding: "8.4px calc(8.4px + var(--safe-right)) 0 calc(8.4px + var(--safe-left))",
-          }}
-        >
-          <OfflineBar />
-          <main className="pathr-tela" style={{ ...PAINEL, flex: 1, padding: 14 }}>{conteudo}</main>
-        </div>
-        <MobileNav />
-        <AvisosDeAmizade />
-      </div>
-    );
-  }
-
+  // UMA árvore só para as duas formas, com a tela sempre no mesmo lugar dela
+  // (raiz → bloco → main → conteúdo). Antes eram dois `return` com estruturas
+  // diferentes: cruzar a largura do celular — girar o aparelho, ou o próprio
+  // vídeo em tela cheia ficar deitado — fazia o React jogar a tela inteira
+  // fora e montar outra. O player do YouTube era destruído no meio da tela
+  // cheia e a página recarregava do zero. Agora a troca de forma muda estilo
+  // e o que fica EM VOLTA da tela; a tela em si continua montada.
   return (
     <div
-      style={{
-        ...FUNDO,
-        display: "flex",
-        flexWrap: "wrap",
-        padding: 11.2,
-        gap: 11.2,
-      }}
+      style={
+        compacto
+          ? {
+              ...FUNDO,
+              display: "flex",
+              flexDirection: "column",
+              // Sem recuo lateral nem no topo AQUI: a barra do topo é fixa e
+              // precisa pintar de borda a borda, senão o conteúdo aparece
+              // rolando pelas frestas ao lado dela. O respiro é do bloco de baixo.
+              paddingBottom: `calc(${ALTURA_DA_BARRA}px + 8.4px + var(--safe-bottom))`,
+            }
+          : { ...FUNDO, display: "flex", flexWrap: "wrap", padding: 11.2, gap: 11.2 }
+      }
     >
-      <Sidebar />
-      <main className="pathr-tela" style={{ ...PAINEL, flex: "1 1 620px", padding: 22.4 }}>
-        <OfflineBar />
-        {conteudo}
-      </main>
+      {compacto ? <MobileHeader /> : <Sidebar />}
+      {/* No largo este bloco some do layout (`display: contents`) e o `main`
+          vira item direto da linha, ao lado da barra lateral. */}
+      <div
+        style={
+          compacto
+            ? {
+                flex: 1,
+                display: "flex",
+                flexDirection: "column",
+                gap: 8.4,
+                padding: "8.4px calc(8.4px + var(--safe-right)) 0 calc(8.4px + var(--safe-left))",
+              }
+            : { display: "contents" }
+        }
+      >
+        {compacto ? <OfflineBar /> : null}
+        <main
+          className="pathr-tela"
+          style={compacto ? { ...PAINEL, flex: 1, padding: 14 } : { ...PAINEL, flex: "1 1 620px", padding: 22.4 }}
+        >
+          {compacto ? null : <OfflineBar />}
+          {conteudo}
+        </main>
+      </div>
+      {compacto ? <MobileNav /> : null}
       <AvisosDeAmizade />
     </div>
   );

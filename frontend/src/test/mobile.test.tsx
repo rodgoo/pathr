@@ -10,7 +10,8 @@
  * afirmar, e é o que importa, é que os destinos EXISTEM e são alcançáveis.
  */
 
-import { render, screen, waitFor, within } from "@testing-library/react";
+import { act, render, screen, waitFor, within } from "@testing-library/react";
+import { useEffect } from "react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AppShell } from "@/components/layout/AppShell";
@@ -124,5 +125,51 @@ describe("moldura do celular", () => {
     // O ponto: a navegação continua de pé, então dá para sair da tela quebrada.
     expect(screen.getByRole("button", { name: "Início" })).toBeInTheDocument();
     consoleErro.mockRestore();
+  });
+});
+
+describe("girar o aparelho", () => {
+  it("troca a moldura sem desmontar a tela aberta (o vídeo em tela cheia não fecha)", async () => {
+    // Um matchMedia que dá para girar: muda a resposta e avisa quem assinou.
+    let compacto = true;
+    const ouvintes = new Set<() => void>();
+    vi.stubGlobal(
+      "matchMedia",
+      (query: string) =>
+        ({
+          get matches() {
+            return compacto && query.includes("max-width");
+          },
+          media: query,
+          addEventListener: (_: string, fn: () => void) => ouvintes.add(fn),
+          removeEventListener: (_: string, fn: () => void) => ouvintes.delete(fn),
+        }) as unknown as MediaQueryList,
+    );
+
+    let montagens = 0;
+    function TelaComVideo() {
+      useEffect(() => {
+        montagens += 1;
+      }, []);
+      return <p>player do vídeo</p>;
+    }
+
+    montaMoldura(<TelaComVideo />);
+    expect(await screen.findByRole("button", { name: "Mais" })).toBeInTheDocument();
+    expect(montagens).toBe(1);
+
+    // Deitou o celular: a largura passa do limite e a moldura vira a larga.
+    compacto = false;
+    act(() => ouvintes.forEach((fn) => fn()));
+    expect(await screen.findByText("pathr.notter.com.br")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Mais" })).not.toBeInTheDocument();
+    expect(screen.getByText("player do vídeo")).toBeInTheDocument();
+    expect(montagens).toBe(1);
+
+    // E voltou a ficar em pé.
+    compacto = true;
+    act(() => ouvintes.forEach((fn) => fn()));
+    expect(await screen.findByRole("button", { name: "Mais" })).toBeInTheDocument();
+    expect(montagens).toBe(1);
   });
 });
