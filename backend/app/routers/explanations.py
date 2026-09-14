@@ -43,6 +43,7 @@ cobra, e a reciclagem reescreve para não virar decoreba da frase.
 """
 
 import re
+import uuid
 from datetime import datetime, timezone
 from typing import Any, Literal, Optional
 
@@ -163,6 +164,9 @@ class SubmitExplanation(BaseModel):
     content: str = Field(min_length=40, max_length=8000)
     node_id: Optional[str] = None
     modo: Literal["explicacao", "atividade"] = "explicacao"
+    # A atividade da fila (pathr_activity_exercise) que esta resposta resolve.
+    # Sem ela, a tarefa é o objetivo do módulo, como antes.
+    exercise_id: Optional[str] = None
 
 
 def limpar_resposta(texto: str) -> str:
@@ -203,16 +207,24 @@ async def submit_explanation(
             detail="A atividade prática precisa do módulo.",
         )
 
+    exercicio: Optional[dict[str, Any]] = None
+    if payload.modo == "atividade" and payload.exercise_id:
+        exercicio = _exercicio(supabase, payload.exercise_id, user_id, str(node["id"]))
+
     resposta = limpar_resposta(payload.content)
     if payload.modo == "atividade":
         # A tarefa sai do BANCO, não do cliente: quem manda a resposta não
         # escolhe contra o que ela é corrigida.
-        pedidos = [str(o).strip() for o in (node.get("objectives") or []) if str(o).strip()]
+        if exercicio:
+            tarefa = f"- {str(exercicio.get('statement') or '')[:1500]}"
+        else:
+            pedidos = [str(o).strip() for o in (node.get("objectives") or []) if str(o).strip()]
+            tarefa = "\n".join(f"- {p[:300]}" for p in pedidos[:5]) or f"- {payload.concept}"
         sistema = ATIVIDADE_PROMPT
         prompt = (
             f"MÓDULO: {str(node.get('title') or payload.concept)[:200]}\n"
             "--- TAREFA ---\n"
-            + ("\n".join(f"- {p[:300]}" for p in pedidos[:5]) or f"- {payload.concept}")
+            + tarefa
             + "\n--- FIM DA TAREFA ---\n\n"
             "--- RESPOSTA DELA ---\n"
             f"{resposta}\n"
@@ -265,6 +277,12 @@ async def submit_explanation(
             "viraram_revisao": 0,
             "fora_do_tema": True,
         }
+
+    if exercicio:
+        # Respondida: sai da fila, e a nota calibra a próxima (services/atividades.py).
+        supabase.table("pathr_activity_exercise").update(
+            {"answered_at": _now().isoformat(), "score": nota, "explanation_id": str(linha["id"])}
+        ).eq("id", str(exercicio["id"])).eq("user_id", user_id).execute()
 
     viraram_revisao = _para_revisao(supabase, user_id, lacunas, tag_ids)
 
@@ -403,6 +421,30 @@ def _para_revisao(
         except Exception:  # noqa: BLE001
             continue
     return entraram
+
+
+def _exercicio(supabase: Client, exercise_id: str, user_id: str, node_id: str) -> dict[str, Any]:
+    """A atividade é desta pessoa, deste módulo, e ainda está aberta?
+
+    Responder de novo uma já corrigida não vale: a nota dela já calibrou a
+    próxima, e reenviar serviria só para trocar a nota por uma melhor depois
+    de ler a correção.
+    """
+    try:
+        uuid.UUID(exercise_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Atividade não encontrada.")
+    linhas = (
+        supabase.table("pathr_activity_exercise").select("*")
+        .eq("id", exercise_id).eq("user_id", user_id).eq("node_id", node_id)
+        .limit(1).execute().data
+        or []
+    )
+    if not linhas:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Atividade não encontrada.")
+    if linhas[0].get("answered_at"):
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail="Esta atividade já foi corrigida. Siga para a próxima.")
+    return linhas[0]
 
 
 def _owned_node(supabase: Client, node_id: str, user_id: str) -> dict[str, Any]:

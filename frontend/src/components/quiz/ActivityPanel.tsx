@@ -1,35 +1,60 @@
 /**
- * A atividade prática do módulo.
+ * A atividade prática do módulo — uma fila, não uma tarefa só.
  *
  * Escrever a solução do zero é o ponto: o modo "sem IA" existe porque a
  * pessoa que pediu este produto queria parar de depender de assistente para
  * codar. O que fica registrado é o texto dela, e a correção compara — não
  * completa.
  *
- * A correção automática ainda não tem endpoint. O rascunho, sim: ele mora no
- * SERVIDOR (`PUT /roadmap/nodes/{id}/draft`), e não mais no `localStorage`.
- * Preso a um navegador, a solução escrita do zero — o trabalho mais caro
- * desta tela — se perdia ao trocar de máquina, que é justamente quando alguém
- * mais precisa dela de volta.
+ * ## Sempre há algo para fazer
  *
- * Grava sozinho, com uma pausa depois da última tecla: um botão "salvar" num
- * campo desses é uma chance a mais de sair da página sem apertar.
+ * Antes havia UMA atividade por módulo, tirada do objetivo: respondida, a aba
+ * não tinha mais nada. Agora cada módulo tem uma fila (routers/atividades.py):
+ * ao abrir, vem a atividade aberta — ou uma nova é gerada; respondeu e corrigiu,
+ * "Próxima atividade" gera outra, diferente das anteriores e puxando o que a
+ * correção apontou. As feitas ficam listadas com a nota.
+ *
+ * Se o servidor ainda não tiver a fila (versão antiga no ar), a tela volta ao
+ * modo de antes, com o objetivo do módulo como tarefa.
+ *
+ * ## O rascunho
+ *
+ * Mora no SERVIDOR (`PUT /roadmap/nodes/{id}/draft`): preso a um navegador, a
+ * solução escrita do zero se perdia ao trocar de máquina. Grava sozinho, com
+ * uma pausa depois da última tecla; ao seguir para a próxima atividade, começa
+ * vazio.
  */
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { explanations as explanationsApi, roadmap as roadmapApi } from "@/api/endpoints";
-import type { ExplanationResult } from "@/api/types";
+import type { AtividadePratica, ExplanationResult, FilaDeAtividades } from "@/api/types";
 import type { RoadmapNode } from "@/api/types";
-import { ACC3, C, TEXT } from "@/lib/tokens";
+import { ACC3, ACC4, C, TEXT, tint } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { Kicker, Panel } from "@/components/ui/primitives";
 import { EditorDeCodigo } from "@/components/ui/EditorDeCodigo";
+import { ProgressoDaTarefa } from "@/components/ui/ProgressoDaTarefa";
 
 /** Quanto tempo sem digitar antes de gravar. Curto o bastante para não perder
  * trabalho, longo o bastante para não mandar uma requisição por tecla. */
 const PAUSA_MS = 900;
 
 type Estado = "carregando" | "ocioso" | "gravando" | "salvo" | "erro";
+
+const TIPO: Record<string, string> = {
+  codigo: "Código",
+  comandos: "Comandos",
+  explicacao: "Explicação",
+  configuracao: "Configuração",
+  pratica: "Prática",
+};
+
+const ETAPAS_GERAR = ["Relendo o que você já fez", "Escolhendo o próximo desafio", "Escrevendo o enunciado"] as const;
+const ETAPAS_CORRIGIR = ["Lendo sua resposta", "Comparando com o que foi pedido", "Escrevendo a correção"] as const;
+
+function mensagem(erro: unknown, padrao: string): string {
+  return erro instanceof Error ? erro.message : padrao;
+}
 
 export function ActivityPanel({ node }: { node: RoadmapNode }) {
   const [answer, setAnswer] = useState("");
@@ -40,6 +65,13 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
   // O que o servidor já tem. Sem isto, a gravação automática dispararia uma
   // vez logo após a carga, gravando exatamente o que acabou de ser lido.
   const gravado = useRef<string | null>(null);
+
+  const [fila, setFila] = useState<FilaDeAtividades | null>(null);
+  const [atual, setAtual] = useState<AtividadePratica | null>(null);
+  const [gerando, setGerando] = useState(false);
+  const [erroFila, setErroFila] = useState<string | null>(null);
+  // Servidor sem a fila: a tarefa volta a ser o objetivo do módulo.
+  const [semFila, setSemFila] = useState(false);
 
   useEffect(() => {
     let vivo = true;
@@ -80,7 +112,43 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
     return () => window.clearTimeout(timer);
   }, [node.id, answer]);
 
+  const gerarProxima = useCallback(async () => {
+    setGerando(true);
+    setErroFila(null);
+    try {
+      setAtual(await roadmapApi.proximaAtividade(node.id));
+    } catch (caught) {
+      setErroFila(mensagem(caught, "Não consegui gerar a próxima atividade."));
+    } finally {
+      setGerando(false);
+    }
+  }, [node.id]);
+
+  // Ao abrir o módulo: a atividade aberta, ou uma nova. Sempre há algo.
+  useEffect(() => {
+    let vivo = true;
+    setFila(null);
+    setAtual(null);
+    setCorrecao(null);
+    setSemFila(false);
+    void roadmapApi
+      .atividades(node.id)
+      .then((dados) => {
+        if (!vivo) return;
+        setFila(dados);
+        if (dados.atual) setAtual(dados.atual);
+        else void gerarProxima();
+      })
+      .catch(() => {
+        if (vivo) setSemFila(true);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [node.id, gerarProxima]);
+
   const objective = node.objectives[0];
+  const respondida = Boolean(correcao && !correcao.fora_do_tema);
 
   async function corrigir() {
     setEnviando(true);
@@ -89,23 +157,39 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
     try {
       // O conceito sai do título do módulo: é o que a pessoa está estudando, e
       // pedir para ela digitá-lo de novo seria burocracia antes do exercício.
-      // `atividade`: corrigida pelo que o módulo pede (a tarefa vem do banco),
-      // lendo os comentários como a explicação da pessoa — não como ensaio.
+      // `atividade` + `exercise_id`: corrigida pelo enunciado DESTA atividade,
+      // que o servidor lê do banco, lendo os comentários como a explicação.
       const resultado = await explanationsApi.submit({
         concept: node.title,
         content: answer.trim(),
         node_id: node.id,
         modo: "atividade",
+        exercise_id: semFila ? undefined : atual?.id,
       });
       setCorrecao(resultado);
+      if (!resultado.fora_do_tema && fila && atual) {
+        const feita = { ...atual, nota: resultado.score, respondida_em: new Date().toISOString() };
+        setFila({ ...fila, atual: null, feitas: [feita, ...fila.feitas].slice(0, 10), total_feitas: fila.total_feitas + 1 });
+      }
     } catch (caught) {
-      setErroCorrecao(
-        caught instanceof Error ? caught.message : "Não consegui corrigir agora.",
-      );
+      setErroCorrecao(mensagem(caught, "Não consegui corrigir agora."));
     } finally {
       setEnviando(false);
     }
   }
+
+  /** Depois da correção: campo vazio, rascunho vazio, e a próxima atividade. */
+  async function seguir() {
+    setCorrecao(null);
+    setErroCorrecao(null);
+    setAtual(null);
+    gravado.current = "";
+    setAnswer("");
+    void roadmapApi.saveDraft(node.id, "").catch(() => undefined);
+    await gerarProxima();
+  }
+
+  const podeEnviar = !enviando && !respondida && answer.trim().length >= 40 && (semFila || Boolean(atual));
 
   return (
     <Panel pad={22.4}>
@@ -120,20 +204,78 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
       >
         <Kicker>Atividade prática</Kicker>
         <span className="tag tag-outline">sem IA</span>
+        {fila && fila.total_feitas > 0 ? (
+          <span style={{ fontSize: 11.5, color: TEXT.faint, marginLeft: "auto" }}>
+            {fila.total_feitas} {fila.total_feitas === 1 ? "feita" : "feitas"} neste módulo
+          </span>
+        ) : null}
       </div>
 
       <h3 style={{ fontSize: 18, marginBottom: 8.4, fontWeight: 500 }}>{node.title}</h3>
-      <p style={{ fontSize: 13.5, color: "rgba(233,233,237,.7)", maxWidth: "62ch" }}>
-        {objective ? (
-          <>
-            Entregue o que o módulo pede:{" "}
-            <span style={{ color: ACC3 }}>{objective.toLowerCase()}</span>. Escreva a solução
-            inteira — a correção compara com a referência e aponta o que difere.
-          </>
-        ) : (
-          "Escreva sua solução para este módulo. A correção compara com a referência e aponta o que difere."
-        )}
-      </p>
+
+      {semFila ? (
+        <p style={{ fontSize: 13.5, color: "rgba(233,233,237,.7)", maxWidth: "62ch" }}>
+          {objective ? (
+            <>
+              Entregue o que o módulo pede:{" "}
+              <span style={{ color: ACC3 }}>{objective.toLowerCase()}</span>. Escreva a solução
+              inteira — a correção compara com a referência e aponta o que difere.
+            </>
+          ) : (
+            "Escreva sua solução para este módulo. A correção compara com a referência e aponta o que difere."
+          )}
+        </p>
+      ) : null}
+
+      {!semFila && gerando ? (
+        <ProgressoDaTarefa
+          ativo={gerando}
+          chave="atividade-gerar"
+          etapas={ETAPAS_GERAR}
+          duracaoMs={12_000}
+          style={{ margin: "11.2px 0" }}
+        />
+      ) : null}
+
+      {!semFila && !gerando && erroFila && !atual ? (
+        <div role="alert" style={{ margin: "11.2px 0", fontSize: 12.5, color: C.ambar, display: "flex", gap: 8.4, alignItems: "center", flexWrap: "wrap" }}>
+          {erroFila}
+          <button type="button" className="btn btn-secondary" style={{ fontSize: 12.5 }} onClick={() => void gerarProxima()}>
+            <Icon name="refresh" size={14} />
+            Tentar de novo
+          </button>
+        </div>
+      ) : null}
+
+      {!semFila && atual ? (
+        <section
+          aria-label="Atividade atual"
+          style={{
+            margin: "11.2px 0",
+            padding: "12.6px 14px",
+            borderRadius: 9,
+            background: tint(ACC4, 7),
+            boxShadow: `inset 0 0 0 1px ${tint(ACC4, 28)}`,
+          }}
+        >
+          <div style={{ fontSize: 11.5, color: ACC4, marginBottom: 5 }}>
+            {TIPO[atual.tipo] ?? "Prática"} · atividade {(fila?.total_feitas ?? 0) + (respondida ? 0 : 1)}
+          </div>
+          <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: TEXT.full, whiteSpace: "pre-wrap" }}>
+            {atual.enunciado}
+          </p>
+          {atual.dicas.length > 0 ? (
+            <details style={{ marginTop: 8.4, fontSize: 12.5, color: TEXT.muted }}>
+              <summary style={{ cursor: "pointer" }}>{atual.dicas.length === 1 ? "Ver dica" : "Ver dicas"}</summary>
+              <ul style={{ margin: "5.6px 0 0", paddingLeft: 18 }}>
+                {atual.dicas.map((dica) => (
+                  <li key={dica}>{dica}</li>
+                ))}
+              </ul>
+            </details>
+          ) : null}
+        </section>
+      ) : null}
 
       <div className="field" style={{ marginTop: 14 }}>
         <label htmlFor="activity-answer">Sua resposta</label>
@@ -153,21 +295,31 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
       </div>
 
       <div style={{ marginTop: 14, display: "flex", gap: 8.4, alignItems: "center", flexWrap: "wrap" }}>
-        <button
-          type="button"
-          className="btn btn-primary"
-          disabled={enviando || answer.trim().length < 40}
-          onClick={() => void corrigir()}
-        >
-          <Icon name="send" size={15} />
-          {enviando ? "Lendo sua explicação…" : "Enviar para correção"}
-        </button>
-        {answer.trim().length < 40 ? (
+        {respondida && !semFila ? (
+          <button type="button" className="btn btn-primary" disabled={gerando} onClick={() => void seguir()}>
+            Próxima atividade
+            <Icon name="arrowRight" size={15} />
+          </button>
+        ) : (
+          <button type="button" className="btn btn-primary" disabled={!podeEnviar} onClick={() => void corrigir()}>
+            <Icon name="send" size={15} />
+            {enviando ? "Corrigindo…" : "Enviar para correção"}
+          </button>
+        )}
+        {!respondida && answer.trim().length < 40 ? (
           <span style={{ fontSize: 11.5, color: TEXT.faint }}>
             Escreva ao menos algumas frases — uma linha não é explicação.
           </span>
         ) : null}
       </div>
+
+      <ProgressoDaTarefa
+        ativo={enviando}
+        chave="atividade-corrigir"
+        etapas={ETAPAS_CORRIGIR}
+        duracaoMs={14_000}
+        style={{ marginTop: 11.2 }}
+      />
 
       {correcao ? <Correcao resultado={correcao} /> : null}
       {erroCorrecao ? (
@@ -204,6 +356,31 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
           {estado === "erro" ? "não consegui gravar — o texto continua aqui" : null}
         </span>
       </div>
+
+      {fila && fila.feitas.length > 0 ? (
+        <details style={{ marginTop: 16.8, fontSize: 12.5, color: TEXT.muted }}>
+          <summary style={{ cursor: "pointer" }}>Atividades feitas neste módulo ({fila.total_feitas})</summary>
+          <ol style={{ listStyle: "none", margin: "8.4px 0 0", padding: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+            {fila.feitas.map((feita) => (
+              <li key={feita.id} style={{ display: "flex", gap: 10, alignItems: "baseline" }}>
+                <span
+                  style={{
+                    flex: "none",
+                    minWidth: 30,
+                    fontVariantNumeric: "tabular-nums",
+                    color: (feita.nota ?? 0) >= 70 ? C.verde : C.ambar,
+                  }}
+                >
+                  {feita.nota ?? "—"}
+                </span>
+                <span style={{ color: TEXT.strong, overflow: "hidden", textOverflow: "ellipsis", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" }}>
+                  {feita.enunciado}
+                </span>
+              </li>
+            ))}
+          </ol>
+        </details>
+      ) : null}
     </Panel>
   );
 }

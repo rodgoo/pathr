@@ -418,6 +418,23 @@ export interface ExplanationGap {
   por_que: string;
 }
 
+/** Uma atividade da fila de um modulo (routers/atividades.py). */
+export interface AtividadePratica {
+  id: string;
+  enunciado: string;
+  tipo: "codigo" | "comandos" | "explicacao" | "configuracao" | "pratica" | string;
+  dicas: string[];
+  criada_em: string | null;
+  respondida_em: string | null;
+  nota: number | null;
+}
+
+export interface FilaDeAtividades {
+  atual: AtividadePratica | null;
+  feitas: AtividadePratica[];
+  total_feitas: number;
+}
+
 export interface ExplanationResult {
   id: string;
   concept?: string;

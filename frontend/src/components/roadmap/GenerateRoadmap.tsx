@@ -15,11 +15,12 @@ import { roadmap as roadmapApi, tags as tagsApi } from "@/api/endpoints";
 import { useAppState } from "@/hooks/useAppState";
 import { curarModulo } from "@/lib/curadoria";
 import { useMutation, useQuery } from "@/hooks/useApi";
-import { ACC, TEXT } from "@/lib/tokens";
+import { TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { Segmented } from "@/components/ui/Segmented";
 import { EmptyState, ErrorState } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
+import { ProgressoDaTarefa } from "@/components/ui/ProgressoDaTarefa";
 
 const HORIZONS = [
   { value: "8", label: "8 semanas" },
@@ -160,7 +161,12 @@ export function GenerateRoadmap({
             </span>
           </div>
 
-          {generate.pending ? <Sweep /> : null}
+          <ProgressoDaTarefa
+            ativo={generate.pending}
+            chave="roadmap-gerar"
+            etapas={["Lendo seu currículo e suas skills", "Desenhando as fases", "Escrevendo os módulos", "Organizando a ordem de estudo"]}
+            duracaoMs={30_000}
+          />
         </Panel>
       </form>
     </div>
@@ -237,27 +243,3 @@ function ContextField({ value, onChange }: { value: string; onChange: (next: str
   );
 }
 
-/** A barra que varre enquanto a IA responde. Puramente decorativa. */
-function Sweep() {
-  return (
-    <div
-      aria-hidden
-      style={{
-        height: 3,
-        borderRadius: 2,
-        background: "rgba(233,233,237,.12)",
-        overflow: "hidden",
-        position: "relative",
-      }}
-    >
-      <div
-        style={{
-          position: "absolute",
-          inset: 0,
-          background: `linear-gradient(90deg,transparent,${ACC},transparent)`,
-          animation: "noc-sweep 1.1s linear infinite",
-        }}
-      />
-    </div>
-  );
-}

@@ -570,6 +570,7 @@ _TABELAS_DO_USUARIO = (
     "pathr_walkthrough",
     "pathr_explanation",
     "pathr_activity_draft",
+    "pathr_activity_exercise",
     "pathr_weekly_checklist",
     "pathr_user_course",
 )

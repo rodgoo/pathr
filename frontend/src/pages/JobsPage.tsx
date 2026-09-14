@@ -41,6 +41,7 @@ import { Icon } from "@/components/ui/icons";
 import { Segmented } from "@/components/ui/Segmented";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
+import { ProgressoDaTarefa } from "@/components/ui/ProgressoDaTarefa";
 
 import { linkExterno } from "@/lib/linkExterno";
 type Filtro = "todas" | "remotas";
@@ -767,6 +768,13 @@ function AnalisarVaga() {
           </button>
         </div>
       </form>
+      <ProgressoDaTarefa
+        ativo={analise.pending}
+        chave="vaga-analisar"
+        etapas={["Lendo a vaga", "Separando os requisitos", "Comparando com o seu perfil"]}
+        duracaoMs={18_000}
+        style={{ marginTop: 11.2 }}
+      />
       {analise.error ? (
         <p role="alert" style={{ margin: "8.4px 0 0", fontSize: 12.5, color: C.ambar }}>
           {analise.error}

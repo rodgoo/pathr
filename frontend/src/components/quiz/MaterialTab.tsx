@@ -27,6 +27,7 @@ import type { ContentLang } from "@/types";
 import { Chip } from "@/components/ui/Chip";
 import { Segmented } from "@/components/ui/Segmented";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
+import { ProgressoDaTarefa } from "@/components/ui/ProgressoDaTarefa";
 import { CurateButton } from "@/components/library/CurateButton";
 import { LibraryRow } from "@/components/library/LibraryRow";
 
@@ -201,7 +202,17 @@ function Lista({
   if (resources.error) {
     return <ErrorState message={resources.error} onRetry={resources.reload} />;
   }
-  if (curando) return <Loading label="Procurando material para este módulo…" />;
+  if (curando) {
+    return (
+      <ProgressoDaTarefa
+        ativo
+        chave="material-buscar"
+        etapas={["Buscando artigos, vídeos e documentação", "Conferindo se cada link abre", "Escolhendo os melhores"]}
+        duracaoMs={20_000}
+        style={{ padding: "22.4px 0" }}
+      />
+    );
+  }
 
   if (matching.length === 0) {
     // Documentação e exercício quase sempre só existem em inglês. Dizer

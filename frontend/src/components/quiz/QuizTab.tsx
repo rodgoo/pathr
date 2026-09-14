@@ -14,6 +14,7 @@ import { TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { EmptyState, ErrorState } from "@/components/ui/States";
 import { Panel } from "@/components/ui/primitives";
+import { ProgressoDaTarefa } from "@/components/ui/ProgressoDaTarefa";
 import { QuizRunner } from "./QuizRunner";
 import { useEffect, useState } from "react";
 
@@ -132,6 +133,13 @@ export function QuizTab({ node }: { node: RoadmapNode | null }) {
           {generate.pending ? "A IA leva alguns segundos." : "Leva cerca de 10 minutos."}
         </span>
       </div>
+      <ProgressoDaTarefa
+        ativo={generate.pending}
+        chave="quiz-gerar"
+        etapas={["Lendo o módulo e o seu nível", "Escrevendo as questões", "Conferindo o gabarito"]}
+        duracaoMs={20_000}
+        style={{ marginTop: 14 }}
+      />
     </Panel>
   );
 }

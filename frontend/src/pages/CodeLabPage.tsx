@@ -37,6 +37,7 @@ import { Select } from "@/components/ui/Select";
 import { iconeDaLinguagem } from "@/lib/linguagens";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
+import { ProgressoDaTarefa } from "@/components/ui/ProgressoDaTarefa";
 
 const MONO = "ui-monospace, Menlo, monospace";
 
@@ -323,6 +324,13 @@ function Sugestoes({
           );
         })}
       </div>
+      <ProgressoDaTarefa
+        ativo={Boolean(gerando)}
+        chave="laboratorio-gerar"
+        etapas={["Escolhendo o exemplo", "Escrevendo o código", "Montando o passo a passo"]}
+        duracaoMs={15_000}
+        style={{ marginTop: 11.2 }}
+      />
       {criar.error ? <ErrorState message={criar.error} /> : null}
     </Panel>
   );

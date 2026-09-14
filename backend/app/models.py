@@ -457,6 +457,29 @@ class PathrRoadmapNode(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
 
+class PathrActivityExercise(SQLModel, table=True):
+    """Uma atividade prática gerada para um módulo (migração 0030).
+
+    A fila da aba Atividade: respondida uma (`answered_at`, `score`), a próxima
+    é gerada sabendo das anteriores. O enunciado mora aqui, e é daqui que a
+    correção o lê — nunca do cliente.
+    """
+
+    __tablename__ = "pathr_activity_exercise"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id"))
+    node_id: uuid.UUID = Field(sa_column=_fk("pathr_roadmap_node.id", index=False))
+    statement: str
+    kind: str = Field(default="pratica", max_length=20)
+    hints: list[Any] = Field(default_factory=list, sa_column=_jsonb("[]"))
+    generated_by: Optional[str] = Field(default=None)
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+    answered_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
+    score: Optional[int] = Field(default=None)
+    explanation_id: Optional[uuid.UUID] = Field(default=None, sa_type=PGUUID(as_uuid=True))
+
+
 class PathrActivityDraft(SQLModel, table=True):
     """O que a pessoa escreveu na atividade prática de um módulo.
 

@@ -20,6 +20,7 @@ import { ACC, C, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
+import { ProgressoDaTarefa } from "@/components/ui/ProgressoDaTarefa";
 import { MASTERY_LABELS, TechnologyRow } from "@/components/profile/TechnologyRow";
 
 export function CvPage() {
@@ -200,26 +201,13 @@ function Parse({
       <Panel pad={22.4} style={{ marginTop: 22.4 }}>
         {parse.pending ? (
           <>
-            <div
-              aria-hidden
-              style={{
-                height: 3,
-                borderRadius: 2,
-                background: "rgba(233,233,237,.12)",
-                overflow: "hidden",
-                position: "relative",
-                marginBottom: 16.8,
-              }}
-            >
-              <div
-                style={{
-                  position: "absolute",
-                  inset: 0,
-                  background: `linear-gradient(90deg,transparent,${ACC},transparent)`,
-                  animation: "noc-sweep 1.1s linear infinite",
-                }}
-              />
-            </div>
+            <ProgressoDaTarefa
+              ativo={parse.pending}
+              chave="curriculo-ler"
+              etapas={steps}
+              duracaoMs={25_000}
+              style={{ marginBottom: 16.8 }}
+            />
             <ol
               aria-live="polite"
               style={{

@@ -16,6 +16,8 @@ import type {
   Relacao,
   Relato,
   RelatoModeracao,
+  AtividadePratica,
+  FilaDeAtividades,
   ListaUsuariosAdmin,
   UsuarioAdmin,
   AssinaturaAdmin,
@@ -259,6 +261,11 @@ export const roadmap = {
    * a solucao escrita do zero se perdia ao trocar de maquina. */
   draft: (nodeId: string) =>
     api.get<{ content: string; updated_at: string | null }>(`/roadmap/nodes/${nodeId}/draft`),
+  /** A fila de atividades praticas do modulo: a aberta e as ja feitas. */
+  atividades: (nodeId: string) => api.get<FilaDeAtividades>(`/roadmap/nodes/${nodeId}/atividades`),
+  /** A proxima atividade. Se ha uma aberta, o servidor devolve ela em vez de gerar outra. */
+  proximaAtividade: (nodeId: string) =>
+    api.post<AtividadePratica>(`/roadmap/nodes/${nodeId}/atividades/proxima`),
   /** Sem rede o rascunho fica na fila. Perder a solucao escrita do zero por
    * causa de um tunel e o pior desfecho possivel desta tela. */
   saveDraft: (nodeId: string, content: string) =>
@@ -384,7 +391,13 @@ export const explanations = {
    * que e a ilusao que o exercicio existe para quebrar. Vem a nota, o que se
    * sustentou e as lacunas -- e cada lacuna ja entrou na fila de revisao.
    */
-  submit: (body: { concept: string; content: string; node_id?: string; modo?: "explicacao" | "atividade" }) =>
+  submit: (body: {
+    concept: string;
+    content: string;
+    node_id?: string;
+    modo?: "explicacao" | "atividade";
+    exercise_id?: string;
+  }) =>
     api.post<ExplanationResult>("/explanations", body),
   list: (nodeId?: string) =>
     api.get<ExplanationResult[]>(nodeId ? `/explanations?node_id=${nodeId}` : "/explanations"),
