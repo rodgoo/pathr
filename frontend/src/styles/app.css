@@ -263,6 +263,74 @@ a,
   border-color: var(--color-accent);
 }
 
+/* — compositor de mensagem (Perguntar) —
+   Campo e botão de enviar na MESMA moldura, como num app de mensagens: a borda
+   e o destaque de foco são da moldura, e o campo por dentro não tem os seus.
+   O botão é um círculo só com o ícone, no canto de baixo, que acende quando
+   há o que enviar. */
+.compositor {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  gap: 6px;
+  padding: 6px 6px 6px 12px;
+  border-radius: 14px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-divider);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+.compositor:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-accent) 18%, transparent);
+}
+.compositor .input {
+  flex: 1;
+  min-height: 40px;
+  max-height: 160px;
+  padding: 7px 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  resize: none;
+  outline: none;
+  line-height: 1.45;
+}
+.compositor .input:focus-visible {
+  border: 0;
+  outline: none;
+}
+.compositor__enviar {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #0b0a14;
+  background: var(--color-accent);
+  transition: background .15s ease, opacity .15s ease, transform .1s ease;
+}
+.compositor__enviar:hover:not(:disabled) {
+  background: var(--color-accent-2);
+}
+.compositor__enviar:active:not(:disabled) {
+  transform: scale(.94);
+}
+.compositor__enviar:disabled {
+  cursor: default;
+  color: rgba(233, 233, 237, .45);
+  background: rgba(233, 233, 237, .08);
+}
+.compositor__enviar:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .compositor, .compositor__enviar { transition: none; }
+}
+
 /* — alvos de toque —
 
    O app foi desenhado para o mouse: abas de 29px, pílulas de 33px, campos de

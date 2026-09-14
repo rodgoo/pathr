@@ -99,7 +99,11 @@ describe("Perguntar", () => {
     expect(segunda).toHaveAccessibleName("Tutor");
     expect(segunda).toHaveStyle({ justifyContent: "flex-end" });
     expect(within(segunda).getByText("private int x;").tagName).toBe("PRE");
-    expect(screen.getByLabelText("Sua dúvida")).toHaveStyle({ resize: "none" });
+    // Campo e botão na mesma moldura; o botão é só o ícone, com nome acessível.
+    const enviarBotao = screen.getByRole("button", { name: "Enviar" });
+    expect(enviarBotao).toHaveTextContent("");
+    expect(enviarBotao.closest("form")).toContainElement(screen.getByLabelText("Sua dúvida"));
+    expect(enviarBotao.closest("form")).toHaveClass("compositor");
     expect(container.querySelector("script")).toBeNull();
 
     const envio = servidor.calls.find((c) => c.method === "POST" && c.url === "/duvidas");

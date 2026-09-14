@@ -265,7 +265,10 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
           evento.preventDefault();
           void enviar();
         }}
-        style={{ display: "flex", gap: 8.4, alignItems: "flex-end" }}
+        // Um compositor só: o campo e o botão de enviar dentro da mesma moldura,
+        // como num app de mensagens. O botão é só o ícone — o nome "Enviar"
+        // continua para leitor de tela, no aria-label.
+        className="compositor"
       >
         <textarea
           className="input"
@@ -281,11 +284,15 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
               void enviar();
             }
           }}
-          style={{ flex: 1, resize: "none", minHeight: 44 }}
         />
-        <button type="submit" className="btn btn-primary" disabled={enviando || texto.trim().length < 3}>
-          <Icon name="send" size={15} />
-          Enviar
+        <button
+          type="submit"
+          className="compositor__enviar"
+          aria-label="Enviar"
+          title="Enviar (Enter)"
+          disabled={enviando || texto.trim().length < 3}
+        >
+          <Icon name="send" size={16} />
         </button>
       </form>
       <div ref={fim} />
