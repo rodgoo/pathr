@@ -19,6 +19,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.ai_providers import AiProviderError
 from app.config import settings
+from app.limite_corpo import LimiteDeCorpo
 from app.middleware_usuario import UsuarioDaRequisicao
 from app.seguranca_http import CabecalhosDeSeguranca
 from app.services import eventos
@@ -31,6 +32,11 @@ logger = logging.getLogger("pathr")
 
 @asynccontextmanager
 async def lifespan(_app: FastAPI):
+    problemas = settings.problemas_de_producao()
+    if problemas:
+        # Recusa subir: melhor a máquina nova falhar no health check (e a Fly
+        # manter a anterior) do que servir sessões forjáveis.
+        raise RuntimeError("Configuração insegura para produção: " + "; ".join(problemas))
     logger.info("PathR subindo em %s", settings.environment)
     yield
     logger.info("PathR encerrando")
@@ -146,6 +152,9 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 # middlewares de `call_next` copiam esse contexto para a rota. A cota de IA
 # por usuário depende disso (services/limites.py).
 app.add_middleware(UsuarioDaRequisicao)
+# Corpo grande demais é recusado antes de qualquer leitura. Por dentro dos
+# cabeçalhos de segurança e do CORS, para o 413 chegar legível à tela.
+app.add_middleware(LimiteDeCorpo, maximo_bytes=settings.max_request_mb * 1024 * 1024)
 # Cabeçalhos de segurança em TODA resposta, inclusive erro e 429 — por isso
 # por fora dos middlewares que respondem sozinhos. Ver app/seguranca_http.py.
 app.add_middleware(CabecalhosDeSeguranca)

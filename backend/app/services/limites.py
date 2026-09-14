@@ -62,6 +62,10 @@ CONVITE_POR_USUARIO = Regra("convite-amizade", 40, timedelta(days=1), "Limite de
 # dia cobre um dia inteiro de estudo pesado com folga.
 RELATO_POR_USUARIO = Regra("relato", 10, timedelta(days=1), "Limite de relatos de hoje atingido. Obrigado por insistir — tente amanhã.")
 IA_POR_USUARIO = Regra("ia", 150, timedelta(days=1), "Você atingiu o limite diário de uso da IA. Ele volta amanhã.")
+# A curadoria busca na web e valida cada link: cara por pedido, e cada tag nova
+# abria uma rodada. Por conta, para criar tags em série não virar busca infinita.
+CURADORIA_POR_USUARIO = Regra("curadoria", 12, timedelta(days=1), "Já buscamos materiais várias vezes hoje. Tente amanhã.")
+TAG_NOVA_POR_USUARIO = Regra("tag-por-nome", 60, timedelta(days=1), "Limite de tecnologias adicionadas hoje atingido.")
 
 
 # Quem está fazendo a requisição corrente, para a IA contar a cota sem que

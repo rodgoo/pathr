@@ -209,6 +209,9 @@ class Settings(BaseSettings):
     # retrato de celular e ainda barra o upload acidental de uma imagem de
     # câmera profissional inteira.
     max_avatar_mb: int = 5
+    # Teto de QUALQUER requisição (app/limite_corpo.py): o maior envio legítimo
+    # é o currículo de 10 MB, mais a embalagem do formulário.
+    max_request_mb: int = 12
 
     @field_validator("database_url")
     @classmethod
@@ -239,6 +242,25 @@ class Settings(BaseSettings):
     @property
     def is_production(self) -> bool:
         return self.environment == "production"
+
+    def problemas_de_producao(self) -> list[str]:
+        """O que impede a produção de subir com segurança — só NOMES, nunca valores.
+
+        Sem isto, um segredo esquecido na Fly deixava o app subir normalmente:
+        com `JWT_SECRET_KEY` vazia, todo token de sessão seria assinado com a
+        string vazia, e qualquer um forjaria o cookie de qualquer conta. Falhar
+        no boot é o único jeito de o erro aparecer antes de alguém explorá-lo.
+        """
+        if not self.is_production:
+            return []
+        problemas: list[str] = []
+        if len(self.jwt_secret_key.encode()) < 32:
+            problemas.append("JWT_SECRET_KEY ausente ou curta (mínimo 32 bytes)")
+        if not self.mfa_encryption_key:
+            problemas.append("MFA_ENCRYPTION_KEY ausente")
+        if not self.data_encryption_key:
+            problemas.append("DATA_ENCRYPTION_KEY ausente")
+        return problemas
 
 
 @lru_cache

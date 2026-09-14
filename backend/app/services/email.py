@@ -98,6 +98,13 @@ _AMBAR = "#cfa25e"
 _FONTE = "-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif"
 
 
+def _mascarar(email: str) -> str:
+    """"ana@exemplo.com" vira "a***@exemplo.com": dá para achar o caso no log
+    sem o log virar uma lista de e-mails de quem usa o app."""
+    usuario, _, dominio = (email or "").partition("@")
+    return f"{usuario[:1]}***@{dominio}" if dominio else "***"
+
+
 def _send(to_email: str, to_name: str, subject: str, html: str) -> bool:
     if not settings.brevo_api_key or not settings.brevo_from_email:
         logger.warning(
@@ -120,10 +127,10 @@ def _send(to_email: str, to_name: str, subject: str, html: str) -> bool:
             timeout=_TIMEOUT,
         )
     except httpx.HTTPError as exc:
-        logger.error("Falha de rede ao enviar e-mail para %s: %s", to_email, exc)
+        logger.error("Falha de rede ao enviar e-mail para %s: %s", _mascarar(to_email), type(exc).__name__)
         return False
     if response.status_code >= 400:
-        logger.error("Brevo recusou o e-mail para %s: HTTP %s", to_email, response.status_code)
+        logger.error("Brevo recusou o e-mail para %s: HTTP %s", _mascarar(to_email), response.status_code)
         return False
     return True
 

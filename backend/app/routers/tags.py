@@ -16,6 +16,7 @@ from supabase import Client
 
 from app.ai_providers import AiProviderError, generate_json
 from app.database import get_supabase
+from app.services import limites
 from app.deps import get_current_user
 from app.services.tag_catalog import TagCatalog, normalize_category, slugify
 
@@ -144,6 +145,8 @@ def upsert_mine(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tecnologia não encontrada.")
         tag = tag_rows[0]
     elif payload.name:
+        # Por nome pode CRIAR uma tag no catálogo de todos: limitado por conta.
+        limites.consumir(supabase, limites.TAG_NOVA_POR_USUARIO, user_id)
         tag = TagCatalog(supabase).load().resolve(payload.name, payload.category or "")
     else:
         raise HTTPException(

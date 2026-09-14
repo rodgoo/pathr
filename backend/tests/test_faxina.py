@@ -69,5 +69,5 @@ def test_o_disparo_de_hora_em_hora_faz_a_faxina(monkeypatch):
     )
     pedido = SimpleNamespace(headers={jobs.CABECALHO: "segredo"})
     resposta = jobs.disparar_avisos(pedido, banco)
-    assert set(resposta["faxina"]) == {"pathr_rate_event", "pathr_error_event"}
+    assert set(resposta["faxina"]) == {"pathr_rate_event", "pathr_error_event", "pathr_security_event"}
     assert banco.tabelas["pathr_rate_event"] == [] and banco.tabelas["pathr_error_event"] == []

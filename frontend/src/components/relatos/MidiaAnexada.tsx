@@ -26,6 +26,9 @@ export function MidiaAnexada({ relatoId }: { relatoId: string }) {
     setErro(null);
     setAbrindo(true);
     const aba = window.open("", "_blank");
+    // A aba nova não pode alcançar esta: sem isto ela poderia trocar o endereço
+    // do app por outro (tabnabbing) se um dia carregar algo que não seja o blob.
+    if (aba) aba.opener = null;
     try {
       const blob = await relatos.foto(relatoId);
       const url = URL.createObjectURL(blob);

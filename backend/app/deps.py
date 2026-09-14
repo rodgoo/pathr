@@ -18,6 +18,7 @@ from typing import Any, Optional
 from fastapi import Depends, HTTPException, Request, status
 from supabase import Client
 
+from app.config import settings
 from app.database import get_supabase
 from app.services.moderacao import CONTA_SUSPENSA, esta_banido
 from app.security import decode_access_token
@@ -38,8 +39,11 @@ def client_ip(request: Optional[Request]) -> Optional[str]:
     a cada requisição: o log de segurança registrava o endereço inventado, e
     qualquer limite por IP virava enfeite.
 
-    Fora da Fly (desenvolvimento, outro host com proxy próprio à frente)
-    vale a ordem antiga.
+    Fora da Fly só em DESENVOLVIMENTO vale a ordem antiga. Em produção sem a
+    Fly (um host novo, uma variável que sumiu) os cabeçalhos do cliente não
+    valem nada: o endereço é o da conexão. Errar para o lado seguro custa só
+    precisão no log; errar para o outro devolve a qualquer um o poder de
+    escolher o próprio IP e passar por cima dos limites.
     """
     if request is None:
         return None
@@ -47,6 +51,8 @@ def client_ip(request: Optional[Request]) -> Optional[str]:
         fly = request.headers.get("fly-client-ip")
         if fly:
             return fly.strip()
+        return request.client.host if request.client else None
+    if settings.is_production:
         return request.client.host if request.client else None
     cloudflare = request.headers.get("cf-connecting-ip")
     if cloudflare:
@@ -73,8 +79,12 @@ def _bearer_token(request: Request) -> Optional[str]:
     return None
 
 
-def _session_is_live(supabase: Client, session_id: str) -> bool:
-    """A sessão referenciada pelo JWT ainda vale?
+def _session_is_live(supabase: Client, session_id: str, user_id: Any = None) -> bool:
+    """A sessão referenciada pelo JWT ainda vale — e é da pessoa do token?
+
+    O dono é conferido aqui, e não só pela assinatura do JWT: se a chave de
+    assinatura um dia vazar, forjar um token não pode bastar trocar o `sub`
+    por outra conta e reaproveitar o id de uma sessão viva qualquer.
 
     Um erro de rede aqui devolve True: derrubar todo mundo porque o Supabase
     piscou é pior que aceitar por mais alguns minutos um JWT cuja sessão foi
@@ -83,7 +93,7 @@ def _session_is_live(supabase: Client, session_id: str) -> bool:
     try:
         rows = (
             supabase.table("pathr_refresh_token")
-            .select("id,revoked_at,expires_at")
+            .select("id,user_id,revoked_at,expires_at")
             .eq("id", session_id)
             .limit(1)
             .execute()
@@ -94,6 +104,8 @@ def _session_is_live(supabase: Client, session_id: str) -> bool:
     if not rows:
         return False
     row = rows[0]
+    if user_id is not None and str(row.get("user_id")) != str(user_id):
+        return False
     if row.get("revoked_at"):
         return False
     expires_at = row.get("expires_at")
@@ -143,7 +155,7 @@ def _resolve_user(request: Request, supabase: Client) -> dict[str, Any]:
         raise _unauthorized()
 
     session_id = payload.get("sid")
-    if not session_id or not _session_is_live(supabase, session_id):
+    if not session_id or not _session_is_live(supabase, session_id, payload.get("sub")):
         raise _unauthorized("Sessão encerrada. Entre novamente.")
 
     try:

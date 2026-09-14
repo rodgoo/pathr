@@ -30,6 +30,10 @@ logger = logging.getLogger("pathr.faxina")
 RETENCAO: tuple[tuple[str, str, timedelta], ...] = (
     ("pathr_rate_event", "created_at", timedelta(days=2)),
     ("pathr_error_event", "occurred_at", timedelta(days=30)),
+    # IP e navegador de cada entrada, troca de senha, chave… é dado pessoal:
+    # seis meses bastam para investigar abuso, e depois disso não há motivo
+    # (LGPD, necessidade) para guardar.
+    ("pathr_security_event", "created_at", timedelta(days=180)),
 )
 
 

@@ -24,6 +24,7 @@ from supabase import Client
 
 from app.database import get_supabase
 from app.deps import get_current_user
+from app.services import limites
 from app.services import resource_search
 from app.services import reader
 from app.services.progress import log_activity, minutos_de_leitura
@@ -334,14 +335,19 @@ def set_progress(
 
     existing = (
         supabase.table("pathr_user_resource")
-        .select("id,status")
+        .select("id,status,completed_at")
         .eq("user_id", user_id)
         .eq("resource_id", resource_id)
         .limit(1)
         .execute()
         .data
     )
-    was_done = bool(existing) and existing[0].get("status") == "done"
+    # "Já concluiu" pela marca de conclusão, que não se apaga ao reabrir — e não
+    # pelo status de agora, que o próprio cliente troca: alternar entre "lendo"
+    # e "concluído" rendia XP e nível a cada volta.
+    was_done = bool(existing) and (
+        existing[0].get("status") == "done" or bool(existing[0].get("completed_at"))
+    )
 
     if existing:
         row = (
@@ -510,6 +516,7 @@ async def curate_library(
     dizer "já procuramos há pouco" em vez de "não achamos nada".
     """
     user_id = str(current_user["id"])
+    limites.consumir(supabase, limites.CURADORIA_POR_USUARIO, user_id)
 
     if node_id:
         node = _owned_node(supabase, node_id, user_id)

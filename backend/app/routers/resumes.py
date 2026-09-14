@@ -26,6 +26,7 @@ from supabase import Client
 from app.ai_providers import AiProviderError
 from app.config import settings
 from app.database import get_supabase
+from app.services.upload import ler_com_limite
 from app.deps import get_current_user
 from app.services import cifra
 from app.services.resume_parser import parse_resume_with_fallback
@@ -97,13 +98,9 @@ async def upload_resume(
             detail="Formato não aceito. Envie PDF, DOCX, ODT, RTF, TXT ou MD.",
         )
 
-    data = await file.read()
-    limit = settings.max_resume_mb * 1024 * 1024
-    if len(data) > limit:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"Arquivo acima de {settings.max_resume_mb} MB.",
-        )
+    data = await ler_com_limite(
+        file, settings.max_resume_mb * 1024 * 1024, f"Arquivo acima de {settings.max_resume_mb} MB."
+    )
     if not data:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Arquivo vazio.")
 

@@ -38,6 +38,7 @@ from supabase import Client
 
 from app.config import settings
 from app.database import get_supabase
+from app.services.upload import ler_com_limite
 from app.deps import get_current_user
 from app.routers.profile import _IMAGENS, _tipo_real
 from app.services import cifra, limites
@@ -121,13 +122,8 @@ async def relatar(
     dados: Optional[bytes] = None
     tipo_foto: Optional[str] = None
     if foto is not None and (foto.filename or foto.size):
-        dados = await foto.read()
+        dados = await ler_com_limite(foto, _FOTO_MAX_MB * 1024 * 1024, f"Imagem acima de {_FOTO_MAX_MB} MB.")
         if dados:
-            if len(dados) > _FOTO_MAX_MB * 1024 * 1024:
-                raise HTTPException(
-                    status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-                    detail=f"Imagem acima de {_FOTO_MAX_MB} MB.",
-                )
             tipo_foto = _tipo_real(dados)
             if tipo_foto is None:
                 raise HTTPException(

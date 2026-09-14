@@ -48,6 +48,7 @@ from urllib.parse import urlparse
 import httpx
 
 from app.ai_providers import AiProviderError, generate_json
+from app.services.reader import _url_permitida as url_publica
 from app.config import settings
 
 logger = logging.getLogger("pathr.resource_search")
@@ -811,8 +812,21 @@ async def _keep_reachable(candidates: list[Candidate]) -> list[Candidate]:
     # quem recebe.
     gate = asyncio.Semaphore(8)
 
+    async def cada_salto(pedido: httpx.Request) -> None:
+        # Antes de CADA envio, redirecionamentos inclusive — a mesma trava do
+        # modo leitura (services/reader.py). A URL daqui pode vir da IA (e o
+        # assunto do pedido à IA é o nome de uma tag que qualquer conta cria)
+        # ou de um buscador: sem isto, bastava um resultado apontar para o
+        # metadata da máquina ou para a rede interna da Fly, e o servidor
+        # fazia o pedido por quem mandou.
+        if not await asyncio.to_thread(url_publica, str(pedido.url)):
+            raise httpx.RequestError("endereço não público", request=pedido)
+
     async with httpx.AsyncClient(
-        timeout=_TIMEOUT, follow_redirects=True, headers={"User-Agent": _UA}
+        timeout=_TIMEOUT,
+        follow_redirects=True,
+        headers={"User-Agent": _UA},
+        event_hooks={"request": [cada_salto]},
     ) as client:
 
         async def check(candidate: Candidate) -> Optional[Candidate]:

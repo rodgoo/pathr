@@ -667,6 +667,7 @@ async def answer_assessment(
         supabase.table("pathr_english_assessment")
         .select("*")
         .eq("id", assessment_id)
+        .eq("user_id", user_id)
         .limit(1)
         .execute()
         .data[0]
@@ -817,6 +818,7 @@ def _resultado_gravado(
         supabase.table("pathr_english_assessment")
         .select("*")
         .eq("id", assessment_id)
+        .eq("user_id", str(user["id"]))
         .limit(1)
         .execute()
         .data[0]

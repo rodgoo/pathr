@@ -488,17 +488,19 @@ def _consume_backup_code(supabase: Client, user_id: str, code: str) -> bool:
 JANELA_DE_CORRIDA = timedelta(seconds=60)
 
 
-def _reuso(supabase: Client, session: dict) -> Optional[str]:
+def _reuso(supabase: Client, session: dict, request: Optional[Request] = None) -> Optional[str]:
     """O que significa usar este token já revogado.
 
-    - "corrida": ele foi TROCADO há instantes (tem sucessor recente).
+    - "corrida": ele foi TROCADO há instantes (tem sucessor recente) PELO MESMO
+      navegador. Um cookie copiado usado de outro navegador dentro da janela
+      era aceito como corrida e ganhava sessão nova; agora é roubo.
     - "roubo": foi trocado há tempo — alguém guardou o cookie velho.
     - None: não tem sucessor — saiu por logout ou já foi derrubado. Não há
       token novo para um invasor estar usando, então não é sinal de roubo.
     """
     sucessores = (
         supabase.table("pathr_refresh_token")
-        .select("id,created_at")
+        .select("id,created_at,user_agent")
         .eq("rotated_from", str(session["id"]))
         .limit(1)
         .execute()
@@ -509,6 +511,9 @@ def _reuso(supabase: Client, session: dict) -> Optional[str]:
         return None
     revogado_em = _parse_momento(session.get("revoked_at"))
     if revogado_em and _now() - revogado_em <= JANELA_DE_CORRIDA:
+        agente_do_sucessor = sucessores[0].get("user_agent")
+        if request is not None and agente_do_sucessor and agente_do_sucessor != user_agent(request):
+            return "roubo"
         return "corrida"
     return "roubo"
 
@@ -597,7 +602,7 @@ def refresh(
     user_id = str(session["user_id"])
 
     if session.get("revoked_at"):
-        tipo = _reuso(supabase, session)
+        tipo = _reuso(supabase, session, request)
         if tipo == "corrida":
             # Duas renovações do MESMO cliente ao mesmo tempo: a primeira
             # trocou o token, a segunda chegou com o anterior. Não é roubo — é

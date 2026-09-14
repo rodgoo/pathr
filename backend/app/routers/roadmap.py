@@ -417,6 +417,14 @@ def patch_node(
     pessoa ter que editar níveis à mão.
     """
     node = _owned_node(supabase, node_id, str(current_user["id"]))
+    # Módulo travado só abre pelo servidor, quando os anteriores terminam
+    # (`_destravar_dependentes`). Aceitar "done" direto num travado deixava a
+    # ordem da trilha — e a subida de nível que vem com ela — a critério do cliente.
+    if node.get("status") == "locked" and (payload.status or payload.progress_pct is not None):
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Conclua os módulos anteriores para abrir este.",
+        )
     update: dict[str, Any] = {}
     if payload.status:
         update["status"] = payload.status
@@ -434,16 +442,20 @@ def patch_node(
 
     if update.get("status") == "done" and node.get("status") != "done":
         tag_ids = [str(tag) for tag in (node.get("tag_ids") or [])]
-        log_activity(
-            supabase,
-            user=current_user,
-            kind="node_done",
-            title=node.get("title") or "",
-            ref_id=node_id,
-            minutes=payload.minutes,
-            tag_ids=tag_ids,
-        )
-        _bump_proficiency(supabase, str(current_user["id"]), tag_ids)
+        # `completed_at` não se apaga ao reabrir: é ele que diz "já concluiu
+        # antes". Sem isto, alternar entre "a fazer" e "concluído" rendia XP e
+        # nível a cada volta.
+        if not node.get("completed_at"):
+            log_activity(
+                supabase,
+                user=current_user,
+                kind="node_done",
+                title=node.get("title") or "",
+                ref_id=node_id,
+                minutes=payload.minutes,
+                tag_ids=tag_ids,
+            )
+            _bump_proficiency(supabase, str(current_user["id"]), tag_ids)
         _destravar_dependentes(supabase, node_id, str(node["roadmap_id"]))
         _advance_next(supabase, node)
 

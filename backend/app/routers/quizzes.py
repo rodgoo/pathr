@@ -367,6 +367,14 @@ def submit_quiz(
     score = round(100 * correct_count / len(questions), 1)
     tag_ids = [str(tag) for tag in (quiz.get("tag_ids") or [])]
     breakdown = {"score": score, "correct": correct_count, "total": len(questions)}
+    # Só a PRIMEIRA tentativa rende XP e mexe no nível das tecnologias. Refazer
+    # continua valendo como estudo (a tentativa é gravada e os erros voltam na
+    # revisão), mas o gabarito já foi mostrado na primeira: repetir o mesmo quiz
+    # em laço inflava XP e proficiência sem estudo nenhum.
+    primeira_tentativa = not (
+        supabase.table("pathr_attempt").select("id")
+        .eq("quiz_id", quiz_id).eq("user_id", user_id).limit(1).execute().data
+    )
 
     attempt = (
         supabase.table("pathr_attempt")
@@ -386,18 +394,20 @@ def submit_quiz(
         .data[0]
     )
 
-    _apply_result_to_tags(supabase, user_id, tag_ids, score)
+    if primeira_tentativa:
+        _apply_result_to_tags(supabase, user_id, tag_ids, score)
     reciclados = _recycle(supabase, user_id, questions, results)
-    log_activity(
-        supabase,
-        user=current_user,
-        kind="quiz_done",
-        title=quiz.get("title") or "Quiz",
-        ref_id=quiz_id,
-        minutes=max(1, payload.duration_s // 60),
-        tag_ids=tag_ids,
-        detail=breakdown,
-    )
+    if primeira_tentativa:
+        log_activity(
+            supabase,
+            user=current_user,
+            kind="quiz_done",
+            title=quiz.get("title") or "Quiz",
+            ref_id=quiz_id,
+            minutes=max(1, payload.duration_s // 60),
+            tag_ids=tag_ids,
+            detail=breakdown,
+        )
 
     return {
         "attempt_id": str(attempt["id"]),

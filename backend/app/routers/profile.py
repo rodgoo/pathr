@@ -17,6 +17,7 @@ from supabase import Client
 
 from app.config import settings
 from app.database import get_supabase
+from app.services.upload import ler_com_limite
 from app.deps import get_current_user
 from app.services import cifra, geo, imagem, progresso
 from app.services.progress import minutos_de_leitura
@@ -233,16 +234,11 @@ async def upload_avatar(
     Substitui no lugar em vez de acumular: a foto anterior não é histórico de
     nada, e guardar todas encheria o bucket com o que ninguém vai olhar.
     """
-    data = await file.read()
+    data = await ler_com_limite(
+        file, settings.max_avatar_mb * 1024 * 1024, f"Imagem acima de {settings.max_avatar_mb} MB."
+    )
     if not data:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Arquivo vazio.")
-
-    limite = settings.max_avatar_mb * 1024 * 1024
-    if len(data) > limite:
-        raise HTTPException(
-            status_code=status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
-            detail=f"Imagem acima de {settings.max_avatar_mb} MB.",
-        )
 
     tipo = _tipo_real(data)
     if tipo is None:
