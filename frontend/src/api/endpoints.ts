@@ -18,6 +18,8 @@ import type {
   RelatoModeracao,
   AtividadePratica,
   FilaDeAtividades,
+  DuvidaConversa,
+  TipoDeContextoDaDuvida,
   ListaUsuariosAdmin,
   UsuarioAdmin,
   AssinaturaAdmin,
@@ -380,6 +382,23 @@ export const plan = {
       `/plan/adjust?preview=${preview}`,
     ),
   adjustments: () => api.get<RouteAdjustmentEntry[]>("/plan/adjustments"),
+};
+
+/**
+ * O "Perguntar": duvida rapida com o tutor. Tudo o que e perguntado entra na
+ * base de conhecimento da conta (e volta na Trilha atual).
+ */
+export const duvidas = {
+  listar: (tipo: TipoDeContextoDaDuvida, ref?: string) =>
+    api.get<DuvidaConversa[]>(
+      `/duvidas?contexto_tipo=${tipo}${ref ? `&contexto_ref=${encodeURIComponent(ref)}` : ""}`,
+    ),
+  abrir: (corpo: { contexto_tipo: TipoDeContextoDaDuvida; contexto_ref?: string; trecho?: string; pergunta: string }) =>
+    api.post<DuvidaConversa>("/duvidas", corpo),
+  continuar: (id: string, texto: string) =>
+    api.post<DuvidaConversa>(`/duvidas/${encodeURIComponent(id)}/mensagens`, { texto }),
+  entendeu: (id: string, entendeu: boolean) =>
+    api.post<DuvidaConversa>(`/duvidas/${encodeURIComponent(id)}/entendeu`, { entendeu }),
 };
 
 export const explanations = {

@@ -571,6 +571,9 @@ _TABELAS_DO_USUARIO = (
     "pathr_explanation",
     "pathr_activity_draft",
     "pathr_activity_exercise",
+    "pathr_knowledge_item",
+    "pathr_doubt_thread",
+    "pathr_doubt_message",
     "pathr_weekly_checklist",
     "pathr_user_course",
 )

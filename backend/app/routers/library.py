@@ -24,6 +24,7 @@ from supabase import Client
 
 from app.database import get_supabase
 from app.deps import get_current_user
+from app.services import conhecimento
 from app.services import limites
 from app.services import resource_search
 from app.services import reader
@@ -540,8 +541,16 @@ async def curate_library(
         or []
     )
     pendentes = [tag for tag in tags if resource_search.needs_curation(tag)][:_MAX_TAGS_PER_CALL]
+    # No módulo, a busca também cobre o que a pessoa perguntou ou errou nessas
+    # tecnologias e ainda não foi buscado — mesmo que a tecnologia tenha sido
+    # buscada há pouco. Dois temas por vez, para a curadoria não disparar.
+    temas = (
+        conhecimento.pendentes(supabase, user_id, tag_ids=wanted, node_id=node_id, so_nao_buscados=True, limite=2)
+        if node_id
+        else []
+    )
 
-    if not pendentes:
+    if not pendentes and not temas:
         return {
             "novos": 0,
             "tags_buscadas": [],
@@ -559,6 +568,18 @@ async def curate_library(
             "id", str(tag["id"])
         ).execute()
 
+    temas_buscados: list[str] = []
+    por_tag = {str(tag["id"]): tag for tag in tags}
+    for tema in temas:
+        tag = por_tag.get(str(tema.get("tag_id"))) or (tags[0] if tags else None)
+        if not tag:
+            continue
+        assunto = f"{tag.get('name') or tag.get('slug')} {tema['concept']}"
+        candidatos = await resource_search.search_for_tag({**tag, "name": assunto})
+        novos += _absorve(supabase, candidatos, str(tag["id"]))
+        conhecimento.marcar_buscado(supabase, str(tema["id"]))
+        temas_buscados.append(assunto)
+
     # Sem `log_activity` aqui, de propósito. Ela não só escreve no feed: ela
     # chama `touch_streak`, que avança a sequência de dias mesmo com xp=0. Um
     # clique em "procurar material" viraria um dia estudado, e o streak
@@ -568,7 +589,7 @@ async def curate_library(
     fontes = resource_search.sources_enabled()
     return {
         "novos": novos,
-        "tags_buscadas": [tag.get("name") or tag.get("slug") for tag in pendentes],
+        "tags_buscadas": [tag.get("name") or tag.get("slug") for tag in pendentes] + temas_buscados,
         "motivo": None
         if novos
         else (

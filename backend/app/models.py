@@ -457,6 +457,67 @@ class PathrRoadmapNode(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
 
+class PathrKnowledgeItem(SQLModel, table=True):
+    """Um tema que a pessoa ainda não sabe (migração 0031, services/conhecimento.py).
+
+    Dúvida, questão errada, lacuna de correção, palavra consultada, erro no
+    treino: tudo cai aqui, um tema por linha, pendente até ser acertado.
+    """
+
+    __tablename__ = "pathr_knowledge_item"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id"))
+    source: str = Field(max_length=20)
+    concept: str
+    concept_key: str
+    detail: Optional[str] = Field(default=None)
+    tag_id: Optional[uuid.UUID] = Field(default=None, sa_type=PGUUID(as_uuid=True))
+    node_id: Optional[uuid.UUID] = Field(default=None, sa_type=PGUUID(as_uuid=True))
+    ref_id: Optional[str] = Field(default=None, max_length=64)
+    language: Optional[str] = Field(default=None, max_length=8)
+    status: str = Field(default="pendente", max_length=12)
+    times_seen: int = Field(default=1)
+    searched_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
+    last_seen_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+    resolved_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
+
+
+class PathrDoubtThread(SQLModel, table=True):
+    """Uma dúvida do "Perguntar", no contexto em que surgiu (migração 0031)."""
+
+    __tablename__ = "pathr_doubt_thread"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id", index=False))
+    context_kind: str = Field(default="geral", max_length=20)
+    context_ref: Optional[str] = Field(default=None, max_length=64)
+    context_title: Optional[str] = Field(default=None)
+    context_excerpt: Optional[str] = Field(default=None)
+    node_id: Optional[uuid.UUID] = Field(default=None, sa_type=PGUUID(as_uuid=True))
+    tag_id: Optional[uuid.UUID] = Field(default=None, sa_type=PGUUID(as_uuid=True))
+    concept: Optional[str] = Field(default=None)
+    status: str = Field(default="aberta", max_length=16)
+    understood: Optional[bool] = Field(default=None)
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+    updated_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+    resolved_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
+
+
+class PathrDoubtMessage(SQLModel, table=True):
+    """Uma fala da conversa: da pessoa (`user`) ou do tutor (`assistant`)."""
+
+    __tablename__ = "pathr_doubt_message"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    thread_id: uuid.UUID = Field(sa_column=_fk("pathr_doubt_thread.id", index=False))
+    user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id", index=False))
+    role: str = Field(max_length=12)
+    content: str
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+
+
 class PathrActivityExercise(SQLModel, table=True):
     """Uma atividade prática gerada para um módulo (migração 0030).
 

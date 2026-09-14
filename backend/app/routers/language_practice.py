@@ -32,6 +32,7 @@ from supabase import Client
 
 from app.ai_providers import AiProviderError, generate_json
 from app.database import get_supabase
+from app.services import conhecimento
 from app.services.alternativas import numerar_de_um
 from app.deps import get_current_user
 from app.services import languages, review
@@ -617,6 +618,13 @@ def _reagenda_ou_cria_ponto(
     correção custa a resposta da pessoa.
     """
     try:
+        tema = str(item.get("topic") or _frente_do_ponto(item))[:120]
+        if correcao.acertou and item.get("review_item_id"):
+            conhecimento.marcar_revisado(supabase, user_id, tema, item.get("language"))
+        elif not correcao.acertou:
+            conhecimento.registrar(
+                supabase, user_id, "idioma", tema, detalhe=_frente_do_ponto(item), idioma=item.get("language")
+            )
         if item.get("review_item_id"):
             cartao = (
                 supabase.table("pathr_review_item")

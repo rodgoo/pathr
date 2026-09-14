@@ -21,6 +21,7 @@ from supabase import Client
 
 from app.ai_providers import AiProviderError, generate_json
 from app.database import get_supabase
+from app.services import conhecimento
 from app.services.alternativas import numerar_de_um
 from app.deps import get_current_user
 from app.services import languages, review, traducao
@@ -753,6 +754,10 @@ def _guarda_ponto_de_melhora(supabase: Client, user_id: str, item: dict[str, Any
         enunciado = str(item.get("prompt") or "").strip()
         if not enunciado:
             return
+        conhecimento.registrar(
+            supabase, user_id, "idioma", item.get("topic") or enunciado[:120],
+            detalhe=enunciado, idioma=item.get("language"),
+        )
         if _melhora_ja_pendente(supabase, user_id, enunciado):
             return
         alternativas = item.get("options") or []
@@ -1059,6 +1064,10 @@ async def lookup_word(
 
     idioma = _idioma_valido(payload.language)
     user_id = str(current_user["id"])
+    # Consultar é dizer "esta eu não sei": entra na base, mesmo repetida.
+    conhecimento.registrar(
+        supabase, user_id, "palavra", termo, detalhe=(payload.context or "")[:500], idioma=idioma
+    )
 
     # Já consultada antes: o cartão guarda o que a consulta respondeu. Sem
     # isto, reabrir a mesma palavra refazia a chamada à IA e ao DeepL — a mesma

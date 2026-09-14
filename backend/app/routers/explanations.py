@@ -54,7 +54,7 @@ from supabase import Client
 from app.ai_providers import generate_json
 from app.database import get_supabase
 from app.deps import get_current_user
-from app.services import review
+from app.services import conhecimento, review
 from app.services.progress import log_activity
 
 router = APIRouter(prefix="/explanations", tags=["feynman"])
@@ -285,6 +285,12 @@ async def submit_explanation(
         ).eq("id", str(exercicio["id"])).eq("user_id", user_id).execute()
 
     viraram_revisao = _para_revisao(supabase, user_id, lacunas, tag_ids)
+    for lacuna in lacunas:
+        conhecimento.registrar(
+            supabase, user_id, "atividade" if payload.modo == "atividade" else "explicacao", lacuna["conceito"],
+            detalhe=lacuna.get("por_que"), tag_id=tag_ids[0] if tag_ids else None,
+            node_id=payload.node_id, ref_id=str(linha["id"]),
+        )
 
     log_activity(
         supabase,

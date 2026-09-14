@@ -37,6 +37,7 @@ import { Select } from "@/components/ui/Select";
 import { iconeDaLinguagem } from "@/lib/linguagens";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
+import { Perguntar } from "@/components/duvidas/Perguntar";
 import { ProgressoDaTarefa } from "@/components/ui/ProgressoDaTarefa";
 
 const MONO = "ui-monospace, Menlo, monospace";
@@ -615,6 +616,18 @@ function Depurador({
           ))}
         </div>
       ) : null}
+
+      <div style={{ marginTop: 14 }}>
+        <Perguntar
+          contextoTipo="laboratorio"
+          contextoRef={exemplo.id}
+          trecho={
+            passo
+              ? `Passo ${indice + 1}, linha ${passo.linha} (${(exemplo.lines[passo.linha - 1] ?? "").trim()}): ${passo.acao}`
+              : undefined
+          }
+        />
+      </div>
 
       <p style={{ fontSize: 11, color: TEXT.faint, margin: "14px 0 0", maxWidth: "74ch" }}>
         A execução aqui é comentada, não medida: o passo a passo foi escrito junto com o código e

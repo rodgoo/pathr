@@ -29,6 +29,7 @@ from typing import Any
 from supabase import Client
 
 from app.ai_providers import AiProviderError, generate_json
+from app.services import conhecimento
 
 logger = logging.getLogger(__name__)
 
@@ -54,7 +55,9 @@ Regras:
 3. Dificuldade pelas NOTAS RECENTES: média abaixo de 60 → mais simples e focada no
    que faltou; de 60 a 80 → mesmo nível com um detalhe a mais; acima de 80 → um
    degrau acima. Sem notas, comece pelo básico do objetivo.
-4. Se houver LACUNAS, exercite pelo menos uma delas, com outras palavras.
+4. Se houver LACUNAS ou PENDÊNCIAS DA BASE DE CONHECIMENTO (dúvidas que a pessoa
+   perguntou, questões que errou), a atividade exercita pelo menos uma delas na
+   prática, com outras palavras — a primeira da lista pesa mais.
 5. `enunciado`: 1 a 4 frases concretas, com o contexto necessário (ex.: "Você tem um
    repositório local sem remoto. Escreva os comandos para..."). NUNCA inclua a
    resposta, nem parte dela.
@@ -152,6 +155,16 @@ async def gerar(supabase: Client, user_id: str, node: dict[str, Any]) -> dict[st
                 f"NOTAS RECENTES (0 a 100, mais nova primeiro): {', '.join(map(str, notas)) or 'nenhuma ainda'}",
                 "LACUNAS DAS ÚLTIMAS CORREÇÕES:",
                 *([f"- {nome}" for nome in _lacunas_recentes(supabase, user_id, node_id)] or ["- nenhuma"]),
+                "PENDÊNCIAS DA BASE DE CONHECIMENTO (dúvidas e erros, a que mais pesa primeiro):",
+                *(
+                    [
+                        f"- {_limpo(item.get('concept'), 160)} ({item.get('source')}, {item.get('times_seen') or 1}x)"
+                        for item in conhecimento.pendentes(
+                            supabase, user_id, tag_ids=[str(t) for t in (node.get("tag_ids") or [])], node_id=node_id
+                        )
+                    ]
+                    or ["- nenhuma"]
+                ),
                 "ANTERIORES (não repita):",
                 *([f"- {a}" for a in anteriores] or ["- nenhuma"]),
             ]

@@ -32,6 +32,7 @@ import {
   idDoYoutube,
 } from "@/components/library/VideoPlayer";
 import { linkExterno } from "@/lib/linkExterno";
+import { Perguntar } from "@/components/duvidas/Perguntar";
 
 /** Só grava quando o progresso andou este tanto desde a última escrita. */
 const PASSO_MINIMO = 0.03;
@@ -133,6 +134,10 @@ export function ResourceViewer({
           Última posição salva: {formatarTempo(resource.user_position_seconds)}
         </p>
       ) : null}
+
+      <div style={{ marginTop: 11.2 }}>
+        <Perguntar contextoTipo="material" contextoRef={resource.id} rotulo="Perguntar sobre este material" />
+      </div>
     </div>
   );
 }

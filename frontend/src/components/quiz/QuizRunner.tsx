@@ -24,6 +24,7 @@ import { ChoiceList } from "@/components/ui/ChoiceList";
 import { ErrorState } from "@/components/ui/States";
 import { Panel } from "@/components/ui/primitives";
 import { CodeBlock } from "./CodeBlock";
+import { Perguntar } from "@/components/duvidas/Perguntar";
 
 /**
  * Onde a pessoa parou neste quiz.
@@ -266,6 +267,9 @@ function Review({
               ) : null}
               <div style={{ fontSize: 13, color: "rgba(233,233,237,.85)", lineHeight: 1.5 }}>
                 {item.explanation}
+              </div>
+              <div style={{ marginTop: 8.4 }}>
+                <Perguntar contextoTipo="quiz" contextoRef={item.question_id} rotulo="Perguntar sobre esta questão" />
               </div>
             </div>
           );

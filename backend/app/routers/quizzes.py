@@ -20,6 +20,7 @@ from supabase import Client
 
 from app.ai_providers import generate_json
 from app.database import get_supabase
+from app.services import conhecimento
 from app.services.alternativas import numerar_de_um
 from app.deps import get_current_user
 from app.services import review
@@ -168,6 +169,23 @@ async def generate_quiz(
         revisar = (
             "\nPARA REVISAR (a pessoa errou estes conceitos; reescreva cada um "
             f"com outro enunciado e outro exemplo):\n{linhas_revisao}\n"
+        )
+
+    # A base de conhecimento completa o que a fila de revisão não tem: dúvidas
+    # do "Perguntar", lacunas de atividades. Dentro do mesmo teto de 4, para o
+    # quiz não virar só revisão.
+    ja_na_fila = {review.concept_key(item.get("front")) for item in pendentes}
+    da_base = [
+        item["concept"]
+        for item in conhecimento.pendentes(supabase, user_id, tag_ids=tag_ids, node_id=payload.node_id, limite=6)
+        if review.concept_key(item.get("concept")) not in ja_na_fila
+    ][: max(0, 4 - len(pendentes))]
+    if da_base:
+        revisar += (
+            "\nDUVIDAS E ERROS DA PESSOA (da base de conhecimento dela; escreva uma "
+            "questao para cada, aplicada, e copie o tema no campo conceito):\n"
+            + "\n".join(f"- {tema}" for tema in da_base)
+            + "\n"
         )
 
     # O que a pessoa JA CONSUMIU sobre estas tags. Sem isto, o quiz perguntava
@@ -584,6 +602,18 @@ def _recycle(
         conceito = (questao.get("concept") or "").strip()
         item_id = questao.get("review_item_id")
         acertou = resultado["is_correct"]
+
+        # Base de conhecimento: todo erro entra (reciclado ou não); acertar o que
+        # voltava para revisão tira da lista de pendências.
+        if conceito:
+            if acertou and item_id:
+                conhecimento.marcar_revisado(supabase, user_id, conceito)
+            elif not acertou:
+                conhecimento.registrar(
+                    supabase, user_id, "quiz", conceito,
+                    detalhe=questao.get("prompt"), tag_id=(questao.get("tag_ids") or [None])[0],
+                    ref_id=str(questao.get("id") or ""),
+                )
 
         try:
             if item_id:

@@ -418,6 +418,30 @@ export interface ExplanationGap {
   por_que: string;
 }
 
+/** Onde a duvida surgiu. O servidor le o conteudo pelo id, conferindo o dono. */
+export type TipoDeContextoDaDuvida = "laboratorio" | "atividade" | "quiz" | "material" | "modulo" | "geral";
+
+export interface DuvidaMensagem {
+  id: string;
+  /** "pessoa" fica a esquerda; "tutor", a direita. */
+  papel: "pessoa" | "tutor";
+  texto: string;
+  criada_em: string | null;
+}
+
+/** Uma conversa do "Perguntar" (routers/duvidas.py). */
+export interface DuvidaConversa {
+  id: string;
+  contexto_tipo: TipoDeContextoDaDuvida;
+  contexto_titulo: string | null;
+  conceito: string | null;
+  /** "aberta" espera o "ficou claro?"; "entendida" fechou. */
+  status: "aberta" | "entendida" | string;
+  entendeu: boolean | null;
+  criada_em: string | null;
+  mensagens: DuvidaMensagem[];
+}
+
 /** Uma atividade da fila de um modulo (routers/atividades.py). */
 export interface AtividadePratica {
   id: string;

@@ -34,6 +34,7 @@ import { Icon } from "@/components/ui/icons";
 import { Kicker, Panel } from "@/components/ui/primitives";
 import { EditorDeCodigo } from "@/components/ui/EditorDeCodigo";
 import { ProgressoDaTarefa } from "@/components/ui/ProgressoDaTarefa";
+import { Perguntar } from "@/components/duvidas/Perguntar";
 
 /** Quanto tempo sem digitar antes de gravar. Curto o bastante para não perder
  * trabalho, longo o bastante para não mandar uma requisição por tecla. */
@@ -275,6 +276,10 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
             </details>
           ) : null}
         </section>
+      ) : null}
+
+      {!semFila && atual ? (
+        <Perguntar contextoTipo="atividade" contextoRef={atual.id} rotulo="Perguntar sobre esta atividade" />
       ) : null}
 
       <div className="field" style={{ marginTop: 14 }}>

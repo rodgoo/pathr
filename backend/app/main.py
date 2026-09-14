@@ -206,6 +206,7 @@ from app import health  # noqa: E402
 from app.routers import (  # noqa: E402
     admin,
     atividades,
+    duvidas,
     auth,
     courses,
     eventos as eventos_router,
@@ -251,6 +252,7 @@ app.include_router(social.router)
 app.include_router(relatos.router)
 app.include_router(admin.router)
 app.include_router(atividades.router)
+app.include_router(duvidas.router)
 app.include_router(profile.router)
 app.include_router(resumes.router)
 app.include_router(tags.router)
