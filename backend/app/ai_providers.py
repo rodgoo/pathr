@@ -59,6 +59,7 @@ import asyncio
 import base64
 import json
 import time
+from contextvars import ContextVar
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Awaitable, Callable, Optional
@@ -353,6 +354,12 @@ def _cooldown_of(name: str) -> Optional[_Cooldown]:
 _GEMINI_MODEL = "gemini-flash-latest"
 _GEMINI_URL = f"https://generativelanguage.googleapis.com/v1beta/models/{_GEMINI_MODEL}:generateContent"
 
+# Pedido "rápido": sem raciocínio antes de responder. O flash pensa por padrão,
+# e numa conversa curta (o tutor do "Perguntar") esse tempo não chega à tela —
+# é só espera. Uma ContextVar e não um parâmetro em cada candidato: a rotação
+# passa os mesmos três argumentos a todos, e só o Gemini sabe desligar isto.
+_rapido: ContextVar[bool] = ContextVar("pedido_rapido", default=False)
+
 
 def _parsed_object(text: str) -> dict:
     """Todo chamador espera um OBJETO JSON. Um provedor que responde `null`,
@@ -370,15 +377,20 @@ async def _call_gemini(
     generation_config: dict[str, Any] = {"responseMimeType": "application/json"}
     if schema:
         generation_config["responseSchema"] = schema
+    corpo = {
+        "contents": [{"parts": [{"text": f"{system_prompt}\n\n{user_prompt}"}]}],
+        "generationConfig": generation_config,
+    }
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-        response = await client.post(
-            _GEMINI_URL,
-            params={"key": api_key},
-            json={
-                "contents": [{"parts": [{"text": f"{system_prompt}\n\n{user_prompt}"}]}],
-                "generationConfig": generation_config,
-            },
-        )
+        if _rapido.get():
+            rapido = {**corpo, "generationConfig": {**generation_config, "thinkingConfig": {"thinkingBudget": 0}}}
+            response = await client.post(_GEMINI_URL, params={"key": api_key}, json=rapido)
+            # Modelo que não aceita desligar o raciocínio responde 400: aí vai
+            # o pedido normal, e a conversa só perde a pressa, não a resposta.
+            if response.status_code == 400:
+                response = await client.post(_GEMINI_URL, params={"key": api_key}, json=corpo)
+        else:
+            response = await client.post(_GEMINI_URL, params={"key": api_key}, json=corpo)
     if response.status_code != 200:
         raise _classify(response)
     data = response.json()
@@ -812,8 +824,12 @@ async def generate_json(
     user_prompt: str,
     gemini_schema: Optional[dict] = None,
     per_attempt_timeout: Optional[float] = None,
+    rapido: bool = False,
 ) -> AiResult:
     """Tenta cada candidato configurado em ordem, rotacionando na falha.
+
+    `rapido`: resposta sem raciocínio prévio, para conversa curta. Só o Gemini
+    tem como desligar; os outros respondem como sempre.
 
     `gemini_schema` (o dialeto de schema do próprio Gemini) só é usado na
     chamada ao Gemini; os outros ficam com o modo JSON solto mais o texto do
@@ -822,10 +838,14 @@ async def generate_json(
     `per_attempt_timeout` limita cada candidato, para que um lento não gaste o
     orçamento inteiro sozinho. Sem ele, cada tentativa usa o que sobrar.
     """
-    return await _rotate(
-        _text_candidates(), system_prompt, user_prompt, gemini_schema, _NO_PROVIDER,
-        per_attempt=per_attempt_timeout,
-    )
+    marca = _rapido.set(rapido)
+    try:
+        return await _rotate(
+            _text_candidates(), system_prompt, user_prompt, gemini_schema, _NO_PROVIDER,
+            per_attempt=per_attempt_timeout,
+        )
+    finally:
+        _rapido.reset(marca)
 
 
 async def generate_json_with_media(

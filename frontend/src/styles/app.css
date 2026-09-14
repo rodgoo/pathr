@@ -331,6 +331,46 @@ a,
   .compositor, .compositor__enviar { transition: none; }
 }
 
+/* — conversa: cada fala entra deslizando, e o tutor "digita" —
+   Sem barra de progresso na conversa: quem está do outro lado mostra que está
+   escrevendo com três pontinhos pulando, no lugar em que a resposta vai
+   aparecer. */
+.bolha {
+  animation: bolha-entra .24s cubic-bezier(.2, .8, .2, 1) both;
+}
+@keyframes bolha-entra {
+  from { opacity: 0; transform: translateY(8px) scale(.98); }
+  to { opacity: 1; transform: none; }
+}
+.digitando {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.digitando span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(233, 233, 237, .7);
+  animation: ponto-pula 1.2s ease-in-out infinite;
+}
+.digitando span:nth-child(2) { animation-delay: .15s; }
+.digitando span:nth-child(3) { animation-delay: .3s; }
+.digitando em {
+  margin-left: 6px;
+  font-style: normal;
+  font-size: 12px;
+  color: rgba(233, 233, 237, .6);
+}
+@keyframes ponto-pula {
+  0%, 60%, 100% { transform: translateY(0); opacity: .45; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .bolha { animation: none; }
+  .digitando span { animation: none; opacity: .7; }
+}
+
 /* — alvos de toque —
 
    O app foi desenhado para o mouse: abas de 29px, pílulas de 33px, campos de

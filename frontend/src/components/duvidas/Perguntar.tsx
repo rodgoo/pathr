@@ -23,7 +23,6 @@ import { duvidas as duvidasApi } from "@/api/endpoints";
 import type { DuvidaConversa, TipoDeContextoDaDuvida } from "@/api/types";
 import { ACC, ACC4, C, TEXT, tint } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
-import { ProgressoDaTarefa } from "@/components/ui/ProgressoDaTarefa";
 import { TextoFormatado } from "./TextoFormatado";
 import { useAppStateOpcional } from "@/hooks/useAppState";
 import { abrirExemploNoLaboratorio } from "@/lib/laboratorio";
@@ -36,8 +35,6 @@ interface Props {
   /** Rótulo do botão; o padrão é "Perguntar". */
   rotulo?: string;
 }
-
-const ETAPAS = ["Lendo o conteúdo", "Pensando num exemplo", "Escrevendo a explicação"] as const;
 
 function mensagemDeErro(erro: unknown): string {
   return erro instanceof Error ? erro.message : "Não consegui falar com o tutor agora.";
@@ -52,6 +49,9 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
   const fim = useRef<HTMLDivElement>(null);
   const app = useAppStateOpcional();
   const [gerandoExemplo, setGerandoExemplo] = useState(false);
+  // A fala da pessoa aparece NA HORA, antes da resposta chegar — esperar o
+  // servidor para mostrar o que ela mesma acabou de escrever parece travado.
+  const [pendente, setPendente] = useState<string | null>(null);
 
   function abrirNoDepurador(id: string) {
     abrirExemploNoLaboratorio(id);
@@ -75,7 +75,7 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
 
   useEffect(() => {
     fim.current?.scrollIntoView?.({ block: "nearest" });
-  }, [conversa?.mensagens.length, enviando]);
+  }, [conversa?.mensagens.length, enviando, pendente, gerandoExemplo]);
 
   async function gerarExemplo(pedido: { linguagem: string; topico: string }) {
     if (!conversa) return;
@@ -90,14 +90,21 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
     }
   }
 
-  async function executar(acao: () => Promise<DuvidaConversa>) {
+  async function executar(
+    acao: () => Promise<DuvidaConversa>,
+    opcoes: { pendente?: string; restaurar?: string } = {},
+  ) {
     setEnviando(true);
     setErro(null);
+    setPendente(opcoes.pendente ?? null);
     try {
       setConversa(await acao());
     } catch (caught) {
       setErro(mensagemDeErro(caught));
+      // Falhou: o texto volta para o campo, para não ter que escrever de novo.
+      if (opcoes.restaurar) setTexto(opcoes.restaurar);
     } finally {
+      setPendente(null);
       setEnviando(false);
     }
   }
@@ -106,11 +113,14 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
     const pergunta = texto.trim();
     if (pergunta.length < 3) return;
     setTexto("");
-    const aindaAberta = conversa && conversa.status === "aberta";
-    await executar(() =>
-      aindaAberta
-        ? duvidasApi.continuar(conversa.id, pergunta)
-        : duvidasApi.abrir({ contexto_tipo: contextoTipo, contexto_ref: contextoRef, trecho, pergunta }),
+    // A conversa segue até a pessoa dizer que entendeu; depois, é dúvida nova.
+    const emAndamento = conversa && conversa.status !== "entendida";
+    await executar(
+      () =>
+        emAndamento
+          ? duvidasApi.continuar(conversa.id, pergunta)
+          : duvidasApi.abrir({ contexto_tipo: contextoTipo, contexto_ref: contextoRef, trecho, pergunta }),
+      { pendente: pergunta, restaurar: pergunta },
     );
   }
 
@@ -126,6 +136,7 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
   const mensagens = conversa?.mensagens ?? [];
   const ultima = mensagens[mensagens.length - 1];
   const esperandoRetorno = Boolean(conversa && conversa.status === "aberta" && ultima?.papel === "tutor" && !enviando);
+  const digitando = enviando || gerandoExemplo;
 
   return (
     <section
@@ -169,6 +180,7 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
           return (
             <li
               key={mensagem.id}
+              className="bolha"
               aria-label={daPessoa ? "Você" : "Tutor"}
               style={{ display: "flex", justifyContent: daPessoa ? "flex-start" : "flex-end" }}
             >
@@ -222,18 +234,48 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
             </li>
           );
         })}
+        {pendente ? (
+          <li key="pendente" className="bolha" aria-label="Você" style={{ display: "flex", justifyContent: "flex-start" }}>
+            <div
+              style={{
+                maxWidth: "85%",
+                padding: "8.4px 11.2px",
+                borderRadius: "10px 10px 10px 3px",
+                background: "rgba(233,233,237,.07)",
+                color: TEXT.strong,
+                fontSize: 13,
+                lineHeight: 1.55,
+                overflowWrap: "anywhere",
+                whiteSpace: "pre-wrap",
+              }}
+            >
+              {pendente}
+            </div>
+          </li>
+        ) : null}
+        {digitando ? (
+          <li
+            key="digitando"
+            className="bolha"
+            aria-label={gerandoExemplo ? "Tutor está escrevendo o exemplo" : "Tutor está escrevendo"}
+            style={{ display: "flex", justifyContent: "flex-end" }}
+          >
+            <div
+              className="digitando"
+              style={{ padding: "11px 14px", borderRadius: "10px 10px 3px 10px", background: tint(ACC, 14) }}
+            >
+              <span aria-hidden />
+              <span aria-hidden />
+              <span aria-hidden />
+              {gerandoExemplo ? <em>escrevendo o exemplo</em> : null}
+            </div>
+          </li>
+        ) : null}
       </ol>
 
-      <ProgressoDaTarefa ativo={enviando} chave="tutor-responder" etapas={ETAPAS} duracaoMs={9_000} />
-      <ProgressoDaTarefa
-        ativo={gerandoExemplo}
-        chave="tutor-exemplo"
-        etapas={["Escrevendo o código", "Montando o passo a passo", "Conferindo cada passo com o código"]}
-        duracaoMs={25_000}
-      />
 
       {esperandoRetorno && conversa ? (
-        <div role="group" aria-label="A explicação ficou clara?" style={{ display: "flex", gap: 8.4, justifyContent: "flex-end", flexWrap: "wrap" }}>
+        <div role="group" aria-label="A explicação ficou clara?" className="bolha" style={{ display: "flex", gap: 8.4, justifyContent: "flex-end", flexWrap: "wrap" }}>
           <button
             type="button"
             className="btn btn-secondary"
@@ -247,7 +289,7 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
             type="button"
             className="btn btn-ghost"
             style={{ fontSize: 12.5 }}
-            onClick={() => void executar(() => duvidasApi.entendeu(conversa.id, false))}
+            onClick={() => void executar(() => duvidasApi.entendeu(conversa.id, false), { pendente: "Ainda não entendi." })}
           >
             Ainda não
           </button>

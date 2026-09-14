@@ -148,6 +148,37 @@ describe("Perguntar", () => {
     window.removeEventListener("pathr:abrir-exemplo", abriu);
   });
 
+  it("mostra a fala na hora e os pontinhos do tutor enquanto ele responde, sem barra", async () => {
+    mockServer({ "GET /duvidas": () => ({ body: [] }) });
+    // O servidor falso responde na hora; aqui a resposta do POST fica presa até
+    // o teste soltar, para ver a tela no meio da espera.
+    const fetchDoTeste = globalThis.fetch;
+    let soltar: () => void = () => {};
+    const resposta = conversa([pessoa("m1", "o que é um commit?"), tutor("m2", `Um registro. ${PERGUNTA_FINAL}`)]);
+    vi.stubGlobal("fetch", (entrada: RequestInfo | URL, init?: RequestInit) => {
+      if ((init?.method ?? "GET").toUpperCase() === "POST" && String(entrada).endsWith("/duvidas")) {
+        return new Promise<Response>((resolve) => {
+          soltar = () =>
+            resolve(new Response(JSON.stringify(resposta), { status: 201, headers: { "Content-Type": "application/json" } }));
+        });
+      }
+      return fetchDoTeste(entrada, init);
+    });
+    const user = userEvent.setup();
+    render(<Perguntar contextoTipo="geral" />);
+    await user.click(screen.getByRole("button", { name: /Perguntar/ }));
+    await user.type(screen.getByLabelText("Sua dúvida"), "o que é um commit?");
+    await user.click(screen.getByRole("button", { name: "Enviar" }));
+
+    expect(await screen.findByText("o que é um commit?")).toBeInTheDocument();
+    expect(screen.getByLabelText("Tutor está escrevendo")).toBeInTheDocument();
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+
+    soltar();
+    expect(await screen.findByText(/Um registro/)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Tutor está escrevendo")).not.toBeInTheDocument();
+  });
+
   it("continua a conversa aberta e fecha ao entender", async () => {
     const aberta = conversa([pessoa("m1", "o que é push?"), tutor("m2", `Envia commits. ${PERGUNTA_FINAL}`)]);
     const servidor = mockServer({

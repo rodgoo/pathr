@@ -208,6 +208,35 @@ def test_exemplo_que_falha_fica_como_sugestao(tutor, monkeypatch):
     assert ultima["exemplo_id"] is None and ultima["sugestoes"] == [{"linguagem": "java", "topico": "protected"}]
 
 
+def test_saudacao_responde_na_hora_sem_ia_e_sem_ir_para_a_base(tutor):
+    banco = _banco()
+    oi = asyncio.run(rotas.abrir(rotas.Abrir(contexto_tipo="laboratorio", contexto_ref=EXEMPLO, pergunta="oi!"), EU, banco))
+    assert tutor.pedidos == [], "saudação não chama a IA"
+    assert oi["status"] == "conversa" and oi["mensagens"][-1]["papel"] == "tutor"
+    assert "Qual é a sua dúvida" in oi["mensagens"][-1]["texto"]
+    assert banco.linhas("pathr_knowledge_item") == []
+
+    duvida = asyncio.run(rotas.continuar(oi["id"], rotas.Falar(texto="não entendi o protected"), EU, banco))
+    assert len(tutor.pedidos) == 1 and duvida["status"] == "aberta"
+    assert duvida["mensagens"][-1]["texto"].endswith(duvidas.PERGUNTA_FINAL)
+
+    valeu = asyncio.run(rotas.continuar(oi["id"], rotas.Falar(texto="valeu!"), EU, banco))
+    assert len(tutor.pedidos) == 1 and valeu["status"] == "conversa"
+    assert duvidas.conversa_casual("oi, não entendi o private") is None, "saudação com dúvida vai para o tutor"
+
+
+def test_tutor_pede_resposta_rapida(monkeypatch):
+    chamadas = []
+
+    async def falso(sistema, pedido, schema, **opcoes):
+        chamadas.append(opcoes)
+        return SimpleNamespace(content={"resposta": "ok", "conceito": "x"}, model="falso")
+
+    monkeypatch.setattr(duvidas, "generate_json", falso)
+    asyncio.run(duvidas.responder("contexto", None, [{"role": "user", "content": "o que é push?"}]))
+    assert chamadas[0].get("rapido") is True and chamadas[0].get("per_attempt_timeout")
+
+
 def test_erro_no_quiz_entra_na_base():
     from app.routers import quizzes
 

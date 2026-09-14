@@ -205,6 +205,7 @@ async def abrir(
     user_id = str(current_user["id"])
     contexto = duvidas.resolver_contexto(supabase, user_id, payload.contexto_tipo, payload.contexto_ref)
     pergunta = payload.pergunta.strip()
+    casual = duvidas.conversa_casual(pergunta, contexto.titulo)
     thread = (
         supabase.table("pathr_doubt_thread")
         .insert({
@@ -215,11 +216,16 @@ async def abrir(
             "context_excerpt": (payload.trecho or "").strip()[:1500] or None,
             "node_id": contexto.node_id,
             "tag_id": contexto.tag_id,
+            **({"status": "conversa"} if casual else {}),
         })
         .execute()
         .data[0]
     )
     _falar(supabase, str(thread["id"]), user_id, "user", pergunta)
+    if casual:
+        # Saudação: resposta na hora, sem IA e sem ir para a base.
+        _falar(supabase, str(thread["id"]), user_id, "assistant", casual)
+        return _publica({**thread, "status": "conversa"}, _mensagens(supabase, str(thread["id"])))
     try:
         thread = await _explicar(supabase, current_user, thread)
     except AiProviderError:
@@ -246,6 +252,11 @@ async def continuar(
         )
     texto = payload.texto.strip()
     _falar(supabase, thread_id, user_id, "user", texto)
+    casual = duvidas.conversa_casual(texto, thread.get("context_title"))
+    if casual:
+        _falar(supabase, thread_id, user_id, "assistant", casual)
+        supabase.table("pathr_doubt_thread").update({"status": "conversa", "updated_at": _agora()}).eq("id", thread_id).execute()
+        return _publica({**thread, "status": "conversa"}, _mensagens(supabase, thread_id))
     _registrar(supabase, user_id, thread, thread.get("concept") or "", texto)
     thread = await _explicar(supabase, current_user, thread)
     return _publica(thread, _mensagens(supabase, thread_id))

@@ -30,6 +30,7 @@ assunto fora de estudo.
 
 from __future__ import annotations
 
+import re
 import uuid
 from dataclasses import dataclass
 from typing import Any, Optional
@@ -237,6 +238,34 @@ def resolver_contexto(supabase: Client, user_id: str, tipo: str, ref: Optional[s
     raise nao_achou
 
 
+_CASUAL = re.compile(
+    r"^\s*(?:"
+    r"(?:oi+|ol[aá]|opa|e a[ií]|eae|hey|hello|hi|bom dia|boa tarde|boa noite|tudo bem|tudo bom)"
+    r"|(?:obrigad[oa]|valeu|vlw|brigad[oa]|obg|thanks|thank you|agrade[cç]o)"
+    r"|(?:ok|okay|beleza|blz|show|certo|entendi|perfeito|legal|top|massa|joia|joinha)"
+    r")(?:[\s,!.?]+(?:tutor|pathr|muito|demais|tudo bem|tudo bom|mesmo))*[\s!.?]*$",
+    re.IGNORECASE,
+)
+
+
+def conversa_casual(texto: str, titulo: Optional[str] = None) -> Optional[str]:
+    """Resposta imediata para saudação, agradecimento e "ok" — sem IA.
+
+    Não é dúvida: não passa pelo modelo (a pessoa não espera nada), não entra na
+    base de conhecimento e não pergunta "ficou claro?". Qualquer coisa além
+    disso ("oi, não entendi o private") vai para o tutor normalmente.
+    """
+    if not texto or len(texto) > 40 or not _CASUAL.match(texto):
+        return None
+    minusculo = texto.lower()
+    assunto = f" sobre **{titulo}**" if titulo and titulo != "Dúvida geral" else ""
+    if re.search(r"obrigad|valeu|vlw|brigad|obg|thank|agrade", minusculo):
+        return "Por nada! Se surgir outra dúvida, é só perguntar."
+    if re.search(r"^\s*(ok|okay|beleza|blz|show|certo|entendi|perfeito|legal|top|massa|joia|joinha)", minusculo):
+        return "Combinado! Quando quiser, manda a próxima dúvida."
+    return f"Oi! Qual é a sua dúvida{assunto}? Pode ser um termo, uma linha do código ou um passo que não ficou claro."
+
+
 def garantir_pergunta_final(resposta: str) -> str:
     """A pergunta de fechamento é regra do produto, não sugestão ao modelo."""
     texto = resposta.strip()
@@ -282,7 +311,9 @@ async def responder(
             "--- FIM ---",
         ]
     )
-    resultado = await generate_json(SISTEMA, prompt, SCHEMA)
+    # Conversa: rápido. Sem raciocínio prévio e com teto por provedor — um lento
+    # passa a vez em vez de deixar a pessoa olhando os pontinhos.
+    resultado = await generate_json(SISTEMA, prompt, SCHEMA, per_attempt_timeout=20, rapido=True)
     conteudo = resultado.content or {}
     resposta = str(conteudo.get("resposta") or "").strip()[:4000]
     if not resposta:
