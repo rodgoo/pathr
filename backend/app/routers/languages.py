@@ -21,6 +21,7 @@ from supabase import Client
 
 from app.ai_providers import AiProviderError, generate_json
 from app.database import get_supabase
+from app.services.alternativas import numerar_de_um
 from app.deps import get_current_user
 from app.services import languages, review, traducao
 from app.services import treino_idioma as treino
@@ -75,7 +76,9 @@ Regras:
 2. Todo item nasce de uma situação real de trabalho em time distribuído:
    daily, code review, e-mail de prazo, entrevista técnica, apresentação,
    negociação de escopo. Nada de gramática solta sem contexto.
-3. Exatamente 4 alternativas; o campo correta é o índice de 0 a 3. As erradas
+3. Exatamente 4 alternativas; o campo correta é o índice de 0 a 3 (uso interno).
+   Na explicação, cite as alternativas contando a partir de 1 (a primeira é a
+   alternativa 1, a última a 4) ou pelo próprio texto delas — nunca pelo índice. As erradas
    precisam ser erros que brasileiros realmente cometem em inglês (falso
    cognato, tradução literal, tom errado), não absurdos.
 4. O campo habilidade: grammar, vocabulary, reading, listening, writing,
@@ -691,7 +694,7 @@ async def answer_assessment(
     if finished:
         result = _finish_assessment(supabase, current_user, assessment_id, answered, correct_count)
         return {"is_correct": is_correct, "correct_index": expected,
-                "explanation": item.get("feedback"), "finished": True, "result": result}
+                "explanation": numerar_de_um(item.get("feedback")), "finished": True, "result": result}
 
     # Acertou -> sobe a banda; errou -> desce. É isto que faz o teste
     # convergir: cada resposta move o alvo em direção ao nível real.
@@ -726,7 +729,7 @@ async def answer_assessment(
     return {
         "is_correct": is_correct,
         "correct_index": expected,
-        "explanation": item.get("feedback"),
+        "explanation": numerar_de_um(item.get("feedback")),
         "finished": False,
         "answered": answered,
         "total": int(assessment.get("item_count") or 20),
@@ -828,7 +831,7 @@ def _resultado_gravado(
     base = {
         "is_correct": bool(item.get("is_correct")),
         "correct_index": expected,
-        "explanation": item.get("feedback"),
+        "explanation": numerar_de_um(item.get("feedback")),
     }
     if assessment.get("status") == "done":
         return {

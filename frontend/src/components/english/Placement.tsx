@@ -140,6 +140,7 @@ export function Placement({
           options={item.options}
           pick={pick}
           answer={feedback ? feedback.correct_index : undefined}
+          numerada
           busy={answer.pending}
           onPick={(choice) => void submit(choice)}
         />

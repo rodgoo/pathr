@@ -20,6 +20,7 @@ from supabase import Client
 
 from app.ai_providers import generate_json
 from app.database import get_supabase
+from app.services.alternativas import numerar_de_um
 from app.deps import get_current_user
 from app.services import review
 from app.services.progress import log_activity
@@ -58,7 +59,9 @@ Regras:
 1. Toda questão testa APLICAÇÃO, não memorização de definição. Prefira
    cenários (um trecho de código com um problema, uma decisão de projeto a
    tomar) a perguntas do tipo o que significa X.
-2. Exatamente 4 alternativas. O campo correta é o índice de 0 a 3.
+2. Exatamente 4 alternativas. O campo correta é o índice de 0 a 3 (uso interno).
+   Na explicação, cite as alternativas contando a partir de 1 (a primeira é a
+   alternativa 1, a última a 4) ou pelo próprio texto delas — nunca pelo índice.
 3. As alternativas erradas precisam ser plausíveis: cada uma deve refletir um
    engano que uma pessoa real comete. Alternativa absurda entrega a resposta.
 4. A explicação diz por que a certa está certa E por que a mais tentadora das
@@ -360,7 +363,7 @@ def submit_quiz(
                 "answer": given,
                 "correct_index": expected,
                 "is_correct": is_correct,
-                "explanation": question.get("explanation"),
+                "explanation": numerar_de_um(question.get("explanation")),
             }
         )
 
@@ -621,7 +624,7 @@ def _recycle(
                     "question_id": str(questao["id"]),
                     "front": conceito,
                     "back": " ".join(
-                        part for part in [str(resposta), questao.get("explanation") or ""] if part
+                        part for part in [str(resposta), numerar_de_um(questao.get("explanation")) or ""] if part
                     )[:2000],
                     # Vence agora: o próximo quiz sobre a tag já recicla.
                     "due_at": _now().isoformat(),

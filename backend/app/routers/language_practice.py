@@ -32,6 +32,7 @@ from supabase import Client
 
 from app.ai_providers import AiProviderError, generate_json
 from app.database import get_supabase
+from app.services.alternativas import numerar_de_um
 from app.deps import get_current_user
 from app.services import languages, review
 from app.services import proficiencia_idioma as proficiencia
@@ -110,7 +111,8 @@ REGRAS GERAIS
    Os termos: {termos}.
 
 POR TIPO (use SÓ os campos do tipo)
-- mcq: enunciado com todo o contexto necessário; alternativas (4); correta (0 a 3).
+- mcq: enunciado com todo o contexto necessário; alternativas (4); correta (0 a 3,
+  uso interno). Na explicação, cite alternativas a partir de 1 ou pelo texto, nunca pelo índice.
 - gap: frase com EXATAMENTE uma lacuna escrita ___ ; enunciado ("Complete com…");
   alternativas (4) para a lacuna; correta.
 - reorder: frase = a frase correta, de 4 a 12 palavras, pontuação colada à
@@ -819,7 +821,7 @@ async def answer_practice(
         "skipped": correcao.pulado,
         "correct_answer": correcao.certa,
         "detail": correcao.detalhe,
-        "explanation": item.get("feedback"),
+        "explanation": numerar_de_um(item.get("feedback")),
         # O que aconteceu com o ponto de melhora — dito na tela, para a
         # reciclagem não ser invisível.
         "improvement": ponto,

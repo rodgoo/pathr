@@ -120,6 +120,7 @@ function Escolha({ item, idioma, travado, resultado, onResponder }: ExercicioPro
         pick={escolha}
         answer={certa >= 0 ? certa : undefined}
         english
+        numerada
         busy={travado}
         onPick={(indice) => {
           setEscolha(indice);

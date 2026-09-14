@@ -67,7 +67,8 @@ interface ChoiceListProps {
   answer?: number;
   onPick: (index: number) => void;
   /** Quiz questions letter their options; scenarios and reviews do not. */
-  letters?: boolean;
+  /** Numera as opções a partir de 1, do jeito que a explicação as cita. */
+  numerada?: boolean;
   /**
    * A resposta está a caminho do servidor.
    *
@@ -87,7 +88,7 @@ export function ChoiceList({
   pick,
   answer,
   onPick,
-  letters = false,
+  numerada = false,
   english = false,
   busy = false,
   label,
@@ -126,8 +127,8 @@ export function ChoiceList({
               color: state.color,
             }}
           >
-            {letters ? (
-              <span style={{ fontSize: 11.5, opacity: 0.6, paddingTop: 2 }}>{"ABCD"[index]}</span>
+            {numerada ? (
+              <span style={{ fontSize: 11.5, opacity: 0.6, paddingTop: 2, minWidth: 10 }}>{index + 1}</span>
             ) : null}
             <span style={{ flex: 1 }}>{text}</span>
             <span style={{ fontSize: 11.5, whiteSpace: "nowrap" }}>{state.mark}</span>

@@ -158,7 +158,7 @@ export function QuizRunner({
         label="Opções de resposta"
         options={question.options}
         pick={picked ?? null}
-        letters
+        numerada
         onPick={(choice) => setAnswers((current) => ({ ...current, [question.id]: choice }))}
       />
 
