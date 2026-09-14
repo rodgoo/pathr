@@ -242,11 +242,24 @@ async def criar(
     supabase: Client = Depends(get_supabase),
 ):
     _valida(payload)
+    return _para_api(
+        await gerar_exemplo(supabase, current_user, payload.language, payload.topic, payload.level)
+    )
 
+
+async def gerar_exemplo(
+    supabase: Client, current_user: dict, language: str, topic: str, level: str = "iniciante"
+) -> dict[str, Any]:
+    """Gera, confere, grava e devolve a linha de um exemplo com passo a passo.
+
+    Uma função e não só a rota: o "Perguntar" (routers/duvidas.py) gera exemplo
+    pelo MESMO caminho — as duas tentativas e a conferência do traço contra o
+    código valem igual para o exemplo pedido numa dúvida.
+    """
     pedido = (
-        f"Linguagem: {code_lab.rotulo(payload.language)}\n"
-        f"Assunto: {payload.topic.strip()}\n"
-        f"Nível de quem vai ler: {payload.level}\n\n"
+        f"Linguagem: {code_lab.rotulo(language)}\n"
+        f"Assunto: {topic.strip()}\n"
+        f"Nível de quem vai ler: {level}\n\n"
         "Escreva o exemplo e o traço de execução completo."
     )
     # Duas tentativas, e não uma.
@@ -297,10 +310,10 @@ async def criar(
 
     novo = {
         "user_id": str(current_user["id"]),
-        "language": payload.language,
-        "topic": payload.topic.strip(),
-        "level": payload.level,
-        "title": str(dados.get("titulo") or payload.topic)[:160],
+        "language": language,
+        "topic": topic.strip(),
+        "level": level,
+        "title": str(dados.get("titulo") or topic)[:160],
         "summary": str(dados.get("resumo") or "")[:600],
         "code": codigo,
         "steps": passos,
@@ -320,9 +333,9 @@ async def criar(
         title=novo["title"],
         ref_id=str(gravado[0]["id"]),
         minutes=5,
-        detail={"language": payload.language, "topic": novo["topic"]},
+        detail={"language": language, "topic": novo["topic"]},
     )
-    return _para_api(gravado[0])
+    return gravado[0]
 
 
 @router.delete("/{walkthrough_id}", status_code=status.HTTP_204_NO_CONTENT)

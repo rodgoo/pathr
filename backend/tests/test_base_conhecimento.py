@@ -154,6 +154,60 @@ def test_ia_fora_do_ar_a_duvida_nao_se_perde(tutor):
     assert item["source"] == "duvida" and "injeção de dependência" in item["concept"]
 
 
+def test_pedir_exemplo_gera_para_depurar_e_sugestoes_invalidas_somem(tutor, monkeypatch):
+    from app.routers import walkthroughs
+
+    gerados = []
+
+    async def gerar(_supabase, _user, linguagem, topico, level="iniciante"):
+        gerados.append((linguagem, topico))
+        return {"id": "w-novo", "title": "Subclasse e protected"}
+
+    monkeypatch.setattr(walkthroughs, "gerar_exemplo", gerar)
+
+    async def falso(sistema, pedido, _schema, **_):
+        tutor.pedidos.append(pedido)
+        return SimpleNamespace(content={
+            "resposta": "Assim:\n```java\nclass B extends A {}\n```",
+            "conceito": "protected em subclasse",
+            "exemplos_sugeridos": [
+                {"linguagem": "java", "topico": "subclasse acessando protected"},
+                {"linguagem": "cobol-inventado", "topico": "x"},
+            ],
+            "gerar_exemplo_agora": {"linguagem": "java", "topico": "subclasse acessando protected"},
+        }, model="falso")
+
+    monkeypatch.setattr(duvidas, "generate_json", falso)
+    banco = _banco()
+    saida = asyncio.run(rotas.abrir(rotas.Abrir(contexto_tipo="laboratorio", contexto_ref=EXEMPLO, pergunta="me mostra um exemplo rodando"), EU, banco))
+
+    explicacao, exemplo = saida["mensagens"][1], saida["mensagens"][2]
+    assert explicacao["sugestoes"] == [{"linguagem": "java", "topico": "subclasse acessando protected"}], "linguagem fora do catálogo some"
+    assert "```java" in explicacao["texto"], "a explicação já traz exemplo em código"
+    assert exemplo["exemplo_id"] == "w-novo" and gerados == [("java", "subclasse acessando protected")]
+    assert "exemplo de uso E a resolução" in duvidas.SISTEMA
+
+    # Pelo botão de sugestão, na mesma conversa.
+    outra = asyncio.run(rotas.gerar_exemplo(saida["id"], rotas.PedidoDeExemplo(linguagem="java", topico="protected no mesmo pacote"), EU, banco))
+    assert outra["mensagens"][-1]["exemplo_id"] == "w-novo" and len(gerados) == 2
+    with pytest.raises(HTTPException):
+        asyncio.run(rotas.gerar_exemplo(saida["id"], rotas.PedidoDeExemplo(linguagem="klingon", topico="x y"), EU, banco))
+
+
+def test_exemplo_que_falha_fica_como_sugestao(tutor, monkeypatch):
+    from app.routers import walkthroughs
+
+    async def quebra(*_a, **_k):
+        raise AiProviderError("fora")
+
+    monkeypatch.setattr(walkthroughs, "gerar_exemplo", quebra)
+    banco = _banco()
+    aberta = asyncio.run(rotas.abrir(rotas.Abrir(contexto_tipo="laboratorio", contexto_ref=EXEMPLO, pergunta="o que é protected?"), EU, banco))
+    saida = asyncio.run(rotas.gerar_exemplo(aberta["id"], rotas.PedidoDeExemplo(linguagem="java", topico="protected"), EU, banco))
+    ultima = saida["mensagens"][-1]
+    assert ultima["exemplo_id"] is None and ultima["sugestoes"] == [{"linguagem": "java", "topico": "protected"}]
+
+
 def test_erro_no_quiz_entra_na_base():
     from app.routers import quizzes
 

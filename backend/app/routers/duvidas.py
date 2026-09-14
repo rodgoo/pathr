@@ -5,8 +5,14 @@
 - `POST /duvidas/{id}/mensagens` — continua a conversa.
 - `POST /duvidas/{id}/entendeu` — a resposta ao "ficou claro?". "Ainda não"
   pede outra explicação, de outro jeito.
+- `POST /duvidas/{id}/exemplo` — gera um exemplo de código para depurar (um
+  que o tutor sugeriu, ou outro) pelo gerador do Laboratório.
 - `GET  /duvidas?contexto_tipo=&contexto_ref=` — as últimas dúvidas daquele
   contexto, para a conversa não sumir ao reabrir a tela.
+
+A explicação já traz exemplo de uso e resolução em código; o exemplo para o
+Laboratório é o aprofundamento. Quando a pessoa pede um exemplo na própria
+pergunta ("me mostra funcionando"), ele é gerado na hora, depois da explicação.
 
 Toda dúvida entra na base de conhecimento da conta — inclusive quando a IA
 falha: a pergunta foi feita, e isso já diz o que a pessoa não sabe.
@@ -23,7 +29,8 @@ from supabase import Client
 from app.ai_providers import AiProviderError
 from app.database import get_supabase
 from app.deps import get_current_user
-from app.services import conhecimento, duvidas
+from app.routers import walkthroughs
+from app.services import code_lab, conhecimento, duvidas
 
 router = APIRouter(prefix="/duvidas", tags=["dúvidas"])
 
@@ -52,6 +59,11 @@ class Retorno(BaseModel):
     entendeu: bool
 
 
+class PedidoDeExemplo(BaseModel):
+    linguagem: str = Field(min_length=1, max_length=20)
+    topico: str = Field(min_length=2, max_length=120)
+
+
 def _agora() -> str:
     return datetime.now(timezone.utc).isoformat()
 
@@ -78,6 +90,8 @@ def _publica(thread: dict[str, Any], mensagens: list[dict[str, Any]]) -> dict[st
                 "id": str(m["id"]),
                 "papel": "pessoa" if m.get("role") == "user" else "tutor",
                 "texto": m.get("content") or "",
+                "sugestoes": list(m.get("suggestions") or []),
+                "exemplo_id": str(m["walkthrough_id"]) if m.get("walkthrough_id") else None,
                 "criada_em": m.get("created_at"),
             }
             for m in mensagens
@@ -85,12 +99,35 @@ def _publica(thread: dict[str, Any], mensagens: list[dict[str, Any]]) -> dict[st
     }
 
 
-def _falar(supabase: Client, thread_id: str, user_id: str, role: str, conteudo: str) -> dict[str, Any]:
+def _falar(
+    supabase: Client, thread_id: str, user_id: str, role: str, conteudo: str, **extras: Any
+) -> dict[str, Any]:
     return (
         supabase.table("pathr_doubt_message")
-        .insert({"thread_id": thread_id, "user_id": user_id, "role": role, "content": conteudo})
+        .insert({"thread_id": thread_id, "user_id": user_id, "role": role, "content": conteudo, **extras})
         .execute()
         .data[0]
+    )
+
+
+async def _gerar_exemplo(supabase: Client, user: dict, thread_id: str, exemplo: dict[str, str]) -> None:
+    """Gera o exemplo pelo gerador do Laboratório e deixa a fala que o abre."""
+    user_id = str(user["id"])
+    rotulo = code_lab.rotulo(exemplo["linguagem"])
+    try:
+        linha = await walkthroughs.gerar_exemplo(supabase, user, exemplo["linguagem"], exemplo["topico"])
+    except (HTTPException, AiProviderError):
+        # Sem o exemplo, fica a sugestão: a pessoa tenta de novo pelo botão.
+        _falar(
+            supabase, thread_id, user_id, "assistant",
+            f"Não consegui gerar o exemplo de **{exemplo['topico']}** agora. Tente de novo pelo botão abaixo.",
+            suggestions=[exemplo],
+        )
+        return
+    _falar(
+        supabase, thread_id, user_id, "assistant",
+        f"Gerei um exemplo de **{linha.get('title') or exemplo['topico']}** em {rotulo} para você depurar passo a passo.",
+        walkthrough_id=str(linha["id"]),
     )
 
 
@@ -117,8 +154,9 @@ def _registrar(supabase: Client, user_id: str, thread: dict[str, Any], conceito:
     )
 
 
-async def _explicar(supabase: Client, user_id: str, thread: dict[str, Any]) -> dict[str, Any]:
+async def _explicar(supabase: Client, user: dict, thread: dict[str, Any]) -> dict[str, Any]:
     """Pede a explicação para a conversa como está e grava a fala do tutor."""
+    user_id = str(user["id"])
     try:
         contexto = duvidas.resolver_contexto(supabase, user_id, thread["context_kind"], thread.get("context_ref"))
         texto_do_contexto = contexto.texto
@@ -126,10 +164,13 @@ async def _explicar(supabase: Client, user_id: str, thread: dict[str, Any]) -> d
         # O conteúdo sumiu (exemplo apagado, trilha refeita): a conversa segue
         # com o que se sabe dele.
         texto_do_contexto = f"Conteúdo: {thread.get('context_title') or 'dúvida de estudo'}"
-    resposta, conceito, _modelo = await duvidas.responder(
+    fala = await duvidas.responder(
         texto_do_contexto, thread.get("context_excerpt"), _mensagens(supabase, str(thread["id"]))
     )
-    _falar(supabase, str(thread["id"]), user_id, "assistant", resposta)
+    conceito = fala["conceito"]
+    _falar(supabase, str(thread["id"]), user_id, "assistant", fala["resposta"], suggestions=fala["sugestoes"])
+    if fala["pedido"]:
+        await _gerar_exemplo(supabase, user, str(thread["id"]), fala["pedido"])
     mudancas = {"updated_at": _agora(), "status": "aberta"}
     if conceito and not thread.get("concept"):
         mudancas["concept"] = conceito
@@ -180,7 +221,7 @@ async def abrir(
     )
     _falar(supabase, str(thread["id"]), user_id, "user", pergunta)
     try:
-        thread = await _explicar(supabase, user_id, thread)
+        thread = await _explicar(supabase, current_user, thread)
     except AiProviderError:
         # A IA falhou, a dúvida não: ela entra na base mesmo sem explicação.
         _registrar(supabase, user_id, thread, "", pergunta)
@@ -206,7 +247,7 @@ async def continuar(
     texto = payload.texto.strip()
     _falar(supabase, thread_id, user_id, "user", texto)
     _registrar(supabase, user_id, thread, thread.get("concept") or "", texto)
-    thread = await _explicar(supabase, user_id, thread)
+    thread = await _explicar(supabase, current_user, thread)
     return _publica(thread, _mensagens(supabase, thread_id))
 
 
@@ -231,5 +272,23 @@ async def entendeu(
     supabase.table("pathr_doubt_thread").update({"understood": False}).eq("id", thread_id).execute()
     _falar(supabase, thread_id, user_id, "user", "Ainda não entendi.")
     _registrar(supabase, user_id, thread, thread.get("concept") or "", "Não entendeu a explicação.")
-    thread = await _explicar(supabase, user_id, {**thread, "understood": False})
+    thread = await _explicar(supabase, current_user, {**thread, "understood": False})
+    return _publica(thread, _mensagens(supabase, thread_id))
+
+
+@router.post("/{thread_id}/exemplo")
+async def gerar_exemplo(
+    thread_id: str,
+    payload: PedidoDeExemplo,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """Gera um exemplo para depurar dentro desta conversa (ex.: uma sugestão do tutor)."""
+    user_id = str(current_user["id"])
+    thread = _da_pessoa(supabase, user_id, thread_id)
+    exemplo = duvidas.exemplo_valido(payload.model_dump())
+    if not exemplo:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Linguagem ou assunto do exemplo inválido.")
+    await _gerar_exemplo(supabase, current_user, thread_id, exemplo)
+    supabase.table("pathr_doubt_thread").update({"updated_at": _agora()}).eq("id", thread_id).execute()
     return _publica(thread, _mensagens(supabase, thread_id))

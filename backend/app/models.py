@@ -515,6 +515,9 @@ class PathrDoubtMessage(SQLModel, table=True):
     user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id", index=False))
     role: str = Field(max_length=12)
     content: str
+    # Migração 0032: exemplos sugeridos nesta fala e o exemplo gerado a partir dela.
+    suggestions: list[Any] = Field(default_factory=list, sa_column=_jsonb("[]"))
+    walkthrough_id: Optional[uuid.UUID] = Field(default=None, sa_type=PGUUID(as_uuid=True))
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
 

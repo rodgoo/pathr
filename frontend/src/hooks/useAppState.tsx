@@ -118,6 +118,11 @@ export function useAppState(): AppContextValue {
   return value;
 }
 
+/** Para componentes que também vivem fora do app (testes isolados): null sem provedor. */
+export function useAppStateOpcional(): AppContextValue | null {
+  return useContext(AppContext);
+}
+
 /**
  * Apaga a posição guardada.
  *

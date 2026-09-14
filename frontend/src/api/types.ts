@@ -426,6 +426,10 @@ export interface DuvidaMensagem {
   /** "pessoa" fica a esquerda; "tutor", a direita. */
   papel: "pessoa" | "tutor";
   texto: string;
+  /** Exemplos de codigo que o tutor sugeriu para depurar no Laboratorio. */
+  sugestoes?: { linguagem: string; topico: string }[];
+  /** O exemplo gerado nesta fala, para abrir no depurador. */
+  exemplo_id?: string | null;
   criada_em: string | null;
 }
 

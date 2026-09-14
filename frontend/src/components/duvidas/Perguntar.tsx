@@ -14,8 +14,8 @@
  * servidor lê o conteúdo conferindo que é dela. O `trecho` (o passo, a linha)
  * é o único texto de contexto que sai do cliente.
  *
- * A resposta do tutor é mostrada como TEXTO — blocos ``` viram <pre>, nada
- * vira HTML.
+ * A resposta do tutor sai formatada (parágrafos, listas, negrito, código) por
+ * `TextoFormatado`, que monta elementos React e nunca HTML.
  */
 
 import { useEffect, useRef, useState } from "react";
@@ -24,6 +24,9 @@ import type { DuvidaConversa, TipoDeContextoDaDuvida } from "@/api/types";
 import { ACC, ACC4, C, TEXT, tint } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { ProgressoDaTarefa } from "@/components/ui/ProgressoDaTarefa";
+import { TextoFormatado } from "./TextoFormatado";
+import { useAppStateOpcional } from "@/hooks/useAppState";
+import { abrirExemploNoLaboratorio } from "@/lib/laboratorio";
 
 interface Props {
   contextoTipo: TipoDeContextoDaDuvida;
@@ -40,42 +43,6 @@ function mensagemDeErro(erro: unknown): string {
   return erro instanceof Error ? erro.message : "Não consegui falar com o tutor agora.";
 }
 
-/** Texto com blocos de código ```. Tudo como texto, nunca HTML. */
-function TextoDoTutor({ texto }: { texto: string }) {
-  const partes = texto.split("```");
-  return (
-    <>
-      {partes.map((parte, indice) => {
-        if (indice % 2 === 1) {
-          const semLinguagem = parte.replace(/^[a-zA-Z0-9+#-]*\n/, "");
-          return (
-            <pre
-              key={indice}
-              className="campo-codigo"
-              style={{
-                margin: "6px 0",
-                padding: "8.4px 10px",
-                borderRadius: 7,
-                background: "#0a0a0d",
-                overflowX: "auto",
-                whiteSpace: "pre",
-                fontSize: 12.5,
-              }}
-            >
-              {semLinguagem.replace(/\n$/, "")}
-            </pre>
-          );
-        }
-        return parte ? (
-          <span key={indice} style={{ whiteSpace: "pre-wrap" }}>
-            {parte.replace(/^\n+|\n+$/g, "")}
-          </span>
-        ) : null;
-      })}
-    </>
-  );
-}
-
 export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Perguntar" }: Props) {
   const [aberto, setAberto] = useState(false);
   const [conversa, setConversa] = useState<DuvidaConversa | null>(null);
@@ -83,6 +50,13 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
   const [enviando, setEnviando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const fim = useRef<HTMLDivElement>(null);
+  const app = useAppStateOpcional();
+  const [gerandoExemplo, setGerandoExemplo] = useState(false);
+
+  function abrirNoDepurador(id: string) {
+    abrirExemploNoLaboratorio(id);
+    app?.dispatch({ type: "navigate", screen: "codigo" });
+  }
 
   // Ao abrir: a última conversa deste contexto volta, para não sumir ao reabrir a tela.
   useEffect(() => {
@@ -102,6 +76,19 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
   useEffect(() => {
     fim.current?.scrollIntoView?.({ block: "nearest" });
   }, [conversa?.mensagens.length, enviando]);
+
+  async function gerarExemplo(pedido: { linguagem: string; topico: string }) {
+    if (!conversa) return;
+    setGerandoExemplo(true);
+    setErro(null);
+    try {
+      setConversa(await duvidasApi.exemplo(conversa.id, pedido));
+    } catch (caught) {
+      setErro(mensagemDeErro(caught));
+    } finally {
+      setGerandoExemplo(false);
+    }
+  }
 
   async function executar(acao: () => Promise<DuvidaConversa>) {
     setEnviando(true);
@@ -197,7 +184,40 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
                   overflowWrap: "anywhere",
                 }}
               >
-                {daPessoa ? <span style={{ whiteSpace: "pre-wrap" }}>{mensagem.texto}</span> : <TextoDoTutor texto={mensagem.texto} />}
+                {daPessoa ? <span style={{ whiteSpace: "pre-wrap" }}>{mensagem.texto}</span> : <TextoFormatado texto={mensagem.texto} />}
+                {!daPessoa && mensagem.exemplo_id ? (
+                  <button
+                    type="button"
+                    className="btn btn-primary"
+                    style={{ fontSize: 12.5, marginTop: 6 }}
+                    onClick={() => abrirNoDepurador(mensagem.exemplo_id as string)}
+                  >
+                    <Icon name="code" size={14} />
+                    Abrir no depurador
+                  </button>
+                ) : null}
+                {!daPessoa && (mensagem.sugestoes ?? []).length > 0 ? (
+                  <div
+                    role="group"
+                    aria-label="Exemplos para depurar"
+                    style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8, paddingTop: 8, borderTop: "1px solid rgba(233,233,237,.1)" }}
+                  >
+                    <span style={{ fontSize: 11.5, color: TEXT.muted, width: "100%" }}>Quer ver rodando, passo a passo?</span>
+                    {(mensagem.sugestoes ?? []).map((sugestao) => (
+                      <button
+                        key={`${sugestao.linguagem}-${sugestao.topico}`}
+                        type="button"
+                        className="btn btn-secondary"
+                        style={{ fontSize: 12 }}
+                        disabled={gerandoExemplo || enviando}
+                        onClick={() => void gerarExemplo(sugestao)}
+                      >
+                        <Icon name="code" size={13} />
+                        Gerar exemplo para depurar: {sugestao.topico}
+                      </button>
+                    ))}
+                  </div>
+                ) : null}
               </div>
             </li>
           );
@@ -205,6 +225,12 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
       </ol>
 
       <ProgressoDaTarefa ativo={enviando} chave="tutor-responder" etapas={ETAPAS} duracaoMs={9_000} />
+      <ProgressoDaTarefa
+        ativo={gerandoExemplo}
+        chave="tutor-exemplo"
+        etapas={["Escrevendo o código", "Montando o passo a passo", "Conferindo cada passo com o código"]}
+        duracaoMs={25_000}
+      />
 
       {esperandoRetorno && conversa ? (
         <div role="group" aria-label="A explicação ficou clara?" style={{ display: "flex", gap: 8.4, justifyContent: "flex-end", flexWrap: "wrap" }}>
@@ -255,7 +281,7 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
               void enviar();
             }
           }}
-          style={{ flex: 1, resize: "vertical", minHeight: 44 }}
+          style={{ flex: 1, resize: "none", minHeight: 44 }}
         />
         <button type="submit" className="btn btn-primary" disabled={enviando || texto.trim().length < 3}>
           <Icon name="send" size={15} />

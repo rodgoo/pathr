@@ -399,6 +399,9 @@ export const duvidas = {
     api.post<DuvidaConversa>(`/duvidas/${encodeURIComponent(id)}/mensagens`, { texto }),
   entendeu: (id: string, entendeu: boolean) =>
     api.post<DuvidaConversa>(`/duvidas/${encodeURIComponent(id)}/entendeu`, { entendeu }),
+  /** Gera um exemplo de codigo para depurar (pelo gerador do Laboratorio). */
+  exemplo: (id: string, pedido: { linguagem: string; topico: string }) =>
+    api.post<DuvidaConversa>(`/duvidas/${encodeURIComponent(id)}/exemplo`, pedido),
 };
 
 export const explanations = {

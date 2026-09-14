@@ -33,6 +33,33 @@ const conversa = (mensagens: DuvidaConversa["mensagens"], extra: Partial<DuvidaC
 const pessoa = (id: string, texto: string) => ({ id, papel: "pessoa" as const, texto, criada_em: null });
 const tutor = (id: string, texto: string) => ({ id, papel: "tutor" as const, texto, criada_em: null });
 
+describe("texto do tutor formatado", () => {
+  it("parágrafos, listas, negrito e código viram elementos — e nada vira HTML", async () => {
+    const { TextoFormatado } = await import("@/components/duvidas/TextoFormatado");
+    const texto = [
+      "Em Java, **modificadores de acesso** controlam quem vê um membro.",
+      "",
+      "- `public`: qualquer classe",
+      "- `private`: só a própria classe",
+      "",
+      "```java",
+      "private int privado = 20;",
+      "```",
+      "<img src=x onerror=alert(1)>",
+      "",
+      PERGUNTA_FINAL,
+    ].join("\n");
+    const { container } = render(<TextoFormatado texto={texto} />);
+    expect(screen.getByText("modificadores de acesso").tagName).toBe("STRONG");
+    const itens = screen.getAllByRole("listitem");
+    expect(itens).toHaveLength(2);
+    expect(within(itens[0]).getByText("public").tagName).toBe("CODE");
+    expect(screen.getByLabelText("Código em java")).toHaveTextContent("private int privado = 20;");
+    expect(container.querySelector("img")).toBeNull();
+    expect(screen.getByText(PERGUNTA_FINAL).tagName).toBe("P");
+  });
+});
+
 describe("Perguntar", () => {
   it("abre com o contexto, mostra pessoa à esquerda e tutor à direita, e pergunta se ficou claro", async () => {
     let entendeuCorpo: unknown = null;
@@ -72,6 +99,7 @@ describe("Perguntar", () => {
     expect(segunda).toHaveAccessibleName("Tutor");
     expect(segunda).toHaveStyle({ justifyContent: "flex-end" });
     expect(within(segunda).getByText("private int x;").tagName).toBe("PRE");
+    expect(screen.getByLabelText("Sua dúvida")).toHaveStyle({ resize: "none" });
     expect(container.querySelector("script")).toBeNull();
 
     const envio = servidor.calls.find((c) => c.method === "POST" && c.url === "/duvidas");
@@ -86,6 +114,34 @@ describe("Perguntar", () => {
     await user.click(within(retorno).getByRole("button", { name: "Ainda não" }));
     expect(await screen.findByText(/gaveta trancada/)).toBeInTheDocument();
     expect(entendeuCorpo).toEqual({ entendeu: false });
+  });
+
+  it("sugere exemplo para depurar, gera e abre no Laboratório", async () => {
+    const aberta = conversa([
+      pessoa("m1", "como o protected funciona na subclasse?"),
+      { ...tutor("m2", `Assim: \`\`\`java\nclass B extends A {}\n\`\`\` ${PERGUNTA_FINAL}`), sugestoes: [{ linguagem: "java", topico: "subclasse acessando protected" }] },
+    ]);
+    let pedido: unknown = null;
+    mockServer({
+      "GET /duvidas": () => ({ body: [aberta] }),
+      "POST /duvidas/d1/exemplo": (req) => {
+        pedido = req.body;
+        return { body: conversa([...aberta.mensagens, { ...tutor("m3", "Gerei um exemplo de **protected** em Java."), exemplo_id: "w9" }]) };
+      },
+    });
+    const abriu = vi.fn();
+    window.addEventListener("pathr:abrir-exemplo", abriu);
+    const user = userEvent.setup();
+    render(<Perguntar contextoTipo="laboratorio" contextoRef="w1" />);
+
+    await user.click(screen.getByRole("button", { name: /Perguntar/ }));
+    await user.click(await screen.findByRole("button", { name: /Gerar exemplo para depurar: subclasse acessando protected/ }));
+    expect(pedido).toEqual({ linguagem: "java", topico: "subclasse acessando protected" });
+
+    await user.click(await screen.findByRole("button", { name: /Abrir no depurador/ }));
+    expect(abriu).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(window.localStorage.getItem("pathr:codigo") || "{}")).toEqual({ id: "w9", passo: 0 });
+    window.removeEventListener("pathr:abrir-exemplo", abriu);
   });
 
   it("continua a conversa aberta e fecha ao entender", async () => {

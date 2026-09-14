@@ -39,6 +39,7 @@ import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
 import { Perguntar } from "@/components/duvidas/Perguntar";
 import { ProgressoDaTarefa } from "@/components/ui/ProgressoDaTarefa";
+import { CHAVE_DO_LABORATORIO, EVENTO_ABRIR_EXEMPLO } from "@/lib/laboratorio";
 
 const MONO = "ui-monospace, Menlo, monospace";
 
@@ -50,7 +51,7 @@ const MONO = "ui-monospace, Menlo, monospace";
  * ir consultar outra coisa no meio de um traço de trinta passos, que é
  * exatamente quando a pessoa sai.
  */
-const CHAVE = "pathr:codigo";
+const CHAVE = CHAVE_DO_LABORATORIO;
 
 const NIVEIS = [
   { value: "iniciante", label: "Iniciante" },
@@ -120,6 +121,20 @@ export function CodeLabPage() {
     () => (lista.data ?? []).find((item) => item.id === abertoId) ?? null,
     [lista.data, abertoId],
   );
+
+  // Um exemplo pedido fora daqui (o "Perguntar") com esta tela já aberta:
+  // troca o exemplo aberto e recarrega a lista, que ainda não o tem.
+  const { reload: recarregarLista } = lista;
+  useEffect(() => {
+    function abrir(evento: Event) {
+      const id = (evento as CustomEvent<string>).detail;
+      if (!id) return;
+      setAbertoId(id);
+      recarregarLista();
+    }
+    window.addEventListener(EVENTO_ABRIR_EXEMPLO, abrir);
+    return () => window.removeEventListener(EVENTO_ABRIR_EXEMPLO, abrir);
+  }, [recarregarLista]);
 
   // O exemplo guardado pode ter sido apagado noutro aparelho. Esquecer é
   // melhor que abrir a tela num estado que não existe mais.
