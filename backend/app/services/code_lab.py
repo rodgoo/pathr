@@ -55,17 +55,38 @@ LINGUAGENS: tuple[dict[str, str], ...] = (
     {"id": "dart", "rotulo": "Dart", "realce": "dart"},
     {"id": "sql", "rotulo": "SQL", "realce": "sql"},
     {"id": "bash", "rotulo": "Shell / Bash", "realce": "bash"},
+    {"id": "powershell", "rotulo": "PowerShell", "realce": "powershell"},
+    {"id": "html", "rotulo": "HTML", "realce": "html"},
+    {"id": "css", "rotulo": "CSS", "realce": "css"},
+    # Arquivos de configuração e de ferramenta. Não são "linguagens que se
+    # estudam" no perfil, mas é neles que Git, CI, Docker e nuvem acontecem de
+    # verdade — um workflow do GitHub é YAML, não Java.
+    {"id": "yaml", "rotulo": "YAML (GitHub Actions, Compose, Kubernetes)", "realce": "yaml"},
+    {"id": "dockerfile", "rotulo": "Dockerfile", "realce": "dockerfile"},
+    {"id": "json", "rotulo": "JSON", "realce": "json"},
+    {"id": "xml", "rotulo": "XML (pom.xml, configurações)", "realce": "xml"},
+    {"id": "terraform", "rotulo": "Terraform (HCL)", "realce": "terraform"},
 )
 
 _POR_ID = {linguagem["id"]: linguagem for linguagem in LINGUAGENS}
+
+# Oferecidos a todo mundo, com ou sem perfil: ninguém marca "YAML" como
+# linguagem que estuda, e ainda assim quem estuda CI precisa dele.
+FORMATOS: tuple[str, ...] = ("yaml", "dockerfile", "json", "xml", "terraform")
+
+# "Automático": o gerador escolhe os arquivos e as linguagens que o assunto usa
+# na vida real (routers/walkthroughs.py). É o padrão, porque quem pede "GitHub e
+# testes automatizados" não precisa saber que isso é um YAML chamando um teste.
+AUTO = "auto"
+AUTOMATICO = {"id": AUTO, "rotulo": "Automático (pelo assunto)", "realce": "text"}
 
 NIVEIS: tuple[str, ...] = ("iniciante", "intermediario", "avancado")
 
 # Um traço mais curto que isto não mostra execução nenhuma; mais longo que isto
 # ninguém percorre até o fim, e é sinal de que o modelo gerou um programa
 # grande demais para o formato.
-_MINIMO_DE_PASSOS = 2
-_MAXIMO_DE_PASSOS = 60
+MINIMO_DE_PASSOS = 2
+MAXIMO_DE_PASSOS = 60
 _MAXIMO_DE_LINHAS = 80
 
 
@@ -73,11 +94,20 @@ def existe(linguagem: str) -> bool:
     return linguagem in _POR_ID
 
 
+def pode_pedir(linguagem: str) -> bool:
+    """O que o pedido de exemplo aceita: uma linguagem da lista ou "auto"."""
+    return linguagem == AUTO or existe(linguagem)
+
+
 def realce(linguagem: str) -> str:
     return _POR_ID.get(linguagem, {}).get("realce", "text")
 
 
 def rotulo(linguagem: str) -> str:
+    if linguagem == AUTO:
+        return AUTOMATICO["rotulo"]
+    if linguagem == "texto":
+        return "Texto"
     return _POR_ID.get(linguagem, {}).get("rotulo", linguagem)
 
 
@@ -103,7 +133,7 @@ def conferir(codigo: str, passos: list[dict[str, Any]]) -> list[dict[str, Any]]:
         return []
 
     limpos: list[dict[str, Any]] = []
-    for passo in passos[:_MAXIMO_DE_PASSOS]:
+    for passo in passos[:MAXIMO_DE_PASSOS]:
         try:
             numero = int(passo.get("linha"))
         except (TypeError, ValueError):
@@ -123,12 +153,12 @@ def conferir(codigo: str, passos: list[dict[str, Any]]) -> list[dict[str, Any]]:
             {
                 "linha": numero,
                 "acao": acao,
-                "estado": _estado(estado),
+                "estado": estado_limpo(estado),
                 "saida": str(passo.get("saida") or ""),
             }
         )
 
-    if len(limpos) < _MINIMO_DE_PASSOS:
+    if len(limpos) < MINIMO_DE_PASSOS:
         return []
 
     # O traço precisa CHEGAR AO FIM, e não só ser coerente onde existe.
@@ -147,7 +177,7 @@ def conferir(codigo: str, passos: list[dict[str, Any]]) -> list[dict[str, Any]]:
     return limpos
 
 
-def _estado(bruto: Any) -> list[dict[str, str]]:
+def estado_limpo(bruto: Any) -> list[dict[str, str]]:
     """As variáveis vivas no fim do passo, como pares nome/valor em texto.
 
     Texto e não número: o painel mostra o valor, não faz conta com ele, e um
@@ -187,6 +217,7 @@ _LINGUAGEM_DA_TAG: dict[str, str] = {
     "java": "java", "c-sharp": "csharp", "go": "go", "rust": "rust", "c": "c",
     "c-plus-plus": "cpp", "php": "php", "ruby": "ruby", "kotlin": "kotlin",
     "swift": "swift", "dart": "dart", "sql": "sql", "shell-script": "bash",
+    "powershell": "powershell", "html": "html", "css": "css",
 }
 
 # Tecnologia de um módulo do roadmap que se estuda em código de uma linguagem.
@@ -205,6 +236,14 @@ _LINGUAGEM_DO_ASSUNTO: dict[str, tuple[str, ...]] = {
     "laravel": ("php",),
     "flutter": ("dart",),
     "android": ("kotlin",),
+    # Ferramentas: estudam-se nos arquivos de configuração delas, que servem a
+    # qualquer pessoa (FORMATOS), com ou sem a linguagem no perfil.
+    **{slug: ("yaml",) for slug in (
+        "github", "github-actions", "gitlab", "gitlab-ci", "ci-cd", "docker-compose", "kubernetes", "ansible",
+    )},
+    "docker": ("dockerfile",),
+    "terraform": ("terraform",),
+    "git": ("bash",),
 }
 
 # Uma trilha por linguagem, do básico ao avançado. Assuntos que cabem num
@@ -240,6 +279,16 @@ _TRILHAS: dict[str, dict[str, tuple[str, ...]]] = {
         "iniciante": ("variáveis e tipos", "laços e condicionais", "métodos"),
         "intermediario": ("classes e propriedades", "LINQ: Where, Select e GroupBy", "interfaces", "exceções"),
         "avancado": ("async/await com Task", "generics", "records e pattern matching"),
+    },
+    "yaml": {
+        "iniciante": ("GitHub Actions: rodar os testes a cada push", "Docker Compose: API e banco de dados juntos"),
+        "intermediario": ("GitHub Actions: matriz de versões e cache de dependências", "Kubernetes: Deployment e Service"),
+        "avancado": ("GitHub Actions: build, testes e deploy com environments", "Kubernetes: ConfigMap, Secret e probes"),
+    },
+    "dockerfile": {
+        "iniciante": ("Dockerfile de uma API: FROM, COPY, RUN e CMD",),
+        "intermediario": ("build em múltiplos estágios",),
+        "avancado": ("imagem enxuta com usuário sem root e HEALTHCHECK",),
     },
 }
 _TRILHA_GENERICA: dict[str, tuple[str, ...]] = {
@@ -322,14 +371,20 @@ def sugerir(
             if slug in _LINGUAGEM_DA_TAG:
                 candidatas.append(_LINGUAGEM_DA_TAG[slug])
             candidatas.extend(_LINGUAGEM_DO_ASSUNTO.get(slug, ()))
-        linguagem = next((c for c in candidatas if c in ids), None)
+        # Linguagem do perfil primeiro; senão, o arquivo da ferramenta (o
+        # workflow YAML, o Dockerfile). Sem nenhum dos dois — AWS pelo console,
+        # soft skills — o laboratório não é o lugar.
+        linguagem = next((c for c in candidatas if c in ids), None) or next(
+            (c for c in candidatas if c in FORMATOS or (c == "bash" and ids)), None
+        )
         if not linguagem:
-            continue  # Git, Docker, AWS: o laboratório não é o lugar
+            continue
         objetivo = next(iter(modulo.get("objetivos") or []), "")
         titulo = str(modulo.get("titulo") or "").strip()
         assunto = f"{titulo}: {objetivo.rstrip('.')}" if objetivo else titulo
         situacao = "Em andamento" if modulo.get("status") == "doing" else "Próximo"
-        if acrescenta(linguagem, assunto, nivel_de[linguagem], f"{situacao} no seu roadmap: {titulo}", "roadmap"):
+        nivel = nivel_de.get(linguagem, "iniciante")
+        if acrescenta(linguagem, assunto, nivel, f"{situacao} no seu roadmap: {titulo}", "roadmap"):
             do_roadmap += 1
 
     # 2. A trilha de cada linguagem, alternando entre elas. Sobra lugar para
@@ -351,10 +406,18 @@ def sugerir(
             if acrescenta(linguagem, assunto, proximo, f"Próximo passo em {rotulo(linguagem)}", "proximo_nivel"):
                 break
 
+    so_do_perfil = [
+        {chave: valor for chave, valor in l.items() if chave in ("id", "rotulo", "realce")} for l in do_perfil
+    ]
     return {
-        "linguagens": [
-            {chave: valor for chave, valor in l.items() if chave in ("id", "rotulo", "realce")} for l in do_perfil
-        ] or catalogo(),
+        # O automático primeiro (é o padrão da tela); depois as do perfil e os
+        # formatos de ferramenta, que valem para todo mundo.
+        "linguagens": [dict(AUTOMATICO)]
+        + (
+            so_do_perfil + [dict(_POR_ID[f]) for f in FORMATOS if f not in ids]
+            if so_do_perfil
+            else catalogo()
+        ),
         "do_perfil": bool(do_perfil),
         "sugestoes": sugestoes,
     }

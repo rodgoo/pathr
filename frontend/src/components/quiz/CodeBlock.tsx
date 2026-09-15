@@ -6,7 +6,13 @@
  * `highlight` marks the lines the explanation is about.
  */
 import { tokenize } from "@/lib/highlight";
+import { COR_DO_PAPEL, realcar } from "@/lib/realce";
 import { PANEL } from "@/lib/tokens";
+
+/** As cores de qualquer linguagem (YAML, Dockerfile, SQL…), não só de Java. */
+function tokensGenericos(linha: string) {
+  return realcar(linha).map((pedaco) => ({ text: pedaco.texto, color: COR_DO_PAPEL[pedaco.papel] }));
+}
 
 const MONO = "ui-monospace, Menlo, monospace";
 
@@ -19,6 +25,8 @@ interface CodeBlockProps {
   /** The accent ring marks the corrected version. */
   corrected?: boolean;
   label: string;
+  /** Cores genéricas, para código que não é Java (o padrão do quiz). */
+  generico?: boolean;
 }
 
 export function CodeBlock({
@@ -28,7 +36,9 @@ export function CodeBlock({
   meta,
   corrected = false,
   label,
+  generico = false,
 }: CodeBlockProps) {
+  const colorir = generico ? tokensGenericos : tokenize;
   return (
     <div
       style={{
@@ -92,7 +102,7 @@ export function CodeBlock({
                 {index + 1}
               </span>
               <span style={{ fontSize: 12.5, lineHeight: 1.65 }}>
-                {tokenize(line).map((token, tokenIndex) => (
+                {colorir(line).map((token, tokenIndex) => (
                   <span key={tokenIndex} style={{ whiteSpace: "pre", color: token.color }}>
                     {token.text}
                   </span>

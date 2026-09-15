@@ -14,12 +14,14 @@ def _tag(slug, proficiency=1, is_target=True):
 
 def test_so_as_linguagens_do_perfil_e_sem_nenhuma_todas():
     r = L.sugerir([_tag("java"), _tag("docker"), _tag("sql", 3, False)], [], set())
-    assert [l["id"] for l in r["linguagens"]] == ["java", "sql"]
+    # O automático na frente; depois as do perfil; depois os formatos de
+    # ferramenta (YAML, Dockerfile…), que valem para todo mundo.
+    assert [l["id"] for l in r["linguagens"]] == ["auto", "java", "sql", *L.FORMATOS]
     assert r["do_perfil"] is True
     assert {s["language"] for s in r["sugestoes"]} <= {"java", "sql"}
 
     vazio = L.sugerir([_tag("docker")], [], set())
-    assert vazio["do_perfil"] is False and len(vazio["linguagens"]) == len(L.LINGUAGENS)
+    assert vazio["do_perfil"] is False and len(vazio["linguagens"]) == len(L.LINGUAGENS) + 1
     assert vazio["sugestoes"] == []
 
 
@@ -32,10 +34,21 @@ def test_roadmap_primeiro_com_o_modulo_em_andamento_na_frente():
     ]
     r = L.sugerir([_tag("java")], modulos, set())
     do_roadmap = [s for s in r["sugestoes"] if s["origem"] == "roadmap"]
-    # Docker não se estuda no laboratório; o módulo feito não volta.
-    assert [s["topic"] for s in do_roadmap] == ["JUnit: Escrever testes", "Spring Boot: Criar um projeto"]
+    # Docker se estuda no Dockerfile, mesmo sem a "linguagem" no perfil; o
+    # módulo feito não volta.
+    assert [s["topic"] for s in do_roadmap] == [
+        "Docker: Subir containers", "JUnit: Escrever testes", "Spring Boot: Criar um projeto",
+    ]
+    assert [s["language"] for s in do_roadmap] == ["dockerfile", "java", "java"]
     assert do_roadmap[0]["motivo"].startswith("Em andamento")
     assert r["sugestoes"][: len(do_roadmap)] == do_roadmap
+
+
+def test_modulo_de_github_actions_vira_yaml():
+    modulos = [{"titulo": "GitHub Actions", "status": "doing", "objetivos": ["Rodar testes no CI."], "tags": ["github-actions"]}]
+    r = L.sugerir([_tag("python")], modulos, set())
+    assert r["sugestoes"][0]["language"] == "yaml"
+    assert r["sugestoes"][0]["topic"] == "GitHub Actions: Rodar testes no CI"
 
 
 def test_nivel_pela_proficiencia_e_um_passo_acima():

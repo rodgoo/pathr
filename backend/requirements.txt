@@ -55,3 +55,5 @@ nh3==0.3.7
 webauthn==3.0.0  # chave de acesso — app/routers/passkeys.py
 # Consulta DNS do domínio do e-mail no cadastro (services/email_dominio.py).
 dnspython==2.8.0
+# Conferência dos arquivos YAML gerados no Laboratório (services/code_lab_projeto.py).
+PyYAML==6.0.3

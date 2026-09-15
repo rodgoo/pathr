@@ -52,9 +52,23 @@ const LOGOS: Record<string, string> = {
  * `alt=""` de propósito: o ícone fica sempre ao lado do nome, e anunciar
  * "Python, Python" a cada opção só dobraria o que o leitor de tela diz.
  */
+// Sem logo próprio aqui: o ícone genérico diz o que o arquivo é.
+const ICONE_GENERICO: Record<string, Parameters<typeof Icon>[0]["name"]> = {
+  sql: "db",
+  auto: "flag",
+  yaml: "file",
+  json: "file",
+  xml: "file",
+  dockerfile: "server",
+  terraform: "server",
+  html: "globe",
+  css: "globe",
+  powershell: "code",
+};
+
 export function iconeDaLinguagem(id: string): ReactNode {
-  // SQL não é um produto com logo; o genérico de banco diz exatamente o que é.
-  if (id === "sql") return <Icon name="db" size={18} />;
+  const generico = ICONE_GENERICO[id];
+  if (generico) return <Icon name={generico} size={18} />;
   const logo = LOGOS[id];
   return logo ? <img src={logo} alt="" width={18} height={18} /> : null;
 }

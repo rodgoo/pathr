@@ -221,6 +221,9 @@ class PathrWalkthrough(SQLModel, table=True):
     title: str
     summary: str = Field(default="")
     code: str = Field(sa_type=sa.Text())
+    # [{caminho, linguagem, conteudo}]; vazio nos exemplos de um arquivo só,
+    # anteriores a 0033 — para eles, `code` é o arquivo.
+    files: list[Any] = Field(default_factory=list, sa_column=_jsonb("[]"))
     steps: list[Any] = Field(default_factory=list, sa_column=_jsonb("[]"))
     concepts: list[Any] = Field(default_factory=list, sa_column=_jsonb("[]"))
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))

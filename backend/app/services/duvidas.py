@@ -67,7 +67,7 @@ SCHEMA: dict[str, Any] = {
     "required": ["resposta", "conceito"],
 }
 
-_LINGUAGENS = ", ".join(l["id"] for l in code_lab.catalogo())
+_LINGUAGENS = ", ".join([code_lab.AUTO, *(l["id"] for l in code_lab.catalogo())])
 
 SISTEMA = f"""Você é o tutor do PathR, um app de estudo de programação e carreira em tecnologia.
 Responde em português do Brasil a dúvidas rápidas de quem está estudando.
@@ -98,8 +98,14 @@ Como explicar:
    na resposta, sugira até 2 exemplos maiores de CÓDIGO para a pessoa depurar
    passo a passo no Laboratório — um aprofundamento, não um substituto da
    explicação. `topico` curto e concreto (ex.: "subclasse acessando campo
-   protected"); `linguagem` é uma destas: {_LINGUAGENS} — a do contexto, quando
-   houver. Dúvida que não envolve código: lista vazia.
+   protected", "workflow do GitHub rodando os testes com Maven"); `linguagem` é
+   uma destas: {_LINGUAGENS}. Escolha o que se usa DE VERDADE no assunto:
+   GitHub Actions, CI, Compose e Kubernetes são `yaml`; Docker é `dockerfile`;
+   Terraform é `terraform`; comandos de Git são `bash`. Quando o assunto junta
+   mais de um arquivo ou ferramenta (o workflow e o teste que ele roda, uma API
+   com Controller e Entity), use `auto`. NUNCA escolha uma linguagem de
+   programação só porque ela aparece no contexto, se a dúvida é sobre uma
+   ferramenta. Dúvida que não envolve código nem configuração: lista vazia.
 8. `gerar_exemplo_agora`: preencha SÓ quando a pessoa pediu ou sugeriu um exemplo
    para rodar ou depurar ("me dá um exemplo", "mostra funcionando", "e se eu fizer
    X?"), com a linguagem e o assunto dele. Mesmo assim a resposta já traz o exemplo
@@ -153,12 +159,21 @@ def resolver_contexto(supabase: Client, user_id: str, tipo: str, ref: Optional[s
         if not exemplo:
             raise nao_achou
         tag = _um(supabase, "pathr_tag", slug=str(exemplo.get("language") or ""))
+        arquivos = [a for a in (exemplo.get("files") or []) if isinstance(a, dict)]
+        if arquivos:
+            # Vários arquivos: todos entram, divididos no mesmo teto do código.
+            fatia = max(4000 // len(arquivos), 600)
+            codigo = "\n\n".join(
+                f"Arquivo {_texto(a.get('caminho'), 160)}:\n{_texto(a.get('conteudo'), fatia)}" for a in arquivos
+            )
+        else:
+            codigo = f"Código:\n{_texto(exemplo.get('code'), 4000)}"
         return Contexto(
             titulo=_texto(exemplo.get("title"), 200),
             texto=(
                 f"Exemplo de código do Laboratório.\nLinguagem: {exemplo.get('language')}\n"
                 f"Tópico: {_texto(exemplo.get('topic'), 200)}\nResumo: {_texto(exemplo.get('summary'), 600)}\n"
-                f"Código:\n{_texto(exemplo.get('code'), 4000)}"
+                f"{codigo}"
             ),
             tag_id=str(tag["id"]) if tag else None,
         )
@@ -280,7 +295,7 @@ def exemplo_valido(bruto: Any) -> Optional[dict[str, str]]:
         return None
     linguagem = str(bruto.get("linguagem") or "").strip().lower()
     topico = " ".join(str(bruto.get("topico") or "").split())[:120]
-    if not code_lab.existe(linguagem) or len(topico) < 2:
+    if not code_lab.pode_pedir(linguagem) or len(topico) < 2:
         return None
     return {"linguagem": linguagem, "topico": topico}
 

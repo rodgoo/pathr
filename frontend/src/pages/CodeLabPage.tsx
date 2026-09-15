@@ -153,9 +153,11 @@ export function CodeLabPage() {
           Código pronto, percorrido linha a linha
         </h1>
         <p style={{ fontSize: 13, color: TEXT.muted, margin: "8.4px 0 0", maxWidth: "70ch" }}>
-          Escolha a linguagem e o assunto. Você recebe um programa curto e o passo a passo da
-          execução: qual linha roda, o que cada variável vale naquele instante e o que já foi
-          impresso.
+          Escolha o assunto e deixe a linguagem no automático, ou escolha você. Você recebe o código ou
+          a configuração que se usa de verdade — um arquivo ou vários, como o workflow do GitHub e o
+          teste que ele roda, ou Controller, Service e Entity — e o passo a passo da execução: qual
+          linha de qual arquivo roda, o que cada variável vale naquele instante e o que saiu no
+          terminal.
         </p>
       </header>
 
@@ -343,8 +345,8 @@ function Sugestoes({
       <ProgressoDaTarefa
         ativo={Boolean(gerando)}
         chave="laboratorio-gerar"
-        etapas={["Escolhendo o exemplo", "Escrevendo o código", "Montando o passo a passo"]}
-        duracaoMs={15_000}
+        etapas={["Escolhendo os arquivos", "Escrevendo o código", "Conferindo se é o que se usa de verdade", "Montando o passo a passo"]}
+        duracaoMs={25_000}
         style={{ marginTop: 11.2 }}
       />
       {criar.error ? <ErrorState message={criar.error} /> : null}
@@ -364,13 +366,14 @@ function Gerador({
   carregando: boolean;
   onCriado: (novo: Walkthrough) => void;
 }) {
-  const [language, setLanguage] = useState("");
+  const [language, setLanguage] = useState("auto");
   const [topic, setTopic] = useState("");
   const [level, setLevel] = useState("iniciante");
 
-  // A linguagem escolhida precisa estar entre as do perfil: começa pela
-  // primeira delas (a meta mais forte), e não por uma fixa que a pessoa
-  // talvez nem estude.
+  // A linguagem escolhida precisa estar na lista que o servidor mandou. Ela
+  // começa pelo automático: quem pede "GitHub e testes" não precisa saber que
+  // isso é um YAML chamando um teste — e escolher Java ali gerava um programa
+  // Java fingindo ser o GitHub.
   useEffect(() => {
     if (linguagens.length && !linguagens.some((item) => item.id === language)) {
       setLanguage(linguagens[0].id);
@@ -395,7 +398,7 @@ function Gerador({
         <div style={{ display: "flex", gap: 11.2, flexWrap: "wrap", alignItems: "flex-end" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 190 }}>
             <label htmlFor="codelab-linguagem" style={{ fontSize: 11.5, color: TEXT.faint }}>
-              {doPerfil ? "Linguagem do seu perfil" : "Linguagem"}
+              {doPerfil ? "Linguagem ou arquivo" : "Linguagem"}
             </label>
             <Select
               id="codelab-linguagem"
@@ -418,7 +421,7 @@ function Gerador({
               className="input"
               value={topic}
               maxLength={120}
-              placeholder="recursão, list comprehension, ponteiros, async/await…"
+              placeholder="GitHub Actions rodando os testes, API com Controller e Entity, closures…"
               onChange={(evento) => setTopic(evento.target.value)}
             />
           </label>
@@ -445,8 +448,9 @@ function Gerador({
 
         {criar.pending ? (
           <p style={{ fontSize: 11.5, color: TEXT.faint, margin: 0 }}>
-            Leva alguns segundos: o programa e o traço de execução saem juntos, e o traço é
-            conferido contra o código antes de aparecer aqui.
+            Leva alguns segundos: os arquivos e o traço de execução saem juntos. Antes de aparecer
+            aqui, o conteúdo é conferido (sintaxe, versões atuais, estrutura de projeto real) e o
+            traço, contra cada arquivo.
           </p>
         ) : null}
         {criar.error ? <ErrorState message={criar.error} /> : null}
@@ -530,6 +534,38 @@ function Depurador({
   const passo = passos[indice];
   const linhaAtual = passo ? passo.linha - 1 : null;
 
+  // Os arquivos do exemplo. Exemplo antigo (anterior aos vários arquivos)
+  // chega sem `files` de um cache velho: vira o arquivo único que ele é.
+  const arquivos = useMemo(
+    () =>
+      exemplo.files?.length
+        ? exemplo.files
+        : [
+            {
+              caminho: exemplo.language_label,
+              linguagem: exemplo.language,
+              rotulo: exemplo.language_label,
+              realce: exemplo.highlight,
+              linhas: exemplo.lines,
+            },
+          ],
+    [exemplo],
+  );
+  const arquivoDoPasso = passo?.arquivo ?? arquivos[0].caminho;
+
+  // A aba acompanha o passo: a requisição sai do Controller e entra no
+  // Service, e a tela vai junto. A pessoa pode abrir outra aba para olhar; o
+  // próximo passo traz de volta para onde a execução está.
+  const [arquivoVisto, setArquivoVisto] = useState(arquivoDoPasso);
+  useEffect(() => {
+    setArquivoVisto(arquivoDoPasso);
+  }, [arquivoDoPasso, indice]);
+  const atual = arquivos.find((arquivo) => arquivo.caminho === arquivoVisto) ?? arquivos[0];
+  const variosArquivos = arquivos.length > 1;
+  const linhaDoPasso = passo
+    ? (arquivos.find((arquivo) => arquivo.caminho === arquivoDoPasso)?.linhas[passo.linha - 1] ?? "").trim()
+    : "";
+
   // A saída acumula. Um painel que mostrasse só a linha do passo atual faria a
   // impressão anterior sumir ao avançar — o oposto do que se precisa ver.
   const saida = useMemo(
@@ -574,12 +610,59 @@ function Depurador({
         </p>
       ) : null}
 
+      {variosArquivos ? (
+        <div
+          role="tablist"
+          aria-label="Arquivos do exemplo"
+          style={{ display: "flex", gap: 4, overflowX: "auto", marginBottom: 8.4, paddingBottom: 2 }}
+        >
+          {arquivos.map((arquivo) => {
+            const selecionado = arquivo.caminho === atual.caminho;
+            const executando = total > 0 && arquivo.caminho === arquivoDoPasso;
+            return (
+              <button
+                key={arquivo.caminho}
+                type="button"
+                role="tab"
+                aria-selected={selecionado}
+                title={arquivo.caminho}
+                onClick={() => setArquivoVisto(arquivo.caminho)}
+                style={{
+                  flex: "none",
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "5.6px 9.8px",
+                  borderRadius: 6,
+                  border: "none",
+                  font: "inherit",
+                  fontFamily: MONO,
+                  fontSize: 12,
+                  cursor: "pointer",
+                  color: selecionado ? TEXT.full : TEXT.muted,
+                  background: selecionado ? "rgba(233,233,237,.08)" : "transparent",
+                  boxShadow: executando ? `inset 0 -2px 0 ${ACC}` : "none",
+                }}
+              >
+                <span style={{ width: 14, height: 14, display: "inline-grid", placeItems: "center" }} aria-hidden>
+                  {iconeDaLinguagem(arquivo.linguagem)}
+                </span>
+                {nomeDoArquivo(arquivo.caminho)}
+              </button>
+            );
+          })}
+        </div>
+      ) : null}
+
       <CodeBlock
-        label={`Código do exemplo em ${exemplo.language_label}`}
-        lines={exemplo.lines}
-        filename={exemplo.language_label}
+        label={`Arquivo ${atual.caminho}`}
+        lines={atual.linhas}
+        filename={variosArquivos ? atual.caminho : atual.rotulo}
         meta={total > 0 ? `passo ${indice + 1} de ${total}` : "sem passo a passo"}
-        highlight={linhaAtual === null ? null : { from: linhaAtual, to: linhaAtual }}
+        generico={atual.realce !== "java"}
+        // A linha marcada só no arquivo onde o passo acontece: marcar a mesma
+        // linha em outro arquivo apontaria para o lugar errado.
+        highlight={linhaAtual === null || atual.caminho !== arquivoDoPasso ? null : { from: linhaAtual, to: linhaAtual }}
       />
 
       {total === 0 ? (
@@ -615,7 +698,7 @@ function Depurador({
               marginTop: 14,
             }}
           >
-            <AcaoDoPasso passo={passo} numero={indice + 1} />
+            <AcaoDoPasso passo={passo} numero={indice + 1} arquivo={variosArquivos ? arquivoDoPasso : null} />
             <Estado variaveis={passo?.estado ?? []} />
             <Saida texto={saida} />
           </div>
@@ -638,7 +721,7 @@ function Depurador({
           contextoRef={exemplo.id}
           trecho={
             passo
-              ? `Passo ${indice + 1}, linha ${passo.linha} (${(exemplo.lines[passo.linha - 1] ?? "").trim()}): ${passo.acao}`
+              ? `Passo ${indice + 1}, ${variosArquivos ? `${arquivoDoPasso} ` : ""}linha ${passo.linha} (${linhaDoPasso}): ${passo.acao}`
               : undefined
           }
         />
@@ -736,16 +819,19 @@ function Controles({
 function AcaoDoPasso({
   passo,
   numero,
+  arquivo,
 }: {
   passo: Walkthrough["steps"][number] | undefined;
   numero: number;
+  /** Com vários arquivos, em qual deles o passo acontece. */
+  arquivo: string | null;
 }) {
   return (
     <Caixa titulo={`Passo ${numero}`}>
       {passo ? (
         <>
-          <div style={{ fontSize: 11.5, color: ACC, fontFamily: MONO, marginBottom: 5.6 }}>
-            linha {passo.linha}
+          <div style={{ fontSize: 11.5, color: ACC, fontFamily: MONO, marginBottom: 5.6, overflowWrap: "anywhere" }}>
+            {arquivo ? `${nomeDoArquivo(arquivo)} · ` : ""}linha {passo.linha}
           </div>
           <p style={{ fontSize: 13, lineHeight: 1.55, margin: 0, color: "rgba(233,233,237,.88)" }}>
             {passo.acao}
@@ -821,11 +907,16 @@ function Saida({ texto }: { texto: string }) {
         </pre>
       ) : (
         <p style={{ fontSize: 12.5, color: TEXT.faint, margin: 0 }}>
-          O programa ainda não imprimiu nada.
+          Nada saiu no terminal ainda.
         </p>
       )}
     </Caixa>
   );
+}
+
+/** `ProdutoController.java` de `src/main/java/.../ProdutoController.java`. */
+function nomeDoArquivo(caminho: string) {
+  return caminho.split("/").pop() || caminho;
 }
 
 function Caixa({ titulo, children }: { titulo: string; children: React.ReactNode }) {
@@ -907,6 +998,7 @@ function Biblioteca({
                   <span style={{ display: "block", fontSize: 13.5 }}>{item.title}</span>
                   <span style={{ display: "block", fontSize: 11.5, color: TEXT.faint }}>
                     {item.language_label} · {item.topic}
+                    {(item.files?.length ?? 0) > 1 ? ` · ${item.files.length} arquivos` : ""}
                     {item.steps.length > 0
                       ? ` · ${item.steps.length} passos`
                       : " · sem passo a passo"}

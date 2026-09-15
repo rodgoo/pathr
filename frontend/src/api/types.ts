@@ -680,12 +680,28 @@ export interface Walkthrough {
   code: string;
   /** O codigo ja quebrado como a tela numera: indice 0 = linha 1. */
   lines: string[];
+  /**
+   * Os arquivos do exemplo, o principal primeiro. Um exemplo real costuma ter
+   * varios: o workflow e o teste que ele roda; Controller, Service e Entity.
+   */
+  files: WalkthroughFile[];
   steps: WalkthroughStep[];
   concepts: string[];
   created_at: string | null;
 }
 
+export interface WalkthroughFile {
+  /** Caminho no projeto, como `.github/workflows/ci.yml`. */
+  caminho: string;
+  linguagem: string;
+  rotulo: string;
+  realce: string;
+  linhas: string[];
+}
+
 export interface WalkthroughStep {
+  /** O `caminho` do arquivo onde este passo acontece. */
+  arquivo?: string;
   /** 1-based, para casar com a numeracao que a pessoa ve ao lado do codigo. */
   linha: number;
   acao: string;
