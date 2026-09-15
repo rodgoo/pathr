@@ -22,6 +22,7 @@ import {
 import { Icon } from "@/components/ui/icons";
 import type { City } from "@/api/types";
 import { CidadeDoCadastro } from "@/components/auth/CidadeDoCadastro";
+import { Turnstile, turnstileLigado } from "@/components/auth/Turnstile";
 import { CampoUsername } from "@/components/social/CampoUsername";
 import { C, TEXT } from "@/lib/tokens";
 
@@ -58,6 +59,12 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [done, setDone] = useState<string | null>(null);
+  // Anti-robô: o campo isca fica fora da tela (só robô preenche) e o token do
+  // Turnstile, quando ligado. A chave troca depois de um envio que falhou,
+  // porque o token vale uma vez só.
+  const [isca, setIsca] = useState("");
+  const [captcha, setCaptcha] = useState<string | null>(null);
+  const [chaveDoDesafio, setChaveDoDesafio] = useState(0);
 
   const missing = problems(password);
   const ready =
@@ -66,7 +73,8 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
     missing.length === 0 &&
     birthDate !== "" &&
     cidade !== null &&
-    usernameOk;
+    usernameOk &&
+    (!turnstileLigado || Boolean(captcha));
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -82,10 +90,14 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
         city: cidade?.nome ?? "",
         state: cidade?.uf ?? "",
         username: username.trim().replace(/^@+/, ""),
+        website: isca,
+        captcha: captcha ?? "",
       });
       setDone(detail);
     } catch (caught) {
       setError(errorMessage(caught));
+      setCaptcha(null);
+      setChaveDoDesafio((valor) => valor + 1);
     } finally {
       setPending(false);
     }
@@ -127,6 +139,21 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
     >
       <form onSubmit={submit} noValidate>
         <FormError>{error}</FormError>
+
+        {/* Campo isca: fora da tela e fora do Tab; leitor de tela não o anuncia.
+            Pessoa real nunca preenche; robô que completa tudo, sim. */}
+        <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
+          <label htmlFor="signup-website">Site</label>
+          <input
+            id="signup-website"
+            name="website"
+            type="text"
+            tabIndex={-1}
+            autoComplete="off"
+            value={isca}
+            onChange={(event) => setIsca(event.target.value)}
+          />
+        </div>
 
         <Field
           id="signup-name"
@@ -194,6 +221,8 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
             );
           })}
         </ul>
+
+        <Turnstile key={chaveDoDesafio} onToken={setCaptcha} />
 
         <button type="submit" className="btn btn-primary btn-block" disabled={pending || !ready}>
           {pending ? null : <Icon name="userPlus" size={17} />}

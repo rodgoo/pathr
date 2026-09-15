@@ -197,4 +197,5 @@ def disparar_avisos(request: Request, supabase: Client = Depends(get_supabase)):
         "enviados": len(enviados),
         "tipos": sorted(set(enviados)),
         "faxina": faxina.apagar_eventos_velhos(supabase, agora),
+        "contas_nao_confirmadas": faxina.apagar_contas_nao_confirmadas(supabase, agora),
     }

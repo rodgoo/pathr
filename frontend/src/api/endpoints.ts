@@ -159,6 +159,10 @@ export const auth = {
     /** Vazio: o servidor escolhe um a partir do nome. */
     username?: string;
     country?: string;
+    /** Campo isca: pessoa real sempre manda vazio (services/antirrobo.py). */
+    website?: string;
+    /** Token do Cloudflare Turnstile, quando ligado. */
+    captcha?: string;
   }) => api.post<{ detail: string }>("/auth/signup", body),
   login: (body: { email: string; password: string; mfa_code?: string }) =>
     api.post<Session>("/auth/login", body),

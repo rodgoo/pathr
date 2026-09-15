@@ -27,6 +27,10 @@ class SignupRequest(BaseModel):
     # UF no Brasil; para outros países o próprio campo aceita o nome da região.
     state: str = Field(min_length=2, max_length=60)
     country: str = Field(default="BR", min_length=2, max_length=2)
+    # Campo isca: a tela não mostra, só robô preenche (services/antirrobo.py).
+    website: str = Field(default="", max_length=200)
+    # Token do Cloudflare Turnstile, quando ligado.
+    captcha: str = Field(default="", max_length=4096)
 
     @field_validator("birth_date")
     @classmethod

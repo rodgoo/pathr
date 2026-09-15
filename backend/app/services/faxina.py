@@ -37,6 +37,28 @@ RETENCAO: tuple[tuple[str, str, timedelta], ...] = (
 )
 
 
+# O link de confirmação vale 3 dias. Passado isso, a conta nunca confirmada não
+# tem como ser usada — e conta assim é quase sempre cadastro falso ou e-mail
+# digitado errado. Apagar libera o e-mail e o @, e não deixa uma fila de contas
+# mortas crescer.
+CONTA_NAO_CONFIRMADA = timedelta(days=3)
+
+
+def apagar_contas_nao_confirmadas(supabase: Any, agora: Optional[datetime] = None) -> Optional[int]:
+    agora = agora or datetime.now(timezone.utc)
+    corte = (agora - CONTA_NAO_CONFIRMADA).isoformat()
+    try:
+        resultado = (
+            supabase.table("pathr_user").delete()
+            .is_("email_verified_at", "null").lt("created_at", corte)
+            .execute()
+        )
+        return len(resultado.data or [])
+    except Exception:  # noqa: BLE001
+        logger.warning("faxina de contas não confirmadas falhou", exc_info=True)
+        return None
+
+
 def apagar_eventos_velhos(supabase: Any, agora: Optional[datetime] = None) -> dict[str, Optional[int]]:
     """Apaga o que passou da retenção. Devolve quantas linhas saíram de cada
     tabela, ou None para a que falhou — uma tabela fora do ar não impede a

@@ -27,6 +27,19 @@ def offline_rotation():
 
 
 @pytest.fixture(autouse=True)
+def offline_dns_do_email(monkeypatch, request):
+    """Sem DNS de verdade: o cadastro dos testes usa domínios de exemplo e a
+    suíte roda sem rede. Quem testa a validação do domínio marca `dns_real`."""
+    if "dns_real" in request.keywords:
+        yield
+        return
+    from app.services import email_dominio
+
+    monkeypatch.setattr(email_dominio, "problema_do_email", lambda _email: None)
+    yield
+
+
+@pytest.fixture(autouse=True)
 def offline_cifra(monkeypatch):
     """Sem a chave de cifra do `.env.local`: com ela, o resultado dos testes
     dependeria da máquina de quem roda. Quem testa a cifra liga uma chave de

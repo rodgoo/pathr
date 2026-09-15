@@ -6,6 +6,7 @@
 # deixar passar um script, a política impede que ele rode ou mande dados
 # para fora. Cada origem listada tem motivo:
 #   script/frame youtube.com  o player de vídeo (iframe_api + iframe)
+#   script/frame challenges.cloudflare.com  o Turnstile anti-robô do cadastro
 #   img-src https:            imagens dos artigos, de qualquer site
 #   connect-src api.pathr...  a API e o canal de avisos (SSE)
 #   style 'unsafe-inline'     estilos de componente; estilo não executa código
@@ -20,7 +21,7 @@
   X-Frame-Options: DENY
   Strict-Transport-Security: max-age=31536000; includeSubDomains
   Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
-  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.youtube.com; frame-src https://www.youtube.com https://www.youtube-nocookie.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.pathr.notter.com.br; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; media-src 'self' blob: data:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://www.youtube.com https://challenges.cloudflare.com; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://challenges.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.pathr.notter.com.br; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; media-src 'self' blob: data:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests
 
 # O sw.js sabe quais arquivos existem nesta versão. Servir uma cópia velha
 # dele faz o deploy não chegar a quem instalou o app na tela de início — e

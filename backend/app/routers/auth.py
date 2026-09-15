@@ -61,7 +61,7 @@ from app.security import (
     verify_password,
     verify_totp_code,
 )
-from app.services import cifra, geo, limites, usernames
+from app.services import antirrobo, cifra, email_dominio, geo, limites, usernames
 from app.services.moderacao import CONTA_SUSPENSA, e_moderador, e_super_admin, esta_banido
 from app.services.email import send_password_reset, send_verification_email
 
@@ -286,7 +286,25 @@ def signup(
     endereço é o que usamos para recuperar senha. O custo é uma ida à caixa
     de entrada antes do primeiro acesso.
     """
-    limites.consumir(supabase, limites.CADASTRO_POR_IP, client_ip(request))
+    ip = client_ip(request)
+    limites.consumir(supabase, limites.CADASTRO_POR_IP, ip)
+    limites.consumir(supabase, limites.CADASTRO_POR_IP_DIA, ip)
+    limites.consumir(supabase, limites.CADASTRO_POR_REDE, limites.rede_do_ip(ip))
+
+    # Campo isca preenchido: robô. Responde como sucesso (ele não aprende que
+    # foi pego) e não cria nada nem manda e-mail.
+    if payload.website.strip():
+        _log_event(supabase, "signup_bot", request=request, detail={"motivo": "campo_isca"})
+        _clear_session_cookies(response)
+        return MessageOut(detail="Conta criada. Confirme seu e-mail pelo link que enviamos para entrar.")
+
+    antirrobo.conferir_turnstile(payload.captcha, ip)
+
+    problema_do_email = email_dominio.problema_do_email(payload.email)
+    if problema_do_email:
+        _log_event(supabase, "signup_email_recusado", request=request, detail={"motivo": problema_do_email[:60]})
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=problema_do_email)
+
     problems = password_problems(payload.password)
     if problems:
         raise HTTPException(
@@ -319,6 +337,10 @@ def signup(
             status_code=status.HTTP_409_CONFLICT,
             detail="Já existe uma conta com este e-mail. Tente entrar ou recuperar a senha.",
         )
+
+    # O teto do app inteiro conta só aqui, com tudo validado: contar antes
+    # deixaria um ataque com cadastros inválidos esgotar a vaga de quem é real.
+    limites.consumir(supabase, limites.CADASTRO_GLOBAL, "todos")
 
     base = {
         "email": email,

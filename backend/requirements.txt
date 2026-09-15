@@ -53,3 +53,5 @@ python-docx==1.2.0
 trafilatura==2.2.0
 nh3==0.3.7
 webauthn==3.0.0  # chave de acesso — app/routers/passkeys.py
+# Consulta DNS do domínio do e-mail no cadastro (services/email_dominio.py).
+dnspython==2.8.0

@@ -118,6 +118,9 @@ class Settings(BaseSettings):
     # --- E-mail transacional (Brevo) ---
     # Conta e remetente próprios do PathR: o e-mail de confirmação sai em nome
     # deste app, e o domínio verificado no Brevo precisa ser o dele.
+    # Cloudflare Turnstile (desafio anti-robô do cadastro). Vazio: desligado, e
+    # o cadastro segue com os outros mecanismos (services/antirrobo.py).
+    turnstile_secret_key: str = ""
     brevo_api_key: str = ""
     brevo_from_email: str = ""
     brevo_sender_name: str = "PathR"

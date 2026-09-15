@@ -52,6 +52,12 @@ class Regra:
 # Os números. Folgados para uso real, apertados para abuso: ninguém pede a
 # recuperação de senha cinco vezes numa hora por engano.
 CADASTRO_POR_IP = Regra("cadastro", 5, timedelta(hours=1), "Muitos cadastros deste endereço. Tente de novo em uma hora.")
+# Contas falsas em série (services/antirrobo.py). O dia segura quem espera a hora
+# virar; a faixa segura quem troca de IP dentro da mesma rede; o global é o teto
+# do app inteiro, contado só quando a conta vai mesmo ser criada.
+CADASTRO_POR_IP_DIA = Regra("cadastro-dia", 10, timedelta(days=1), "Muitos cadastros deste endereço hoje. Tente amanhã.")
+CADASTRO_POR_REDE = Regra("cadastro-rede", 30, timedelta(days=1), "Muitos cadastros desta rede hoje. Tente mais tarde.")
+CADASTRO_GLOBAL = Regra("cadastro-global", 300, timedelta(hours=1), "Muitos cadastros agora. Tente de novo em alguns minutos.")
 LOGIN_POR_IP = Regra("login", 30, timedelta(minutes=15), "Muitas tentativas de entrada. Aguarde alguns minutos.")
 EMAIL_POR_IP = Regra("email-publico", 6, timedelta(hours=1), "Muitos pedidos de e-mail deste endereço. Tente de novo em uma hora.")
 EMAIL_POR_DESTINO = Regra("email-destino", 3, timedelta(hours=1), "Já enviamos alguns e-mails para este endereço há pouco. Confira a caixa de entrada e o spam.")
@@ -73,6 +79,22 @@ TAG_NOVA_POR_USUARIO = Regra("tag-por-nome", 60, timedelta(days=1), "Limite de t
 # `app.middleware_usuario` — só para CONTAGEM: autorização continua sendo do
 # `get_current_user`, que confere a sessão no banco.
 usuario_da_requisicao: ContextVar[Optional[str]] = ContextVar("usuario_da_requisicao", default=None)
+
+
+def rede_do_ip(ip: Optional[str]) -> Optional[str]:
+    """A faixa do IP: /24 no IPv4, /48 no IPv6. Um IPv6 inteiro é trivial de
+    trocar (cada aparelho tem milhões), e um script com várias máquinas numa
+    mesma rede ainda cai na mesma chave."""
+    if not ip:
+        return None
+    import ipaddress
+
+    try:
+        endereco = ipaddress.ip_address(ip.strip())
+    except ValueError:
+        return ip
+    prefixo = 24 if endereco.version == 4 else 48
+    return str(ipaddress.ip_network(f"{endereco}/{prefixo}", strict=False))
 
 
 def _agora() -> datetime:

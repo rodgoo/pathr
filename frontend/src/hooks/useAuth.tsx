@@ -43,6 +43,8 @@ interface AuthContextValue {
     city: string;
     state: string;
     username?: string;
+    website?: string;
+    captcha?: string;
   }) => Promise<string>;
   /** Entra pela chave de acesso do aparelho. Não pede e-mail: a chave diz quem é. */
   loginWithPasskey: () => Promise<void>;
@@ -115,6 +117,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       city: string;
       state: string;
       username?: string;
+      website?: string;
+      captcha?: string;
     }) => {
       const { detail } = await authApi.signup(body);
       return detail;
