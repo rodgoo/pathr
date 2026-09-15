@@ -148,7 +148,10 @@ def list_resources(
     if language:
         query = query.eq("language", language)
     if q.strip():
-        query = query.ilike("title", f"%{q.strip()}%")
+        # Escapa %, _ e \: são curingas do ilike, e sem isto quem digita "%"
+        # amplia a busca em vez de procurar o caractere literal.
+        termo = q.strip().replace(chr(92), chr(92)*2).replace("%", chr(92)+"%").replace("_", chr(92)+"_")
+        query = query.ilike("title", f"%{termo}%")
     if only_mine:
         tag_ids = _user_tag_ids(supabase, user_id)
         if not tag_ids:

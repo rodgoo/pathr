@@ -51,6 +51,38 @@ def normalize_kind(filename: str, content_type: str) -> str | None:
     return SUPPORTED.get((content_type or "").split(";")[0].strip().lower())
 
 
+# A assinatura que cada formato BINÁRIO carrega nos primeiros bytes. txt e md
+# são texto puro, não têm assinatura e não entram aqui: qualquer byte é texto
+# válido, e o pior que um binário renomeado para .txt causa é texto ilegível.
+_ASSINATURAS_POR_TIPO: dict[str, tuple[bytes, ...]] = {
+    "pdf": (b"%PDF-",),
+    # docx e odt sao conteineres ZIP; assinatura via bytes() para o fonte ficar ASCII puro.
+    "docx": (bytes([0x50, 0x4B, 0x03, 0x04]), bytes([0x50, 0x4B, 0x05, 0x06]), bytes([0x50, 0x4B, 0x07, 0x08])),
+    "odt": (bytes([0x50, 0x4B, 0x03, 0x04]), bytes([0x50, 0x4B, 0x05, 0x06]), bytes([0x50, 0x4B, 0x07, 0x08])),
+    "doc": (bytes([0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1]),),  # OLE2
+    "rtf": (bytes([0x7B, 0x5C, 0x72, 0x74, 0x66]),),
+}
+
+
+def bytes_conferem(kind: str, data: bytes) -> bool:
+    """Os bytes batem com o formato declarado pela extensão?
+
+    A extensão e o Content-Type vêm do cliente e mentem de graça — um arquivo
+    qualquer renomeado para .pdf era aceito, guardado e, no caso do PDF, mandado
+    ao Gemini como `application/pdf` sem nunca começar com `%PDF`. Aqui o
+    conteúdo precisa provar o que diz ser. Mesma ideia do `_tipo_real` das fotos.
+    """
+    esperadas = _ASSINATURAS_POR_TIPO.get(kind)
+    if esperadas is None:
+        return True  # txt, md
+    cabecalho = data[:1024]
+    if kind == "pdf":
+        # O `%PDF-` costuma abrir o arquivo, mas o padrão tolera alguns bytes
+        # antes dele; aceitar no início do cabeçalho cobre esse caso raro.
+        return b"%PDF-" in cabecalho
+    return any(cabecalho.startswith(a) for a in esperadas)
+
+
 def _clean(text: str) -> str:
     """Junta as quebras que o PDF inventa e remove o excesso de espaço.
 

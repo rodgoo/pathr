@@ -31,7 +31,7 @@ from app.deps import get_current_user
 from app.services import cifra
 from app.services.resume_parser import parse_resume_with_fallback
 from app.services.tag_catalog import TagCatalog
-from app.services.text_extract import extract_text, normalize_kind
+from app.services.text_extract import bytes_conferem, extract_text, normalize_kind
 
 router = APIRouter(prefix="/resumes", tags=["currículo"])
 
@@ -103,6 +103,14 @@ async def upload_resume(
     )
     if not data:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Arquivo vazio.")
+
+    # O conteúdo tem de bater com a extensão: sem isto, bytes arbitrários
+    # entravam no bucket e seguiam para a IA sob um tipo falso.
+    if not bytes_conferem(kind, data):
+        raise HTTPException(
+            status_code=status.HTTP_415_UNSUPPORTED_MEDIA_TYPE,
+            detail="O conteúdo do arquivo não corresponde à extensão. Envie o arquivo original.",
+        )
 
     user_id = str(current_user["id"])
     content_hash = hashlib.sha256(data).hexdigest()

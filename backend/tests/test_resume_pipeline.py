@@ -12,7 +12,7 @@ from app.security import hash_password, password_problems, verify_password
 from app.services.resume_parser import normalize
 from app.services.tag_catalog import CATEGORIES, normalize_category, slugify
 from app.services.tag_seed import SEED, seed_rows
-from app.services.text_extract import extract_text, normalize_kind
+from app.services.text_extract import bytes_conferem, extract_text, normalize_kind
 
 
 class TestExtracaoDeTexto:
@@ -44,6 +44,18 @@ class TestExtracaoDeTexto:
         assert normalize_kind("cv.pdf", "application/octet-stream") == "pdf"
         assert normalize_kind("cv", "application/pdf") == "pdf"
         assert normalize_kind("cv.exe", "application/x-msdownload") is None
+
+    def test_bytes_conferem_com_a_extensao(self):
+        # Formato binario tem de provar o que diz ser pela assinatura.
+        assert bytes_conferem("pdf", b"%PDF-1.7 conteudo") is True
+        assert bytes_conferem("pdf", b"<html>nao sou pdf") is False
+        assert bytes_conferem("docx", bytes([0x50, 0x4B, 0x03, 0x04]) + b"zip") is True
+        assert bytes_conferem("docx", b"MZ executavel") is False
+        assert bytes_conferem("doc", bytes([0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1])) is True
+        assert bytes_conferem("rtf", b"{" + bytes([0x5C]) + b"rtf1") is True
+        # txt e md sao texto puro: qualquer byte passa (o pior caso e texto ilegivel).
+        assert bytes_conferem("txt", bytes([0x00, 0x01, 0x02])) is True
+        assert bytes_conferem("md", b"# titulo") is True
 
 
 class TestNormalizacaoDoParse:

@@ -59,7 +59,8 @@ def list_catalog(
         # ilike cobre o começo e o meio do nome; os apelidos ficam de fora
         # aqui porque a busca é interativa e o casamento por apelido é papel
         # da importação de currículo, não da digitação.
-        query = query.ilike("name", f"%{q.strip()}%")
+        termo = q.strip().replace(chr(92), chr(92)*2).replace("%", chr(92)+"%").replace("_", chr(92)+"_")
+        query = query.ilike("name", f"%{termo}%")
     return (
         query.order("popularity", desc=True)
         .order("name")
