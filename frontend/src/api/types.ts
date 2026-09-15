@@ -108,6 +108,21 @@ export interface DisponibilidadeUsername {
   sugestoes: string[];
 }
 
+/** Um aparelho com a conta aberta (uma família de tokens no servidor). */
+export interface SessaoAtiva {
+  id: string;
+  /** "Chrome no Windows". */
+  aparelho: string;
+  navegador: string;
+  sistema: string;
+  celular: boolean;
+  /** IP sem o último bloco: "189.40.12.…". */
+  ip: string | null;
+  ultimo_uso: string;
+  entrou_em: string;
+  este_aparelho: boolean;
+}
+
 export interface Session {
   user: User;
   /** O token não vem no corpo: fica só no cookie HttpOnly, fora do alcance do JS. */

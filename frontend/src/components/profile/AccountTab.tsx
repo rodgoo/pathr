@@ -6,7 +6,7 @@
  * um campo que não salva seria pior que mostrá-lo bloqueado.
  */
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type FormEvent } from "react";
 import { auth as authApi, profile as profileApi, social } from "@/api/endpoints";
 import { useAuth } from "@/hooks/useAuth";
 import { useMutation, useQuery } from "@/hooks/useApi";
@@ -18,6 +18,7 @@ import { Kicker, Panel } from "@/components/ui/primitives";
 import { Select } from "@/components/ui/Select";
 import { PasskeysPanel } from "./PasskeysPanel";
 import { CampoUsername } from "@/components/social/CampoUsername";
+import type { SessaoAtiva } from "@/api/types";
 
 /**
  * Os degraus de senioridade que o app entende.
@@ -278,21 +279,145 @@ function ChangePassword() {
   );
 }
 
-/** Encerrar as sessões abertas — o botão de quando um dispositivo se perde. */
-function Sessions() {
+/** "há 5 min", "há 3 h", "ontem", "12/09". Suficiente para reconhecer o aparelho. */
+function haQuanto(iso: string): string {
+  const minutos = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60_000));
+  if (minutos < 2) return "agora";
+  if (minutos < 60) return `há ${minutos} min`;
+  const horas = Math.round(minutos / 60);
+  if (horas < 24) return `há ${horas} h`;
+  if (horas < 48) return "ontem";
+  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+}
+
+/** Tela ou celular, desenhado aqui: o conjunto de ícones do app não tem os dois. */
+function SimboloDoAparelho({ celular }: { celular: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8"
+      strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      {celular ? (
+        <>
+          <rect x="7" y="2.5" width="10" height="19" rx="2.2" />
+          <path d="M11 18.5h2" />
+        </>
+      ) : (
+        <>
+          <rect x="3" y="4" width="18" height="12" rx="1.8" />
+          <path d="M8.5 20h7M12 16v4" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+/**
+ * Aparelhos conectados: onde a conta está aberta, e o botão de encerrar cada um.
+ *
+ * Um cookie de sessão copiado dá acesso até expirar ou ser encerrado. Esta
+ * lista é como a pessoa descobre um acesso que não é dela ("Firefox no Linux?
+ * não uso isso") e o derruba na hora — o token daquele aparelho para de valer
+ * na requisição seguinte, sem esperar os 30 minutos.
+ */
+export function Sessions() {
   const { logout } = useAuth();
   const [done, setDone] = useState(false);
+  const [encerrando, setEncerrando] = useState<string | null>(null);
+  const [erro, setErro] = useState<string | null>(null);
+  const sessoes = useQuery(() => authApi.sessoes(), []);
   const logoutAll = useMutation(() => authApi.logoutAll());
+
+  async function encerrar(sessao: SessaoAtiva) {
+    setErro(null);
+    setEncerrando(sessao.id);
+    try {
+      await authApi.encerrarSessao(sessao.id);
+      if (sessao.este_aparelho) {
+        await logout();
+        return;
+      }
+      sessoes.set((atual) => (atual ?? []).filter((item) => item.id !== sessao.id));
+    } catch {
+      setErro("Não consegui encerrar esse aparelho agora. Tente de novo.");
+    } finally {
+      setEncerrando(null);
+    }
+  }
+
+  const lista = sessoes.data ?? [];
+  const outros = lista.filter((item) => !item.este_aparelho).length;
 
   return (
     <Panel pad={16.8} style={{ boxShadow: "0 0 0 1px rgba(233,233,237,.16)" }}>
       <Kicker tone="muted" style={{ display: "block", marginBottom: 8.4 }}>
-        Sessões
+        Aparelhos conectados
       </Kicker>
       <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 11.2px", maxWidth: "62ch" }}>
-        Encerra o acesso em todos os aparelhos, inclusive neste. Use se perdeu um dispositivo ou
-        suspeita que alguém entrou na sua conta.
+        Onde a sua conta está aberta agora. Não reconhece algum? Encerre o acesso e troque a senha.
+        Quando a conta entra por um aparelho novo, avisamos por e-mail.
       </p>
+
+      {sessoes.loading ? <Loading label="Buscando aparelhos…" /> : null}
+      {sessoes.error ? <ErrorState message={sessoes.error} onRetry={sessoes.reload} /> : null}
+
+      {lista.length > 0 ? (
+        <ul
+          aria-label="Aparelhos conectados"
+          style={{ listStyle: "none", margin: "0 0 14px", padding: 0, display: "flex", flexDirection: "column", gap: 6 }}
+        >
+          {lista.map((sessao) => (
+            <li
+              key={sessao.id}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: 12,
+                flexWrap: "wrap",
+                padding: "10px 12px",
+                borderRadius: 10,
+                background: sessao.este_aparelho ? "rgba(99,180,143,.07)" : "rgba(233,233,237,.03)",
+                boxShadow: `inset 0 0 0 1px ${sessao.este_aparelho ? "rgba(99,180,143,.3)" : "rgba(233,233,237,.1)"}`,
+              }}
+            >
+              <span
+                style={{ color: sessao.este_aparelho ? C.verde : TEXT.muted, display: "grid", placeItems: "center", flex: "none" }}
+              >
+                <SimboloDoAparelho celular={sessao.celular} />
+              </span>
+              <span style={{ flex: "1 1 180px", minWidth: 0 }}>
+                <span style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                  <span style={{ fontSize: 13.5, color: TEXT.full }}>{sessao.aparelho}</span>
+                  {sessao.este_aparelho ? (
+                    <span
+                      style={{ fontSize: 11, color: C.verde, padding: "1px 7px", borderRadius: 999, background: "rgba(99,180,143,.14)" }}
+                    >
+                      este aparelho
+                    </span>
+                  ) : null}
+                </span>
+                <span style={{ display: "block", fontSize: 11.5, color: TEXT.faint, marginTop: 2 }}>
+                  {sessao.este_aparelho ? "em uso agora" : `usado ${haQuanto(sessao.ultimo_uso)}`}
+                  {" · entrou em "}
+                  {new Date(sessao.entrou_em).toLocaleDateString("pt-BR")}
+                  {sessao.ip ? ` · rede ${sessao.ip}` : ""}
+                </span>
+              </span>
+              <button
+                type="button"
+                className="btn btn-tom-leve"
+                style={{ "--tom": C.rosa, fontSize: 12.5 } as CSSProperties}
+                disabled={encerrando !== null}
+                onClick={() => void encerrar(sessao)}
+                aria-label={sessao.este_aparelho ? "Sair deste aparelho" : `Encerrar ${sessao.aparelho}`}
+              >
+                <Icon name="signOut" size={14} />
+                {encerrando === sessao.id ? "Encerrando…" : sessao.este_aparelho ? "Sair" : "Encerrar"}
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+      {erro ? <p role="alert" style={{ fontSize: 12, color: C.ambar, margin: "0 0 10px" }}>{erro}</p> : null}
+
       <div style={{ display: "flex", gap: 8.4, alignItems: "center", flexWrap: "wrap" }}>
         <button
           type="button"
@@ -308,9 +433,12 @@ function Sessions() {
         >
           {logoutAll.pending ? "Encerrando…" : "Sair de todos os dispositivos"}
         </button>
-        {logoutAll.error ? (
-          <span style={{ fontSize: 12, color: "#cfa25e" }}>{logoutAll.error}</span>
-        ) : null}
+        <span style={{ fontSize: 11.5, color: TEXT.faint }}>
+          {outros > 0
+            ? `Encerra este e ${outros === 1 ? "o outro aparelho" : `os outros ${outros} aparelhos`}.`
+            : "Inclusive este."}
+        </span>
+        {logoutAll.error ? <span style={{ fontSize: 12, color: "#cfa25e" }}>{logoutAll.error}</span> : null}
       </div>
     </Panel>
   );

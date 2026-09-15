@@ -62,6 +62,7 @@ import type {
   CodeLanguage,
   Walkthrough,
   WordMeaning,
+  SessaoAtiva,
 } from "./types";
 
 /** A stack, o objetivo e a região decidem que vagas aparecem e em que ordem.
@@ -168,6 +169,9 @@ export const auth = {
     api.post<Session>("/auth/login", body),
   logout: () => api.post<{ detail: string }>("/auth/logout"),
   logoutAll: () => api.post<{ detail: string }>("/auth/logout-all"),
+  /** Um item por aparelho com sessão viva; o atual vem primeiro. */
+  sessoes: () => api.getSemCache<SessaoAtiva[]>("/auth/sessoes"),
+  encerrarSessao: (id: string) => api.del<void>(`/auth/sessoes/${encodeURIComponent(id)}`),
   me: () => api.get<User>("/auth/me"),
   verifyEmail: (token: string) => api.post<{ detail: string }>("/auth/verify-email", { token }),
   resendVerification: () => api.post<{ detail: string }>("/auth/resend-verification"),
