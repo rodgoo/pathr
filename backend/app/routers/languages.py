@@ -15,10 +15,11 @@ import re
 from datetime import datetime, timezone
 from typing import Any, Optional
 
-from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Response, status
 from pydantic import BaseModel, Field
 from supabase import Client
 
+from app import tts
 from app.ai_providers import AiProviderError, generate_json
 from app.database import get_supabase
 from app.services import conhecimento
@@ -35,11 +36,17 @@ BANDS = ["A1", "A2", "B1", "B2", "C1", "C2"]
 # As habilidades que o nivelamento pontua.
 #
 # `listening` tem audio de verdade: a transcricao guardada aqui e lida em voz
-# alta pelo navegador (speechSynthesis) na tela, e a transcricao so aparece se
-# a pessoa pedir. A sintese e do proprio aparelho -- sem chave, sem requisicao
-# e sem custo por caractere -- que foi o que permitiu o listening existir sem
-# virar cobranca por uso, ja que o nivelamento gera itens novos a cada lote,
-# para cada pessoa, em cada tentativa.
+# alta na tela, e a transcricao so aparece se a pessoa pedir.
+#
+# Quem fala e o TTS do Gemini, por `/languages/tts` (ver app/tts.py). A escolha
+# original era so a voz do navegador, porque ela nao cobra -- e o nivelamento
+# gera itens novos a cada lote, para cada pessoa, em cada tentativa. O que
+# derrubou essa escolha foi a qualidade: o navegador so oferece a voz que o
+# sistema tem instalada, e uma voz SAPI antiga le palavra por palavra, sem
+# entonacao de pontuacao. Escuta em nivel CEFR se apoia em prosodia.
+#
+# A voz do navegador continua como plano B: sem chave ou sem cota, o endpoint
+# responde 503 e a tela volta a falar sozinha.
 SKILLS = frozenset(
     {"grammar", "vocabulary", "reading", "listening", "writing", "speaking", "business"}
 )
@@ -1239,3 +1246,48 @@ def _registra_consulta(
     gravado = supabase.table("pathr_english_vocab").insert(linha).execute().data
     return (gravado or [linha])[0]
 
+
+
+# ── Áudio falado ──────────────────────────────────────────────────────────
+# A voz do navegador continua sendo o plano B, e não o contrário: este
+# endpoint pode faltar (sem chave, sem cota, modelo fora do ar) e a tela
+# precisa seguir tocando o item. Ver `app/tts.py` para a decisão inteira.
+
+
+class NarracaoIn(BaseModel):
+    # O teto casa com `tts._LIMITE_DE_CARACTERES`: reprovar aqui devolve 422
+    # com a razão, em vez de gastar uma chamada para falhar lá dentro.
+    text: str = Field(min_length=1, max_length=1200)
+    language: str = "en"
+    # Qual interlocutor está falando, para a tela de escuta poder mandar uma
+    # fala por vez e ainda assim manter cada pessoa na sua voz. Omitido, o
+    # texto inteiro é lido e os falantes saem da própria marcação dele.
+    voice: Optional[int] = Field(default=None, ge=0)
+
+
+@router.post("/tts")
+async def narrar(corpo: NarracaoIn, _current_user: dict = Depends(get_current_user)):
+    """O texto de um item, falado por voz neural.
+
+    Responde o WAV inteiro, e não um link: o áudio é gerado sob demanda e
+    guardado por conteúdo em `tts`, então não existe arquivo para apontar. A
+    coluna `audio_url` do item continua vazia de propósito — ela só passa a
+    fazer sentido quando o áudio for para o Storage, e aí este endpoint vira
+    um redirecionamento.
+
+    503 é a resposta certa para toda falha de geração: diz ao front "hoje
+    não", que é exatamente a condição em que ele deve voltar para o
+    `speechSynthesis`. Um 500 sugeriria defeito e um 200 vazio calaria a tela.
+    """
+    codigo = _idioma_valido(corpo.language)
+    try:
+        audio = await tts.narrar(corpo.text, codigo, corpo.voice)
+    except AiProviderError as erro:
+        raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, str(erro)) from erro
+    return Response(
+        content=audio,
+        media_type="audio/wav",
+        # Privado porque o áudio é de um item de teste de alguém, e o conteúdo
+        # já é imutável para um mesmo texto: reouvir não repete a geração.
+        headers={"Cache-Control": "private, max-age=86400"},
+    )

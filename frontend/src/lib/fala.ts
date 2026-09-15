@@ -75,7 +75,10 @@ export function locucao(
 }
 
 /** Aviso para quando o sistema não tem voz do idioma: o áudio sairia com a
- * pronúncia de outra língua, e a pessoa culparia o próprio ouvido. */
+ * pronúncia de outra língua, e a pessoa culparia o próprio ouvido.
+ *
+ * Só aparece quando a voz neural do servidor também falhou — com ela, o
+ * inventário de vozes do sistema não importa. */
 export const SEM_VOZ_DO_IDIOMA =
   "Seu navegador não tem voz neste idioma, então o áudio sai com pronúncia errada. " +
   "No Edge ou no Chrome a voz vem pronta; no Windows, dá para instalar em Configurações › Hora e idioma › Fala.";

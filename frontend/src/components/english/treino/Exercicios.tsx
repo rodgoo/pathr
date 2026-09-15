@@ -16,7 +16,7 @@
  * gabarito nunca chega antes — a correção é do servidor.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { PracticeAnswer, PracticeAnswerResult, PracticeItem } from "@/api/types";
 import { ACC, ACC3, C, HAIRLINE, PANEL, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
@@ -24,6 +24,7 @@ import { IconButton } from "@/components/ui/IconButton";
 import { ChoiceList } from "@/components/ui/ChoiceList";
 import { ListeningPlayer, useVozes } from "@/components/english/ListeningPlayer";
 import { locucao, SEM_VOZ_DO_IDIOMA } from "@/lib/fala";
+import { audiosDasFalas } from "@/lib/vozNeural";
 
 /** Código de voz do navegador para cada idioma do catálogo. */
 const VOZ: Record<string, string> = {
@@ -399,41 +400,78 @@ function AssociarPares({ item, travado, resultado, onResponder }: ExercicioProps
  * resposta. "Mais devagar" é o recurso clássico de todo exercício de ditado.
  */
 function OuvirFrase({ texto, idioma }: { texto: string; idioma: string }) {
-  const suportado = typeof window !== "undefined" && !!window.speechSynthesis;
+  const temSintese = typeof window !== "undefined" && !!window.speechSynthesis;
   const [tocando, setTocando] = useState(false);
+  const [preparando, setPreparando] = useState(false);
+  // Só quando a voz neural falhou: com ela, o inventário de vozes do aparelho
+  // não tem efeito nenhum sobre o que se ouve.
+  const [naVozDoNavegador, setNaVozDoNavegador] = useState(false);
   const { vozes, semVozDoIdioma } = useVozes(idioma);
+  const tocador = useRef<HTMLAudioElement | null>(null);
 
-  useEffect(() => () => window.speechSynthesis?.cancel(), [texto]);
+  function calar() {
+    window.speechSynthesis?.cancel();
+    if (tocador.current) {
+      tocador.current.pause();
+      tocador.current = null;
+    }
+  }
 
-  function tocar(velocidade: number) {
-    if (!suportado) return;
-    window.speechSynthesis.cancel();
+  useEffect(() => {
+    return () => calar();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [texto]);
+
+  async function tocar(velocidade: number) {
+    calar();
+    setTocando(true);
+    setPreparando(true);
+
+    const audios = await audiosDasFalas([{ texto, voz: 0 }], idioma);
+    setPreparando(false);
+
+    if (audios) {
+      setNaVozDoNavegador(false);
+      const audio = audios[0];
+      tocador.current = audio;
+      // "Mais devagar" continua existindo com o áudio gravado: `playbackRate`
+      // estica o tempo, e o navegador corrige o tom sozinho — a frase sai
+      // lenta sem virar voz grave, que é o que o ditado precisa.
+      audio.playbackRate = velocidade;
+      audio.onended = () => {
+        tocador.current = null;
+        setTocando(false);
+      };
+      audio.play().catch(() => setTocando(false));
+      return;
+    }
+
+    if (!temSintese) {
+      setTocando(false);
+      setNaVozDoNavegador(true);
+      return;
+    }
+    setNaVozDoNavegador(true);
     const fala = locucao(texto, idioma, vozes);
     fala.rate = velocidade;
     fala.onend = () => setTocando(false);
-    setTocando(true);
     window.speechSynthesis.speak(fala);
   }
 
-  if (!suportado) {
-    return (
-      <p style={{ fontSize: 13, color: C.ambar }}>
-        Este navegador não tem voz para o ditado. Tente no Chrome, Edge ou Safari.
-      </p>
-    );
-  }
   return (
     <div style={{ display: "flex", gap: 8, margin: "4px 0 14px", flexWrap: "wrap" }}>
-      <button type="button" className="btn btn-secondary" onClick={() => tocar(0.92)}>
+      <button type="button" className="btn btn-secondary" onClick={() => void tocar(0.92)}>
         <Icon name="playSolid" size={14} />
-        {tocando ? "Tocando…" : "Ouvir"}
+        {preparando ? "Preparando…" : tocando ? "Tocando…" : "Ouvir"}
       </button>
-      <button type="button" className="btn btn-ghost" onClick={() => tocar(0.6)}>
+      <button type="button" className="btn btn-ghost" onClick={() => void tocar(0.6)}>
         Mais devagar
       </button>
-      {semVozDoIdioma ? (
+      {naVozDoNavegador && (semVozDoIdioma || !temSintese) ? (
         <p role="note" style={{ flexBasis: "100%", margin: 0, fontSize: 11.5, color: C.ambar }}>
-          {SEM_VOZ_DO_IDIOMA}
+          {temSintese
+            ? SEM_VOZ_DO_IDIOMA
+            : "Este navegador não tem voz para o ditado. Tente no Chrome, Edge ou Safari."}
         </p>
       ) : null}
     </div>
@@ -516,9 +554,21 @@ function Fala({ item, idioma, travado, resultado, onResponder }: ExercicioProps)
 
   useEffect(() => () => reconhecimento?.stop(), [reconhecimento]);
 
-  function ouvirModelo() {
+  /** O modelo que a pessoa vai imitar.
+   *
+   * É onde a voz neural mais importa em todo o treino: aqui o áudio não é
+   * material de escuta, é o alvo da imitação. Uma voz que erra a entonação
+   * ensina a errar junto, e logo em seguida o reconhecimento de fala cobra a
+   * pronúncia certa. */
+  async function ouvirModelo() {
+    window.speechSynthesis?.cancel();
+    const audios = await audiosDasFalas([{ texto, voz: 0 }], idioma);
+    if (audios) {
+      audios[0].playbackRate = 0.9;
+      void audios[0].play().catch(() => undefined);
+      return;
+    }
     if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
     const fala = locucao(texto, idioma, vozes);
     fala.rate = 0.9;
     window.speechSynthesis.speak(fala);

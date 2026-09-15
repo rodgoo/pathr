@@ -238,13 +238,19 @@ export const api = {
     request<T>(path, { method: "PUT", body, offline }),
   del: <T>(path: string) => request<T>(path, { method: "DELETE" }),
   /**
-   * Uma resposta que não é JSON — hoje, a foto de perfil.
+   * Uma resposta que não é JSON: a foto de perfil e o áudio falado dos itens
+   * de idioma.
    *
-   * A imagem vem por aqui e não por `<img src="https://api…">`: o app e a API
-   * estão em hosts diferentes, então a tag `img` não mandaria o cookie de
-   * sessão e a foto voltaria 401. Buscando como blob, o cookie vai junto.
+   * Vêm por aqui, e não por `<img src="https://api…">` ou `<audio src=…>`: o
+   * app e a API estão em hosts diferentes, então a tag não mandaria o cookie
+   * de sessão e a resposta voltaria 401. Buscando como blob, o cookie vai
+   * junto e o que chega é um `blob:` local, que qualquer tag toca.
+   *
+   * Com `body`, vira POST — é como o áudio pede o texto a ser falado, já que
+   * um diálogo inteiro não cabe em query string.
    */
-  blob: (path: string) => send(path).then((response) => response.blob()),
+  blob: (path: string, body?: unknown) =>
+    send(path, body === undefined ? {} : { method: "POST", body }).then((r) => r.blob()),
   upload: <T>(path: string, file: File) => {
     const form = new FormData();
     form.append("file", file);

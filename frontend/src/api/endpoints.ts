@@ -502,6 +502,18 @@ export const languages = {
     api.get(`/languages/vocab?language=${language}&due_only=${dueOnly}`),
   reviewVocab: (id: string, quality: number) =>
     api.post(`/languages/vocab/${id}/review`, { quality }),
+  /** O texto falado por voz neural, em WAV.
+   *
+   * `voice` é qual interlocutor está falando — o mesmo índice que a tela já
+   * usa para dar uma voz a cada pessoa do diálogo. Mandando uma fala por vez,
+   * o texto não carrega mais o nome de quem diz, e sem este número todos
+   * voltariam na mesma voz.
+   *
+   * Responde 503 quando não há como gerar (sem chave, sem cota, modelo fora
+   * do ar). Quem chama trata isso como "hoje não" e volta para a voz do
+   * navegador — nunca como erro de tela. */
+  narrar: (text: string, language = "en", voice?: number) =>
+    api.blob("/languages/tts", { text, language, voice }),
 };
 
 /** Nome antigo do modulo, de quando ele so falava ingles. Mantido para as

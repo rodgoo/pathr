@@ -1,17 +1,34 @@
 /**
- * O áudio do item de listening, falado pelo próprio navegador.
+ * O áudio do item de listening.
  *
- * ## Por que a voz do navegador, e não um TTS de servidor
+ * ## Duas fontes de voz, nesta ordem
  *
- * Custo. `speechSynthesis` é parte do navegador: não há chave, não há
- * requisição, não há cobrança por caractere — o som é gerado no aparelho de
- * quem está fazendo o teste. Um TTS de provedor cobraria por item gerado, e
- * o nivelamento gera itens novos a cada lote, para cada pessoa, em cada
- * tentativa. Era o único jeito de o listening existir sem virar custo por uso.
+ * 1. **`/languages/tts`** — TTS neural do Gemini, na chave que o app já usa
+ *    para o resto da IA. É quem fala normalmente.
+ * 2. **`speechSynthesis`** — o sintetizador do próprio navegador, quando a
+ *    primeira não pôde responder.
  *
- * O preço disso é a voz: ela é sintética e varia por sistema. Para um item de
- * compreensão em nível CEFR isso serve — o que se mede é entender o que foi
- * dito, não reconhecer timbre humano.
+ * A ordem já foi a inversa, e por um motivo defensável: custo. A síntese do
+ * navegador não tem chave nem cobrança por caractere, e o nivelamento gera
+ * itens novos a cada lote, para cada pessoa, em cada tentativa — um TTS pago
+ * por item era o que impedia o listening de existir.
+ *
+ * O que derrubou essa escolha não foi o custo ter mudado, foi a VOZ não ser
+ * escolha do app. O navegador só oferece o que o sistema tem instalado, e num
+ * Windows em português sobra uma voz de inglês da geração SAPI antiga, que lê
+ * palavra por palavra: não pausa na vírgula, não sobe no ponto de
+ * interrogação, não separa uma fala da outra. Compreensão em nível CEFR se
+ * apoia em prosódia — sem ela o item mede outra coisa.
+ *
+ * O custo continua contido, e é `app/tts.py` que explica como: cache por
+ * conteúdo, teto de tamanho e o tier gratuito. E a queda para a voz antiga é
+ * automática — sem cota, o áudio piora, mas a atividade continua existindo.
+ *
+ * ## Tudo ou nada por diálogo
+ *
+ * Se uma fala vier do servidor e outra do sintetizador, o timbre troca no
+ * meio e soa como defeito. Por isso `audiosDasFalas` é tudo ou nada: falhou
+ * uma, o diálogo inteiro sai pela voz do navegador.
  *
  * ## A transcrição fica ESCONDIDA
  *
@@ -22,6 +39,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { locucao, SEM_VOZ_DO_IDIOMA, vozesDoIdioma } from "@/lib/fala";
+import { audiosDasFalas } from "@/lib/vozNeural";
 import { ACC, ACC3, HAIRLINE, TEXT } from "@/lib/tokens";
 import { IconButton } from "@/components/ui/IconButton";
 
@@ -87,41 +105,93 @@ export function ListeningPlayer({
   const falas = separarFalas(contexto);
   const { vozes, semVozDoIdioma } = useVozes(idioma);
   const [tocando, setTocando] = useState(false);
+  // Gerar voz neural leva segundos, e o clique precisa responder na hora.
+  // Sem este estado, o botão ficaria parado em "Ouvir" durante a espera e a
+  // pessoa clicaria de novo, achando que não pegou.
+  const [preparando, setPreparando] = useState(false);
+  // Verdadeiro só quando a voz neural falhou e quem está falando é o
+  // sintetizador do sistema. É o que decide mostrar o aviso de pronúncia:
+  // com a voz do servidor, o inventário de vozes do aparelho não importa.
+  const [naVozDoNavegador, setNaVozDoNavegador] = useState(false);
   const [atual, setAtual] = useState(-1);
   const [mostrarTexto, setMostrarTexto] = useState(false);
   const cancelado = useRef(false);
+  // O áudio em curso, para poder pará-lo. A síntese do navegador é global e
+  // se cancela sozinha; um `<audio>` é um objeto, e sem guardá-lo aqui o
+  // botão "Parar" não teria o que parar.
+  const tocador = useRef<HTMLAudioElement | null>(null);
 
-  const suportado = typeof window !== "undefined" && !!window.speechSynthesis;
+  const temSintese = typeof window !== "undefined" && !!window.speechSynthesis;
+
+  /** Silêncio, venha ele do sintetizador ou de um `<audio>`. */
+  function calar() {
+    window.speechSynthesis?.cancel();
+    if (tocador.current) {
+      tocador.current.pause();
+      tocador.current = null;
+    }
+  }
 
   // Sair da tela no meio da fala deixaria a voz falando sozinha: a síntese é
   // global do navegador e não morre com o componente.
   useEffect(() => {
     return () => {
       cancelado.current = true;
-      window.speechSynthesis?.cancel();
+      calar();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Item novo, áudio novo: sem isto, avançar a pergunta manteria a fala
   // anterior tocando por cima da próxima.
   useEffect(() => {
-    window.speechSynthesis?.cancel();
+    calar();
     setTocando(false);
+    setPreparando(false);
     setAtual(-1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [contexto]);
 
-  /** Quem fala em cada linha ganha uma voz diferente, quando o sistema tem
-   * mais de uma. É o que deixa o diálogo audível como diálogo. */
+  /** Quem fala em cada linha ganha uma voz diferente. É o que deixa o diálogo
+   * audível como diálogo, e vale para as duas fontes de voz. */
   function posicaoDaVoz(quem: string): number {
     const nomes = [...new Set(falas.map((f) => f.quem))];
     return Math.max(0, nomes.indexOf(quem));
   }
 
-  function tocar() {
-    if (!suportado || falas.length === 0) return;
+  function terminou() {
+    if (cancelado.current) return;
+    tocador.current = null;
+    setTocando(false);
+    setAtual(-1);
+  }
+
+  /** Toca os áudios do servidor em sequência.
+   *
+   * Um de cada vez, e não todos de uma vez: é o encadeamento por `onended`
+   * que mantém o destaque da linha em curso e a ordem das falas. */
+  function tocarEmSequencia(audios: HTMLAudioElement[], indice: number) {
+    if (cancelado.current || indice >= audios.length) {
+      terminou();
+      return;
+    }
+    const audio = audios[indice];
+    tocador.current = audio;
+    setAtual(indice);
+    audio.onended = () => tocarEmSequencia(audios, indice + 1);
+    // Um `play()` recusado (autoplay, aba em segundo plano) não pode deixar o
+    // botão preso em "Parar": trata como fim.
+    audio.play().catch(() => terminou());
+  }
+
+  /** O caminho antigo: o sintetizador do próprio navegador. */
+  function tocarComSintese() {
+    if (!temSintese) {
+      terminou();
+      return;
+    }
+    setNaVozDoNavegador(true);
     window.speechSynthesis.cancel();
-    cancelado.current = false;
-    setTocando(true);
 
     falas.forEach((fala, indice) => {
       // As vozes vêm da melhor para a pior; cada interlocutor pega a sua a
@@ -132,21 +202,47 @@ export function ListeningPlayer({
       // ainda está aprendendo.
       fase.rate = 0.92;
       fase.onstart = () => !cancelado.current && setAtual(indice);
-      if (indice === falas.length - 1) {
-        fase.onend = () => {
-          if (cancelado.current) return;
-          setTocando(false);
-          setAtual(-1);
-        };
-      }
+      if (indice === falas.length - 1) fase.onend = terminou;
       window.speechSynthesis.speak(fase);
     });
   }
 
+  async function tocar() {
+    if (falas.length === 0) return;
+    calar();
+    cancelado.current = false;
+    setTocando(true);
+    setPreparando(true);
+
+    // A voz neural primeiro. `audiosDasFalas` devolve null em qualquer falha
+    // — inclusive uma única fala que não veio — e aí o diálogo inteiro sai
+    // pelo sintetizador, para não trocar de timbre no meio.
+    const audios = await audiosDasFalas(
+      falas.map((fala) => ({ texto: fala.texto, voz: posicaoDaVoz(fala.quem) })),
+      idioma,
+    );
+
+    // Parar durante a espera: a pessoa desistiu, e o áudio que acabou de
+    // chegar não pode começar a tocar depois disso.
+    if (cancelado.current) {
+      setPreparando(false);
+      return;
+    }
+    setPreparando(false);
+
+    if (audios) {
+      setNaVozDoNavegador(false);
+      tocarEmSequencia(audios, 0);
+      return;
+    }
+    tocarComSintese();
+  }
+
   function parar() {
     cancelado.current = true;
-    window.speechSynthesis?.cancel();
+    calar();
     setTocando(false);
+    setPreparando(false);
     setAtual(-1);
   }
 
@@ -163,18 +259,20 @@ export function ListeningPlayer({
       }}
     >
       <div style={{ display: "flex", alignItems: "center", gap: 11.2, flexWrap: "wrap" }}>
-        {suportado ? (
-          <IconButton
-            icon={tocando ? "stop" : "playSolid"}
-            label={tocando ? "Parar" : atual === -1 ? "Ouvir o diálogo" : "Ouvir de novo"}
-            tone="secondary"
-            onClick={() => (tocando ? parar() : tocar())}
-          />
-        ) : (
-          <span style={{ fontSize: 11.5, color: TEXT.muted }}>
-            Este navegador não tem voz para reproduzir o diálogo.
-          </span>
-        )}
+        <IconButton
+          icon={tocando ? "stop" : "playSolid"}
+          label={
+            preparando
+              ? "Preparando o áudio…"
+              : tocando
+                ? "Parar"
+                : atual === -1
+                  ? "Ouvir o diálogo"
+                  : "Ouvir de novo"
+          }
+          tone="secondary"
+          onClick={() => (tocando ? parar() : void tocar())}
+        />
 
         <IconButton
           icon={mostrarTexto ? "eyeOff" : "eye"}
@@ -189,16 +287,26 @@ export function ListeningPlayer({
         </span>
       </div>
 
-      {suportado && semVozDoIdioma ? (
+      {/* Só quando a voz neural falhou E o aparelho também não tem voz do
+          idioma: aí o áudio realmente sai com pronúncia de outra língua, e a
+          pessoa precisa saber que o problema não é o ouvido dela. Enquanto o
+          servidor responde, nada disso importa e o aviso não aparece. */}
+      {naVozDoNavegador && (semVozDoIdioma || !temSintese) ? (
         <p role="note" style={{ margin: "8.4px 0 0", fontSize: 11.5, color: "#cfa25e", lineHeight: 1.5 }}>
-          {SEM_VOZ_DO_IDIOMA}
+          {temSintese ? SEM_VOZ_DO_IDIOMA : "Este navegador não tem voz para reproduzir o diálogo."}
         </p>
       ) : null}
 
       {/* A transcrição só aparece quando pedida: junto do áudio, o item
           viraria leitura e pararia de medir escuta. Quando aparece, a fala em
-          curso é destacada — é o que ajuda a acompanhar. */}
-      {(mostrarTexto || !suportado) ? (
+          curso é destacada — é o que ajuda a acompanhar.
+
+          A exceção é não haver áudio NENHUM — nem o do servidor, nem o do
+          navegador. Aí o item ficaria sem enunciado, e um item sem enunciado
+          não mede escuta, só impede de responder. Antes bastava não haver
+          `speechSynthesis` para cair aqui; agora é preciso que a voz neural
+          também tenha falhado, o que só se sabe depois da primeira tentativa. */}
+      {mostrarTexto || (naVozDoNavegador && !temSintese) ? (
         <div style={{ marginTop: 11.2, fontSize: 13.5, lineHeight: 1.6 }}>
           {falas.map((fala, indice) => (
             <p
