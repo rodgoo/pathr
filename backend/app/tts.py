@@ -62,11 +62,44 @@ import httpx
 from app.ai_providers import AiProviderError, _classify, _keys
 from app.config import settings
 
-# Preview é o que existe: em setembro de 2026 o TTS do Gemini ainda não saiu
-# dessa fase em nenhuma variante. Um modelo preview que sai do catálogo
-# responde 404, e aí a tela cai para a voz do navegador até a troca daqui.
-_MODELO = "gemini-2.5-flash-preview-tts"
-_URL = "https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent"
+# ── Dois dialetos, e por que os dois ────────────────────────────────────────
+#
+# O TTS do Gemini é servido por duas superfícies de API, e elas NÃO têm o mesmo
+# formato de pedido nem de resposta:
+#
+# 1. `/v1beta/interactions` — o que o guia de TTS publica hoje (setembro de
+#    2026), com o modelo no corpo, `response_format: {"type": "audio"}` e uma
+#    lista `speech_config` em que cada item é `{"speaker", "voice"}`.
+# 2. `…/models/{modelo}:generateContent` — a superfície clássica, com
+#    `responseModalities: ["AUDIO"]` e `speechConfig` aninhado. É a mesma porta
+#    que `ai_providers` usa para texto, e o modelo 2.5 não está deprecado.
+#
+# Os dois estão aqui porque não deu para decidir entre eles com honestidade: o
+# guia atual descreve (1), a página do modelo 2.5 não descreve formato nenhum,
+# e nenhuma das duas fontes declara (2) morta. Sem chave neste ambiente, não
+# houve como perguntar ao servidor quem está certo.
+#
+# Então a ordem é: tenta o documentado, cai para o clássico se ele recusar o
+# pedido (404 de modelo/rota inexistente, 400 de corpo que não entendeu). Um
+# dialeto errado custa uma requisição perdida na primeira fala; o mesmo
+# dialeto, se fosse o único e estivesse errado, custaria a feature inteira
+# falhando calada — porque 503 aqui é indistinguível de "sem cota" e a tela
+# voltaria para a voz velha para sempre, sem ninguém perceber.
+#
+# Quando a verificação ao vivo disser quem responde, o outro sai daqui.
+
+_URL_INTERACTIONS = "https://generativelanguage.googleapis.com/v1beta/interactions"
+_MODELO_INTERACTIONS = "gemini-3.1-flash-tts-preview"
+
+# Mais barato por minuto de áudio que o 3.1, e o custo é o eixo da decisão
+# original de nem ter TTS de servidor — por isso ele é o preferido quando os
+# dois funcionam. Ver a ordem em `_DIALETOS`.
+_MODELO_GENERATE = "gemini-2.5-flash-preview-tts"
+_URL_GENERATE = "https://generativelanguage.googleapis.com/v1beta/models/{modelo}:generateContent"
+
+# Compatibilidade: a chave do cache inclui o modelo, e trocar este nome
+# invalida o cache de propósito — áudio gerado por outro modelo soa diferente.
+_MODELO = _MODELO_GENERATE
 
 _TIMEOUT = 60
 
@@ -215,6 +248,22 @@ def _config_de_voz(texto: str, voz: Optional[int] = None) -> dict:
     }
 
 
+def _vozes_achatadas(texto: str, voz: Optional[int] = None) -> list[dict]:
+    """A mesma decisão de `_config_de_voz`, no formato do dialeto novo.
+
+    Aqui a configuração é uma lista: um item sem `speaker` é narração de voz
+    única, e dois itens com `speaker` são o diálogo. As duas funções partem de
+    `_interlocutores`, então a escolha de quem fala com qual voz é a mesma nos
+    dois dialetos — só a forma do JSON muda.
+    """
+    if voz is not None:
+        return [{"voice": _VOZES[voz % len(_VOZES)]}]
+    nomes = _interlocutores(texto)
+    if len(nomes) != 2:
+        return [{"voice": _VOZES[0]}]
+    return [{"speaker": nome, "voice": voz_} for nome, voz_ in zip(nomes, _VOZES)]
+
+
 def _chave_do_cache(texto: str, idioma: str, voz: Optional[int]) -> str:
     """A voz entra na chave: o mesmo texto em duas vozes são dois áudios, e
     servir um pelo outro trocaria o interlocutor no meio do diálogo."""
@@ -237,19 +286,57 @@ async def _grava_no_cache(chave: str, audio: bytes) -> None:
             _cache.popitem(last=False)
 
 
-async def _pede_ao_gemini(texto: str, idioma: str, voz: Optional[int], api_key: str) -> bytes:
+class _DialetoRecusado(Exception):
+    """A rota ou o corpo não serviram para esta superfície de API.
+
+    Distinta de `_CandidateFailed`: aquela diz "esta CHAVE não deu" (cota,
+    auth) e manda tentar a próxima chave; esta diz "este DIALETO não existe
+    aqui" e manda tentar o outro formato com a MESMA chave. Confundir as duas
+    gastaria todas as chaves repetindo um pedido que nenhuma poderia atender.
+    """
+
+
+def _texto_dirigido(texto: str, idioma: str) -> str:
+    return _DIRECAO.format(idioma=_NOME_DO_IDIOMA.get(idioma, "English"), texto=texto)
+
+
+def _audio_ou_erro(bruto: Optional[str]) -> bytes:
+    if not bruto:
+        # 200 sem áudio é como o filtro de conteúdo do Gemini responde: vem o
+        # metadado de uso e nenhum dado de som. Não é falha de chave nem de
+        # dialeto — é este texto que ele não vai falar.
+        raise AiProviderError("o modelo não devolveu áudio para este texto")
+    return _wav(base64.b64decode(bruto))
+
+
+async def _via_interactions(texto: str, idioma: str, voz: Optional[int], api_key: str) -> bytes:
+    """O dialeto que o guia de TTS publica hoje.
+
+    O `speech_config` é uma LISTA achatada, e é o campo `speaker` em cada item
+    que liga uma voz a um interlocutor — sem o aninhamento de `voiceConfig` /
+    `prebuiltVoiceConfig` do dialeto clássico.
+    """
+    corpo: dict = {
+        "model": _MODELO_INTERACTIONS,
+        "input": _texto_dirigido(texto, idioma),
+        "response_format": {"type": "audio"},
+        "generation_config": {"speech_config": _vozes_achatadas(texto, voz)},
+    }
+    async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+        resposta = await client.post(_URL_INTERACTIONS, params={"key": api_key}, json=corpo)
+    if resposta.status_code in (400, 404, 405):
+        raise _DialetoRecusado(f"interactions recusou o pedido (HTTP {resposta.status_code})")
+    if resposta.status_code != 200:
+        raise _classify(resposta)
+    dados = resposta.json()
+    saida = dados.get("output_audio") or {}
+    return _audio_ou_erro(saida.get("data") if isinstance(saida, dict) else None)
+
+
+async def _via_generate_content(texto: str, idioma: str, voz: Optional[int], api_key: str) -> bytes:
+    """O dialeto clássico, a mesma porta que `ai_providers` usa para texto."""
     corpo = {
-        "contents": [
-            {
-                "parts": [
-                    {
-                        "text": _DIRECAO.format(
-                            idioma=_NOME_DO_IDIOMA.get(idioma, "English"), texto=texto
-                        )
-                    }
-                ]
-            }
-        ],
+        "contents": [{"parts": [{"text": _texto_dirigido(texto, idioma)}]}],
         "generationConfig": {
             "responseModalities": ["AUDIO"],
             "speechConfig": _config_de_voz(texto, voz),
@@ -257,18 +344,41 @@ async def _pede_ao_gemini(texto: str, idioma: str, voz: Optional[int], api_key: 
     }
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
         resposta = await client.post(
-            _URL.format(modelo=_MODELO), params={"key": api_key}, json=corpo
+            _URL_GENERATE.format(modelo=_MODELO_GENERATE), params={"key": api_key}, json=corpo
         )
+    if resposta.status_code in (400, 404, 405):
+        raise _DialetoRecusado(f"generateContent recusou o pedido (HTTP {resposta.status_code})")
     if resposta.status_code != 200:
         raise _classify(resposta)
     dados = resposta.json()
     try:
-        bruto = dados["candidates"][0]["content"]["parts"][0]["inlineData"]["data"]
-    except (KeyError, IndexError, TypeError) as erro:
-        # Resposta 200 sem áudio é o formato do filtro de conteúdo do Gemini:
-        # o candidato volta com `finishReason` e sem `inlineData`.
-        raise AiProviderError("o modelo não devolveu áudio para este texto") from erro
-    return _wav(base64.b64decode(bruto))
+        partes = dados["candidates"][0]["content"]["parts"]
+    except (KeyError, IndexError, TypeError):
+        return _audio_ou_erro(None)
+    bruto = next(
+        (p["inlineData"]["data"] for p in partes if isinstance(p, dict) and "inlineData" in p),
+        None,
+    )
+    return _audio_ou_erro(bruto)
+
+
+# O mais barato por minuto primeiro: custo é o eixo da decisão original, e a
+# diferença entre os dois modelos é de cerca de duas vezes. O documentado vem
+# depois, como rede de segurança para o caso de o clássico ter sido desligado.
+_DIALETOS = (_via_generate_content, _via_interactions)
+
+
+async def _pede_ao_gemini(texto: str, idioma: str, voz: Optional[int], api_key: str) -> bytes:
+    """Tenta os dialetos com a MESMA chave, e para no primeiro que responder."""
+    recusas: list[str] = []
+    for dialeto in _DIALETOS:
+        try:
+            return await dialeto(texto, idioma, voz, api_key)
+        except _DialetoRecusado as erro:
+            recusas.append(str(erro))
+    raise AiProviderError(
+        "nenhuma superfície de TTS do Gemini aceitou o pedido: " + "; ".join(recusas)
+    )
 
 
 async def narrar(texto: str, idioma: str = "en", voz: Optional[int] = None) -> bytes:

@@ -8,9 +8,11 @@ cache e a recusa limpa quando não há chave de Gemini configurada.
 O que não se testa: a voz em si. Isso é do provedor.
 """
 
+import base64
 import io
 import wave
 
+import httpx
 import pytest
 
 from app import tts
@@ -187,6 +189,182 @@ async def test_o_cache_evita_o_segundo_pedido(monkeypatch):
     # Outra voz é outro áudio, e portanto um pedido novo.
     await tts.narrar("Hello there.", "en", 1)
     assert len(pedidos) == 2
+
+
+# ── Os dois dialetos ─────────────────────────────────────────────────────────
+# O guia de TTS publica `/v1beta/interactions`; o dialeto clássico usa
+# `:generateContent`. Nenhuma fonte declara o clássico morto, e sem chave não
+# houve como perguntar ao servidor. Daí os dois — e daí testar que a escolha de
+# voz é a MESMA nos dois, senão trocar de dialeto trocaria o interlocutor.
+
+
+def test_as_duas_formas_de_json_descrevem_a_mesma_escolha_de_voz():
+    dialogo = "Ana: Hi.\nMarc: Hello."
+
+    aninhado = tts._config_de_voz(dialogo)["multiSpeakerVoiceConfig"]["speakerVoiceConfigs"]
+    achatado = tts._vozes_achatadas(dialogo)
+
+    assert [f["speaker"] for f in aninhado] == [f["speaker"] for f in achatado]
+    assert [f["voiceConfig"]["prebuiltVoiceConfig"]["voiceName"] for f in aninhado] == [
+        f["voice"] for f in achatado
+    ]
+
+
+@pytest.mark.parametrize("texto", ["Plain narration.", "Ana: Hi.\nMarc: Hello.\nSofia: Morning."])
+def test_voz_unica_no_dialeto_novo_e_uma_lista_de_um_sem_falante(texto):
+    achatado = tts._vozes_achatadas(texto)
+
+    assert len(achatado) == 1
+    assert "speaker" not in achatado[0]
+
+
+def test_voz_explicita_tambem_desliga_a_deteccao_no_dialeto_novo():
+    assert tts._vozes_achatadas("I'll push it.", 0) == [{"voice": tts._VOZES[0]}]
+    assert tts._vozes_achatadas("Thanks.", 1) == [{"voice": tts._VOZES[1]}]
+
+
+class _ClienteFalso:
+    """Um `httpx.AsyncClient` de mentira, para conferir o que sai e o que entra.
+
+    O código cria o cliente por dentro, então não há transporte para injetar:
+    trocar a classe é o único jeito de ver o corpo do pedido sem rede.
+    """
+
+    enviado: dict = {}
+
+    def __init__(self, resposta):
+        self._resposta = resposta
+
+    def __call__(self, *_a, **_kw):
+        return self
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, *_a):
+        return False
+
+    async def post(self, url, params=None, json=None):
+        type(self).enviado = {"url": url, "params": params, "json": json}
+        return self._resposta
+
+
+def _resposta(payload: dict, status: int = 200):
+    return httpx.Response(status, json=payload)
+
+
+@pytest.mark.asyncio
+async def test_dialeto_novo_monta_o_corpo_e_le_o_audio_de_output_audio(monkeypatch):
+    pcm = base64.b64encode(b"\x00\x01" * 10).decode("ascii")
+    cliente = _ClienteFalso(_resposta({"output_audio": {"data": pcm}}))
+    monkeypatch.setattr(tts.httpx, "AsyncClient", cliente)
+
+    audio = await tts._via_interactions("Ana: Hi.\nMarc: Hello.", "en", None, "k1")
+
+    assert audio.startswith(b"RIFF")
+    corpo = _ClienteFalso.enviado["json"]
+    assert _ClienteFalso.enviado["url"] == tts._URL_INTERACTIONS
+    assert corpo["response_format"] == {"type": "audio"}
+    assert corpo["model"] == tts._MODELO_INTERACTIONS
+    assert [f["speaker"] for f in corpo["generation_config"]["speech_config"]] == ["Ana", "Marc"]
+    # A direção de atuação tem que chegar junto: é ela que pede pontuação
+    # obedecida e sotaque nativo, que era o defeito original.
+    assert "Obey the punctuation" in corpo["input"]
+
+
+@pytest.mark.asyncio
+async def test_dialeto_classico_monta_o_corpo_e_le_o_audio_de_inline_data(monkeypatch):
+    pcm = base64.b64encode(b"\x00\x01" * 10).decode("ascii")
+    cliente = _ClienteFalso(
+        _resposta(
+            {
+                "candidates": [
+                    {
+                        "content": {
+                            "parts": [
+                                # Uma parte de texto na frente não pode esconder
+                                # o áudio: a busca é pela que tem `inlineData`.
+                                {"text": "ok"},
+                                {"inlineData": {"mimeType": "audio/L16", "data": pcm}},
+                            ]
+                        }
+                    }
+                ]
+            }
+        )
+    )
+    monkeypatch.setattr(tts.httpx, "AsyncClient", cliente)
+
+    audio = await tts._via_generate_content("Ana: Hi.\nMarc: Hello.", "en", None, "k1")
+
+    assert audio.startswith(b"RIFF")
+    corpo = _ClienteFalso.enviado["json"]
+    assert tts._MODELO_GENERATE in _ClienteFalso.enviado["url"]
+    assert corpo["generationConfig"]["responseModalities"] == ["AUDIO"]
+    assert "multiSpeakerVoiceConfig" in corpo["generationConfig"]["speechConfig"]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("status", [400, 404, 405])
+async def test_rota_ou_corpo_recusados_viram_recusa_de_dialeto(monkeypatch, status):
+    cliente = _ClienteFalso(_resposta({"error": {"message": "nope"}}, status))
+    monkeypatch.setattr(tts.httpx, "AsyncClient", cliente)
+
+    with pytest.raises(tts._DialetoRecusado):
+        await tts._via_interactions("Hello.", "en", 0, "k1")
+
+
+@pytest.mark.asyncio
+async def test_200_sem_audio_nao_rotaciona_nada(monkeypatch):
+    """É o filtro de conteúdo: nem chave nem dialeto resolvem, e insistir só
+    gastaria cota. O erro sobe direto e a tela cai para a voz do navegador."""
+    cliente = _ClienteFalso(_resposta({"usageMetadata": {"totalTokenCount": 7}}))
+    monkeypatch.setattr(tts.httpx, "AsyncClient", cliente)
+
+    with pytest.raises(AiProviderError, match="não devolveu áudio"):
+        await tts._via_interactions("Hello.", "en", 0, "k1")
+
+
+@pytest.mark.asyncio
+async def test_dialeto_recusado_cai_para_o_outro_com_a_mesma_chave(monkeypatch):
+    """Rota inexistente é problema de FORMATO, não de chave.
+
+    Se isso rotacionasse chave, todas seriam gastas repetindo um pedido que
+    nenhuma poderia atender — e o motivo real ficaria escondido.
+    """
+    monkeypatch.setattr(tts.settings, "gemini_api_key", "k1,k2", raising=False)
+    tts._cache.clear()
+    chamados = []
+
+    async def recusa(texto, idioma, voz, api_key):
+        chamados.append(("recusa", api_key))
+        raise tts._DialetoRecusado("HTTP 404")
+
+    async def aceita(texto, idioma, voz, api_key):
+        chamados.append(("aceita", api_key))
+        return tts._wav(b"\x00\x01" * 10)
+
+    monkeypatch.setattr(tts, "_DIALETOS", (recusa, aceita))
+
+    audio = await tts.narrar("Hello.", "en", 0)
+
+    assert audio.startswith(b"RIFF")
+    # A mesma chave nos dois: nenhuma rotação disparada por recusa de formato.
+    assert chamados == [("recusa", "k1"), ("aceita", "k1")]
+
+
+@pytest.mark.asyncio
+async def test_os_dois_dialetos_recusados_falha_dizendo_por_que(monkeypatch):
+    monkeypatch.setattr(tts.settings, "gemini_api_key", "k1", raising=False)
+    tts._cache.clear()
+
+    async def recusa(texto, idioma, voz, api_key):
+        raise tts._DialetoRecusado("HTTP 404")
+
+    monkeypatch.setattr(tts, "_DIALETOS", (recusa, recusa))
+
+    with pytest.raises(AiProviderError, match="nenhuma superfície de TTS"):
+        await tts.narrar("Hello.", "en", 0)
 
 
 @pytest.mark.asyncio
