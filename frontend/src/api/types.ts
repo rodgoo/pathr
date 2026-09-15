@@ -110,7 +110,7 @@ export interface DisponibilidadeUsername {
 
 export interface Session {
   user: User;
-  access_token: string;
+  /** O token não vem no corpo: fica só no cookie HttpOnly, fora do alcance do JS. */
   expires_in: number;
 }
 

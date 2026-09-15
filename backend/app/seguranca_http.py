@@ -30,6 +30,12 @@ from __future__ import annotations
 from app.config import settings
 
 _SEMPRE = [
+    # Nenhuma resposta da API vai para cache (do navegador ou de proxy), a não
+    # ser que a rota diga o contrário — as fotos dizem, com `private`. Sem
+    # isto, uma resposta com e-mail, relatos ou a exportação de dados podia
+    # ficar guardada em disco no computador e reaparecer para quem usar a
+    # mesma máquina depois.
+    (b"cache-control", b"no-store"),
     (b"x-content-type-options", b"nosniff"),
     (b"x-frame-options", b"DENY"),
     (b"referrer-policy", b"no-referrer"),

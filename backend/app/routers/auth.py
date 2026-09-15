@@ -64,6 +64,7 @@ from app.security import (
 from app.services import antirrobo, cifra, email_dominio, geo, limites, usernames
 from app.services.moderacao import CONTA_SUSPENSA, e_moderador, e_super_admin, esta_banido
 from app.services.email import send_password_reset, send_verification_email
+from app.routers.sessoes import avisar_se_novo
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -215,7 +216,6 @@ def _issue_session(
     _set_session_cookies(response, access_token, refresh_token)
     return SessionOut(
         user=_user_out(user),
-        access_token=access_token,
         expires_in=settings.access_token_minutes * 60,
     )
 
@@ -472,6 +472,8 @@ def login(
 
     supabase.table("pathr_user").update(reset_failure_state()).eq("id", user["id"]).execute()
     _log_event(supabase, "login_ok", user_id=str(user["id"]), request=request)
+    # Antes de criar a sessão: a comparação é com os aparelhos que JÁ entraram.
+    avisar_se_novo(supabase, user, request, "senha")
     return _issue_session(supabase, user, response, request)
 
 

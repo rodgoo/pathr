@@ -95,10 +95,15 @@ class UserOut(BaseModel):
 
 
 class SessionOut(BaseModel):
+    """O que o login e a renovação devolvem no CORPO.
+
+    O token de acesso NÃO vem aqui — só no cookie HttpOnly. Antes ele vinha
+    também no JSON "para um cliente sem cookie", e isso anulava o HttpOnly: o
+    token ficava legível por qualquer JavaScript da página (o que um XSS
+    roubaria) e exposto na aba Network do DevTools. Nenhum cliente o usava.
+    """
+
     user: UserOut
-    # Devolvido no corpo além do cookie: um cliente sem cookie (app nativo,
-    # script) usa este valor no header Authorization.
-    access_token: str
     expires_in: int
 
 

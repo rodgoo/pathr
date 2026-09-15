@@ -224,6 +224,7 @@ from app.routers import (  # noqa: E402
     relatos,
     roadmap,
     social,
+    sessoes,
     status_apis,
     varredura,
     geo,
@@ -248,6 +249,7 @@ async def _fecha_canal_de_avisos() -> None:
 app.include_router(health.router)
 app.include_router(eventos_router.router)
 app.include_router(auth.router)
+app.include_router(sessoes.router)
 app.include_router(social.router)
 app.include_router(relatos.router)
 app.include_router(admin.router)

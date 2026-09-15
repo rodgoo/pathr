@@ -52,8 +52,10 @@ garante que uma falha de e-mail nunca derrube o cadastro em si.
 """
 
 import logging
+from datetime import datetime
 from html import escape
 from urllib.parse import quote
+from zoneinfo import ZoneInfo
 
 import httpx
 
@@ -637,3 +639,60 @@ def send_scan_summary(to_email: str, numeros: dict, destaques: list[str], notion
         f'{_plural(numeros["erros"], "erro", "erros")} · {_plural(total_relatos, "relato", "relatos")}'
     )
     return _send(to_email, "Moderação PathR", assunto, _pagina(relatos_txt, miolo))
+
+
+# ---------------------------------------------------------------------------
+# Segurança: novo acesso
+#
+# Sai quando a conta entra de um navegador+sistema que não usava nos últimos
+# 180 dias (routers/sessoes.py). Âmbar, como a troca de senha: é o e-mail que
+# a pessoa precisa reconhecer como fora do comum se não foi ela. Não é
+# preferência e não pode ser desligado — quem desliga isto é quem invade.
+# ---------------------------------------------------------------------------
+
+_FUSO_AVISO = ZoneInfo("America/Sao_Paulo")
+
+
+def send_new_login(
+    to_email: str,
+    to_name: str,
+    *,
+    aparelho: str,
+    ip: str | None,
+    quando: datetime,
+    metodo: str,
+) -> bool:
+    local = quando.astimezone(_FUSO_AVISO)
+    momento = local.strftime("%d/%m/%Y às %H:%M") + " (horário de Brasília)"
+    como = "com chave de acesso" if metodo == "passkey" else "com e-mail e senha"
+    nome = _primeiro_nome(to_name)
+
+    detalhes = (
+        f'<b style="color:{_TINTA}">{escape(aparelho)}</b><br />'
+        f"{escape(momento)}<br />"
+        f"Entrada {como}"
+        + (f"<br />Rede: {escape(ip)}" if ip else "")
+    )
+    miolo = (
+        _cabecalho(_AMBAR)
+        + _titulo("Segurança", f"Novo acesso à sua conta{', ' + escape(nome) if nome else ''}.", _AMBAR)
+        + _texto("Sua conta do PathR acabou de ser aberta num aparelho que ela não usava:")
+        + _texto(detalhes, topo=12)
+        + _texto(
+            "<b>Foi você?</b> Então está tudo certo, não precisa fazer nada.",
+            topo=18,
+        )
+        + _texto(
+            "<b>Não foi você?</b> Entre no PathR, abra <b>Configurações › Conta › Aparelhos conectados</b>, "
+            "encerre esse aparelho e troque sua senha.",
+            topo=8,
+        )
+        + _botao("Revisar aparelhos conectados", settings.frontend_url, _AMBAR)
+        + _rodape(mostrar_preferencias=False)
+    )
+    return _send(
+        to_email,
+        to_name,
+        f"Novo acesso à sua conta do PathR: {aparelho}",
+        _pagina(f"{aparelho} · {momento}. Não foi você? Encerre a sessão.", miolo),
+    )

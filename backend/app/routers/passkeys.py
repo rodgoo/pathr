@@ -57,6 +57,8 @@ from app.security import is_locked, reset_failure_state
 from app.services import limites
 from app.services import passkeys as chaves
 
+from app.routers.sessoes import avisar_se_novo
+
 router = APIRouter(prefix="/auth/passkeys", tags=["autenticação"])
 
 # Tempo de tocar no leitor de digital ou digitar o PIN, com folga. Mais que
@@ -386,4 +388,5 @@ def entrar(
     _log_event(
         supabase, "login_ok", user_id=str(user["id"]), request=request, detail={"method": "passkey"}
     )
+    avisar_se_novo(supabase, user, request, "passkey")
     return _issue_session(supabase, user, response, request)

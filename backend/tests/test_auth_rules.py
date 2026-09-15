@@ -179,7 +179,10 @@ def test_login_deixa_entrar_depois_de_confirmado(cliente, banco):
     )
 
     assert resposta.status_code == 200, resposta.text
-    assert resposta.json()["access_token"]
+    # A sessão vai só no cookie HttpOnly: o corpo não pode trazer token.
+    corpo = resposta.json()
+    assert "access_token" not in corpo and "refresh_token" not in corpo
+    assert corpo["user"]["email"] == "pessoa@exemplo.com"
     assert len(banco.linhas("pathr_refresh_token")) == 1
 
 
