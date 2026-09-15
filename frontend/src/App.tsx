@@ -6,6 +6,7 @@
  * link de "nova senha" por definição não consegue entrar.
  */
 
+import { useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
 import { MarcaCarregando } from "@/components/ui/MarcaCarregando";
 import { useAppState } from "@/hooks/useAppState";
@@ -54,9 +55,31 @@ const SCREENS: Record<Screen, () => JSX.Element | null> = {
   manual: ManualPage,
 };
 
+/** Endereços que só existem para quem ainda não entrou.
+ *
+ * Entrar, criar conta e recuperar senha são degraus para dentro do app: uma
+ * vez dentro, o endereço passa a contar uma história que não é mais verdade.
+ * Ficam de fora os endereços de link de e-mail (`/confirmar-email`,
+ * `/nova-senha`) e as páginas legais, que são lidas com sessão e precisam
+ * manter o próprio endereço — são destino, e não degrau. */
+const ENDERECOS_DE_VISITANTE = new Set(["/entrar", "/cadastro", "/recuperar-senha"]);
+
 export function App() {
   const { status } = useAuth();
-  const [location, navigate] = useLocation();
+  const [location, navigate, replace] = useLocation();
+
+  // Entrar não troca de endereço: o login acontece no lugar, o `status` vira
+  // `authenticated` e a tela passa a ser o app — mas a barra de endereços
+  // continua marcando `/entrar`. Recarregar dali funciona (a sessão é lida do
+  // servidor, não do caminho), então o sintoma é só o endereço mentindo:
+  // guardar nos favoritos, copiar o link ou abrir o histórico registra uma
+  // tela de login que a pessoa não vai ver. Vale para quem acabou de entrar e
+  // para quem chega em `/entrar` com sessão de outra aba.
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    if (!ENDERECOS_DE_VISITANTE.has(location.path)) return;
+    replace("/");
+  }, [status, location.path, replace]);
 
   // Alcançadas por link de e-mail: abrem com ou sem sessão.
   if (location.path === "/confirmar-email") {

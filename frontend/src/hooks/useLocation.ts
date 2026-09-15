@@ -26,7 +26,7 @@ function read(): Location {
   return { path: url.pathname.replace(/\/+$/, "") || "/", token: url.searchParams.get("token") ?? "" };
 }
 
-export function useLocation(): [Location, (path: string) => void] {
+export function useLocation(): [Location, (path: string) => void, (path: string) => void] {
   const [location, setLocation] = useState<Location>(read);
 
   // O botão voltar do navegador continua funcionando entre as telas de
@@ -42,5 +42,17 @@ export function useLocation(): [Location, (path: string) => void] {
     comTransicao(() => setLocation(read()));
   }, []);
 
-  return [location, navigate];
+  /** Troca o endereço sem criar passo no histórico, e sem transição.
+   *
+   * É para corrigir um endereço que deixou de ser verdade — não para navegar.
+   * Com `pushState`, o botão voltar levaria de volta ao endereço errado; e a
+   * transição de tela existe para acompanhar quem pediu para ir a outro
+   * lugar, o que aqui não aconteceu: a tela é a mesma, só a barra de
+   * endereços é que estava desatualizada. */
+  const replace = useCallback((path: string) => {
+    window.history.replaceState({}, "", path);
+    setLocation(read());
+  }, []);
+
+  return [location, navigate, replace];
 }
