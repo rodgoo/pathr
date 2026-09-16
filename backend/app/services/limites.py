@@ -71,6 +71,13 @@ IA_POR_USUARIO = Regra("ia", 150, timedelta(days=1), "Você atingiu o limite di�
 # A curadoria busca na web e valida cada link: cara por pedido, e cada tag nova
 # abria uma rodada. Por conta, para criar tags em série não virar busca infinita.
 CURADORIA_POR_USUARIO = Regra("curadoria", 12, timedelta(days=1), "Já buscamos materiais várias vezes hoje. Tente amanhã.")
+# Candidaturas (services/candidaturas.py). Montar a fila à mão busca em todas
+# as fontes; a carta é uma chamada de IA; e o envio sai pelo domínio do PathR —
+# sem teto, seria um relay de spam de graça, e a reputação de envio perdida
+# derrubaria junto os e-mails de confirmação de conta.
+FILA_DE_VAGAS = Regra("fila-vagas", 6, timedelta(days=1), "Você já montou a fila de vagas várias vezes hoje. Tente amanhã.")
+CARTA_POR_USUARIO = Regra("carta", 30, timedelta(days=1), "Limite de cartas de apresentação de hoje atingido.")
+ENVIO_DE_CANDIDATURA = Regra("envio-candidatura", 25, timedelta(days=1), "Você já enviou muitas candidaturas hoje. O limite volta amanhã.")
 TAG_NOVA_POR_USUARIO = Regra("tag-por-nome", 60, timedelta(days=1), "Limite de tecnologias adicionadas hoje atingido.")
 
 

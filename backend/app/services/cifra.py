@@ -211,5 +211,11 @@ def ctx_relato(user_id: str, coluna: str) -> str:
     return f"pathr_report.{coluna}:{user_id}"
 
 
+def ctx_carta(user_id: str) -> str:
+    """A carta de apresentação da candidatura: currículo e objetivo de
+    carreira misturados, o mesmo tipo de dado de `ctx_curriculo_texto`."""
+    return f"carta:{user_id}"
+
+
 def ctx_arquivo(bucket: str, caminho: str) -> str:
     return f"storage:{bucket}/{caminho}"

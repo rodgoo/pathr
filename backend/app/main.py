@@ -208,6 +208,7 @@ from app.routers import (  # noqa: E402
     atividades,
     duvidas,
     auth,
+    candidaturas,
     courses,
     eventos as eventos_router,
     explanations,
@@ -260,6 +261,7 @@ app.include_router(resumes.router)
 app.include_router(tags.router)
 app.include_router(courses.router)
 app.include_router(vagas.router)
+app.include_router(candidaturas.router)
 app.include_router(geo.router)
 app.include_router(status_apis.router)
 app.include_router(roadmap.router)

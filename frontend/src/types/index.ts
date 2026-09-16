@@ -11,6 +11,7 @@
 export type Screen =
   | "home"
   | "cv"
+  | "candidaturas"
   | "roadmap"
   | "modulo"
   | "ingles"

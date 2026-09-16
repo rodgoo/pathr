@@ -44,6 +44,7 @@ const BARRA: Destino[] = [
 const FOLHA: Destino[] = [
   { label: "Cursos", screen: "cursos", icon: "award" },
   { label: "Vagas", screen: "vagas", icon: "suitcase" },
+  { label: "Candidaturas", screen: "candidaturas", icon: "send" },
   { label: "Código", screen: "codigo", icon: "code" },
   { label: "Idiomas", screen: "ingles", icon: "flag" },
   { label: "Amigos", screen: "amigos", icon: "users" },

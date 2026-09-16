@@ -229,6 +229,39 @@ class PathrWalkthrough(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
 
+class PathrApplication(SQLModel, table=True):
+    """Uma vaga da fila diária, e o que foi feito com ela.
+
+    A fila é montada pelo agendador (routers/jobs.py) com o mesmo
+    ranqueamento da tela de Vagas. `url` é único por pessoa: a mesma vaga não
+    volta a ser sugerida, nem amanhã nem depois de descartada.
+
+    `letter` é a carta de apresentação, cifrada — ela junta currículo e
+    objetivo de carreira, o mesmo dado que já é cifrado em `pathr_resume`.
+    """
+
+    __tablename__ = "pathr_application"
+    __table_args__ = (sa.UniqueConstraint("user_id", "url", name="uq_pathr_application_user_url"),)
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id"))
+    day: date
+    source: str = Field(default="")
+    title: str
+    company: str = Field(default="")
+    url: str
+    location: Optional[str] = None
+    remote: bool = Field(default=False)
+    score: int = Field(default=0)
+    snippet: Optional[str] = Field(default=None, sa_type=sa.Text())
+    letter: Optional[str] = Field(default=None, sa_type=sa.Text())
+    subject: Optional[str] = None
+    to_email: Optional[str] = None
+    status: str = Field(default="sugerida")
+    sent_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+
+
 class PathrEmailLog(SQLModel, table=True):
     """Um aviso por pessoa, por tipo, por dia local.
 

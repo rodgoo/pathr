@@ -710,6 +710,41 @@ export interface WalkthroughStep {
   saida: string;
 }
 
+/**
+ * Uma vaga da fila diária e o que foi feito com ela.
+ *
+ * `to_email` vazio e `url` preenchido é o caso comum: a vaga pede para
+ * responder no site (Gupy, LinkedIn, formulario proprio), e o app da o link.
+ */
+export interface Candidatura {
+  id: string;
+  /** Dia da fila, no fuso da pessoa (AAAA-MM-DD). */
+  day: string;
+  source: string;
+  title: string;
+  company: string;
+  url: string;
+  location: string | null;
+  remote: boolean;
+  /** O quanto combina com o perfil, 0 a 100 — o mesmo da tela de Vagas. */
+  score: number;
+  snippet: string | null;
+  /** Carta de apresentacao, escrita sob medida quando pedida. */
+  letter: string | null;
+  subject: string | null;
+  to_email: string | null;
+  status: "sugerida" | "enviada" | "descartada";
+  sent_at: string | null;
+  created_at: string | null;
+}
+
+export interface FilaDeCandidaturas {
+  hoje: string;
+  por_dia: number;
+  candidaturas: Candidatura[];
+  enviadas: number;
+}
+
 export interface CodeLanguage {
   id: string;
   rotulo: string;

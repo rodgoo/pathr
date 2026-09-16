@@ -57,6 +57,7 @@ export function Sidebar() {
         { label: "Trilha atual", screen: "modulo", icon: "book" },
         { label: "Cursos", screen: "cursos", icon: "award" },
         { label: "Vagas", screen: "vagas", icon: "suitcase" },
+        { label: "Candidaturas", screen: "candidaturas", icon: "send" },
         // O contador é de convites RECEBIDOS: é o único número aqui que pede
         // uma ação, e sem ele o convite ficaria esperando alguém abrir a aba.
         {

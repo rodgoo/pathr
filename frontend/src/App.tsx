@@ -23,6 +23,7 @@ import { LegalPage, ehPaginaLegal } from "@/pages/legal/LegalPage";
 import { CodeLabPage } from "@/pages/CodeLabPage";
 import { CoursesPage } from "@/pages/CoursesPage";
 import { JobsPage } from "@/pages/JobsPage";
+import { CandidaturasPage } from "@/pages/CandidaturasPage";
 import { AmigosPage } from "@/pages/AmigosPage";
 import { RelatarPage } from "@/pages/RelatarPage";
 import { CvPage } from "@/pages/CvPage";
@@ -51,6 +52,7 @@ const SCREENS: Record<Screen, () => JSX.Element | null> = {
   material: ResourcePage,
   cursos: CoursesPage,
   vagas: JobsPage,
+  candidaturas: CandidaturasPage,
   config: SettingsPage,
   manual: ManualPage,
 };

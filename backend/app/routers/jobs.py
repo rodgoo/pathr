@@ -32,7 +32,7 @@ from app.config import settings
 from app.database import get_supabase
 from app.routers.profile import AVISOS
 from app.services import email as emails
-from app.services import faxina, notifications, weekly_plan
+from app.services import candidaturas, faxina, notifications, weekly_plan
 
 router = APIRouter(prefix="/jobs", tags=["operação"])
 logger = logging.getLogger("pathr.jobs")
@@ -94,6 +94,58 @@ def _minutos(supabase: Client, user_id: str, de, ate) -> int:
     return total
 
 
+VAGAS_DO_DIA = "vagas_do_dia"
+
+# Quantas filas de vaga uma rodada monta. Cada uma busca em várias fontes, e a
+# rodada é uma requisição HTTP com tempo limite: com muita gente na mesma
+# janela, o resto fica para a rodada da hora seguinte (a janela da manhã tem
+# duas) e para o dia seguinte. Ninguém perde nada: a fila é diária.
+_FILAS_POR_RODADA = 25
+
+
+async def _fila_de_vagas(
+    supabase: Client,
+    user: dict,
+    local,
+    preferencias: dict[str, Any],
+    ja_enviados: set[str],
+    montadas: int,
+) -> bool:
+    """Monta a fila de vagas de hoje e avisa por e-mail. Devolve se avisou.
+
+    Só de manhã, uma vez por dia (a trava é o `pathr_email_log`, como nos
+    outros avisos), só para quem tem currículo analisado — sem currículo não há
+    o que enviar nem com o que comparar — e só para quem não desligou o aviso.
+    """
+    if montadas >= _FILAS_POR_RODADA or VAGAS_DO_DIA in ja_enviados:
+        return False
+    if not preferencias.get(VAGAS_DO_DIA, True) or not (8 <= local.hour <= 9):
+        return False
+    user_id = str(user["id"])
+    tem_curriculo = (
+        supabase.table("pathr_resume").select("id").eq("user_id", user_id).eq("status", "parsed")
+        .limit(1).execute().data
+    )
+    if not tem_curriculo:
+        return False
+
+    novas = await candidaturas.montar_fila(supabase, user)
+    if not novas:
+        return False
+    return emails.send_daily_jobs(
+        str(user.get("email") or ""),
+        str(user.get("name") or ""),
+        [
+            {
+                "titulo": str(linha.get("title") or ""),
+                "empresa": str(linha.get("company") or ""),
+                "local": str(linha.get("location") or ("Remota" if linha.get("remote") else "")),
+            }
+            for linha in novas
+        ],
+    )
+
+
 def _enviar(supabase: Client, user: dict, kind: str, hoje_local) -> bool:
     """Monta e manda um aviso. Devolve se saiu — o que não tem conteúdo não sai."""
     user_id = str(user["id"])
@@ -136,8 +188,13 @@ def _enviar(supabase: Client, user: dict, kind: str, hoje_local) -> bool:
 
 
 @router.post("/emails")
-def disparar_avisos(request: Request, supabase: Client = Depends(get_supabase)):
-    """Manda os avisos devidos nesta hora. Chamado pelo cron, de hora em hora."""
+async def disparar_avisos(request: Request, supabase: Client = Depends(get_supabase)):
+    """Manda os avisos devidos nesta hora. Chamado pelo cron, de hora em hora.
+
+    É aqui também que a fila diária de candidaturas é montada, no começo da
+    manhã de cada pessoa — é o que faz a busca de vagas acontecer 24/7 no
+    servidor, sem depender de nenhum computador ligado.
+    """
     _confere_segredo(request)
     agora = datetime.now(timezone.utc)
 
@@ -145,6 +202,7 @@ def disparar_avisos(request: Request, supabase: Client = Depends(get_supabase)):
         supabase.table("pathr_user").select("id,email,name,timezone_name").execute().data or []
     )
     enviados: list[str] = []
+    filas_montadas = 0
     for user in usuarios:
         user_id = str(user["id"])
         try:
@@ -186,6 +244,13 @@ def disparar_avisos(request: Request, supabase: Client = Depends(get_supabase)):
                         {"user_id": user_id, "kind": kind, "sent_on": hoje_local.isoformat()}
                     ).execute()
                     enviados.append(kind)
+
+            if await _fila_de_vagas(supabase, user, local, preferencias, ja, filas_montadas):
+                filas_montadas += 1
+                supabase.table("pathr_email_log").insert(
+                    {"user_id": user_id, "kind": VAGAS_DO_DIA, "sent_on": hoje_local.isoformat()}
+                ).execute()
+                enviados.append(VAGAS_DO_DIA)
         except Exception:  # noqa: BLE001
             # Uma conta com dado estranho não pode impedir os avisos das outras.
             logger.warning("aviso falhou para %s", user_id, exc_info=True)

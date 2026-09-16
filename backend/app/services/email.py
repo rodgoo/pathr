@@ -54,6 +54,7 @@ garante que uma falha de e-mail nunca derrube o cadastro em si.
 import logging
 from datetime import datetime
 from html import escape
+from typing import Optional
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
@@ -107,7 +108,20 @@ def _mascarar(email: str) -> str:
     return f"{usuario[:1]}***@{dominio}" if dominio else "***"
 
 
-def _send(to_email: str, to_name: str, subject: str, html: str) -> bool:
+def _send(
+    to_email: str,
+    to_name: str,
+    subject: str,
+    html: str,
+    reply_to: Optional[dict[str, str]] = None,
+    anexos: Optional[list[dict[str, str]]] = None,
+) -> bool:
+    """Manda o e-mail. `reply_to` e `anexos` existem por causa da candidatura.
+
+    Quem envia é sempre o domínio do PathR (é dele o DKIM/SPF que faz o e-mail
+    chegar). Numa candidatura, porém, quem precisa receber a resposta é a
+    pessoa — daí o `Reply-To` com o e-mail dela, e o currículo em anexo.
+    """
     if not settings.brevo_api_key or not settings.brevo_from_email:
         logger.warning(
             "BREVO_API_KEY ausente — e-mail %r para %s não foi enviado. Conteúdo: %s",
@@ -125,6 +139,8 @@ def _send(to_email: str, to_name: str, subject: str, html: str) -> bool:
                 "to": [{"email": to_email, "name": to_name or to_email}],
                 "subject": subject,
                 "htmlContent": html,
+                **({"replyTo": reply_to} if reply_to else {}),
+                **({"attachment": anexos} if anexos else {}),
             },
             timeout=_TIMEOUT,
         )
@@ -453,6 +469,93 @@ def send_password_reset(to_email: str, to_name: str, token: str) -> bool:
         to_name,
         "Redefinir sua senha do PathR",
         _pagina("Link de senha nova, válido por 1 hora. Não pediu? Pode ignorar.", miolo),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Candidaturas
+#
+# Dois e-mails bem diferentes: um avisa a PESSOA das vagas do dia; o outro vai
+# para a EMPRESA, com a carta e o currículo em anexo. Só o segundo leva
+# `Reply-To` com o e-mail de quem se candidatou — a resposta da empresa tem que
+# chegar nela, não no PathR.
+# ---------------------------------------------------------------------------
+
+
+def send_daily_jobs(to_email: str, to_name: str, vagas: list[dict[str, str]]) -> bool:
+    """As vagas separadas hoje, para a pessoa decidir o que enviar."""
+    if not vagas:
+        return False
+    nome = _primeiro_nome(to_name)
+    quantas = len(vagas)
+    coisa = "vaga" if quantas == 1 else "vagas"
+    itens = [
+        f"{v.get('titulo', '')} — {v.get('empresa', '')}".strip(" —")
+        + (f" · {v['local']}" if v.get("local") else "")
+        for v in vagas
+    ]
+    miolo = (
+        _cabecalho(_VERDE)
+        + _titulo("Vagas de hoje", f"{quantas} {coisa} para você{', ' + nome if nome else ''}.", _VERDE)
+        + _texto(
+            "Separadas pelo quanto combinam com o seu currículo e o seu objetivo. "
+            "No app, cada uma já sai com uma carta de apresentação escrita para ela."
+        )
+        + _itens(itens, _VERDE)
+        + _botao("Ver e enviar", f"{settings.frontend_url}", _VERDE)
+        + _texto(
+            f'<span style="color:{_TINTA_FRACA}">Você decide o que enviar: nada sai sem você '
+            "confirmar.</span>",
+            topo=20,
+        )
+        + _rodape(mostrar_preferencias=True)
+    )
+    return _send(
+        to_email,
+        to_name,
+        f"{quantas} {coisa} para você hoje",
+        _pagina(f"{quantas} {coisa} que combinam com o seu perfil, com carta pronta.", miolo),
+    )
+
+
+def send_application(
+    to_email: str,
+    subject: str,
+    carta: str,
+    candidato_nome: str,
+    candidato_email: str,
+    anexo_nome: str = "",
+    anexo_base64: str = "",
+) -> bool:
+    """A candidatura em si: carta no corpo, currículo em anexo.
+
+    Texto simples e sem marca do PathR no corpo: quem lê é um recrutador, e a
+    carta é da pessoa. O rodapé diz só o nome e o e-mail dela.
+    """
+    paragrafos = "".join(
+        f'<p style="font-family:{_FONTE};font-size:15px;line-height:1.7;color:#1a1a1a;margin:0 0 14px">'
+        f"{escape(trecho)}</p>"
+        for trecho in (carta or "").split("\n")
+        if trecho.strip()
+    )
+    assinatura = (
+        f'<p style="font-family:{_FONTE};font-size:15px;line-height:1.7;color:#1a1a1a;margin:22px 0 0">'
+        f"{escape(candidato_nome)}<br>"
+        f'<a href="mailto:{escape(candidato_email)}" style="color:#1a1a1a">{escape(candidato_email)}</a></p>'
+    )
+    html = (
+        '<div style="background:#ffffff;padding:24px;max-width:620px">' + paragrafos + assinatura + "</div>"
+    )
+    anexos = (
+        [{"name": anexo_nome, "content": anexo_base64}] if anexo_nome and anexo_base64 else None
+    )
+    return _send(
+        to_email,
+        "",
+        subject,
+        html,
+        reply_to={"email": candidato_email, "name": candidato_nome or candidato_email},
+        anexos=anexos,
     )
 
 

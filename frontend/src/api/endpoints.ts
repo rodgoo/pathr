@@ -59,7 +59,9 @@ import type {
   TagSuggestions,
   User,
   UserTag,
+  Candidatura,
   CodeLanguage,
+  FilaDeCandidaturas,
   Walkthrough,
   WordMeaning,
   SessaoAtiva,
@@ -235,6 +237,21 @@ export const resumes = {
   apply: (id: string, body?: { tecnologias?: unknown[]; aplicar_perfil?: boolean }) =>
     api.post<{ imported: number; tags: unknown[] }>(`/resumes/${id}/apply`, body ?? {}).then(depoisDeMudarOPerfil),
   remove: (id: string) => api.del<void>(`/resumes/${id}`),
+};
+
+/**
+ * A fila diária de candidaturas.
+ *
+ * `enviar` sem e-mail não manda nada: registra que você se candidatou pelo
+ * site da vaga (é o caso das vagas com perguntas próprias).
+ */
+export const candidaturas = {
+  list: () => api.get<FilaDeCandidaturas>("/candidaturas"),
+  gerar: () => api.post<{ novas: Candidatura[] }>("/candidaturas/gerar"),
+  carta: (id: string) => api.post<Candidatura>(`/candidaturas/${encodeURIComponent(id)}/carta`),
+  enviar: (id: string, body: { email?: string; carta?: string; assunto?: string } = {}) =>
+    api.post<Candidatura>(`/candidaturas/${encodeURIComponent(id)}/enviar`, body),
+  descartar: (id: string) => api.post<Candidatura>(`/candidaturas/${encodeURIComponent(id)}/descartar`),
 };
 
 export const tags = {

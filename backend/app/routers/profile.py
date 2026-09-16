@@ -86,6 +86,8 @@ AVISOS: dict[str, bool] = {
     "novidades": False,
     "correcao_pronta": True,
     "sequencia_em_risco": False,
+    # As vagas que o app separou hoje, com carta pronta (services/candidaturas.py).
+    "vagas_do_dia": True,
 }
 
 

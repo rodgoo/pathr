@@ -6,6 +6,7 @@ zeraria a contagem de quem está sendo barrado —, uma tabela que falha não
 impede a outra, e o disparo de hora em hora é quem chama.
 """
 
+import asyncio
 from datetime import datetime, timedelta, timezone
 from types import SimpleNamespace
 
@@ -68,6 +69,7 @@ def test_o_disparo_de_hora_em_hora_faz_a_faxina(monkeypatch):
         pathr_error_event=[{"id": "e1", "fingerprint": "a", "occurred_at": "2000-01-01T00:00:00+00:00"}],
     )
     pedido = SimpleNamespace(headers={jobs.CABECALHO: "segredo"})
-    resposta = jobs.disparar_avisos(pedido, banco)
+    # O disparo virou assíncrono quando passou a montar a fila de vagas.
+    resposta = asyncio.run(jobs.disparar_avisos(pedido, banco))
     assert set(resposta["faxina"]) == {"pathr_rate_event", "pathr_error_event", "pathr_security_event"}
     assert banco.tabelas["pathr_rate_event"] == [] and banco.tabelas["pathr_error_event"] == []

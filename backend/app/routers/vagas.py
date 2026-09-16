@@ -80,7 +80,24 @@ async def listar_vagas(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
 ):
-    """Vagas das fontes confiáveis, ordenadas pelo quanto combinam com a pessoa.
+    """Vagas das fontes confiáveis, ordenadas pelo quanto combinam com a pessoa."""
+    return await vagas_da_pessoa(supabase, current_user, q=q, remotas=remotas, alcance=alcance, atualizar=atualizar)
+
+
+async def vagas_da_pessoa(
+    supabase: Client,
+    current_user: dict,
+    q: str = "",
+    remotas: bool = False,
+    alcance: str = "todas",
+    atualizar: bool = False,
+) -> dict[str, Any]:
+    """O mesmo resultado da tela de Vagas, sem depender de uma requisição.
+
+    Função e não só rota porque a fila diária de candidaturas
+    (services/candidaturas.py) precisa EXATAMENTE deste ranqueamento: se ela
+    escolhesse por conta própria, a vaga sugerida por e-mail não seria a mesma
+    que a pessoa vê na tela.
 
     Sem `q`, os termos saem das competências (metas primeiro) e do objetivo.
     Presencial e híbrida só no raio da cidade do perfil; remota sempre.
