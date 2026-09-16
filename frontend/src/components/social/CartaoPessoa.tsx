@@ -20,19 +20,21 @@ import { marcoAtingido, proximoMarco } from "@/lib/conquista";
 import { fotoDe } from "@/lib/fotos";
 import { MarcaDaTecnologia, identidade } from "@/lib/tecnologias";
 import { ACC, ACC3, C, HAIRLINE, TEXT, tint } from "@/lib/tokens";
+import { useT } from "@/lib/i18n";
 
 export type AcaoDeAmizade = "convidar" | "aceitar" | "desfazer";
 
 /** O tom de um `.btn-tom`: a cor do significado da ação. */
 const tom = (cor: string) => ({ "--tom": cor }) as CSSProperties;
 
+/** O degrau de senioridade, pela chave do dicionário. */
 const SENIORIDADE: Record<string, string> = {
-  estagio: "Estágio",
-  junior: "Júnior",
-  pleno: "Pleno",
-  senior: "Sênior",
-  especialista: "Especialista",
-  lideranca: "Liderança",
+  estagio: "senioridade.estagio",
+  junior: "senioridade.junior",
+  pleno: "senioridade.pleno",
+  senior: "senioridade.senior",
+  especialista: "senioridade.especialista",
+  lideranca: "senioridade.lideranca",
 };
 
 function iniciais(nome: string): string {
@@ -110,6 +112,7 @@ export function CartaoPessoa({
    */
   onDemo?: (acao: AcaoDeAmizade) => void;
 }) {
+  const t = useT();
   const [ocupado, setOcupado] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const [confirmandoSaida, setConfirmandoSaida] = useState(false);
@@ -126,7 +129,7 @@ export function CartaoPessoa({
       await acao();
       onMudou();
     } catch (caught) {
-      setErro(caught instanceof Error ? caught.message : "Não consegui concluir.");
+      setErro(caught instanceof Error ? caught.message : t("pessoa.erro"));
     } finally {
       setOcupado(false);
       setConfirmandoSaida(false);
@@ -134,7 +137,7 @@ export function CartaoPessoa({
   }
 
   const lugar = [pessoa.city, pessoa.state].filter(Boolean).join(" · ");
-  const sobre = [pessoa.senioridade ? SENIORIDADE[pessoa.senioridade] ?? pessoa.senioridade : null, pessoa.cargo]
+  const sobre = [pessoa.senioridade ? (SENIORIDADE[pessoa.senioridade] ? t(SENIORIDADE[pessoa.senioridade]) : pessoa.senioridade) : null, pessoa.cargo]
     .filter(Boolean)
     .join(" · ");
   const id = pessoa.friendship_id;
@@ -169,7 +172,7 @@ export function CartaoPessoa({
         <div style={{ fontSize: 12.5, color: TEXT.muted, lineHeight: 1.45 }}>
           {pessoa.objetivo ? (
             <div>
-              <span style={{ color: TEXT.faint }}>Objetivo: </span>
+              <span style={{ color: TEXT.faint }}>{t("pessoa.objetivo")} </span>
               {pessoa.objetivo}
             </div>
           ) : null}
@@ -182,14 +185,14 @@ export function CartaoPessoa({
           {pessoa.mesma_stack ? (
             <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12, color: C.verde }}>
               <Icon name="check" size={13} />
-              Vocês possuem a mesma stack
+              {t("pessoa.mesmaStack")}
             </div>
           ) : emComum.size > 0 ? (
             <div style={{ fontSize: 12, color: TEXT.faint }}>
-              {emComum.size === 1 ? "1 tecnologia em comum" : `${emComum.size} tecnologias em comum`}
+              {t(emComum.size === 1 ? "pessoa.umaEmComum" : "pessoa.emComum", { n: emComum.size })}
             </div>
           ) : null}
-          <ul aria-label="Stack" style={{ display: "flex", flexWrap: "wrap", gap: 5, margin: 0, padding: 0, listStyle: "none" }}>
+          <ul aria-label={t("pessoa.stack")} style={{ display: "flex", flexWrap: "wrap", gap: 5, margin: 0, padding: 0, listStyle: "none" }}>
             {pessoa.stack.map((tecnologia) => {
               const { cor } = identidade(tecnologia);
               // Em comum com quem olha: contorno mais forte e um ✓ — é o
@@ -230,7 +233,7 @@ export function CartaoPessoa({
           <button type="button" className="btn btn-tom" style={tom(ACC)} disabled={ocupado}
             onClick={() => void agir(() => social.convidar(pessoa.username), "convidar")}>
             <Icon name="plus" size={15} />
-            {ocupado ? "Enviando…" : "Adicionar"}
+            {ocupado ? t("pessoa.enviando") : t("pessoa.adicionar")}
           </button>
         ) : null}
 
@@ -239,12 +242,12 @@ export function CartaoPessoa({
             <button type="button" className="btn btn-tom" style={tom(C.verde)} disabled={ocupado}
               onClick={() => void agir(() => social.aceitar(id), "aceitar")}>
               <Icon name="check" size={15} />
-              Aceitar
+              {t("pessoa.aceitar")}
             </button>
             <button type="button" className="btn btn-tom-leve" style={tom(C.rosa)} disabled={ocupado}
               onClick={() => void agir(() => social.desfazer(id), "desfazer")}>
               <Icon name="x" size={15} />
-              Recusar
+              {t("pessoa.recusar")}
             </button>
           </>
         ) : null}
@@ -253,12 +256,12 @@ export function CartaoPessoa({
           <>
             <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, color: C.ambar }}>
               <Icon name="clock" size={14} />
-              Convite enviado
+              {t("pessoa.conviteEnviado")}
             </span>
             <button type="button" className="btn btn-tom-leve" style={tom(C.rosa)} disabled={ocupado}
               onClick={() => void agir(() => social.desfazer(id), "desfazer")}>
               <Icon name="x" size={14} />
-              Cancelar
+              {t("pessoa.cancelar")}
             </button>
           </>
         ) : null}
@@ -266,25 +269,25 @@ export function CartaoPessoa({
         {pessoa.relacao === "amigos" && id ? (
           confirmandoSaida ? (
             <>
-              <span style={{ fontSize: 12.5, color: TEXT.muted }}>Desfazer a amizade?</span>
+              <span style={{ fontSize: 12.5, color: TEXT.muted }}>{t("pessoa.desfazerPergunta")}</span>
               <button type="button" className="btn btn-tom" style={tom(C.rosa)} disabled={ocupado}
                 onClick={() => void agir(() => social.desfazer(id), "desfazer")}>
                 <Icon name="trash" size={14} />
-                Desfazer
+                {t("pessoa.desfazer")}
               </button>
               <button type="button" className="btn btn-ghost" onClick={() => setConfirmandoSaida(false)}>
-                Manter
+                {t("pessoa.manter")}
               </button>
             </>
           ) : (
             <>
               <span style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, color: C.verde }}>
                 <Icon name="users" size={14} />
-                Amigos
+                {t("pessoa.amigos")}
               </span>
               <button type="button" className="btn btn-ghost" style={{ fontSize: 12, color: TEXT.faint }}
                 onClick={() => setConfirmandoSaida(true)}>
-                Desfazer amizade
+                {t("pessoa.desfazerAmizade")}
               </button>
             </>
           )

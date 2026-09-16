@@ -66,7 +66,7 @@ it.each(["ano", "mes", "semana"] as const)(
     fireEvent.mouseEnter(dia);
 
     const balao = screen.getByRole("tooltip");
-    expect(within(balao).getByText("Sexta, 11 de setembro")).toBeInTheDocument();
+    expect(within(balao).getByText("Sexta-feira, 11 de setembro")).toBeInTheDocument();
     expect(within(balao).getByText("Artigo")).toBeInTheDocument();
     expect(within(balao).getByText("Learn to Use GitHub Actions")).toBeInTheDocument();
     expect(within(balao).getByText("Vídeo")).toBeInTheDocument();

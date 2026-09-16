@@ -23,6 +23,7 @@ import {
 import { createPortal } from "react-dom";
 import type { ActivityItem } from "@/api/types";
 import { longDate, type DayDetail } from "@/lib/dashboard";
+import { useT } from "@/lib/i18n";
 
 /** O nome de cada coisa que se faz no app, como a pessoa diria. */
 const MATERIAL: Record<string, string> = {
@@ -110,6 +111,7 @@ export function useDicaDoDia() {
 const LARGURA = 300;
 
 function Balao({ alvo }: { alvo: Alvo }) {
+  const t = useT();
   const { dia } = alvo;
   // `clientWidth` e não `innerWidth`: o segundo inclui a barra de rolagem
   // vertical, e o balão encostado na borda direita ficava por baixo dela.
@@ -145,7 +147,7 @@ function Balao({ alvo }: { alvo: Alvo }) {
       <div className="dica-titulo">{titulo[0].toUpperCase() + titulo.slice(1)}</div>
 
       {vazio ? (
-        <div className="dica-vazio">Nenhum estudo neste dia.</div>
+        <div className="dica-vazio">{t("dica.semEstudo")}</div>
       ) : (
         <>
           {dia.items.length > 0 ? (
@@ -161,7 +163,7 @@ function Balao({ alvo }: { alvo: Alvo }) {
                     {item.minutes > 0 ? (
                       <span className="dica-min">
                         {item.estimated ? "≈" : ""}
-                        {item.minutes} min
+                        {t("painel.minutos", { n: item.minutes })}
                       </span>
                     ) : null}
                   </span>
@@ -170,22 +172,22 @@ function Balao({ alvo }: { alvo: Alvo }) {
             </ul>
           ) : (
             <div className="dica-vazio">
-              {dia.count} {dia.count === 1 ? "atividade" : "atividades"}
+              {t(dia.count === 1 ? "painel.umaAtividade" : "painel.atividades", { n: dia.count })}
             </div>
           )}
           <div className="dica-total">
-            Tempo de estudo:{" "}
+            {t("dica.tempoDeEstudo")}{" "}
             <strong>
               {dia.minutes > 0
                 ? `${dia.estimated ? "≈ " : ""}${tempoPorExtenso(dia.minutes)}`
-                : "sem tempo registrado"}
+                : t("dica.semTempo")}
             </strong>
           </div>
           {/* A estimativa se declara. Tempo de artigo sai do tamanho do
               texto, não de um cronômetro, e apresentar como medido seria
               dizer mais do que o app sabe. */}
           {dia.estimated ? (
-            <div className="dica-nota">≈ estimado pelo tamanho do texto lido</div>
+            <div className="dica-nota">{t("dica.estimado")}</div>
           ) : null}
         </>
       )}

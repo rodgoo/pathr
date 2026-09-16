@@ -7,7 +7,8 @@
  */
 
 import {
-  WEEKDAYS,
+  diasDaSemana,
+  configurarTextosDoPainel,
   monthGrid,
   rangeSummary,
   weekBars,
@@ -20,15 +21,22 @@ import { HEAT, TEXT } from "@/lib/tokens";
 import type { ActivitySummary } from "@/api/types";
 import type { ConstancyView } from "@/types";
 import { Segmented } from "@/components/ui/Segmented";
+import { useIdioma, useT } from "@/lib/i18n";
 import { Panel } from "@/components/ui/primitives";
 
-const VIEWS: readonly { value: ConstancyView; label: string }[] = [
-  { value: "ano", label: "Ano" },
-  { value: "mes", label: "Mês" },
-  { value: "semana", label: "Semana" },
+const VIEWS: readonly { value: ConstancyView; chave: string }[] = [
+  { value: "ano", chave: "constancia.ano" },
+  { value: "mes", chave: "constancia.mes" },
+  { value: "semana", chave: "constancia.semana" },
 ];
 
 export function ConsistencyPanel({ activity }: { activity: ActivitySummary }) {
+  const t = useT();
+  const { idioma } = useIdioma();
+  // Durante a renderização, e não num efeito: as funções de lib/dashboard.ts
+  // são chamadas logo abaixo, e um efeito só rodaria depois — a primeira
+  // pintura sairia no idioma anterior.
+  configurarTextosDoPainel(idioma, t);
   const { state, dispatch } = useAppState();
   const view = state.constancyView;
   const summary = rangeSummary(activity, view);
@@ -48,9 +56,9 @@ export function ConsistencyPanel({ activity }: { activity: ActivitySummary }) {
         <span style={{ fontSize: 11.5, color: TEXT.faint }}>{summary.headline}</span>
         <Segmented
           name="constancy-view"
-          label="Intervalo da constância"
+          label={t("constancia.intervalo")}
           value={view}
-          options={VIEWS}
+          options={VIEWS.map((item) => ({ value: item.value, label: t(item.chave) }))}
           onChange={(next) => dispatch({ type: "setConstancyView", view: next })}
           style={{ marginLeft: "auto" }}
         />
@@ -113,6 +121,7 @@ function Numeros({
 }
 
 function YearHeatmap({ activity }: { activity: ActivitySummary }) {
+  const t = useT();
   const cells = yearHeat(activity);
   const { gatilho, dica } = useDicaDoDia();
   return (
@@ -128,7 +137,7 @@ function YearHeatmap({ activity }: { activity: ActivitySummary }) {
             paddingTop: 18,
           }}
         >
-          {WEEKDAYS.map((day) => (
+          {diasDaSemana().map((day: string) => (
             <span
               key={day}
               style={{
@@ -174,7 +183,7 @@ function YearHeatmap({ activity }: { activity: ActivitySummary }) {
             ))}
           </div>
           <ul
-            aria-label="Atividade diária no ano"
+            aria-label={t("constancia.atividadeNoAno")}
             style={{
               display: "grid",
               gridAutoFlow: "column",
@@ -225,7 +234,7 @@ function MonthCalendar({ activity }: { activity: ActivitySummary }) {
           maxWidth: 320,
         }}
       >
-        {WEEKDAYS.map((day) => (
+        {diasDaSemana().map((day: string) => (
           <span key={day} style={{ fontSize: 9.5, color: TEXT.faint, textAlign: "center" }}>
             {day}
           </span>
@@ -307,6 +316,7 @@ function WeekChart({ activity }: { activity: ActivitySummary }) {
 }
 
 function HeatLegend() {
+  const t = useT();
   return (
     <div
       style={{
@@ -318,11 +328,11 @@ function HeatLegend() {
         color: TEXT.faint,
       }}
     >
-      <span>menos</span>
+      <span>{t("constancia.menos")}</span>
       {HEAT.map((background) => (
         <span key={background} style={{ width: 10, height: 10, borderRadius: 2, background }} />
       ))}
-      <span>mais</span>
+      <span>{t("constancia.mais")}</span>
     </div>
   );
 }

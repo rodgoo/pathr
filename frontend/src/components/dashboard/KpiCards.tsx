@@ -12,6 +12,7 @@
 
 import { humanMinutes, recentDays, type DayDetail } from "@/lib/dashboard";
 import { C, TEXT } from "@/lib/tokens";
+import { useT, type Traduzir } from "@/lib/i18n";
 import type { Overview } from "@/api/types";
 import { Icon, type IconName } from "@/components/ui/icons";
 import { Panel } from "@/components/ui/primitives";
@@ -52,39 +53,39 @@ function recentSeries(overview: Overview): Barra[] {
   }));
 }
 
-function build(overview: Overview): Kpi[] {
+function build(overview: Overview, t: Traduzir): Kpi[] {
   const series = recentSeries(overview);
   const { streak, roadmap, activity, english } = overview;
 
   return [
     {
-      label: "Sequência de estudo",
-      value: streak.current === 1 ? "1 dia" : `${streak.current} dias`,
+      label: t("kpi.sequencia"),
+      value: t(streak.current === 1 ? "kpi.umDia" : "kpi.dias", { n: streak.current }),
       support: [
-        { label: "Recorde", value: `${streak.longest} dias` },
-        { label: "Dias ativos", value: String(activity.active_days) },
+        { label: t("kpi.recorde"), value: t("kpi.dias", { n: streak.longest }) },
+        { label: t("kpi.diasAtivos"), value: String(activity.active_days) },
       ],
       color: C.ambar,
       icon: "flame",
       series,
     },
     {
-      label: "Progresso do roadmap",
+      label: t("kpi.progresso"),
       value: roadmap ? `${roadmap.progress_pct}%` : "—",
       support: [
-        { label: "Concluídos", value: roadmap ? String(roadmap.done_nodes) : "0" },
-        { label: "No plano", value: roadmap ? String(roadmap.total_nodes) : "0" },
+        { label: t("kpi.concluidos"), value: roadmap ? String(roadmap.done_nodes) : "0" },
+        { label: t("kpi.noPlano"), value: roadmap ? String(roadmap.total_nodes) : "0" },
       ],
       color: "#b5afe8",
       icon: "trend",
       series,
     },
     {
-      label: "Tempo de estudo",
+      label: t("kpi.tempo"),
       value: humanMinutes(activity.total_minutes),
       support: [
         { label: "XP", value: String(streak.total_xp) },
-        { label: "Inglês", value: english.cefr_level ?? "—" },
+        { label: t("kpi.ingles"), value: english.cefr_level ?? "—" },
       ],
       color: C.teal,
       icon: "clock",
@@ -94,6 +95,7 @@ function build(overview: Overview): Kpi[] {
 }
 
 export function KpiCards({ overview }: { overview: Overview }) {
+  const t = useT();
   const { gatilho, dica } = useDicaDoDia();
   return (
     <div
@@ -103,7 +105,7 @@ export function KpiCards({ overview }: { overview: Overview }) {
         gap: 11.2,
       }}
     >
-      {build(overview).map((kpi) => (
+      {build(overview, t).map((kpi) => (
         <Panel key={kpi.label} style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8.4 }}>
             <span

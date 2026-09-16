@@ -17,20 +17,64 @@
  */
 
 import { HEAT } from "@/lib/tokens";
+import { traduzirPt, type Traduzir } from "@/lib/i18n";
 import type { ActivityDay, ActivityItem, ActivitySummary } from "@/api/types";
 import type { ConstancyView } from "@/types";
 
-export const WEEKDAYS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"] as const;
-export const MONTHS_SHORT = [
-  "Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez",
-] as const;
-export const MONTHS_LONG = [
-  "janeiro", "fevereiro", "março", "abril", "maio", "junho",
-  "julho", "agosto", "setembro", "outubro", "novembro", "dezembro",
-] as const;
-const WEEKDAYS_LONG = [
-  "domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado",
-] as const;
+/**
+ * O idioma do painel, e como ele fala.
+ *
+ * Este arquivo não é componente: não pode usar hook. A tela avisa qual é o
+ * idioma ao renderizar (`configurarTextosDoPainel`), e nome de mês e de dia
+ * saem do `Intl` do navegador — que já tem os doze meses em todos os idiomas,
+ * sem listas escritas à mão que envelheceriam uma por idioma.
+ *
+ * Sem aviso, fica o português: é o que faz este módulo funcionar solto, num
+ * teste ou antes de a tela montar.
+ */
+let idiomaDoPainel = "pt";
+let traduzir: Traduzir = traduzirPt;
+
+export function configurarTextosDoPainel(idioma: string, t: Traduzir): void {
+  idiomaDoPainel = idioma;
+  traduzir = t;
+}
+
+const maiuscula = (texto: string) => (texto ? texto[0].toUpperCase() + texto.slice(1) : texto);
+
+/** Os nomes de data por idioma, calculados uma vez só. */
+const nomesPorIdioma = new Map<string, { curtosDeMes: string[]; diasDaSemana: string[] }>();
+
+function nomes(idioma = idiomaDoPainel) {
+  const guardado = nomesPorIdioma.get(idioma);
+  if (guardado) return guardado;
+  const mes = new Intl.DateTimeFormat(idioma, { month: "short" });
+  const semana = new Intl.DateTimeFormat(idioma, { weekday: "short" });
+  const novo = {
+    curtosDeMes: Array.from({ length: 12 }, (_, i) =>
+      maiuscula(mes.format(new Date(2026, i, 1)).replace(".", "")),
+    ),
+    // 5 de janeiro de 2026 é uma segunda: a semana do mapa começa nela.
+    diasDaSemana: Array.from({ length: 7 }, (_, i) =>
+      maiuscula(semana.format(new Date(2026, 0, 5 + i)).replace(".", "")),
+    ),
+  };
+  nomesPorIdioma.set(idioma, novo);
+  return novo;
+}
+
+/** Segunda a domingo, no idioma da tela. */
+export const diasDaSemana = (idioma?: string) => nomes(idioma).diasDaSemana;
+/** Jan…Dez, no idioma da tela. */
+export const mesesCurtos = (idioma?: string) => nomes(idioma).curtosDeMes;
+
+/** "9 de setembro", "September 9", "9. September" — quem formata é o Intl. */
+function diaEMes(iso: string): string {
+  const [ano, mes, dia] = iso.split("-").map(Number);
+  return new Intl.DateTimeFormat(idiomaDoPainel, { day: "numeric", month: "long" }).format(
+    new Date(ano, (mes ?? 1) - 1, dia),
+  );
+}
 
 /**
  * Minutos que definem cada degrau do heatmap.
@@ -89,19 +133,21 @@ function detail(index: Map<string, ActivityDay>, key: string): DayDetail {
   };
 }
 
-/** "sexta, 11 de setembro". */
+/** "sexta-feira, 11 de setembro" — no idioma da tela. */
 export function longDate(iso: string): string {
-  const [year, month, day] = iso.split("-").map(Number);
-  const date = new Date(year, (month ?? 1) - 1, day);
-  return `${WEEKDAYS_LONG[date.getDay()]}, ${day} de ${MONTHS_LONG[(month ?? 1) - 1]}`;
+  const [ano, mes, dia] = iso.split("-").map(Number);
+  const data = new Date(ano, (mes ?? 1) - 1, dia);
+  const nomeDoDia = new Intl.DateTimeFormat(idiomaDoPainel, { weekday: "long" }).format(data);
+  return `${maiuscula(nomeDoDia)}, ${diaEMes(iso)}`;
 }
 
 function label(iso: string, minutes: number, count: number): string {
-  const [, month, day] = iso.split("-").map(Number);
-  const date = `${day} de ${MONTHS_LONG[(month ?? 1) - 1]}`;
-  if (count <= 0 && minutes <= 0) return `${date} · nenhuma atividade`;
-  const atividades = `${count} ${count === 1 ? "atividade" : "atividades"}`;
-  return minutes > 0 ? `${date} · ${atividades} · ${minutes} min` : `${date} · ${atividades}`;
+  const data = diaEMes(iso);
+  if (count <= 0 && minutes <= 0) return `${data} · ${traduzir("painel.nenhumaAtividade")}`;
+  const atividades = traduzir(count === 1 ? "painel.umaAtividade" : "painel.atividades", { n: count });
+  return minutes > 0
+    ? `${data} · ${atividades} · ${traduzir("painel.minutos", { n: minutes })}`
+    : `${data} · ${atividades}`;
 }
 
 export interface HeatCell extends DayDetail {
@@ -170,7 +216,7 @@ export function yearHeat(activity: ActivitySummary | null, today = new Date()): 
 export function yearMonths(today = new Date()): { label: string; column: number }[] {
   const year = today.getFullYear();
   const start = mondayOf(new Date(year, 0, 1));
-  return MONTHS_SHORT.map((month, index) => ({
+  return mesesCurtos().map((month, index) => ({
     label: month,
     column: Math.floor(daysBetween(start, new Date(year, index, 1)) / 7),
   }));
@@ -273,7 +319,7 @@ export function weekBars(activity: ActivitySummary | null, today = new Date()): 
   const hoje = isoLocal(today);
   const monday = mondayOf(today);
 
-  const days = WEEKDAYS.map((label_, offset) => {
+  const days = diasDaSemana().map((label_, offset) => {
     const key = isoLocal(
       new Date(monday.getFullYear(), monday.getMonth(), monday.getDate() + offset),
     );
@@ -336,24 +382,31 @@ export function rangeSummary(
   const average = withTime.length ? Math.round(total / withTime.length) : 0;
   const best = cells.reduce((max, cell) => Math.max(max, cell.minutes), 0);
 
-  const month = MONTHS_LONG[today.getMonth()];
+  const nomeDoMes = maiuscula(
+    new Intl.DateTimeFormat(idiomaDoPainel, { month: "long" }).format(today),
+  );
   const period =
     view === "ano"
-      ? `Sua constância em ${today.getFullYear()}`
+      ? traduzir("painel.constanciaEm", { ano: today.getFullYear() })
       : view === "mes"
-        ? `${month[0].toUpperCase()}${month.slice(1)} de ${today.getFullYear()}`
-        : "Esta semana";
+        ? traduzir("painel.mesDoAno", { mes: nomeDoMes, ano: today.getFullYear() })
+        : traduzir("painel.estaSemana");
 
-  const scope = view === "ano" ? "no ano" : view === "mes" ? "no mês" : "na semana";
+  const escopo = traduzir(
+    view === "ano" ? "painel.noAno" : view === "mes" ? "painel.noMes" : "painel.naSemana",
+  );
 
   return {
     title: period,
-    headline: `${active.length} de ${cells.length} dias ativos até hoje`,
+    headline: traduzir("painel.diasAtivosAteHoje", { ativos: active.length, total: cells.length }),
     stats: [
-      { value: String(active.length), label: `dias ativos ${scope}` },
-      { value: humanMinutes(total), label: "tempo total" },
-      { value: average ? `${average} min` : "—", label: "média por dia com estudo" },
-      { value: best ? humanMinutes(best) : "—", label: "melhor dia" },
+      { value: String(active.length), label: traduzir("painel.diasAtivos", { escopo }) },
+      { value: humanMinutes(total), label: traduzir("painel.tempoTotal") },
+      {
+        value: average ? traduzir("painel.minutos", { n: average }) : "—",
+        label: traduzir("painel.mediaPorDia"),
+      },
+      { value: best ? humanMinutes(best) : "—", label: traduzir("painel.melhorDia") },
     ],
   };
 }

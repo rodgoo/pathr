@@ -274,6 +274,14 @@
       "termos": "Nutzungsbedingungen",
       "privacidade": "Datenschutz",
       "seguranca": "Sicherheit"
+    },
+    "perfis": {
+      "javaSpring": "Java-Backend mit Spring",
+      "fullstackTs": "Full-Stack-Entwickler (TypeScript)",
+      "pythonBackend": "Python-Backend mit Django",
+      "plataforma": "Plattform und Infrastruktur",
+      "dotnet": ".NET-Backend",
+      "android": "Android mit Kotlin"
     }
   },
   "auth": {
@@ -347,5 +355,663 @@
     "meta": "Ziel",
     "progresso": "Fortschritt bei der Roadmap",
     "modulos": "{pct}% · {feitos} von {total} Modulen"
+  },
+  "painel": {
+    "nenhumaAtividade": "keine Aktivität",
+    "umaAtividade": "{n} Aktivität",
+    "atividades": "{n} Aktivitäten",
+    "minutos": "{n} min",
+    "constanciaEm": "Seine Beständigkeit unter {ano}",
+    "mesDoAno": "{mes} von {ano}",
+    "estaSemana": "Diese Woche",
+    "diasAtivosAteHoje": "{ativos} von {total} aktive Tage bis heute",
+    "diasAtivos": "aktive Tage {escopo}",
+    "noAno": "im Jahr",
+    "noMes": "im Monat",
+    "naSemana": "in der Woche",
+    "tempoTotal": "Gesamtzeit",
+    "mediaPorDia": "Durchschnitt pro Tag mit Lernen",
+    "melhorDia": "schöner Tag"
+  },
+  "kpi": {
+    "sequencia": "Lernserie",
+    "umDia": "1 Tag",
+    "dias": "{n} Tage",
+    "recorde": "Rekord",
+    "diasAtivos": "Aktive Tage",
+    "progresso": "Fortschritt bei der Roadmap",
+    "concluidos": "Abgeschlossen",
+    "noPlano": "Auf dem Plan",
+    "tempo": "Lernzeit",
+    "ingles": "Englisch"
+  },
+  "constancia": {
+    "ano": "Jahr",
+    "mes": "Monat",
+    "semana": "Woche",
+    "intervalo": "Konstanzintervall",
+    "atividadeNoAno": "Tägliche Aktivitäten im Laufe des Jahres",
+    "menos": "weniger",
+    "mais": "mehr"
+  },
+  "senioridade": {
+    "estagio": "Praktikum",
+    "junior": "Junior",
+    "pleno": "Plenarsitzung",
+    "senior": "Senior",
+    "especialista": "Experte",
+    "lideranca": "Führung"
+  },
+  "pessoa": {
+    "objetivo": "Ziel:",
+    "mesmaStack": "Ihr habt denselben Stack",
+    "umaEmComum": "1 gemeinsame Technologie",
+    "emComum": "{n} gemeinsame Technologien",
+    "stack": "Stack",
+    "adicionar": "Hinzufügen",
+    "enviando": "Wird gesendet…",
+    "aceitar": "Akzeptieren",
+    "recusar": "Ablehnen",
+    "conviteEnviado": "Einladung versendet",
+    "cancelar": "Abbrechen",
+    "desfazerPergunta": "Die Freundschaft beenden?",
+    "desfazer": "Rückgängig machen",
+    "manter": "Beibehalten",
+    "amigos": "Freunde",
+    "desfazerAmizade": "Eine Freundschaft beenden",
+    "erro": "Ich konnte es nicht zu Ende bringen."
+  },
+  "dica": {
+    "semEstudo": "Heute findet kein Unterricht statt.",
+    "tempoDeEstudo": "Lernzeit:",
+    "semTempo": "ohne Zeitangabe",
+    "estimado": "≈ geschätzt anhand der Länge des gelesenen Textes"
+  },
+  "legal": {
+    "layout": {
+      "voltar": "Zurück zu PathR",
+      "abasAria": "Rechtliche Dokumente",
+      "ultimaAtualizacao": "Letzte Aktualisierung:",
+      "resumoTitulo": "Zusammenfassend",
+      "nestaPagina": "Auf dieser Seite",
+      "nestaPaginaCompacta": "Auf dieser Seite (kompakte Liste)",
+      "duvidas": "Haben Sie Fragen zu diesem Dokument? Schreiben Sie an",
+      "rodapeMarca": "PathR · Studienplan",
+      "rodapeAria": "Fußzeile"
+    },
+    "termos": {
+      "aba": "Nutzungsbedingungen",
+      "kicker": "Nutzungsbedingungen",
+      "titulo": "Nutzungsbedingungen",
+      "introducao": "Die Nutzungsbedingungen für PathR: Was die App bietet, was wir von den Nutzern erwarten und welche Pflichten jeder einzelne hat. Mit der Erstellung eines Kontos oder der Nutzung der App erklären Sie sich mit diesen Bedingungen einverstanden.",
+      "resumo": [
+        "PathR ist ein kostenloses Tool zur Studienplanung, das ausschließlich für Personen ab 18 Jahren bestimmt ist.",
+        "Von KI generierte Inhalte können Fehler enthalten und stellen keine Garantie für eine Anstellung, Beförderung oder Zertifizierung dar.",
+        "Dein Lebenslauf und deine Texte bleiben weiterhin dein Eigentum; wir nutzen sie lediglich, um die App für dich zum Laufen zu bringen.",
+        "Respekt im Umgang mit sozialen Medien: Keine Belästigung, kein Spam, kein Datenscraping und keine Daten Dritter.",
+        "Sie können sich jederzeit abmelden, indem Sie Ihre Daten exportieren und Ihr Konto löschen.",
+        "Es gilt das brasilianische Recht, einschließlich des Verbraucherschutzgesetzes und des LGPD."
+      ],
+      "aceitacao": {
+        "titulo": "Annahme",
+        "p1a": "Diese Nutzungsbedingungen regeln die Nutzung von PathR, das unter pathr.notter.com.br verfügbar ist und von Rodrigo Carvalho betrieben wird. Mit der Erstellung eines Kontos erklären Sie, dass Sie diese gelesen haben und ihnen sowie der",
+        "p1link": "Datenschutzerklärung",
+        "p1b": ", in der erläutert wird, wie Ihre Daten verarbeitet werden.",
+        "p2": "Wenn Sie damit nicht einverstanden sind, nutzen Sie die App bitte nicht. Sie können das Konto jederzeit löschen."
+      },
+      "servico": {
+        "titulo": "Was ist PathR?",
+        "p1a": "PathR ist eine App",
+        "p1forte": "kostenlos",
+        "p1b": "die Menschen, die im Technologiebereich tätig sind, dabei unterstützt, ihr Lernen zu organisieren. Zu den Funktionen gehören: Analyse des Lehrplans durch KI, eine in Phasen unterteilte Roadmap, kuratierte Lernmaterialien, Quizze und verteilte Wiederholungen, ein Programmierlabor, Sprachtraining, Stellensuche, Überwachung der Lernkontinuität und Vernetzung mit anderen.",
+        "p2": "Funktionen können sich im Laufe der Zeit ändern, verbessert werden oder wegfallen. Die App ist auf Dienste von Drittanbietern angewiesen, von denen viele im Rahmen kostenloser Tarife mit Nutzungsbeschränkungen angeboten werden; daher können einige Funktionen vorübergehend nicht verfügbar oder eingeschränkt sein."
+      },
+      "conta": {
+        "titulo": "Ihr Konto",
+        "idadeA": "Man muss",
+        "idadeForte": "mindestens 18 Jahre alt",
+        "idadeB": ". Konten von Minderjährigen werden geschlossen und die Daten gelöscht.",
+        "itens": [
+          "Geben Sie korrekte Daten an und halten Sie Ihre E-Mail-Adresse auf dem neuesten Stand – über diese können Sie Ihr Konto bestätigen und Ihr Passwort zurücksetzen.",
+          "Das Konto ist persönlich. Sie sind dafür verantwortlich, Ihr Passwort geheim zu halten und für alle Handlungen, die über Ihren Zugang vorgenommen werden; sollten Sie einen Missbrauch vermuten, ändern Sie Ihr Passwort und melden Sie sich ab.",
+          "Der Benutzername (@) darf weder eine andere Person, eine Marke oder die Moderation der App imitieren noch beleidigend sein."
+        ]
+      },
+      "ia": {
+        "titulo": "Von KI generierter Inhalt",
+        "p1": "Das Auswerten von Lebensläufen, Roadmaps, Quizfragen, Erläuterungen, Korrekturen, Code-Beispielen, Übersetzungen und Vorschlägen erfolgt mithilfe von KI-Modellen von Drittanbietern.",
+        "notaA": "Dieser Inhalt",
+        "notaForte": "kann Fehler, Auslassungen oder veraltete Informationen enthalten",
+        "notaB": ". Er dient als Hilfestellung beim Lernen, stellt jedoch keine professionelle, rechtliche oder berufliche Beratung dar und garantiert weder das Bestehen von Auswahlverfahren noch eine Anstellung, Beförderung oder Zertifizierung. Informieren Sie sich über wichtige Details in offiziellen Quellen.",
+        "itens": [
+          "Die anhand des Lehrplans geschätzten Kompetenzstufen sind nur Anhaltspunkte: Überprüfen Sie diese, bevor Sie sie auf das Profil anwenden.",
+          "Die aufgeführten Materialien, Kurse und Stellenangebote stammen von Websites Dritter. PathR übernimmt keine Verantwortung für den Inhalt, die Verfügbarkeit oder die Bedingungen dieser Websites und vermittelt keine Verträge.",
+          "Pro Konto gilt ein tägliches Nutzungslimit für die KI, damit das gemeinsame Kontingent für alle ausreicht."
+        ]
+      },
+      "usoAceitavel": {
+        "titulo": "Zulässige Nutzung",
+        "intro": "Mit der Nutzung von PathR erklären Sie sich damit einverstanden, Folgendes zu unterlassen:",
+        "itensAntes": [
+          "Einen Lebenslauf, ein Foto oder persönliche Daten einer anderen Person ohne deren Einwilligung versenden.",
+          "Andere Personen belästigen, bedrohen, diskriminieren oder in Verlegenheit bringen, unter anderem durch wiederholte Freundschaftsanfragen oder Meldungen.",
+          "Daten aus anderen Konten automatisch erfassen (Scraping), Nutzer auflisten oder Datenbanken über die App erstellen.",
+          "Nutzungsbeschränkungen umgehen, Konten in großem Umfang anlegen oder Automatisierungen nutzen, um das Kontingent für KI, E-Mail oder die Suche aufzubrauchen."
+        ],
+        "falhasA": "Der Versuch, ohne Berechtigung auf Konten, Daten oder Bereiche zuzugreifen, Schwachstellen auszunutzen oder den Betrieb des Dienstes zu stören – festgestellte Fehler müssen gemeldet werden (siehe die Seite",
+        "falhasLink": "Sicherheit",
+        "falhasB": ").",
+        "itensDepois": [
+          "Das Versenden von schädlichen Dateien, illegalen oder anstößigen Inhalten sowie von Inhalten, die die Rechte Dritter verletzen.",
+          "Die App für illegale Zwecke zu nutzen oder Inhalte zu erstellen, die gegen das Gesetz verstoßen."
+        ]
+      },
+      "social": {
+        "titulo": "Soziale Ressourcen",
+        "p1a": "Mit PathR können Sie Personen finden, Einladungen versenden und die Profile anderer Nutzer ansehen. Was auf Ihrem Profil angezeigt wird und wie Sie die Sichtbarkeit Ihrer Daten steuern können, ist beschrieben unter",
+        "p1link": "Datenschutzerklärung",
+        "itens": [
+          "Behandle andere Menschen mit Respekt. Eine abgelehnte Einladung ist auch eine Antwort.",
+          "Die auf der Karte einer anderen Person angezeigten Informationen dienen der Anmeldung in der App – kopieren Sie sie nicht für andere Zwecke.",
+          "Missbräuchliches Verhalten kann über den Bildschirm „Melden“ gemeldet werden."
+        ]
+      },
+      "seuConteudo": {
+        "titulo": "Sein Inhalt",
+        "p1a": "Alles, was Sie einreichen oder schreiben – Lebenslauf, Foto, Erläuterungen, Aktivitäten, Antworten und Berichte —",
+        "p1forte": "bleibt weiterhin dein",
+        "p2a": "Damit die App funktioniert, erteilen Sie uns eine beschränkte, unentgeltliche und widerrufbare Berechtigung, diese Inhalte zu speichern, zu verarbeiten und anzuzeigen sowie an die in der",
+        "p2link": "Datenschutzerklärung",
+        "p2b": "(wie z. B. KI-Anbieter), ausschließlich zur Erbringung der Dienstleistung für Sie. Diese Ermächtigung erlischt, sobald Sie die Inhalte oder das Konto löschen, sofern nicht gesetzlich eine Aufbewahrungspflicht besteht.",
+        "p3": "Sie versichern, dass Sie berechtigt sind, die von Ihnen übermittelten Inhalte zu versenden. Über den Bildschirm „Melden“ eingereichte Vorschläge können zur Verbesserung der App verwendet werden, ohne dass daraus Verpflichtungen oder eine Vergütung entstehen."
+      },
+      "propriedade": {
+        "titulo": "Eigenschaft von PathR",
+        "p1": "Die Software, die Marke, das Design und die Texte von PathR sind Eigentum des Betreibers, mit Ausnahme von Komponenten Dritter, die unter den jeweiligen Lizenzen genutzt werden (wie beispielsweise die in den Einstellungen angegebenen Symbole). Diese Bedingungen übertragen Ihnen keine Rechte daran, die über die Nutzung der App hinausgehen."
+      },
+      "moderacao": {
+        "titulo": "Moderation, Sperrung und Schließung",
+        "p1": "Eingereichte Meldungen werden von den Moderatoren geprüft. Bei Verstößen gegen diese Nutzungsbedingungen, bei Gefahren für andere Personen oder für den Dienst oder aufgrund gesetzlicher Vorschriften können wir Inhalte entfernen und das betreffende Konto sperren oder schließen – soweit möglich mit einer Benachrichtigung und einer Erklärung an die hinterlegte E-Mail-Adresse.",
+        "p2": "Sie können die Nutzung jederzeit beenden: Exportieren Sie Ihre Daten und löschen Sie Ihr Konto unter „Einstellungen“ › „Benachrichtigungen und Datenschutz“."
+      },
+      "responsabilidade": {
+        "titulo": "Verfügbarkeit und Verantwortung",
+        "p1": "PathR wird kostenlos und im aktuellen Zustand bereitgestellt. Wir bemühen uns, die Verfügbarkeit, Richtigkeit und Sicherheit des Dienstes zu gewährleisten, können jedoch weder einen unterbrechungsfreien oder fehlerfreien Betrieb noch den Erhalt Ihrer Daten im Falle von Ausfällen garantieren – exportieren Sie Ihre Daten daher regelmäßig, falls diese für Sie wichtig sind.",
+        "p2": "Soweit gesetzlich zulässig, übernimmt PathR keine Haftung für Entscheidungen, die auf der Grundlage von KI-generierten Inhalten getroffen werden, für Inhalte und Bedingungen von Websites Dritter sowie für die Nichtverfügbarkeit von Anbietern. Keine Bestimmung dieser Bedingungen schränkt die durch das Verbraucherschutzgesetz oder das LGPD garantierten Rechte ein."
+      },
+      "mudancas": {
+        "titulo": "Änderungen dieser Bedingungen",
+        "p1": "Diese Bedingungen können aktualisiert werden. Das Datum oben gibt die aktuell gültige Version an, und relevante Änderungen werden vor ihrem Inkrafttreten in der App oder per E-Mail angekündigt. Wenn Sie PathR danach weiterhin nutzen, erklären Sie sich mit der neuen Version einverstanden; sollten Sie damit nicht einverstanden sein, können Sie Ihr Konto löschen."
+      },
+      "lei": {
+        "titulo": "Anwendbares Recht und Gerichtsstand",
+        "p1a": "Diese Bedingungen entsprechen der brasilianischen Gesetzgebung. Etwaige Streitigkeiten werden gemäß dem Verbraucherschutzgesetz vor dem zuständigen Gericht am Wohnsitz des Verbrauchers beigelegt. Zuvor schreiben Sie bitte an",
+        "p1b": "— Die meisten Probleme lassen sich durch ein Gespräch lösen."
+      }
+    },
+    "privacidade": {
+      "aba": "Datenschutz",
+      "kicker": "Datenschutz und Datennutzung",
+      "titulo": "Datenschutzerklärung",
+      "introducao": "Wie PathR Ihre personenbezogenen Daten erhebt, nutzt, speichert und weitergibt und wie Sie Ihre Rechte gemäß dem Allgemeinen Datenschutzgesetz (Gesetz Nr. 13.709/2018) ausüben können.",
+      "resumo": [
+        "Wir erfassen alle notwendigen Informationen, um Ihren Studienplan zu erstellen und zu begleiten: Konto, Profil, Lebenslauf und Lernfortschritt.",
+        "Wir verkaufen keine Daten, zeigen keine Werbung an und verwenden keine Analysetools oder Werbe-Pixel.",
+        "Der Lehrplan und die Lerninhalte werden an Anbieter von künstlicher Intelligenz übermittelt, um den Lehrplan, die Quizze und die Korrekturen zu erstellen.",
+        "Andere Nutzer sehen nur Ihr Profil (Name, @, Foto, Stadt, Ziel und Technologien) – niemals Ihre E-Mail-Adresse oder Ihr Geburtsdatum.",
+        "Sie können jederzeit unter „Einstellungen“ › „Benachrichtigungen und Datenschutz“ alles in eine Datei exportieren oder das Konto löschen.",
+        "Fragen oder Anfragen bezüglich Ihrer Daten: privacidade@notter.com.br."
+      ],
+      "controlador": {
+        "titulo": "Wer kümmert sich um Ihre Daten?",
+        "p1a": "PathR ist eine App zur Studienplanung für alle, die im Technologiebereich tätig sind, erhältlich unter",
+        "p1b": ", mit der API unter",
+        "p1c": ". Es wird entwickelt und betrieben von",
+        "p1d": ", der gemäß Art. 5 Abs. VI des LGPD der Verantwortliche für die in der App verarbeiteten personenbezogenen Daten ist.",
+        "p2": "Für alle Fragen zum Datenschutz – sei es bei Unklarheiten, Anträgen auf Auskunft, Berichtigung oder Löschung – ist der Kontaktkanal, der gleichzeitig als Datenschutzbeauftragter fungiert (Art. 41),",
+        "p3": "Obwohl die Adresse unter der Domain notter.com.br liegt, ist PathR unabhängig: Es verfügt über eine eigene Datenbank, eigene Konten und eigene Anmeldedaten. Ein PathR-Konto gewährt keinen Zugriff auf andere Anwendungen, und das Gleiche gilt auch umgekehrt."
+      },
+      "dadosColetados": {
+        "titulo": "Welche Daten erheben wir?",
+        "contaTitulo": "Konto und Zugang",
+        "conta": [
+          "Name, E-Mail-Adresse, Benutzername (@) und das Erstellungsdatum des Kontos.",
+          "Das Passwort wird ausschließlich als Hash (Argon2id) gespeichert – niemals als Klartext.",
+          "Kontoeinstellungen: Sprache, Zeitzone und Design.",
+          "Wenn Sie diese Option aktivieren: den verschlüsselt gespeicherten Zwei-Faktor-Schlüssel (TOTP) und die als Hash gespeicherten Wiederherstellungscodes.",
+          "Wenn Sie Passkeys registrieren: Nur der öffentliche Teil des Schlüssels, der von Ihnen gewählte Name und die Verwendungsdaten. Der private Schlüssel verlässt Ihr Gerät zu keinem Zeitpunkt."
+        ],
+        "perfilTitulo": "Profil",
+        "perfil": [
+          "Geburtsdatum (verschlüsselt gespeichert), Stadt, Bundesland (UF) und Land.",
+          "Aktuelle Position, angestrebte Position oder Ziel, Dienstalter, Berufserfahrung in Jahren, Lernstunden pro Woche, Lernstil und Ziele.",
+          "Optionale Angaben: Titel, Biografie, Links zu LinkedIn und GitHub sowie Profilbild.",
+          "Einstellungen für E-Mail-Benachrichtigungen, ob Sie in den Personenvorschlägen erscheinen und der Suchradius für Präsenzstellen."
+        ],
+        "curriculoTitulo": "Lebenslauf",
+        "curriculo": [
+          "Die hochgeladene Datei (PDF, DOCX, ODT, RTF, TXT oder MD, bis zu 10 MB), der Dateiname und ein digitale Fingerabdruck (Hash) des Inhalts, der dazu dient, zu verhindern, dass dieselbe Datei erneut verarbeitet wird.",
+          "Der aus der Datei extrahierte Text und das, was die KI darin gelesen hat: Technologien, geschätztes Niveau der einzelnen Technologien, Position und Berufserfahrung in Jahren."
+        ],
+        "notaCurriculo": "Der Lebenslauf wird so wie er ist verschickt. Falls er eine Telefonnummer, Adresse oder andere Kontaktdaten enthält, werden diese Angaben mitgeschickt. Falls Sie es vorziehen, können Sie diese Angaben vor dem Versenden aus der Datei entfernen – sie sind für die Erstellung des Plans nicht erforderlich.",
+        "estudoTitulo": "Studium und Fortschritt",
+        "estudo": [
+          "Kompetenzen und Leistungsstufen (aus dem Lehrplan, aus Quizzen oder von Ihnen angepasst).",
+          "Roadmap, Module, gespeicherte Materialien und der jeweilige Fortschritt in jedem Modul, Kurse und markierte Zertifikate.",
+          "Quizze, Antworten und die „Spaced-Repetition“-Warteschlange; von dir verfasste Erklärungen und Aufgaben sowie deren Korrekturen; wöchentliche Checklisten; im Code-Labor erstellte Beispiele.",
+          "Sprachmodul: Einstufung, Übungsrunden (Lesen, Hören, Schreiben und Sprechen), Antworten und Vokabeln.",
+          "Tägliche Aktivität: Lernminuten, XP, Serie und die Jahresübersicht."
+        ],
+        "pessoasTitulo": "Menschen und Berichte",
+        "pessoas": [
+          "Gesendete oder erhaltene Freundschaftsanfragen und Einladungen.",
+          "Meldungen (Beschwerden und Vorschläge): Art, Nachricht, Seite, auf der Sie sich befanden, angehängtes Foto (optional), Status und Anmerkung der Moderation."
+        ],
+        "tecnicosTitulo": "Technische Daten und Sicherheitshinweise",
+        "tecnicos": [
+          "IP-Adresse und Browser-Identifikation (User-Agent) jeder Sitzung sowie von Sicherheitsereignissen wie Registrierung, Anmeldungen, fehlgeschlagenen Anmeldeversuchen und der Nutzung der Zwei-Faktor-Authentifizierung.",
+          "Nutzungsbegrenzer, die mit der IP-Adresse, der Empfänger-E-Mail-Adresse oder dem Konto verknüpft sind, um Missbrauch zu verhindern.",
+          "Eine Auflistung, welche E-Mail-Benachrichtigungen Ihnen an welchem Tag zugesandt wurden, damit dieselbe Benachrichtigung nicht erneut versendet wird.",
+          "Server-Fehlerprotokolle: Der Pfad, die Fehlerart und eine Meldung, aus der vor dem Speichern E-Mail-Adressen, Kennungen und Tokens entfernt werden."
+        ],
+        "naoColetamosTitulo": "Was wir nicht erfassen",
+        "naoColetamos": [
+          "Wir verwenden weder Tools zur Besucheranalyse noch Werbe-Pixel.",
+          "Wir fragen nicht nach Ihrem Standort über das Gerät (GPS) – die Stadt geben Sie selbst an.",
+          "Wir erfassen keine Zahlungsdaten: PathR ist kostenlos."
+        ]
+      },
+      "finalidades": {
+        "titulo": "Wofür verwenden wir die Daten und auf welcher Rechtsgrundlage?",
+        "itens": [
+          {
+            "forte": "Die von Ihnen angeforderte Dienstleistung erbringen",
+            "resto": " (Vertragsdurchführung, § 7, V): das Konto anlegen und pflegen, den Lebenslauf lesen, den Fahrplan erstellen und anpassen, Quizze, Erklärungen und Übungen erstellen, den Fortschritt messen, Materialien und Stellenangebote suchen, die zu Ihrem Profil und Ihrer Region passen, sowie die erforderlichen E-Mails versenden, wie z. B. die Anmeldebestätigung und die Passwortzurücksetzung."
+          },
+          {
+            "forte": "Schützen Sie Ihre Konten und den Dienst",
+            "resto": " (berechtigtes Interesse, Art. 7 Abs. IX, und Betrugsbekämpfung, Art. 11 Abs. II Buchstabe g, sofern anwendbar): Sicherheitsprotokolle, Sperrung nach fehlgeschlagenen Anmeldeversuchen, Nutzungsbeschränkungen pro IP-Adresse oder Konto sowie Fehlerprotokollierung."
+          },
+          {
+            "forte": "Soziale Ressourcen",
+            "resto": " (berechtigtes Interesse): Personen aus Ihrer Stadt oder mit gemeinsamen Interessen vorschlagen. Sie können dem jederzeit widersprechen, indem Sie die Option „In den Freundesvorschlägen erscheinen“ deaktivieren."
+          },
+          {
+            "forte": "E-Mail-Benachrichtigungen",
+            "resto": " (Tägliche Erinnerung, wöchentliche Zusammenfassung, Neuigkeiten, fertige Korrektur, gefährdete Folge): Jede Funktion hat einen eigenen Schalter, den Sie nach Belieben ein- oder ausschalten können."
+          },
+          {
+            "forte": "Mindestalter überprüfen",
+            "resto": ": Das Geburtsdatum dient dazu, zu bestätigen, dass Sie mindestens 18 Jahre alt sind."
+          },
+          {
+            "forte": "Moderation und Verbesserung der App",
+            "resto": " (berechtigtes Interesse): die eingereichten Berichte zu prüfen und Mängel zu beheben."
+          },
+          {
+            "forte": "Gesetzliche Verpflichtungen erfüllen und Rechte verteidigen",
+            "resto": " (Art. 7 Abs. II und VI), sofern erforderlich."
+          }
+        ],
+        "nota": "Wir verkaufen, vermieten oder geben Ihre Daten nicht zu Werbezwecken weiter. Wir verwenden Ihre Daten nicht für Entscheidungen, die Sie außerhalb der App betreffen."
+      },
+      "ia": {
+        "titulo": "Künstliche Intelligenz",
+        "p1": "Ein Großteil von PathR arbeitet mit Sprachmodellen von Drittanbietern. Zu diesem Zweck senden wir ihnen die für die jeweilige Aufgabe erforderlichen Inhalte:",
+        "itens": [
+          "Anzeigen des Lebenslaufs: die gesamte PDF-Datei (um das Layout beizubehalten) oder der aus den anderen Formaten extrahierte Text.",
+          "Studienplan und Vorschläge: Zielsetzung, Studienjahr, verfügbare Stunden und Kompetenzen.",
+          "Quizze, Erklärungen, Lösungen zu Aufgaben, Code-Beispiele und Sprachübungen: das Thema und der von Ihnen verfasste Text bzw. Code."
+        ],
+        "p2a": "Die Provider werden abwechselnd genutzt – wenn einer nicht erreichbar ist oder das Kontingent aufgebraucht ist, wird die Anfrage an den nächsten weitergeleitet:",
+        "p2b": ". Wir geben Ihr Passwort oder Ihre Zugangsdaten niemals an diese weiter. Einige dieser Anbieter werden im Rahmen von kostenlosen Tarifen genutzt, deren Nutzungsbedingungen es möglicherweise erlauben, dass die erhaltenen Inhalte zur Verbesserung ihrer Dienste verwendet werden; vermeiden Sie daher bitte, sensible Daten in Texten und Aktivitäten anzugeben.",
+        "p3": "Was die KI liefert, ist eine Schätzung. Nichts von dem, was sie im Lebenslauf liest, wird in Ihr Profil übernommen, ohne dass Sie es überprüfen und bestätigen, und für jedes Konto gilt ein tägliches Nutzungslimit für die KI."
+      },
+      "compartilhamento": {
+        "titulo": "An wen wir diese Informationen weitergeben",
+        "p1": "Damit PathR funktionieren kann, ist es auf Dienstleister angewiesen, die Daten in unserem Auftrag verarbeiten (Auftragsverarbeiter). Jeder von ihnen erhält nur die Informationen, die er für seine Aufgabe benötigt:",
+        "fichas": [
+          {
+            "papel": "Datenbanken und Speicherung",
+            "detalhe": "Speichert alle Kontodaten. Die Dateien (Lebenslauf, Fotos) werden in privaten Bereichen gespeichert, ohne öffentliche Adresse."
+          },
+          {
+            "papel": "API-Hosting",
+            "detalhe": "Verarbeitet die Anfragen an den Server, der in der Region São Paulo gehostet wird."
+          },
+          {
+            "papel": "Webhosting",
+            "detalhe": "Liefert die Seiten der App; empfängt technische Zugangsdaten wie IP-Adresse und Browser."
+          },
+          {
+            "papel": "Transaktions-E-Mail",
+            "detalhe": "Es versendet Bestätigungen zur Registrierung, Passwortzurücksetzungen und die Benachrichtigungen, die Sie aktiviert haben. Es empfängt Ihren Namen, Ihre E-Mail-Adresse und den Inhalt der Nachricht."
+          },
+          {
+            "papel": "Künstliche Intelligenz",
+            "detalhe": "Sie erhalten die im vorigen Abschnitt beschriebenen Inhalte."
+          },
+          {
+            "papel": "Übersetzung",
+            "detalhe": "Übersetzt Wörter und Textabschnitte, die im Sprachmodul aufgerufen werden. Es wird nur der zu übersetzende Text übergeben."
+          },
+          {
+            "papel": "Suche nach Materialien und Stellenangeboten",
+            "detalhe": "Sie erhalten Suchbegriffe wie „Technologie“, „Thema“, „Position“ und „Stadt“ – nicht Ihren Namen oder Ihre E-Mail-Adresse."
+          },
+          {
+            "papel": "Stellenangebote",
+            "detalhe": "Sie erhalten die Suchanfrage und bei Adzuna die ausgewählte Stadt und den Radius. Die Stellenangebote stammen aus den Anzeigen dieser Websites."
+          },
+          {
+            "papel": "Videoplayer",
+            "detalhe": "Lernvideos nutzen den eingebetteten YouTube-Player, der technische Daten von Ihrem Browser erhält und den Richtlinien von Google folgt."
+          },
+          {
+            "papel": "Schriftart",
+            "detalhe": "Übermittelt die Inter-Quelle; empfängt die IP-Adresse und technische Daten des Browsers."
+          },
+          {
+            "papel": "Interne Triage",
+            "detalhe": "Privater Bereich des Betreibers, in dem Meldungen und Fehler systematisch erfasst werden – Meldungen ohne Namen, E-Mail-Adresse oder @-Zeichen des Absenders."
+          },
+          {
+            "papel": "Tägliche Sortierroutine",
+            "detalhe": "Ein automatisierter Prozess liest die anonymen Meldungen und die Serverfehler aus, um sie in Notion zu organisieren."
+          }
+        ],
+        "p2": "Neben diesen Betreibern können Daten auch weitergegeben werden an:",
+        "itens": [
+          "Bei anderen PathR-Konten gelten die unter „Was andere Nutzer sehen“ beschriebenen Einschränkungen.",
+          "Bei den Berichten erfolgt eine Moderation.",
+          "An Behörden, sofern eine gesetzliche Verpflichtung oder eine gerichtliche Anordnung vorliegt."
+        ]
+      },
+      "outrasPessoas": {
+        "titulo": "Was andere Menschen sehen",
+        "p1a": "Andere mit PathR verknüpfte Konten können Ihr",
+        "p1forte": "Karte",
+        "p1b": ": Name, @, Profilbild, Stadt und Bundesland, Ziel, Position, Berufserfahrung und bis zu fünf Technologien aus Ihrem Profil, zusätzlich zu denen, die Sie gemeinsam haben.",
+        "p2a": "Die Karte",
+        "p2forte": "niemals",
+        "p2b": "zeigt deine E-Mail-Adresse, dein Geburtsdatum, deinen Lebenslauf, deine Biografie, deine Antworten auf Quizfragen oder Details zu deinem Fortschritt an. Besucher ohne Konto sehen nichts davon.",
+        "sugestoesForte": "In den Freundschaftsvorschlägen erscheinen",
+        "sugestoesResto": " Diese Funktion ist standardmäßig aktiviert. Wenn Sie sie deaktivieren, werden Sie aus den Vorschlägen und der Suche nach Teilen des Namens entfernt, und Ihr Foto wird für Personen, die keine Verbindung zu Ihnen haben, nicht mehr angezeigt. Die Option finden Sie unter „Einstellungen“ › „Benachrichtigungen und Datenschutz“.",
+        "arrobaA": "Die Suche nach dem",
+        "arrobaForte": "@ genau",
+        "arrobaB": "Finde ein beliebiges Konto, damit jemand, dem du deinen @-Namen weitergegeben hast, dich hinzufügen kann.",
+        "convite": "Eine abgelehnte Einladung wird gelöscht – der Einladende wird nicht über die Ablehnung informiert."
+      },
+      "relatos": {
+        "titulo": "Berichte und Moderation",
+        "p1": "Wenn Sie über den Bildschirm „Melden“ eine Beschwerde oder einen Vorschlag einreichen, ist dieser für Sie und die Moderation sichtbar. Die Moderation sieht Ihren Namen, Ihr @ und Ihre E-Mail-Adresse, um Ihnen antworten zu können. Das angehängte Foto wird ausschließlich über den Server an Sie und die Moderation weitergeleitet.",
+        "p2a": "Einmal täglich kopiert ein automatisierter Vorgang die neuesten Berichte",
+        "p2forte": "ohne jegliche Angabe, von wem sie gesendet wurden",
+        "p2b": " (nur Typ, Nachricht, Seite und Status) in einen privaten Sortierbereich in Notion, und die Moderatoren erhalten per E-Mail eine Zusammenfassung mit der Anzahl der Meldungen und Fehler des Tages."
+      },
+      "retencao": {
+        "titulo": "Wie lange bewahren wir sie auf?",
+        "itens": [
+          {
+            "forte": "Konto, Profil und Studiendaten",
+            "resto": ": solange das Konto besteht. Beim Löschen des Kontos werden diese Datensätze sofort aus der Datenbank gelöscht, ohne dass eine Karenzfrist gilt."
+          },
+          {
+            "forte": "Lebensläufe",
+            "resto": ": bis Sie sie auf dem Lebenslauf-Bildschirm löschen (die Datei wird aus dem Speicher entfernt) oder das Konto löschen."
+          },
+          {
+            "forte": "E-Mail-Links",
+            "resto": ": Die Bestätigungs-E-Mail ist 3 Tage lang gültig, die E-Mail mit dem neuen Passwort 1 Stunde lang; beide sind nur einmal verwendbar."
+          },
+          {
+            "forte": "Sitzung",
+            "resto": ": Der Zugriff läuft in 30 Minuten ab und wird automatisch um bis zu 30 Tage verlängert – oder bis Sie sich abmelden."
+          },
+          {
+            "forte": "Verbrauchsgrenzzähler",
+            "resto": ": werden nach 2 Tagen gelöscht."
+          },
+          {
+            "forte": "Triage in Notion",
+            "resto": ": Die kopierten Beiträge, bei denen der Autor nicht angegeben ist, können als Korrekturverlauf beibehalten werden."
+          }
+        ],
+        "registrosForte1": "Server-Fehlerprotokolle",
+        "registrosMeio": ": werden nach 30 Tagen gelöscht (die Nachricht wird bereits ohne E-Mail-Adresse, Kennungen oder Tokens gespeichert).",
+        "registrosForte2": "Sicherheitsprotokolle",
+        "registrosResto": ": so lange, wie es zum Schutz der Konten erforderlich ist. Die mit Ihrem Konto verbundenen Sicherheitsprotokolle (Art des Vorfalls, Datum, IP-Adresse und Browser) werden zusammen mit dem Konto gelöscht; Zugriffsversuche, bei denen kein Konto identifiziert werden konnte, haben keinen Eigentümer und werden nur so lange gespeichert, wie es zur Betrugsbekämpfung erforderlich ist (Art. 16 des LGPD).",
+        "nota": "Beim Löschen des Kontos werden die hochgeladenen Dateien – Lebensläufe, Profilbild und an Beiträge angehängte Fotos – zusammen mit den Daten aus dem Speicher entfernt. Sollte aufgrund eines technischen Fehlers etwas zurückbleiben, bitten Sie per E-Mail um die Entfernung."
+      },
+      "direitos": {
+        "titulo": "Ihre Rechte",
+        "p1": "Die LGPD (Art. 18) garantiert Ihnen unter anderem die folgenden Rechte. Die meisten davon können Sie direkt in der App ausüben:",
+        "fichas": [
+          {
+            "nome": "Zugang und Übertragbarkeit",
+            "papel": "Einstellungen › Benachrichtigungen und Datenschutz",
+            "detalhe": "„Meine Daten exportieren“ lädt eine JSON-Datei herunter, die Konto, Profil, Kompetenzen, Lebensläufe (ohne den extrahierten Text), Roadmap, Quizze, Aktivitäten, Sprachen, Materialien, Kurse, Erläuterungen, Checklisten, Berichte und Freundschaften (nur mit dem @-Zeichen der anderen Person) enthält."
+          },
+          {
+            "nome": "Korrektur",
+            "papel": "Einstellungen und Profil",
+            "detalhe": "Name, Profildaten, Ziel, Kompetenzen und Präferenzen können jederzeit bearbeitet werden."
+          },
+          {
+            "nome": "Ausscheidung",
+            "papel": "Einstellungen › Benachrichtigungen und Datenschutz",
+            "detalhe": "Mit „Konto löschen“ werden das Konto, die damit verknüpften Daten, hochgeladene Dateien, Berichte, Freundschaften und Sicherheitsprotokolle des Kontos gelöscht. Lebensläufe können ebenfalls einzeln gelöscht werden."
+          },
+          {
+            "nome": "Einwilligung widerrufen und Widerspruch einlegen",
+            "papel": "Einstellungen › Benachrichtigungen und Datenschutz",
+            "detalhe": "Deaktivieren Sie E-Mail-Benachrichtigungen und die Option, in den Vorschlägen angezeigt zu werden."
+          },
+          {
+            "nome": "Information",
+            "papel": "Diese Seite",
+            "detalhe": "An wen geben wir Daten weiter, zu welchem Zweck und wie lange."
+          },
+          {
+            "nome": "Sonstige Anfragen",
+            "papel": "Per E-Mail",
+            "detalhe": "Alle weiteren Rechte oder Fragen dazu, welche Daten wir speichern, können per E-Mail angefragt werden."
+          }
+        ],
+        "p2": "Anfragen per E-Mail werden gemäß Art. 19 des LGPD innerhalb von 15 Tagen beantwortet. Wir können verlangen, dass die E-Mail von der in Ihrem Konto hinterlegten Adresse stammt, um zu bestätigen, dass der Antrag von Ihnen stammt. Sie können außerdem eine Beschwerde bei der Nationalen Datenschutzbehörde (ANPD) einreichen."
+      },
+      "idade": {
+        "titulo": "Mindestalter",
+        "p1a": "PathR ist nur für Volljährige bestimmt: Man muss mindestens",
+        "p1forte": "18 Jahre",
+        "p1b": "Um ein Konto zu erstellen, muss bei der Registrierung das Geburtsdatum angegeben werden. Wenn wir von einem Konto einer Person unter 18 Jahren erfahren, wird dieses geschlossen und die Daten werden gelöscht."
+      },
+      "cookies": {
+        "titulo": "Cookies und Speicherung auf dem Gerät",
+        "itens": [
+          {
+            "forte": "Sitzungs-Cookies",
+            "resto": " (unverzichtbar): Zwei API-Cookies sorgen dafür, dass Sie angemeldet bleiben. Sie sind „HttpOnly“ (der Seitencode kann sie nicht lesen), „Secure“ und „SameSite=Strict“."
+          },
+          {
+            "forte": "Lokale Speicherung",
+            "resto": ": Die App speichert im Browser den aktuellen Bildschirm und die verwendeten Einstellungen der Benutzeroberfläche sowie eine Kopie der bereits geladenen Daten, um auch ohne Internetverbindung zu funktionieren. Diese Kopie wird gelöscht, wenn Sie sich aus Ihrem Konto abmelden."
+          },
+          {
+            "forte": "App-Dateien",
+            "resto": ": Wenn die Website auf dem Startbildschirm installiert wird, werden die Dateien im Cache gespeichert, damit sie schneller geladen werden können."
+          }
+        ],
+        "p1": "Wir verwenden weder Werbe- noch Analyse-Cookies."
+      },
+      "transferencia": {
+        "titulo": "Internationaler Transfer",
+        "p1": "Ein Teil der aufgeführten Anbieter – insbesondere diejenigen aus den Bereichen künstliche Intelligenz, E-Mail, Website-Bereitstellung und Datenfilterung – verarbeitet Daten auf Servern außerhalb Brasiliens. Diese Übermittlungen erfolgen zur Erbringung der von Ihnen angeforderten Dienstleistung (Art. 33, IX der LGPD) durch Anbieter, die eigene Datenschutzverpflichtungen einhalten."
+      },
+      "incidentes": {
+        "titulo": "Sicherheit und Vorfälle",
+        "p1a": "Die Maßnahmen, die wir zum Schutz der Daten ergreifen, sind auf der Seite",
+        "p1link": "Sicherheit",
+        "p1b": ". Sollte sich ein Sicherheitsvorfall ereignen, der ein erhebliches Risiko oder einen erheblichen Schaden verursachen könnte, werden wir dies gemäß Art. 48 des LGPD der ANPD und den betroffenen Personen melden."
+      },
+      "mudancas": {
+        "titulo": "Änderungen dieser Richtlinie",
+        "p1": "Diese Richtlinien können sich ändern, wenn die App aktualisiert wird – beispielsweise durch eine neue Funktion oder einen neuen Anbieter. Das Aktualisierungsdatum oben gibt stets die aktuell gültige Version an, und relevante Änderungen werden vor ihrem Inkrafttreten in der App oder per E-Mail angekündigt."
+      }
+    },
+    "seguranca": {
+      "aba": "Sicherheit",
+      "kicker": "Sicherheit",
+      "titulo": "So schützen wir Ihr Konto",
+      "introducao": "Die technischen Maßnahmen, die PathR einsetzt, um den Zugriff auf Ihr Konto und die darin gespeicherten Daten zu schützen – und was Sie selbst tun können.",
+      "resumo": [
+        "Gespeicherte Passwörter werden ausschließlich als Argon2id-Hash gespeichert; der Passworttext selbst wird niemals gespeichert.",
+        "Für die Anmeldung ist eine bestätigte E-Mail-Adresse erforderlich, und das Konto wird nach fünf falschen Passwortversuchen für 15 Minuten gesperrt.",
+        "Ein Passkey und die Zwei-Faktor-Authentifizierung über eine Authentifizierungs-App werden unterstützt.",
+        "Sitzung in HttpOnly- und SameSite=Strict-Cookies mit rotierender Erneuerung und „Von allen Geräten abmelden“.",
+        "Geburtsdatum, Lebenslauf, Fotos und Berichte, die in der App selbst mit AES-256-GCM verschlüsselt sind, wobei der Schlüssel außerhalb der Datenbank gespeichert ist.",
+        "Dateien im privaten Speicher, die ausschließlich vom Server bereitgestellt werden und nur für berechtigte Personen zugänglich sind.",
+        "Haben Sie einen Fehler entdeckt? Bitte melden Sie ihn an privacidade@notter.com.br, bevor Sie ihn veröffentlichen."
+      ],
+      "senhas": {
+        "titulo": "Passwörter und Anmeldung",
+        "hashA": "Passwörter werden ausschließlich als Hash gespeichert",
+        "hashB": ", ein Algorithmus, der so konzipiert ist, dass er Angriffen mit Grafikkarten standhält. Nicht einmal der Betreiber der App kann Ihr Passwort einsehen.",
+        "itens": [
+          "Das Passwort muss mindestens 10 Zeichen lang sein und Buchstaben sowie Zahlen enthalten – diese Regel wird auf dem Server überprüft.",
+          "Nach fünf falschen Passwörtern in Folge wird das Konto für 15 Minuten gesperrt. Die Sperre ist vorübergehend, damit ein Angriff nicht dazu führt, dass der Kontoinhaber ausgesperrt wird.",
+          "Bei nicht existierenden E-Mail-Adressen und falschen Passwörtern wird dieselbe Meldung angezeigt, um nicht preiszugeben, zu welchen E-Mail-Adressen ein Konto gehört.",
+          "Zugang erhalten nur diejenigen, die ihre E-Mail-Adresse bestätigt haben – so kann niemand ein Konto mit der E-Mail-Adresse einer anderen Person erstellen.",
+          "Die Bestätigungslinks (3 Tage gültig) und die Links zum Anlegen eines neuen Passworts (1 Stunde gültig) sind nur einmal verwendbar, und der Server speichert lediglich deren Hash-Werte."
+        ]
+      },
+      "fatores": {
+        "titulo": "Zugangsschlüssel und zweite Authentifizierungsstufe",
+        "passkeyForte": "Zugangsschlüssel (Passkeys, WebAuthn-Standard)",
+        "passkeyResto": ": Sie melden sich mit Ihren biometrischen Daten oder der PIN des Geräts an. Der Server speichert nur den öffentlichen Teil des Schlüssels, der an die Adresse pathr.notter.com.br gebunden ist – eine gefälschte Seite kann ihn nicht verwenden. Sie können Ihre Daten unter „Einstellungen“ › „Konto“ hinzufügen und entfernen.",
+        "totpForte": "Zweiter Faktor (TOTP)",
+        "totpResto": ": Wenn diese Funktion aktiviert ist, wird bei der Anmeldung zusätzlich der Code einer Authentifizierungs-App abgefragt. Das Passwort wird verschlüsselt gespeichert, und die Wiederherstellungscodes sind einmalig und werden als Hash gespeichert.",
+        "desafio": "Jede Zugangsschlüssel-Herausforderung gilt für fünf Minuten und kann nur einmal genutzt werden."
+      },
+      "sessao": {
+        "titulo": "Sitzung",
+        "cookiesA": "Die Sitzung wird in Cookies gespeichert",
+        "cookiesB": "(der Code der Seite kann sie nicht lesen),",
+        "cookiesC": "(sie laufen ausschließlich über HTTPS) und",
+        "cookiesD": "(Bestellungen von anderen Websites werden nicht berücksichtigt).",
+        "itens": [
+          "Das Zugriffstoken ist 30 Minuten lang gültig. Bei der Verlängerung wird ein zweites Token verwendet, das bei jeder Nutzung ausgetauscht wird; sollte ein bereits ausgetauschtes Token erneut auftauchen – was darauf hindeutet, dass es kopiert wurde –, wird die gesamte Sitzungskette widerrufen.",
+          "Jede Anfrage prüft auf dem Server, ob die Sitzung noch gültig ist. Beendete Sitzungen funktionieren sofort nicht mehr, nicht erst, wenn sie ablaufen.",
+          "Durch das Ändern des Passworts werden Ihre anderen Sitzungen beendet; durch das Zurücksetzen des Passworts per E-Mail werden alle Sitzungen beendet."
+        ],
+        "p1a": "Unter „Einstellungen“ › „Benachrichtigungen und Datenschutz“,",
+        "p1forte": "Von allen Geräten abmelden",
+        "p1b": "schließt alle geöffneten Sitzungen auf einmal."
+      },
+      "dados": {
+        "titulo": "Zugriff auf die Daten",
+        "itens": [
+          "Jeder API-Aufruf erfordert eine gültige Sitzung und gibt nur Datensätze zurück oder ändert nur solche, die dem angemeldeten Benutzer gehören.",
+          "Der Browser kommuniziert niemals direkt mit der Datenbank: Nur die API verfügt über die Anmeldedaten, und die Berechtigungen der öffentlichen Rollen der Bank werden in allen Tabellen widerrufen.",
+          "Lebensläufe, Profilbilder und Fotos aus Beiträgen werden privat gespeichert und sind nicht öffentlich zugänglich. Sie werden ausschließlich über den Server an diejenigen weitergegeben, die über die entsprechende Berechtigung verfügen.",
+          "Geburtsdatum, Lebenslauf (die Datei, der extrahierte Text und das, was die KI daraus gelesen hat), Profilbilder und Beiträge (Nachricht, Antwort der Moderation und Foto) werden von der App selbst mit AES-256-GCM verschlüsselt, bevor sie in die Datenbank oder den Speicher gelangen. Der Schlüssel wird in den geschützten Einstellungen des Servers außerhalb der Datenbank gespeichert: Wer eine Kopie der Datenbank oder der Dateien erhält, sieht nur verschlüsselten Text. Jeder Wert ist an das zugehörige Konto gebunden, sodass ein Kopieren in ein anderes Konto diesen nicht freischaltet.",
+          "Das Foto einer anderen Person wird nur angezeigt, wenn diese in den Vorschlägen sichtbar ist oder eine Verbindung zu dir hat.",
+          "Die Moderationsbereiche werden für alle Konten, die nicht zur Moderation gehören, als nicht vorhanden angezeigt.",
+          "Der Datenexport enthält keine Passwort-Hashes, keine Zwei-Faktor-Passwörter und keine Sitzungstoken."
+        ]
+      },
+      "navegador": {
+        "titulo": "Schutzmaßnahmen im Browser und im Netzwerk",
+        "httpsA": "Der gesamte Datenverkehr nutzt",
+        "httpsB": ", mit HSTS: Der Browser merkt sich, PathR niemals unverschlüsselt aufzurufen.",
+        "csp": "schränkt ein, von wo die Website Skripte, Stylesheets, Schriftarten und Verbindungen lädt, und dient so als zweite Barriere gegen Code-Injektionen.",
+        "itens": [
+          "Die Website kann nicht in Frames anderer Seiten angezeigt werden (X-Frame-Options und frame-ancestors), wodurch manipulierte Klicks verhindert werden.",
+          "Die Header „nosniff“, „Referrer-Policy“ und „Cross-Origin-Resource-Policy“ verhindern, dass Dateien als etwas anderes interpretiert oder von anderen Websites eingebettet werden.",
+          "Die Website blockiert die Nutzung der Kamera, der Standortbestimmung und der Zahlungsfunktion über den Browser, die die App nicht nutzt.",
+          "Die interaktive API-Dokumentation ist in der Produktionsumgebung deaktiviert."
+        ]
+      },
+      "arquivos": {
+        "titulo": "Dateien und Inhalte von Dritten",
+        "itens": [
+          "Lebensläufe werden in den Formaten PDF, DOCX, ODT, RTF, TXT und MD mit einer Dateigröße von bis zu 10 MB akzeptiert.",
+          "Fotos (Profilbilder und Beiträge) werden nur im JPG-, PNG- oder WebP-Format mit einer Größe von bis zu 5 MB akzeptiert, wobei der Dateityp anhand der Dateibyte ermittelt wird – nicht anhand des Dateinamens oder der vom Browser angegebenen Informationen.",
+          "Das Foto eines Berichts wird mit einer Richtlinie bereitgestellt, die jegliche Ausführung verhindert, selbst wenn eine getarnte Datei die Überprüfung passieren sollte.",
+          "Artikel von anderen Websites, die in der App angezeigt werden, werden vor der Darstellung auf dem Server anhand einer Zulassungsliste überprüft, und der Server weigert sich, Adressen aus internen Netzwerken abzurufen.",
+          "Externe Links (Artikel, Stellenangebote, Kurse, KI-Antworten) werden nur dann zu anklickbaren Links, wenn sie mit http oder https beginnen."
+        ]
+      },
+      "limites": {
+        "titulo": "Grenzen gegen Missbrauch",
+        "p1": "Einige Ressourcen stehen allen gemeinsam zur Verfügung – das E-Mail-Kontingent und das Kontingent für künstliche Intelligenz. Damit niemand das aufbraucht, was allen gehört, legt der Server Obergrenzen fest:",
+        "fichas": [
+          {
+            "nome": "Registrierung",
+            "papel": "5 pro Stunde",
+            "detalhe": "Nach IP-Adresse."
+          },
+          {
+            "nome": "Eingang",
+            "papel": "30 alle 15 Minuten",
+            "detalhe": "Nach IP-Adresse sowie zusätzlich durch Sperrung des Kontos."
+          },
+          {
+            "nome": "Bestätigungs-E-Mails und Passwort",
+            "papel": "6 pro Stunde pro IP-Adresse",
+            "detalhe": "Und höchstens drei pro Stunde an dieselbe E-Mail-Adresse."
+          },
+          {
+            "nome": "Künstliche Intelligenz",
+            "papel": "150 Anrufe pro Tag",
+            "detalhe": "Auf Rechnung."
+          },
+          {
+            "nome": "Personensuche",
+            "papel": "60 alle 10 Minuten",
+            "detalhe": "Auf Rechnung."
+          },
+          {
+            "nome": "Freundschaftseinladungen",
+            "papel": "40 pro Tag",
+            "detalhe": "Auf Rechnung."
+          },
+          {
+            "nome": "Berichte",
+            "papel": "10 pro Tag",
+            "detalhe": "Auf Rechnung."
+          }
+        ]
+      },
+      "monitoramento": {
+        "titulo": "Überwachung",
+        "itens": [
+          "Sicherheitsereignisse – Registrierung, Anmeldungen, Fehler und die Verwendung der Zwei-Faktor-Authentifizierung – werden mit Datum, IP-Adresse und Browser protokolliert. Das Protokoll enthält niemals Passwörter, Codes oder Tokens.",
+          "Serverfehler werden ohne E-Mails, Kennungen oder Tokens in der Meldung protokolliert.",
+          "Im Rahmen einer täglichen automatisierten Überprüfung werden Fehler, Meldungen und Abhängigkeiten des Projekts überprüft, und die Moderatoren erhalten eine Zusammenfassung per E-Mail."
+        ]
+      },
+      "suaParte": {
+        "titulo": "Was Sie tun können",
+        "itens": [
+          "Verwenden Sie ein Passwort, das Sie nirgendwo sonst verwenden, oder einen Passwort-Manager.",
+          "Registrieren Sie einen Zugangsschlüssel für Ihr Gerät unter „Einstellungen“ › „Konto“.",
+          "Wenn Sie den Verdacht haben, dass sich jemand in Ihr Konto eingeloggt hat, ändern Sie Ihr Passwort und wählen Sie „Von allen Geräten abmelden“.",
+          "Seien Sie misstrauisch gegenüber Nachrichten, in denen Sie nach Ihrem Passwort gefragt werden: PathR fragt niemals per E-Mail nach Ihrem Passwort. Im Zweifelsfall geben Sie pathr.notter.com.br direkt in den Browser ein, anstatt auf den Link zu klicken.",
+          "Bei gemeinsam genutzten Computern sollten Sie sich nach Beendigung der Sitzung abmelden – dadurch wird auch die im Browser gespeicherte Offline-Kopie gelöscht."
+        ]
+      },
+      "vulnerabilidades": {
+        "titulo": "Haben Sie eine Sicherheitslücke entdeckt?",
+        "p1a": "Schreiben Sie an",
+        "p1b": "mit einer Beschreibung des Problems und den Schritten, um es zu reproduzieren. Wir bitten Sie, keine Daten anderer Personen abzurufen, zu ändern oder zu löschen, den Dienst nicht zu beeinträchtigen und eine angemessene Frist für die Behebung des Problems einzuräumen, bevor Sie die Schwachstelle öffentlich machen. PathR hat kein Prämienprogramm, bedankt sich jedoch – und antwortet."
+      },
+      "limitacoes": {
+        "titulo": "Ein ehrlicher Hinweis",
+        "notaA": "Kein System ist vollkommen sicher. PathR ist ein unabhängiges Projekt ohne Sicherheitszertifizierungen und hängt zudem von der Sicherheit der in der",
+        "notaLink": "Datenschutzerklärung",
+        "notaB": ". Sollte es zu einem relevanten Vorfall kommen, der Ihre Daten betrifft, werden Sie gemäß dem LGPD benachrichtigt."
+      }
+    }
   }
 }

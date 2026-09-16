@@ -29,7 +29,7 @@
  */
 
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
-import type { ActivitySummary, Overview, PessoaCartao } from "@/api/types";
+import type { ActivitySummary, Overview } from "@/api/types";
 import { ConsistencyPanel } from "@/components/dashboard/ConsistencyPanel";
 import { KpiCards } from "@/components/dashboard/KpiCards";
 import { CartaoPessoa, type AcaoDeAmizade } from "@/components/social/CartaoPessoa";
@@ -37,7 +37,8 @@ import { Icon, type IconName } from "@/components/ui/icons";
 import { Logo } from "@/components/ui/Logo";
 import { Select } from "@/components/ui/Select";
 import { SeletorDeIdioma } from "@/components/ui/SeletorDeIdioma";
-import { useT, type Traduzir } from "@/lib/i18n";
+import { pessoasDeExemplo } from "@/lib/lugaresDeExemplo";
+import { useIdioma, useT, type Traduzir } from "@/lib/i18n";
 import { iconeDaLinguagem } from "@/lib/linguagens";
 import { isoLocal } from "@/lib/dashboard";
 import { ACC, ACC3, ACC4, BG, C, HAIRLINE, PANEL, TEXT, tint } from "@/lib/tokens";
@@ -102,24 +103,6 @@ function panoramaDeExemplo(atividade: ActivitySummary, feitos: number, total: nu
   } as unknown as Overview;
 }
 
-function pessoasDeExemplo(t: Traduzir): PessoaCartao[] {
-  return [
-    {
-      username: "marinacosta", name: t("landing.pessoas.marina.nome"), has_avatar: false,
-      city: t("landing.pessoas.marina.cidade"), state: "ES",
-      objetivo: t("landing.pessoas.marina.objetivo"), cargo: t("landing.pessoas.marina.cargo"), senioridade: "pleno",
-      stack: ["Java", "Spring Boot", "PostgreSQL", "Docker"], relacao: "nenhuma", friendship_id: null,
-      em_comum: ["Java", "Spring Boot"],
-    },
-    {
-      username: "lucas_rocha", name: t("landing.pessoas.lucas.nome"), has_avatar: false,
-      city: t("landing.pessoas.lucas.cidade"), state: "ES",
-      objetivo: t("landing.pessoas.lucas.objetivo"), cargo: null, senioridade: "junior",
-      stack: ["React", "TypeScript", "Node.js"], relacao: "recebido", friendship_id: "exemplo",
-      em_comum: ["React", "TypeScript", "Node.js"], mesma_stack: true,
-    },
-  ];
-}
 
 /** A trilha de exemplo: 19 módulos no total, e estes cinco são a fase atual. */
 const TOTAL_DE_MODULOS = 19;
@@ -657,8 +640,22 @@ function PreviaCodigo() {
 
 function PreviaPessoas() {
   const t = useT();
-  const [pessoas, setPessoas] = useState(() => pessoasDeExemplo(t));
+  const { idioma } = useIdioma();
+  const [pessoas, setPessoas] = useState(() => pessoasDeExemplo(idioma));
   const [aviso, setAviso] = useState<string | null>(null);
+
+  // Trocou o idioma: outras pessoas, de outra cidade, com outra stack. O que
+  // o visitante já tinha adicionado no exemplo volta ao começo junto — é um
+  // exemplo novo, não o mesmo traduzido. Depende só do idioma: o dicionário
+  // chega depois da primeira pintura, e reagir a ele apagaria o clique que o
+  // visitante acabou de dar.
+  useEffect(() => {
+    setPessoas(pessoasDeExemplo(idioma));
+    setAviso(null);
+  }, [idioma]);
+
+  // O objetivo vem como chave e é traduzido aqui, na hora de mostrar.
+  const naTela = pessoas.map((pessoa) => ({ ...pessoa, objetivo: t(pessoa.objetivo ?? "") }));
 
   function simular(username: string, acao: AcaoDeAmizade) {
     setPessoas((atuais) =>
@@ -682,7 +679,7 @@ function PreviaPessoas() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 230px), 1fr))", gap: 10 }}>
-        {pessoas.map((pessoa) => (
+        {naTela.map((pessoa) => (
           <CartaoPessoa
             key={pessoa.username}
             pessoa={pessoa}

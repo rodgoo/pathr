@@ -13,6 +13,8 @@
 
 import { useEffect, type MouseEvent, type ReactNode } from "react";
 import { Logo } from "@/components/ui/Logo";
+import { SeletorDeIdioma } from "@/components/ui/SeletorDeIdioma";
+import { useT } from "@/lib/i18n";
 import { ACC, ACC3, ACC4, BG, C, HAIRLINE, PANEL, TEXT } from "@/lib/tokens";
 
 export type Navegar = (path: string) => void;
@@ -201,6 +203,8 @@ export function LegalLayout({
   documentos: DocumentoLegal[];
   onNavigate: Navegar;
 }) {
+  const t = useT();
+
   useEffect(() => {
     const anterior = document.title;
     document.title = `${documento.titulo} · PathR`;
@@ -230,12 +234,13 @@ export function LegalLayout({
           <span style={{ fontSize: 17, fontWeight: 600 }}>PathR</span>
         </a>
         <a {...linkInterno("/", onNavigate)} className="lg-voltar" style={{ marginLeft: "auto" }}>
-          <span aria-hidden>← </span>Voltar ao PathR
+          <span aria-hidden>← </span>
+          {t("legal.layout.voltar")}
         </a>
       </header>
 
       <div style={{ maxWidth: 1120, margin: "0 auto", padding: "0 clamp(16px, 4vw, 40px)" }}>
-        <nav aria-label="Documentos legais" style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: "24px 0 0" }}>
+        <nav aria-label={t("legal.layout.abasAria")} style={{ display: "flex", gap: 8, flexWrap: "wrap", padding: "24px 0 0" }}>
           {documentos.map((outro) => (
             <a
               key={outro.path}
@@ -257,7 +262,7 @@ export function LegalLayout({
           </h1>
           <p style={{ fontSize: "clamp(15.5px, 1.6vw, 17px)", lineHeight: 1.7, color: TEXT.muted, margin: 0 }}>{documento.introducao}</p>
           <p style={{ fontSize: 13, color: TEXT.faint, margin: "14px 0 0" }}>
-            Última atualização: <time dateTime="2026-09-13">{ULTIMA_ATUALIZACAO}</time>
+            {t("legal.layout.ultimaAtualizacao")} <time dateTime="2026-09-13">{ULTIMA_ATUALIZACAO}</time>
           </p>
         </header>
 
@@ -271,7 +276,7 @@ export function LegalLayout({
             marginBottom: "clamp(28px, 5vw, 48px)",
           }}
         >
-          <h2 id="lg-resumo" style={{ fontSize: 18, fontWeight: 600, margin: "0 0 14px" }}>Em resumo</h2>
+          <h2 id="lg-resumo" style={{ fontSize: 18, fontWeight: 600, margin: "0 0 14px" }}>{t("legal.layout.resumoTitulo")}</h2>
           <ul style={{ listStyle: "none", padding: 0, margin: 0, display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 300px), 1fr))", gap: "10px 28px" }}>
             {documento.resumo.map((ponto) => (
               <li key={ponto} style={{ display: "flex", gap: 10, fontSize: 14.5, lineHeight: 1.6, color: TEXT.strong }}>
@@ -284,9 +289,9 @@ export function LegalLayout({
 
         <div className="lg-grade">
           <aside className="lg-sumario lg-sumario-largo">
-            <nav aria-label="Nesta página">
+            <nav aria-label={t("legal.layout.nestaPagina")}>
               <div style={{ fontSize: 11.5, letterSpacing: ".14em", textTransform: "uppercase", color: TEXT.faint, fontWeight: 600, margin: "0 0 10px 10px" }}>
-                Nesta página
+                {t("legal.layout.nestaPagina")}
               </div>
               <Sumario secoes={documento.secoes} />
             </nav>
@@ -294,8 +299,8 @@ export function LegalLayout({
 
           <main style={{ minWidth: 0, maxWidth: "74ch" }}>
             <details className="lg-sumario lg-sumario-estreito" style={{ marginBottom: 28, padding: "12px 14px", borderRadius: 12, boxShadow: `inset 0 0 0 1px ${HAIRLINE}` }}>
-              <summary style={{ cursor: "pointer", fontSize: 14, color: TEXT.strong }}>Nesta página</summary>
-              <nav aria-label="Nesta página (lista compacta)" style={{ marginTop: 8 }}>
+              <summary style={{ cursor: "pointer", fontSize: 14, color: TEXT.strong }}>{t("legal.layout.nestaPagina")}</summary>
+              <nav aria-label={t("legal.layout.nestaPaginaCompacta")} style={{ marginTop: 8 }}>
                 <Sumario secoes={documento.secoes} />
               </nav>
             </details>
@@ -311,7 +316,7 @@ export function LegalLayout({
             ))}
 
             <p style={{ fontSize: 14, color: TEXT.muted, lineHeight: 1.7, margin: "0 0 8px" }}>
-              Dúvidas sobre este documento? Escreva para <EmailContato />.
+              {t("legal.layout.duvidas")} <EmailContato />.
             </p>
           </main>
         </div>
@@ -319,8 +324,8 @@ export function LegalLayout({
 
       <footer style={{ maxWidth: 1120, margin: "0 auto", padding: "40px clamp(16px, 4vw, 40px) 48px", display: "flex", flexWrap: "wrap", gap: "10px 18px", alignItems: "center", color: TEXT.faint, fontSize: 13 }}>
         <Logo size={20} />
-        <span>PathR · plano de estudos</span>
-        <nav aria-label="Rodapé" style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", marginLeft: "auto" }}>
+        <span>{t("legal.layout.rodapeMarca")}</span>
+        <nav aria-label={t("legal.layout.rodapeAria")} style={{ display: "flex", flexWrap: "wrap", gap: "6px 16px", marginLeft: "auto" }}>
           {documentos.map((outro) => (
             <a key={outro.path} {...linkInterno(outro.path, onNavigate)} style={{ color: TEXT.muted, textDecoration: "none" }}>
               {outro.aba}
@@ -328,6 +333,11 @@ export function LegalLayout({
           ))}
         </nav>
       </footer>
+
+      {/* Uma moldura só para os três documentos: o seletor entra aqui uma vez e
+          vale para termos, privacidade e segurança. Quem chega a estas páginas
+          pode não ter conta — a escolha fica no aparelho. */}
+      <SeletorDeIdioma flutuante />
     </div>
   );
 }

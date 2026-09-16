@@ -118,6 +118,18 @@ function aplicar(texto: string, valores?: Record<string, string | number>): stri
 
 export type Traduzir = (chave: string, valores?: Record<string, string | number>) => string;
 
+/**
+ * Tradução em português, sem React.
+ *
+ * Para código que não é componente (lib/dashboard.ts, por exemplo): ele recebe
+ * o tradutor da tela quando há um, e cai aqui quando roda solto — num teste ou
+ * antes de a tela montar.
+ */
+export const traduzirPt: Traduzir = (chave, valores) => {
+  const achado = buscar(pt as Dicionario, chave);
+  return typeof achado === "string" ? aplicar(achado, valores) : chave;
+};
+
 interface Contexto {
   idioma: Idioma;
   /** Troca o idioma da tela e o guarda no aparelho. Gravar na conta é de quem
