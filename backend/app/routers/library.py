@@ -520,7 +520,6 @@ async def curate_library(
     dizer "já procuramos há pouco" em vez de "não achamos nada".
     """
     user_id = str(current_user["id"])
-    limites.consumir(supabase, limites.CURADORIA_POR_USUARIO, user_id)
 
     if node_id:
         node = _owned_node(supabase, node_id, user_id)
@@ -559,6 +558,11 @@ async def curate_library(
             "tags_buscadas": [],
             "motivo": "Essas tecnologias foram buscadas há pouco. A curadoria repete a cada 14 dias.",
         }
+
+    # A cota é gasta só AQUI, quando uma busca de verdade vai acontecer. Antes
+    # ela era consumida no topo, então um clique que o cache (`curated_at`)
+    # atende sem buscar nada já queimava uma unidade do limite diário.
+    limites.consumir(supabase, limites.CURADORIA_POR_USUARIO, user_id)
 
     novos = 0
     for tag in pendentes:

@@ -31,7 +31,14 @@ def numerar_de_um(texto):
     if not texto or not isinstance(texto, str):
         return texto
     citacoes = list(_CITACAO.finditer(texto))
-    if not any("0" in _NUMERO.findall(m.group(3)) for m in citacoes):
+    numeros = [int(d) for m in citacoes for d in _NUMERO.findall(m.group(3))]
+    # Sem nenhum 0, não há prova de contagem a partir do zero: fica como está.
+    if 0 not in numeros:
+        return texto
+    # Cita "alternativa 4" (ou mais): num quiz de 4 opções, o zero-based vai só
+    # de 0 a 3, então um 4 prova que o texto JÁ conta a partir de 1. Somar +1
+    # aqui estragaria uma citação correta — melhor não mexer no texto ambíguo.
+    if any(n >= 4 for n in numeros):
         return texto
 
     def subir(m: re.Match) -> str:

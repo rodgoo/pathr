@@ -30,3 +30,21 @@ def test_prompts_pedem_contagem_a_partir_de_um():
     assert "a partir de 1" in quizzes.SYSTEM_PROMPT
     fonte = open(language_practice.__file__, encoding="utf-8").read()
     assert "cite alternativas a partir de 1" in fonte
+
+
+def test_nao_renumera_quando_ja_conta_de_um():
+    from app.services.alternativas import numerar_de_um
+
+    # Cita "alternativa 4": num quiz de 4 opções isso prova contagem a partir de
+    # 1, então o texto (mesmo com um "0" solto) não pode ser deslocado.
+    texto = "A alternativa 0 é distrator; a alternativa 4 está correta."
+    assert numerar_de_um(texto) == texto
+
+
+def test_renumera_texto_claramente_do_zero():
+    from app.services.alternativas import numerar_de_um
+
+    assert (
+        numerar_de_um("A alternativa 0 erra; a alternativa 2 acerta.")
+        == "A alternativa 1 erra; a alternativa 3 acerta."
+    )
