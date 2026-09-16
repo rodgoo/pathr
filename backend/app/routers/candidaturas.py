@@ -99,6 +99,23 @@ async def carta(
     return servico.para_api(await servico.escrever_carta(supabase, current_user, linha), user_id)
 
 
+@router.post("/{application_id}/respostas")
+async def respostas(
+    application_id: str,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """As respostas prontas para o formulário desta vaga, para conferir e colar.
+
+    O app escreve com base no currículo e no perfil; quem responde ao recrutador
+    continua sendo a pessoa.
+    """
+    user_id = str(current_user["id"])
+    limites.consumir(supabase, limites.CARTA_POR_USUARIO, user_id)
+    linha = servico.uma(supabase, user_id, application_id)
+    return servico.para_api(await servico.escrever_respostas(supabase, current_user, linha), user_id)
+
+
 @router.post("/{application_id}/enviar")
 async def enviar(
     application_id: str,
@@ -169,22 +186,9 @@ def descartar(
 
 
 def _curriculo_em_anexo(supabase: Client, user_id: str) -> tuple[str, str]:
-    """O arquivo do currículo principal, em base64 para o anexo."""
-    import base64
-
-    from app.routers.resumes import _load_file
-
-    linhas = (
-        supabase.table("pathr_resume").select("*").eq("user_id", user_id)
-        .order("is_primary", desc=True).order("created_at", desc=True).limit(1).execute().data or []
-    )
-    if not linhas:
-        return "", ""
-    conteudo = _load_file(supabase, linhas[0])
-    if not conteudo:
-        return "", ""
-    nome = str(linhas[0].get("filename") or "curriculo.pdf")
-    return nome[:120], base64.b64encode(conteudo).decode()
+    """O anexo do e-mail. Mora no serviço porque o envio automático do
+    agendador (routers/jobs.py) precisa do mesmo arquivo."""
+    return servico.curriculo_em_anexo(supabase, user_id)
 
 
 def _registrar_envio(supabase: Client, request: Request, user_id: str, destino: str, vaga: str) -> None:

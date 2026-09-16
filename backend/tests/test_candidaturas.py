@@ -182,6 +182,89 @@ def test_candidatura_de_outra_pessoa_nao_abre(busca):
     assert erro.value.status_code == 404
 
 
+@pytest.mark.parametrize(
+    "texto,esperado",
+    [
+        ("Envie seu currículo para vagas@empresa.com até sexta.", "vagas@empresa.com"),
+        ("Dúvidas: contato@empresa.com. Currículos: rh@empresa.com", "rh@empresa.com"),
+        ("Responda para no-reply@empresa.com", None),
+        ("Aplique pelo site da empresa.", None),
+    ],
+)
+def test_email_de_contato_sai_do_anuncio(texto, esperado):
+    assert servico.email_do_anuncio(texto) == esperado
+
+
+def test_envio_automatico_respeita_nota_email_e_teto(busca, curriculo, ia, monkeypatch):
+    """Só sai sozinho o que dá para enviar de verdade e combina o bastante."""
+    enviados = []
+    monkeypatch.setattr(servico.emails, "send_application", lambda **kw: enviados.append(kw) or True)
+    monkeypatch.setattr(servico, "curriculo_em_anexo", lambda *_: ("curriculo-ana.pdf", "YmFzZTY0"))
+    banco = _banco(pathr_resume=[curriculo])
+    linhas = [
+        {"id": "a1", "title": "Java sênior", "company": "Boa", "score": 88, "to_email": "vagas@boa.com", "snippet": "Java"},
+        {"id": "a2", "title": "Java júnior", "company": "Fraca", "score": 40, "to_email": "vagas@fraca.com", "snippet": "Java"},
+        {"id": "a3", "title": "Java pleno", "company": "SemEmail", "score": 95, "to_email": None, "snippet": "Java"},
+    ]
+    for linha in linhas:
+        banco.tabelas["pathr_application"].append({**linha, "user_id": EU["id"], "status": "sugerida"})
+
+    enviadas = asyncio.run(servico.enviar_automaticamente(banco, EU, linhas))
+
+    # Nota baixa e vaga sem e-mail ficam na fila para a pessoa decidir.
+    assert [linha["id"] for linha in enviadas] == ["a1"]
+    assert enviados[0]["to_email"] == "vagas@boa.com"
+    situacoes = {l["id"]: l["status"] for l in banco.linhas("pathr_application")}
+    assert situacoes == {"a1": "enviada", "a2": "sugerida", "a3": "sugerida"}
+
+
+def test_envio_automatico_para_no_teto_do_dia(busca, curriculo, ia, monkeypatch):
+    monkeypatch.setattr(servico.emails, "send_application", lambda **kw: True)
+    monkeypatch.setattr(servico, "curriculo_em_anexo", lambda *_: ("cv.pdf", "YmFzZTY0"))
+    banco = _banco(pathr_resume=[curriculo])
+    linhas = []
+    for i in range(servico.MAXIMO_AUTOMATICO + 3):
+        linha = {"id": f"x{i}", "title": "Java", "company": "Empresa", "score": 90, "to_email": f"vagas{i}@e.com", "snippet": "Java"}
+        linhas.append(linha)
+        banco.tabelas["pathr_application"].append({**linha, "user_id": EU["id"], "status": "sugerida"})
+
+    assert len(asyncio.run(servico.enviar_automaticamente(banco, EU, linhas))) == servico.MAXIMO_AUTOMATICO
+
+
+def test_email_recusado_nao_marca_como_enviada(busca, curriculo, ia, monkeypatch):
+    monkeypatch.setattr(servico.emails, "send_application", lambda **kw: False)
+    monkeypatch.setattr(servico, "curriculo_em_anexo", lambda *_: ("cv.pdf", "YmFzZTY0"))
+    banco = _banco(pathr_resume=[curriculo])
+    linha = {"id": "a1", "title": "Java", "company": "Boa", "score": 90, "to_email": "vagas@boa.com", "snippet": "Java"}
+    banco.tabelas["pathr_application"].append({**linha, "user_id": EU["id"], "status": "sugerida"})
+
+    assert asyncio.run(servico.enviar_automaticamente(banco, EU, [linha])) == []
+    assert banco.linhas("pathr_application")[0]["status"] == "sugerida"
+
+
+def test_respostas_do_formulario_usam_perfil_e_curriculo(busca, curriculo, monkeypatch):
+    pedidos = []
+
+    async def falsa(_sistema, pedido, _schema, **_):
+        pedidos.append(pedido)
+        return SimpleNamespace(
+            content={"respostas": [{"pergunta": "Pretensão salarial", "resposta": "R$ 9.000"}]}, model="falso"
+        )
+
+    monkeypatch.setattr(servico, "generate_json", falsa)
+    banco = _banco(
+        pathr_resume=[curriculo],
+        pathr_profile=[{"user_id": EU["id"], "salary_expectation": "R$ 9.000", "availability": "30 dias"}],
+        pathr_english_profile=[{"user_id": EU["id"], "language": "en", "cefr_level": "B2"}],
+    )
+    linha = asyncio.run(servico.montar_fila(banco, EU, agora=AGORA))[0]
+
+    atualizada = asyncio.run(servico.escrever_respostas(banco, EU, linha))
+
+    assert "R$ 9.000" in pedidos[0] and "30 dias" in pedidos[0] and "B2" in pedidos[0]
+    assert servico.para_api(atualizada, EU["id"])["answers"][0]["resposta"] == "R$ 9.000"
+
+
 def _banco_do_agendador(curriculos):
     return _banco(
         pathr_user=[EU],
@@ -222,6 +305,30 @@ def test_o_agendador_monta_a_fila_de_manha_uma_vez_por_dia(busca, curriculo, age
     agendador.clear()
     resposta = asyncio.run(jobs.disparar_avisos(_pedido_do_cron(), banco))
     assert jobs.VAGAS_DO_DIA not in resposta["tipos"] and agendador == []
+
+
+def test_agendador_envia_sozinho_so_quando_a_pessoa_ligou(busca, curriculo, ia, agendador, monkeypatch):
+    """O envio automático é escolha: desligado, a fila só espera na tela."""
+    enviados = []
+    monkeypatch.setattr(servico.emails, "send_application", lambda **kw: enviados.append(kw) or True)
+    monkeypatch.setattr(servico, "curriculo_em_anexo", lambda *_: ("cv.pdf", "YmFzZTY0"))
+    # A primeira vaga passa a trazer e-mail de contato no anúncio.
+    busca.vagas[0]["sobre"] = {"pede": "Java. Envie seu currículo para vagas@empresa1.com"}
+
+    desligado = _banco_do_agendador([curriculo])
+    asyncio.run(jobs.disparar_avisos(_pedido_do_cron(), desligado))
+    assert enviados == []
+    assert {l["status"] for l in desligado.linhas("pathr_application")} == {"sugerida"}
+
+    ligado = _banco_do_agendador([curriculo])
+    ligado.tabelas["pathr_profile"][0]["notifications"] = {jobs.AUTOMATICO: True}
+    asyncio.run(jobs.disparar_avisos(_pedido_do_cron(), ligado))
+
+    assert [e["to_email"] for e in enviados] == ["vagas@empresa1.com"]
+    situacoes = sorted(l["status"] for l in ligado.linhas("pathr_application"))
+    assert situacoes == ["enviada", "sugerida", "sugerida", "sugerida", "sugerida"]
+    # O e-mail do dia diz o que já saiu em nome da pessoa.
+    assert [v["enviada"] for v in agendador[-1][2]].count(True) == 1
 
 
 def test_sem_curriculo_o_agendador_nao_monta_fila(busca, agendador):

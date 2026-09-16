@@ -249,6 +249,8 @@ export const candidaturas = {
   list: () => api.get<FilaDeCandidaturas>("/candidaturas"),
   gerar: () => api.post<{ novas: Candidatura[] }>("/candidaturas/gerar"),
   carta: (id: string) => api.post<Candidatura>(`/candidaturas/${encodeURIComponent(id)}/carta`),
+  /** Respostas prontas para as perguntas do formulário da vaga. */
+  respostas: (id: string) => api.post<Candidatura>(`/candidaturas/${encodeURIComponent(id)}/respostas`),
   enviar: (id: string, body: { email?: string; carta?: string; assunto?: string } = {}) =>
     api.post<Candidatura>(`/candidaturas/${encodeURIComponent(id)}/enviar`, body),
   descartar: (id: string) => api.post<Candidatura>(`/candidaturas/${encodeURIComponent(id)}/descartar`),

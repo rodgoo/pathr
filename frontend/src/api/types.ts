@@ -147,6 +147,9 @@ export interface Profile {
   bio: string | null;
   linkedin_url: string | null;
   github_url: string | null;
+  /** O que todo formulario de vaga pergunta e o curriculo nao responde. */
+  salary_expectation?: string | null;
+  availability?: string | null;
   /** Avisos por e-mail. O servidor sempre devolve as cinco chaves, ja com
    * o padrao aplicado — o front nao guarda padrao nenhum. */
   notifications?: Record<string, boolean>;
@@ -731,6 +734,8 @@ export interface Candidatura {
   snippet: string | null;
   /** Carta de apresentacao, escrita sob medida quando pedida. */
   letter: string | null;
+  /** Respostas prontas para o formulario da vaga: a pessoa confere e cola. */
+  answers: { pergunta: string; resposta: string }[];
   subject: string | null;
   to_email: string | null;
   status: "sugerida" | "enviada" | "descartada";

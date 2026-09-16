@@ -22,8 +22,8 @@
  *   procurando emprego.
  */
 
-import { useMemo, useState } from "react";
-import { candidaturas as candidaturasApi, resumes as resumesApi } from "@/api/endpoints";
+import { useEffect, useMemo, useState } from "react";
+import { candidaturas as candidaturasApi, profile as profileApi, resumes as resumesApi } from "@/api/endpoints";
 import type { Candidatura } from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
 import { useMutation, useQuery } from "@/hooks/useApi";
@@ -80,6 +80,8 @@ export function CandidaturasPage() {
         </Panel>
       ) : null}
 
+      {temCurriculo ? <EnvioAutomatico /> : null}
+
       {temCurriculo ? (
         <Panel pad={16.8}>
           <div style={{ display: "flex", gap: 11.2, flexWrap: "wrap", alignItems: "center" }}>
@@ -130,6 +132,112 @@ export function CandidaturasPage() {
   );
 }
 
+/**
+ * O envio sem confirmação, e o que ele precisa saber sobre você.
+ *
+ * Desligado por padrão de propósito: candidatura é uma ação em seu nome, e
+ * ninguém deve descobrir depois do fato que ela aconteceu. Ligado, o app envia
+ * sozinho de manhã as vagas que trazem e-mail de contato no anúncio e combinam
+ * acima do corte — e o e-mail do dia diz o que saiu.
+ */
+function EnvioAutomatico() {
+  const perfil = useQuery(() => profileApi.get(), []);
+  const salvar = useMutation((corpo: Parameters<typeof profileApi.update>[0]) => profileApi.update(corpo));
+
+  const [pretensao, setPretensao] = useState("");
+  const [disponibilidade, setDisponibilidade] = useState("");
+  const [salvo, setSalvo] = useState(false);
+
+  const ligado = Boolean(perfil.data?.notifications?.candidatura_automatica);
+
+  useEffect(() => {
+    if (!perfil.data) return;
+    setPretensao(perfil.data.salary_expectation ?? "");
+    setDisponibilidade(perfil.data.availability ?? "");
+  }, [perfil.data]);
+
+  async function alternar() {
+    const atualizado = await salvar.run({
+      notifications: { ...(perfil.data?.notifications ?? {}), candidatura_automatica: !ligado },
+    });
+    if (atualizado) perfil.reload();
+  }
+
+  async function salvarRespostas() {
+    setSalvo(false);
+    const atualizado = await salvar.run({
+      salary_expectation: pretensao.trim(),
+      availability: disponibilidade.trim(),
+    });
+    if (atualizado) {
+      setSalvo(true);
+      perfil.reload();
+    }
+  }
+
+  if (!perfil.data) return null;
+
+  return (
+    <Panel pad={16.8}>
+      <div style={{ display: "flex", gap: 11.2, alignItems: "flex-start", flexWrap: "wrap" }}>
+        <div style={{ flex: 1, minWidth: 260 }}>
+          <Kicker style={{ display: "block", marginBottom: 4 }}>Envio automático</Kicker>
+          <p style={{ margin: 0, fontSize: 13, color: TEXT.muted, lineHeight: 1.55, maxWidth: "62ch" }}>
+            {ligado
+              ? "Ligado: todo dia de manhã o app envia seu currículo, sozinho, para as vagas que trazem e-mail de contato e combinam 70% ou mais — até 5 por dia. Você recebe um e-mail com o que foi enviado."
+              : "Desligado: o app separa as vagas e escreve a carta, e você clica para enviar. Ligando, ele envia sozinho as vagas que trazem e-mail de contato e combinam 70% ou mais, até 5 por dia."}
+          </p>
+          <p style={{ margin: "6px 0 0", fontSize: 11.5, color: TEXT.faint, lineHeight: 1.5, maxWidth: "62ch" }}>
+            Vaga que só aceita candidatura pelo site (Gupy, LinkedIn, formulário próprio) continua vindo com o
+            link e as respostas prontas: lá quem responde é você.
+          </p>
+        </div>
+        <button
+          type="button"
+          className={ligado ? "btn btn-secondary" : "btn btn-primary"}
+          aria-pressed={ligado}
+          disabled={salvar.pending}
+          onClick={() => void alternar()}
+        >
+          <Icon name={ligado ? "check" : "send"} size={15} />
+          {ligado ? "Enviando sozinho" : "Enviar sozinho todo dia"}
+        </button>
+      </div>
+
+      <div style={{ display: "flex", gap: 11.2, flexWrap: "wrap", alignItems: "flex-end", marginTop: 14 }}>
+        <label style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 200 }}>
+          <span style={{ fontSize: 11.5, color: TEXT.faint }}>Pretensão salarial</span>
+          <input
+            className="input"
+            value={pretensao}
+            maxLength={120}
+            placeholder="R$ 8.000 CLT"
+            onChange={(evento) => setPretensao(evento.target.value)}
+          />
+        </label>
+        <label style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 200 }}>
+          <span style={{ fontSize: 11.5, color: TEXT.faint }}>Disponibilidade para começar</span>
+          <input
+            className="input"
+            value={disponibilidade}
+            maxLength={120}
+            placeholder="30 dias"
+            onChange={(evento) => setDisponibilidade(evento.target.value)}
+          />
+        </label>
+        <button type="button" className="btn btn-ghost" disabled={salvar.pending} onClick={() => void salvarRespostas()}>
+          {salvar.pending ? "Salvando…" : salvo ? "Salvo" : "Salvar"}
+        </button>
+      </div>
+      <p style={{ fontSize: 11, color: TEXT.faint, margin: "8.4px 0 0" }}>
+        São as duas perguntas que todo formulário faz e que o currículo não responde. Sem elas, a resposta
+        pronta devolve a pergunta em vez de inventar um número.
+      </p>
+      {salvar.error ? <ErrorState message={salvar.error} /> : null}
+    </Panel>
+  );
+}
+
 /** Uma vaga da fila: a carta, o envio e o link para responder no site. */
 function Cartao({
   item,
@@ -143,8 +251,11 @@ function Cartao({
   const [carta, setCarta] = useState(item.letter ?? "");
   const [email, setEmail] = useState(item.to_email ?? "");
   const [aberta, setAberta] = useState(false);
+  const [respostas, setRespostas] = useState(item.answers ?? []);
+  const [copiada, setCopiada] = useState<string | null>(null);
 
   const escrever = useMutation(() => candidaturasApi.carta(item.id));
+  const prepararRespostas = useMutation(() => candidaturasApi.respostas(item.id));
   const enviar = useMutation((corpo: { email?: string; carta?: string }) => candidaturasApi.enviar(item.id, corpo));
   const descartar = useMutation(() => candidaturasApi.descartar(item.id));
 
@@ -226,6 +337,25 @@ function Cartao({
             {escrever.pending ? "Escrevendo…" : carta ? "Reescrever carta" : "Escrever carta"}
           </button>
 
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={prepararRespostas.pending}
+            onClick={async () => {
+              onErro(null);
+              const resposta = await prepararRespostas.run();
+              if (resposta) setRespostas(resposta.answers ?? []);
+              else if (prepararRespostas.error) onErro(prepararRespostas.error);
+            }}
+          >
+            <Icon name="chat" size={15} />
+            {prepararRespostas.pending
+              ? "Escrevendo…"
+              : respostas.length > 0
+                ? "Refazer respostas"
+                : "Respostas do formulário"}
+          </button>
+
           {carta ? (
             <button type="button" className="btn btn-ghost" onClick={() => setAberta((valor) => !valor)}>
               <Icon name={aberta ? "eyeOff" : "eye"} size={15} />
@@ -303,6 +433,44 @@ function Cartao({
           <p style={{ fontSize: 11, color: TEXT.faint, margin: "11.2px 0 0", lineHeight: 1.5 }}>
             O e-mail sai pelo PathR, mas a resposta da empresa vai direto para o seu endereço. Seu currículo
             vai em anexo, do jeito que você enviou.
+          </p>
+        </div>
+      ) : null}
+
+      {respostas.length > 0 ? (
+        <div style={{ marginTop: 14, borderTop: `1px solid ${HAIRLINE}`, paddingTop: 14 }}>
+          <Kicker style={{ display: "block", marginBottom: 8.4 }}>Respostas para o formulário da vaga</Kicker>
+          <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 11.2 }}>
+            {respostas.map((item_) => (
+              <li key={item_.pergunta}>
+                <div style={{ display: "flex", gap: 8.4, alignItems: "baseline", flexWrap: "wrap" }}>
+                  <strong style={{ fontSize: 12.5, fontWeight: 500, color: ACC4 }}>{item_.pergunta}</strong>
+                  <button
+                    type="button"
+                    className="btn btn-ghost"
+                    style={{ marginLeft: "auto", fontSize: 11.5, padding: "2px 8px" }}
+                    onClick={async () => {
+                      try {
+                        await navigator.clipboard.writeText(item_.resposta);
+                        setCopiada(item_.pergunta);
+                      } catch {
+                        // Sem permissão da área de transferência: o texto está
+                        // à vista para selecionar e copiar à mão.
+                        setCopiada(null);
+                      }
+                    }}
+                  >
+                    {copiada === item_.pergunta ? "Copiado" : "Copiar"}
+                  </button>
+                </div>
+                <p style={{ margin: "4px 0 0", fontSize: 13, color: "rgba(233,233,237,.85)", lineHeight: 1.55 }}>
+                  {item_.resposta}
+                </p>
+              </li>
+            ))}
+          </ul>
+          <p style={{ fontSize: 11, color: TEXT.faint, margin: "11.2px 0 0", lineHeight: 1.5 }}>
+            Confira antes de colar: quem responde ao recrutador é você, e o formulário pode perguntar outra coisa.
           </p>
         </div>
       ) : null}

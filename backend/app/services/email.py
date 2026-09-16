@@ -492,14 +492,23 @@ def send_daily_jobs(to_email: str, to_name: str, vagas: list[dict[str, str]]) ->
     itens = [
         f"{v.get('titulo', '')} — {v.get('empresa', '')}".strip(" —")
         + (f" · {v['local']}" if v.get("local") else "")
+        # Diz o que já saiu: quem ligou o envio automático precisa saber o que
+        # foi enviado em nome dele hoje, sem ter que abrir o app para descobrir.
+        + (" · currículo enviado" if v.get("enviada") else "")
         for v in vagas
     ]
+    quantas_enviadas = sum(1 for v in vagas if v.get("enviada"))
     miolo = (
         _cabecalho(_VERDE)
         + _titulo("Vagas de hoje", f"{quantas} {coisa} para você{', ' + nome if nome else ''}.", _VERDE)
         + _texto(
             "Separadas pelo quanto combinam com o seu currículo e o seu objetivo. "
             "No app, cada uma já sai com uma carta de apresentação escrita para ela."
+            + (
+                f' Em <b style="color:{_TINTA}">{quantas_enviadas}</b> delas o seu currículo já foi enviado.'
+                if quantas_enviadas
+                else ""
+            )
         )
         + _itens(itens, _VERDE)
         + _botao("Ver e enviar", f"{settings.frontend_url}", _VERDE)

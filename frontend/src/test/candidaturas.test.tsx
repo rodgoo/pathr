@@ -7,7 +7,7 @@
  * registra sem mandar e-mail nenhum.
  */
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 import type { Candidatura } from "@/api/types";
@@ -29,6 +29,7 @@ const vaga: Candidatura = {
   score: 82,
   snippet: "Java, Spring Boot e PostgreSQL no time de produto.",
   letter: null,
+  answers: [],
   subject: null,
   to_email: null,
   status: "sugerida",
@@ -36,8 +37,25 @@ const vaga: Candidatura = {
   created_at: null,
 };
 
-function monta(comCurriculo = true) {
+function monta(comCurriculo = true, automatico = false) {
+  let perfil = {
+    user_id: "u1",
+    notifications: { candidatura_automatica: automatico },
+    salary_expectation: null,
+    availability: null,
+  };
   const servidor = mockServer({
+    "GET /profile": () => ({ body: perfil }),
+    "PATCH /profile": (pedido) => {
+      perfil = { ...perfil, ...(pedido.body as object) };
+      return { body: perfil };
+    },
+    "POST /candidaturas/c1/respostas": () => ({
+      body: {
+        ...vaga,
+        answers: [{ pergunta: "Pretensão salarial", resposta: "R$ 9.000, aberto a conversar." }],
+      },
+    }),
     "GET /resumes": () => ({ body: comCurriculo ? [{ id: "r1", status: "parsed" }] : [] }),
     "GET /candidaturas": () => ({
       body: { hoje: HOJE, por_dia: 5, enviadas: 0, candidaturas: comCurriculo ? [vaga] : [] },
@@ -72,6 +90,30 @@ describe("candidaturas", () => {
     const link = screen.getByRole("link", { name: /Abrir vaga e responder/ });
     expect(link).toHaveAttribute("href", vaga.url);
     expect(link).toHaveAttribute("target", "_blank");
+  });
+
+  it("liga o envio automático, e ele fica registrado no perfil", async () => {
+    const { user, servidor } = monta();
+    const botao = await screen.findByRole("button", { name: "Enviar sozinho todo dia" });
+    expect(botao).toHaveAttribute("aria-pressed", "false");
+
+    await user.click(botao);
+
+    const salvo = servidor.calls.find((c) => c.method === "PATCH" && c.url === "/profile");
+    expect(salvo?.body).toEqual({ notifications: { candidatura_automatica: true } });
+    expect(await screen.findByRole("button", { name: "Enviando sozinho" })).toHaveAttribute("aria-pressed", "true");
+  });
+
+  it("prepara as respostas do formulário para conferir e colar", async () => {
+    const { user } = monta();
+    await user.click(await screen.findByRole("button", { name: /Respostas do formulário/ }));
+
+    // "Pretensão salarial" também é o rótulo do campo do perfil acima: a
+    // pergunta que interessa é a que está junto da resposta.
+    const resposta = await screen.findByText("R$ 9.000, aberto a conversar.");
+    const bloco = resposta.closest("li") as HTMLElement;
+    expect(within(bloco).getByText("Pretensão salarial")).toBeInTheDocument();
+    expect(within(bloco).getByRole("button", { name: "Copiar" })).toBeInTheDocument();
   });
 
   it("escreve a carta, deixa editar e registra a candidatura feita no site", async () => {

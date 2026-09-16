@@ -31,7 +31,9 @@ por texto que ninguém lê.
 
 from __future__ import annotations
 
+import base64
 import logging
+import re
 from datetime import date, datetime, timezone
 from typing import Any, Optional
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
@@ -41,6 +43,7 @@ from supabase import Client
 
 from app.ai_providers import AiProviderError, generate_json
 from app.services import cifra, vagas
+from app.services import email as emails
 
 logger = logging.getLogger(__name__)
 
@@ -50,6 +53,39 @@ POR_DIA = 5
 MAXIMO_POR_DIA = 10
 
 ESTADOS = ("sugerida", "enviada", "descartada")
+
+# --- envio automático ------------------------------------------------------
+#
+# O app só envia sozinho o que consegue enviar DE VERDADE: vaga cujo anúncio
+# traz um e-mail de contato. O resto (Gupy, LinkedIn, formulário da empresa)
+# pede login e faz perguntas próprias — lá quem se candidata é a pessoa, com as
+# respostas prontas que este módulo escreve.
+#
+# O corte por nota existe por reputação, não por economia: currículo disparado
+# para tudo que aparece é o que faz recrutador parar de ler. Abaixo do corte, a
+# vaga fica na fila para a pessoa decidir.
+LIMIAR_AUTOMATICO = 70
+MAXIMO_AUTOMATICO = 5
+
+_EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
+# Caixas que não recebem candidatura: mandar para elas é jogar o currículo fora.
+_EMAIL_PROIBIDO = re.compile(r"(no[-_.]?reply|nao[-_.]?responda|donotreply|example\.(com|org)|sentry)", re.IGNORECASE)
+# Com mais de um endereço no anúncio, o de recrutamento é o certo.
+_EMAIL_DE_VAGA = re.compile(r"(vaga|rh|recrut|talent|selecao|curricul|\bcv\b|job|carreira|career|people)", re.IGNORECASE)
+
+
+def email_do_anuncio(texto: Optional[str]) -> Optional[str]:
+    """O e-mail para onde mandar o currículo, se o anúncio disser um.
+
+    A maioria das vagas não diz — manda aplicar no site. Quando diz, costuma ser
+    em "envie seu currículo para vagas@empresa.com", e é nessa que o envio
+    automático se apoia.
+    """
+    candidatos = [e for e in _EMAIL.findall(texto or "") if not _EMAIL_PROIBIDO.search(e)]
+    if not candidatos:
+        return None
+    de_vaga = [e for e in candidatos if _EMAIL_DE_VAGA.search(e)]
+    return (de_vaga or candidatos)[0][:200]
 
 CARTA_SCHEMA: dict[str, Any] = {
     "type": "OBJECT",
@@ -174,6 +210,7 @@ async def montar_fila(
             "remote": bool(vaga.get("remota")),
             "score": int(vaga.get("combina") or 0),
             "snippet": _trecho_do_anuncio(vaga),
+            "to_email": email_do_anuncio(_trecho_do_anuncio(vaga)),
             "status": "sugerida",
         })
         if len(novas) >= faltam:
@@ -293,6 +330,177 @@ async def escrever_carta(supabase: Client, current_user: dict[str, Any], linha: 
     return (atualizada or [{**linha, "letter": carta, "subject": assunto}])[0]
 
 
+def curriculo_em_anexo(supabase: Client, user_id: str) -> tuple[str, str]:
+    """O arquivo do currículo principal, em base64 para o anexo do e-mail."""
+    from app.routers.resumes import _load_file  # tarde: o router usa os serviços
+
+    linhas = (
+        supabase.table("pathr_resume").select("*").eq("user_id", user_id)
+        .order("is_primary", desc=True).order("created_at", desc=True).limit(1).execute().data or []
+    )
+    if not linhas:
+        return "", ""
+    conteudo = _load_file(supabase, linhas[0])
+    if not conteudo:
+        return "", ""
+    return str(linhas[0].get("filename") or "curriculo.pdf")[:120], base64.b64encode(conteudo).decode()
+
+
+async def enviar_automaticamente(
+    supabase: Client,
+    current_user: dict[str, Any],
+    linhas: list[dict[str, Any]],
+    limite: int = MAXIMO_AUTOMATICO,
+) -> list[dict[str, Any]]:
+    """Envia, sem perguntar, as vagas que dá para enviar por e-mail.
+
+    Só entra vaga com endereço de contato no anúncio e nota acima do corte. O
+    que falhar (IA fora, e-mail recusado) fica como estava, na fila, para a
+    pessoa resolver à mão — nunca é marcado como enviado sem ter saído.
+    """
+    user_id = str(current_user["id"])
+    remetente = str(current_user.get("email") or "")
+    if not remetente:
+        return []
+    anexo_nome, anexo = curriculo_em_anexo(supabase, user_id)
+    if not anexo:
+        return []
+
+    enviadas: list[dict[str, Any]] = []
+    for linha in linhas:
+        if len(enviadas) >= limite:
+            break
+        destino = str(linha.get("to_email") or "").strip()
+        if not destino or int(linha.get("score") or 0) < LIMIAR_AUTOMATICO:
+            continue
+        try:
+            com_carta = await escrever_carta(supabase, current_user, linha)
+        except HTTPException:
+            logger.info("carta não saiu para a candidatura %s; fica para a pessoa", linha.get("id"))
+            continue
+        carta = para_api(com_carta, user_id).get("letter") or ""
+        if not carta:
+            continue
+        saiu = emails.send_application(
+            to_email=destino,
+            subject=str(com_carta.get("subject") or f"Candidatura — {linha.get('title')}")[:200],
+            carta=carta,
+            candidato_nome=str(current_user.get("name") or ""),
+            candidato_email=remetente,
+            anexo_nome=anexo_nome,
+            anexo_base64=anexo,
+        )
+        if saiu:
+            enviadas.append(marcar(supabase, user_id, str(linha["id"]), "enviada", {"to_email": destino}))
+    return enviadas
+
+
+# --- respostas do formulário da vaga ---------------------------------------
+
+RESPOSTAS_SCHEMA: dict[str, Any] = {
+    "type": "OBJECT",
+    "properties": {
+        "respostas": {
+            "type": "ARRAY",
+            "items": {
+                "type": "OBJECT",
+                "properties": {"pergunta": {"type": "STRING"}, "resposta": {"type": "STRING"}},
+                "required": ["pergunta", "resposta"],
+            },
+        }
+    },
+    "required": ["respostas"],
+}
+
+SISTEMA_DAS_RESPOSTAS = """Você prepara as respostas que a pessoa vai colar no formulário de candidatura.
+
+Escreva na primeira pessoa, como ela responderia — o texto vai direto no campo
+do formulário da empresa.
+
+Regras:
+1. Responda estas perguntas, nesta ordem, adaptando ao que a vaga pede:
+   "Por que você quer esta vaga?", "Pretensão salarial", "Disponibilidade para
+   início", "Nível de inglês", "Conte uma experiência relevante para esta vaga",
+   "Modelo de trabalho". Se o anúncio deixar clara outra pergunta importante,
+   acrescente no fim (no máximo 8 no total).
+2. Cada resposta entre 15 e 70 palavras, direta, sem rodeio e sem clichê.
+3. Use SÓ o currículo e os dados do perfil. NUNCA invente experiência, número,
+   certificação, salário ou nível de idioma.
+4. Pretensão salarial e disponibilidade: use exatamente o que o perfil informa.
+   Se o perfil não informar, escreva uma resposta honesta que devolva a pergunta
+   ("aberto a conversar sobre a faixa da vaga") e não invente valor.
+5. Nível de inglês: use o nível medido no perfil, se houver; senão, diga o que o
+   currículo sustenta, sem inflar.
+6. Texto simples, sem marcação, sem saudação e sem assinatura.
+
+Responda apenas o JSON."""
+
+
+async def escrever_respostas(
+    supabase: Client, current_user: dict[str, Any], linha: dict[str, Any]
+) -> dict[str, Any]:
+    """As respostas prontas para o formulário desta vaga, guardadas na linha.
+
+    O app escreve; quem responde continua sendo a pessoa. É a diferença entre
+    adiantar o trabalho e responder um recrutador no lugar dela.
+    """
+    user_id = str(current_user["id"])
+    _, dados = _curriculo(supabase, user_id)
+    if not dados:
+        raise HTTPException(
+            status_code=status.HTTP_412_PRECONDITION_FAILED,
+            detail="Envie e analise seu currículo antes: é dele que saem as respostas.",
+        )
+    perfil = (
+        supabase.table("pathr_profile").select("*").eq("user_id", user_id).limit(1).execute().data or [{}]
+    )[0]
+    ingles = (
+        supabase.table("pathr_english_profile").select("cefr_level").eq("user_id", user_id)
+        .eq("language", "en").limit(1).execute().data or [{}]
+    )[0].get("cefr_level")
+
+    pedido = "\n".join([
+        f"--- CURRÍCULO DE {str(current_user.get('name') or '').strip()} ---",
+        _resumo_do_curriculo(dados),
+        "",
+        "--- PERFIL ---",
+        f"Pretensão salarial: {perfil.get('salary_expectation') or 'não informada'}",
+        f"Disponibilidade: {perfil.get('availability') or 'não informada'}",
+        f"Nível de inglês medido: {ingles or 'não medido'}",
+        f"Cidade: {perfil.get('city') or '—'}/{perfil.get('state') or '—'}",
+        f"Objetivo: {perfil.get('target_role') or '—'}",
+        "",
+        "--- ANÚNCIO DA VAGA ---",
+        f"Cargo: {linha.get('title')}",
+        f"Empresa: {linha.get('company')}",
+        str(linha.get("snippet") or "")[:4000],
+    ])
+    try:
+        resultado = await generate_json(SISTEMA_DAS_RESPOSTAS, pedido, RESPOSTAS_SCHEMA)
+    except AiProviderError as erro:
+        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail=str(erro)) from erro
+
+    conteudo = resultado.content if isinstance(resultado.content, dict) else {}
+    respostas = [
+        {
+            "pergunta": str(item.get("pergunta") or "").strip()[:200],
+            "resposta": str(item.get("resposta") or "").strip()[:1200],
+        }
+        for item in (conteudo.get("respostas") or [])
+        if isinstance(item, dict) and item.get("pergunta") and item.get("resposta")
+    ][:8]
+    if not respostas:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail="A IA não devolveu as respostas. Tente de novo.",
+        )
+    atualizada = (
+        supabase.table("pathr_application").update({"answers": respostas})
+        .eq("id", str(linha["id"])).eq("user_id", user_id).execute().data
+    )
+    return (atualizada or [{**linha, "answers": respostas}])[0]
+
+
 def para_api(linha: dict[str, Any], user_id: str) -> dict[str, Any]:
     """A linha como a tela precisa dela, com a carta já decifrada."""
     return {
@@ -307,6 +515,7 @@ def para_api(linha: dict[str, Any], user_id: str) -> dict[str, Any]:
         "score": int(linha.get("score") or 0),
         "snippet": (linha.get("snippet") or "")[:600] or None,
         "letter": cifra.decifrar(linha.get("letter"), cifra.ctx_carta(user_id)),
+        "answers": linha.get("answers") or [],
         "subject": linha.get("subject"),
         "to_email": linha.get("to_email"),
         "status": linha.get("status") or "sugerida",

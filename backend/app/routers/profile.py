@@ -49,6 +49,10 @@ class ProfileUpdate(BaseModel):
     bio: Optional[str] = Field(default=None, max_length=2000)
     linkedin_url: Optional[str] = Field(default=None, max_length=300)
     github_url: Optional[str] = Field(default=None, max_length=300)
+    # O que o formulário da vaga pergunta e o currículo não responde
+    # (services/candidaturas.escrever_respostas).
+    salary_expectation: Optional[str] = Field(default=None, max_length=120)
+    availability: Optional[str] = Field(default=None, max_length=120)
     notifications: Optional[dict[str, bool]] = None
 
     _idade = field_validator("birth_date")(
@@ -88,6 +92,11 @@ AVISOS: dict[str, bool] = {
     "sequencia_em_risco": False,
     # As vagas que o app separou hoje, com carta pronta (services/candidaturas.py).
     "vagas_do_dia": True,
+    # Enviar o currículo sozinho, sem confirmação, nas vagas que trazem e-mail
+    # de contato e combinam acima do corte. Desligado por padrão: candidatura é
+    # uma ação em nome da pessoa, e ninguém deve descobrir que ela aconteceu
+    # depois do fato. Quem quer, liga na aba Candidaturas.
+    "candidatura_automatica": False,
 }
 
 

@@ -257,6 +257,9 @@ class PathrApplication(SQLModel, table=True):
     letter: Optional[str] = Field(default=None, sa_type=sa.Text())
     subject: Optional[str] = None
     to_email: Optional[str] = None
+    # [{pergunta, resposta}] para o formulário da vaga: o app escreve, a pessoa
+    # confere e cola. Quem responde continua sendo ela.
+    answers: list[Any] = Field(default_factory=list, sa_column=_jsonb("[]"))
     status: str = Field(default="sugerida")
     sent_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
@@ -356,6 +359,10 @@ class PathrProfile(SQLModel, table=True):
     bio: Optional[str] = Field(default=None)
     linkedin_url: Optional[str] = Field(default=None)
     github_url: Optional[str] = Field(default=None)
+    # As duas perguntas que todo formulário de vaga faz e que o currículo não
+    # responde (services/candidaturas.py).
+    salary_expectation: Optional[str] = Field(default=None)
+    availability: Optional[str] = Field(default=None)
     # Quais e-mails a pessoa aceita receber. JSONB e não cinco colunas
     # booleanas porque a lista de avisos muda com o produto, e cada aviso novo
     # custaria uma migration mais um deploy coordenado com o frontend. As

@@ -95,6 +95,8 @@ def _minutos(supabase: Client, user_id: str, de, ate) -> int:
 
 
 VAGAS_DO_DIA = "vagas_do_dia"
+# A chave da preferência que liga o envio sem confirmação (routers/profile.AVISOS).
+AUTOMATICO = "candidatura_automatica"
 
 # Quantas filas de vaga uma rodada monta. Cada uma busca em várias fontes, e a
 # rodada é uma requisição HTTP com tempo limite: com muita gente na mesma
@@ -132,6 +134,17 @@ async def _fila_de_vagas(
     novas = await candidaturas.montar_fila(supabase, user)
     if not novas:
         return False
+
+    # Envio automático: só para quem ligou, e só onde dá para enviar de verdade
+    # (anúncio com e-mail de contato). O resto fica na fila com o link.
+    enviadas: list[dict[str, Any]] = []
+    if preferencias.get(AUTOMATICO):
+        try:
+            enviadas = await candidaturas.enviar_automaticamente(supabase, user, novas)
+        except Exception:  # noqa: BLE001 — falha no envio não pode calar o aviso
+            logger.warning("envio automático falhou para %s", user_id, exc_info=True)
+    ids_enviados = {str(linha["id"]) for linha in enviadas}
+
     return emails.send_daily_jobs(
         str(user.get("email") or ""),
         str(user.get("name") or ""),
@@ -140,6 +153,7 @@ async def _fila_de_vagas(
                 "titulo": str(linha.get("title") or ""),
                 "empresa": str(linha.get("company") or ""),
                 "local": str(linha.get("location") or ("Remota" if linha.get("remote") else "")),
+                "enviada": str(linha["id"]) in ids_enviados,
             }
             for linha in novas
         ],
