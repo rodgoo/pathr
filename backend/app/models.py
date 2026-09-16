@@ -1341,4 +1341,16 @@ class PathrScanRun(SQLModel, table=True):
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
 
+class PathrFeatureFlag(SQLModel, table=True):
+    """O estado de um recurso, quando mudado na tela de admin. Ver migração 0036
+    e services/features.py — o catálogo e os padrões ficam no código."""
+
+    __tablename__ = "pathr_feature_flag"
+
+    key: str = Field(primary_key=True)
+    state: str = Field(default="todos")  # todos | admin | ninguem
+    updated_by: Optional[uuid.UUID] = Field(default=None, sa_type=PGUUID(as_uuid=True))
+    updated_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+
+
 _mirror_defaults_to_database()

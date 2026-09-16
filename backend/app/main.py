@@ -228,6 +228,7 @@ from app.routers import (  # noqa: E402
     sessoes,
     status_apis,
     varredura,
+    recursos,
     geo,
     tags,
     vagas,
@@ -274,4 +275,5 @@ app.include_router(plan.router)
 app.include_router(passkeys.router)
 app.include_router(jobs.router)
 app.include_router(varredura.router)
+app.include_router(recursos.router)
 app.include_router(walkthroughs.router)
