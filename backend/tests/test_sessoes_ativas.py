@@ -126,3 +126,23 @@ def test_mesmo_dispositivo_colapsa_em_uma_linha(cliente, banco):
     # Encerrar por device_id revoga as duas famílias do aparelho.
     assert cliente.delete(f"/auth/sessoes/{DEV}").status_code == 204
     assert all(t.get("revoked_at") for t in banco.linhas("pathr_refresh_token"))
+
+
+def test_cookie_limpo_herda_o_dispositivo_da_sessao_viva_do_mesmo_navegador():
+    """Sem cookie, o aparelho é reconhecido por uma sessão VIVA do mesmo
+    usuário no mesmo navegador+sistema — limpar cookies não vira aparelho novo."""
+    from app.routers import auth
+
+    agora = datetime.now(timezone.utc)
+    banco = FakeSupabase(pathr_refresh_token=[
+        {"id": "s1", "user_id": "u1", "device_id": "dev-1", "user_agent": CHROME_WIN,
+         "created_at": (agora - timedelta(hours=1)).isoformat(),
+         "expires_at": (agora + timedelta(days=10)).isoformat(), "revoked_at": None},
+    ])
+    # mesmo navegador -> herda o device_id existente
+    assert auth._dispositivo_por_assinatura(banco, "u1", CHROME_WIN) == "dev-1"
+    # navegador diferente -> não herda (aparelho de verdade novo)
+    assert auth._dispositivo_por_assinatura(banco, "u1", SAFARI_IPHONE) is None
+    # sessão já revogada não empresta a identidade
+    banco.tabelas["pathr_refresh_token"][0]["revoked_at"] = agora.isoformat()
+    assert auth._dispositivo_por_assinatura(banco, "u1", CHROME_WIN) is None
