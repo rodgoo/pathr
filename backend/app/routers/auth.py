@@ -22,6 +22,7 @@ from app.config import settings
 from app.database import get_supabase
 from app.deps import (
     ACCESS_COOKIE,
+    DEVICE_COOKIE,
     REFRESH_COOKIE,
     client_ip,
     get_current_user,
@@ -174,6 +175,44 @@ def _clear_session_cookies(response: Response) -> None:
     response.delete_cookie(REFRESH_COOKIE, **shared)
 
 
+# Dois anos: o cookie do aparelho tem de sobreviver a muitos logout/login para
+# fazer o seu papel. Ele não é sessão — expirar cedo só faria o mesmo aparelho
+# voltar a duplicar na lista.
+_DEVICE_TTL_DIAS = 730
+
+
+def _device_id(request: Optional[Request], response: Optional[Response]) -> str:
+    """O id do aparelho: reusa o do cookie, ou cria um e o grava. Sempre renova
+    a validade, para o aparelho conhecido não caducar de tanto usar."""
+    bruto = request.cookies.get(DEVICE_COOKIE) if request else None
+    try:
+        dispositivo = str(uuid.UUID(bruto)) if bruto else str(uuid.uuid4())
+    except ValueError:
+        dispositivo = str(uuid.uuid4())
+    if response is not None:
+        atributos: dict[str, Any] = {
+            "httponly": True,
+            "secure": True,
+            "samesite": settings.cookie_samesite,
+            "path": "/",
+        }
+        if settings.cookie_domain:
+            atributos["domain"] = settings.cookie_domain
+        response.set_cookie(DEVICE_COOKIE, dispositivo, max_age=_DEVICE_TTL_DIAS * 24 * 3600, **atributos)
+    return dispositivo
+
+
+def _revogar_dispositivo(supabase: Client, user_id: str, device_id: str) -> None:
+    """Encerra as sessões vivas ANTERIORES do mesmo aparelho.
+
+    Login novo no mesmo navegador reusa a linha em vez de criar outra: sem
+    isto, cada logout/login virava um "aparelho conectado" a mais na lista.
+    """
+    supabase.table("pathr_refresh_token").update({"revoked_at": _now().isoformat()}).eq(
+        "user_id", user_id
+    ).eq("device_id", device_id).is_("revoked_at", "null").execute()
+
+
 def _issue_session(
     supabase: Client,
     user: dict,
@@ -198,6 +237,11 @@ def _issue_session(
             _clear_session_cookies(response)
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=CONTA_SUSPENSA)
     session_id = str(uuid.uuid4())
+    device_id = _device_id(request, response)
+    # Login novo (não é rotação) no mesmo aparelho: encerra a sessão anterior
+    # dele antes de abrir a nova, para não duplicar na lista de aparelhos.
+    if rotated_from is None:
+        _revogar_dispositivo(supabase, str(user["id"]), device_id)
     refresh_token = new_token()
     supabase.table("pathr_refresh_token").insert(
         {
@@ -207,6 +251,7 @@ def _issue_session(
             "expires_at": (_now() + timedelta(days=settings.refresh_token_days)).isoformat(),
             "rotated_from": rotated_from,
             "family_id": family_id or session_id,
+            "device_id": device_id,
             "user_agent": user_agent(request),
             "ip": client_ip(request),
         }

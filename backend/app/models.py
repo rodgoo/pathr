@@ -125,6 +125,9 @@ class PathrRefreshToken(SQLModel, table=True):
     # O login de origem, herdado em cada rotação. Reuso suspeito revoga só a
     # família, nunca as outras sessões da conta (migração 0025).
     family_id: Optional[uuid.UUID] = Field(default=None, sa_type=PGUUID(as_uuid=True), index=True)
+    # O navegador físico, do cookie pathr_device: o mesmo aparelho reusa a linha
+    # na lista em vez de duplicar a cada login (migração 0037).
+    device_id: Optional[uuid.UUID] = Field(default=None, sa_type=PGUUID(as_uuid=True), index=True)
     user_agent: Optional[str] = Field(default=None)
     ip: Optional[str] = Field(default=None)
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))

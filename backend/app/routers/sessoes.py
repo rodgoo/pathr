@@ -50,6 +50,13 @@ def _familia(linha: dict[str, Any]) -> str:
     return str(linha.get("family_id") or linha["id"])
 
 
+def _grupo(linha: dict[str, Any]) -> str:
+    """O que conta como "um aparelho" na lista: o id do dispositivo (o cookie
+    que sobrevive a logout/login), ou a família do login para sessões antigas
+    que ainda não têm dispositivo."""
+    return str(linha.get("device_id") or linha.get("family_id") or linha["id"])
+
+
 @router.get("")
 def listar(
     current_user: dict = Depends(get_current_user_allow_unverified),
@@ -60,7 +67,7 @@ def listar(
     user_id = str(current_user["id"])
     linhas = (
         supabase.table("pathr_refresh_token")
-        .select("id,family_id,user_agent,ip,created_at,expires_at,revoked_at")
+        .select("id,family_id,device_id,user_agent,ip,created_at,expires_at,revoked_at")
         .eq("user_id", user_id)
         .execute()
         .data
@@ -68,11 +75,11 @@ def listar(
     )
     agora = _agora()
     sessao_atual = str(current_user.get("session_id") or "")
-    familia_atual = next((_familia(l) for l in linhas if str(l["id"]) == sessao_atual), None)
+    grupo_atual = next((_grupo(l) for l in linhas if str(l["id"]) == sessao_atual), None)
 
     familias: dict[str, dict[str, Any]] = {}
     for linha in linhas:
-        grupo = familias.setdefault(_familia(linha), {"inicio": None, "viva": None, "viva_em": None})
+        grupo = familias.setdefault(_grupo(linha), {"inicio": None, "viva": None, "viva_em": None})
         criado = _momento(linha.get("created_at"))
         if criado and (grupo["inicio"] is None or criado < grupo["inicio"]):
             grupo["inicio"] = criado
@@ -100,7 +107,7 @@ def listar(
                 # a data dele é o "último uso" que a pessoa entende.
                 "ultimo_uso": viva.get("created_at"),
                 "entrou_em": grupo["inicio"].isoformat() if grupo["inicio"] else viva.get("created_at"),
-                "este_aparelho": chave == familia_atual,
+                "este_aparelho": chave == grupo_atual,
             }
         )
     atual = [s for s in saida if s["este_aparelho"]]
@@ -124,13 +131,13 @@ def encerrar(
     user_id = str(current_user["id"])
     linhas = (
         supabase.table("pathr_refresh_token")
-        .select("id,family_id")
+        .select("id,family_id,device_id")
         .eq("user_id", user_id)
         .execute()
         .data
         or []
     )
-    ids = [str(l["id"]) for l in linhas if _familia(l) == familia]
+    ids = [str(l["id"]) for l in linhas if _grupo(l) == familia]
     if not ids:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Sessão não encontrada.")
     agora = _agora().isoformat()

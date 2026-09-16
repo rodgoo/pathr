@@ -25,6 +25,10 @@ from app.security import decode_access_token
 
 ACCESS_COOKIE = "pathr_access"
 REFRESH_COOKIE = "pathr_refresh"
+# Identifica o NAVEGADOR físico entre logins. Não é credencial (não dá acesso a
+# nada sozinho): só serve para o mesmo aparelho reusar a mesma linha na lista de
+# "aparelhos conectados" em vez de virar um item novo a cada login.
+DEVICE_COOKIE = "pathr_device"
 
 
 def client_ip(request: Optional[Request]) -> Optional[str]:

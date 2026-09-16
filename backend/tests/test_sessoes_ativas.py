@@ -104,3 +104,25 @@ def test_email_de_novo_acesso_diz_o_aparelho_e_o_que_fazer(monkeypatch):
     )
     assert capturado["a"] == "Novo acesso à sua conta do PathR: Edge no Windows"
     assert "15/09/2026 às 12:00" in capturado["h"] and "Aparelhos conectados" in capturado["h"]
+
+
+def test_mesmo_dispositivo_colapsa_em_uma_linha(cliente, banco):
+    # Duas famílias (dois logins), mesmo device_id: uma linha só na lista.
+    DEV = "dddddddd-0000-0000-0000-0000000000d0"
+
+    def tok(id_, fam, criado_ha):
+        t = _token(id_, ANA, fam, CHROME_WIN, criado_ha=criado_ha)
+        t["device_id"] = DEV
+        return t
+
+    banco.tabelas["pathr_refresh_token"] = [
+        tok("pc-2", FAM_PC, timedelta(minutes=10)),  # sessão atual (session_id do fixture)
+        tok("re-1", "99999999-0000-0000-0000-00000000009a", timedelta(hours=2)),
+    ]
+    lista = cliente.get("/auth/sessoes").json()
+    assert [s["id"] for s in lista] == [DEV]
+    assert lista[0]["este_aparelho"] is True
+
+    # Encerrar por device_id revoga as duas famílias do aparelho.
+    assert cliente.delete(f"/auth/sessoes/{DEV}").status_code == 204
+    assert all(t.get("revoked_at") for t in banco.linhas("pathr_refresh_token"))
