@@ -361,16 +361,19 @@ def test_sinonimos_da_mesma_opcao_viram_um_subtitulo(doc_git):
 
 def test_redirecionamento_para_endereco_interno_e_barrado_antes_de_sair(monkeypatch):
     """Um link público que redireciona para a rede interna não pode chegar a
-    ser requisitado: a checagem vale para cada salto, não só para o destino."""
+    ser requisitado: a validação vale para cada salto, e a conexão vai ao IP
+    já validado (Host carrega o domínio), então o IP interno é barrado no
+    passo de resolução, antes de o segundo pedido sair."""
     import httpx
 
     from app.services import reader as leitor
 
-    pedidos = []
+    hosts_pedidos = []
 
     def transporte(pedido: httpx.Request) -> httpx.Response:
-        pedidos.append(str(pedido.url))
-        if pedido.url.host == "publico.exemplo":
+        # A URL aponta para o IP fixado; o domínio vem no cabeçalho Host.
+        hosts_pedidos.append(pedido.headers.get("host"))
+        if pedido.headers.get("host") == "publico.exemplo":
             return httpx.Response(302, headers={"location": "http://169.254.169.254/latest/meta-data/"})
         return httpx.Response(200, text="<html>segredo</html>", headers={"content-type": "text/html"})
 
@@ -380,13 +383,22 @@ def test_redirecionamento_para_endereco_interno_e_barrado_antes_de_sair(monkeypa
         return original(transport=httpx.MockTransport(transporte), **argumentos)
 
     monkeypatch.setattr(leitor.httpx, "Client", cliente)
+    # publico.exemplo resolve para um IP público de mentira; o 169.254.169.254 é
+    # um IP literal interno e cai na validação real, sem rede.
+    real = leitor._resolver_e_validar
+    monkeypatch.setattr(
+        leitor,
+        "_resolver_e_validar",
+        lambda host, porta: "93.184.216.34" if host == "publico.exemplo" else real(host, porta),
+    )
     monkeypatch.setattr(leitor, "_endereco_publico", lambda host: host == "publico.exemplo")
 
     import pytest
 
     with pytest.raises(leitor.LeituraIndisponivel):
         leitor._baixar("https://publico.exemplo/vaga")
-    assert pedidos == ["https://publico.exemplo/vaga"]
+    # O metadata nunca foi pedido: só o primeiro salto (publico.exemplo) saiu.
+    assert hosts_pedidos == ["publico.exemplo"]
 
 
 def test_link_javascript_no_artigo_perde_o_href():
@@ -401,3 +413,37 @@ def test_link_javascript_no_artigo_perde_o_href():
     )
     assert "javascript" not in limpo
     assert 'href="https://ok.com"' in limpo
+
+
+def test_dns_rebinding_conexao_usa_a_mesma_resolucao_validada(monkeypatch):
+    """Mesmo que a checagem por nome 'passe', a conexão resolve e valida o
+    MESMO endereço — um host que resolve para IP interno na hora de conectar é
+    barrado antes de qualquer pedido sair (fecha o DNS rebinding)."""
+    import httpx
+
+    from app.services import reader as leitor
+
+    # A checagem antiga aceitaria; a resolução real devolve um IP interno.
+    monkeypatch.setattr(leitor, "_endereco_publico", lambda host: True)
+    monkeypatch.setattr(
+        leitor.socket,
+        "getaddrinfo",
+        lambda host, porta, **k: [(2, 1, 6, "", ("127.0.0.1", porta or 443))],
+    )
+
+    pediu = []
+
+    def transporte(pedido: httpx.Request) -> httpx.Response:
+        pediu.append(str(pedido.url))
+        return httpx.Response(200, text="<html>x</html>", headers={"content-type": "text/html"})
+
+    original = httpx.Client
+    monkeypatch.setattr(
+        leitor.httpx, "Client", lambda **kw: original(transport=httpx.MockTransport(transporte), **kw)
+    )
+
+    import pytest
+
+    with pytest.raises(leitor.LeituraIndisponivel):
+        leitor._baixar("https://qualquer.exemplo/x")
+    assert pediu == []

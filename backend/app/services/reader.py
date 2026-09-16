@@ -56,6 +56,7 @@ from lxml import html as lxml_html
 _AGENTE = "Mozilla/5.0 (compatible; PathR/1.0; +https://pathr.notter.com.br)"
 
 _TIMEOUT = 25
+_MAX_REDIRECIONAMENTOS = 5
 # Teto do que se baixa. Um artigo grande fica em centenas de KB; o que passa
 # muito disso é vídeo, instalador ou um erro de curadoria — e ler o corpo
 # inteiro antes de descobrir isso é como se enche a memória do processo.
@@ -162,16 +163,20 @@ def _endereco_publico(host: str) -> bool:
             ip = ipaddress.ip_address(info[4][0])
         except ValueError:
             return False
-        if (
-            ip.is_private
-            or ip.is_loopback
-            or ip.is_link_local
-            or ip.is_reserved
-            or ip.is_multicast
-            or ip.is_unspecified
-        ):
+        if _ip_interno(ip):
             return False
     return True
+
+
+def _ip_interno(ip: "ipaddress._BaseAddress") -> bool:
+    return bool(
+        ip.is_private
+        or ip.is_loopback
+        or ip.is_link_local
+        or ip.is_reserved
+        or ip.is_multicast
+        or ip.is_unspecified
+    )
 
 
 def _url_permitida(url: str) -> bool:
@@ -181,54 +186,98 @@ def _url_permitida(url: str) -> bool:
     return _endereco_publico(partes.hostname)
 
 
-def _baixar(url: str) -> tuple[str, str]:
-    """Devolve (html, endereço onde se chegou).
+def _resolver_e_validar(host: str, porta: int) -> str:
+    """Resolve o host UMA vez, exige que TODA resposta seja pública, e devolve
+    o IP que a conexão vai usar.
 
-    O endereço final importa tanto quanto o texto: é contra ele que os links e
-    imagens relativos se resolvem. Depois de um redirecionamento de
-    `/docs/git` para `/docs/git/`, um `img/x.png` aponta para outro lugar.
+    É isto que fecha o DNS rebinding: antes, `_url_permitida` resolvia para
+    checar e o httpx resolvia DE NOVO para conectar — o domínio do atacante
+    podia dar um IP público na checagem e um interno (127.0.0.1, o metadata da
+    nuvem) na conexão. Aqui a checagem e a conexão usam a MESMA resolução: o
+    pedido vai ao IP validado, com Host e SNI mantendo o domínio.
+    """
+    try:
+        infos = socket.getaddrinfo(host, porta, proto=socket.IPPROTO_TCP)
+    except socket.gaierror as exc:
+        raise LeituraIndisponivel("Endereço não permitido para leitura.") from exc
+    escolhido: Optional[str] = None
+    for info in infos:
+        try:
+            ip = ipaddress.ip_address(info[4][0])
+        except ValueError as exc:
+            raise LeituraIndisponivel("Endereço não permitido para leitura.") from exc
+        if _ip_interno(ip):
+            raise LeituraIndisponivel("Endereço não permitido para leitura.")
+        if escolhido is None:
+            escolhido = str(ip)
+    if escolhido is None:
+        raise LeituraIndisponivel("Endereço não permitido para leitura.")
+    return escolhido
+
+
+def _baixar(url: str) -> tuple[str, str]:
+    """Devolve (html, endereço lógico onde se chegou).
+
+    Conecta sempre no IP validado (ver `_resolver_e_validar`), nunca deixando o
+    httpx resolver o nome por conta própria — é o que impede o DNS rebinding.
+    Os redirecionamentos são seguidos à mão para revalidar e re-fixar o IP a
+    cada salto; um link público que redireciona para um endereço interno é
+    barrado antes de a conexão sair.
     """
     if not _url_permitida(url):
         raise LeituraIndisponivel("Endereço não permitido para leitura.")
 
-    def cada_salto(pedido: httpx.Request) -> None:
-        # Antes de CADA envio, redirecionamentos inclusive. Checar só o destino
-        # final deixava um link público redirecionar para um endereço interno
-        # (o metadata da máquina, um serviço da rede privada) e o pedido já
-        # tinha saído quando a checagem recusava. A análise de vaga aceita link
-        # de qualquer pessoa, o que tornou isso alcançável.
-        if not _url_permitida(str(pedido.url)):
-            raise LeituraIndisponivel("Endereço não permitido para leitura.")
+    atual = url
+    with httpx.Client(
+        headers={"User-Agent": _AGENTE, "Accept": "text/html,application/xhtml+xml"},
+        follow_redirects=False,
+        timeout=_TIMEOUT,
+    ) as cliente:
+        for _ in range(_MAX_REDIRECIONAMENTOS + 1):
+            partes = urlparse(atual)
+            if partes.scheme not in ("http", "https") or not partes.hostname:
+                raise LeituraIndisponivel("Endereço não permitido para leitura.")
+            porta = partes.port or (443 if partes.scheme == "https" else 80)
+            ip = _resolver_e_validar(partes.hostname, porta)
 
-    try:
-        with httpx.Client(
-            headers={"User-Agent": _AGENTE, "Accept": "text/html,application/xhtml+xml"},
-            follow_redirects=True,
-            timeout=_TIMEOUT,
-            event_hooks={"request": [cada_salto]},
-        ) as cliente:
-            with cliente.stream("GET", url) as resposta:
-                if resposta.status_code != 200:
-                    raise LeituraIndisponivel(
-                        f"O site respondeu {resposta.status_code} ao pedido de leitura."
+            # A URL aponta para o IP validado; Host e SNI mantêm o domínio, para
+            # o servidor virtual certo responder e o certificado TLS conferir.
+            hospedeiro = f"[{ip}]" if ":" in ip else ip
+            alvo = partes._replace(netloc=f"{hospedeiro}:{porta}").geturl()
+            cabecalho_host = partes.hostname if porta in (80, 443) else f"{partes.hostname}:{porta}"
+
+            try:
+                with cliente.stream(
+                    "GET",
+                    alvo,
+                    headers={"Host": cabecalho_host},
+                    extensions={"sni_hostname": partes.hostname},
+                ) as resposta:
+                    if resposta.status_code in (301, 302, 303, 307, 308):
+                        destino = resposta.headers.get("location")
+                        if not destino:
+                            raise LeituraIndisponivel("O site respondeu com um redirecionamento sem destino.")
+                        atual = urljoin(atual, destino)
+                        continue
+                    if resposta.status_code != 200:
+                        raise LeituraIndisponivel(
+                            f"O site respondeu {resposta.status_code} ao pedido de leitura."
+                        )
+                    if "html" not in resposta.headers.get("content-type", ""):
+                        raise LeituraIndisponivel("O endereço não aponta para uma página de texto.")
+                    corpo = bytearray()
+                    for pedaco in resposta.iter_bytes():
+                        corpo.extend(pedaco)
+                        if len(corpo) > _MAX_BYTES:
+                            raise LeituraIndisponivel("A página é grande demais para ler aqui.")
+                    return (
+                        corpo.decode(resposta.encoding or "utf-8", errors="replace"),
+                        atual,
                     )
-                if "html" not in resposta.headers.get("content-type", ""):
-                    raise LeituraIndisponivel("O endereço não aponta para uma página de texto.")
-                # Um redirecionamento pode terminar num endereço interno mesmo
-                # tendo começado público — a checagem vale para onde se CHEGOU.
-                if not _url_permitida(str(resposta.url)):
-                    raise LeituraIndisponivel("Endereço não permitido para leitura.")
-                corpo = bytearray()
-                for pedaco in resposta.iter_bytes():
-                    corpo.extend(pedaco)
-                    if len(corpo) > _MAX_BYTES:
-                        raise LeituraIndisponivel("A página é grande demais para ler aqui.")
-                return (
-                    corpo.decode(resposta.encoding or "utf-8", errors="replace"),
-                    str(resposta.url),
-                )
-    except httpx.HTTPError as exc:
-        raise LeituraIndisponivel("Não consegui alcançar o site do material.") from exc
+            except httpx.HTTPError as exc:
+                raise LeituraIndisponivel("Não consegui alcançar o site do material.") from exc
+
+    raise LeituraIndisponivel("O site redirecionou vezes demais.")
 
 
 # --------------------------------------------------------------------------
