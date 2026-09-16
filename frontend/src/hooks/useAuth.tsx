@@ -20,7 +20,7 @@ import {
   type ReactNode,
 } from "react";
 import { startAuthentication } from "@simplewebauthn/browser";
-import { auth as authApi, passkeys as passkeysApi } from "@/api/endpoints";
+import { auth as authApi, features as featuresApi, passkeys as passkeysApi } from "@/api/endpoints";
 import { ApiError } from "@/api/client";
 import { clearReads } from "@/offline/cache";
 import type { User } from "@/api/types";
@@ -70,7 +70,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (esperas[tentativa]) await new Promise((r) => setTimeout(r, esperas[tentativa]));
       try {
         const current = await authApi.me();
-        setUser(current);
+        // Os feature flags entram junto de quem-sou-eu, para a barra lateral já
+        // saber o que mostrar. Se a busca falhar, o recurso fica oculto (mapa
+        // vazio) em vez de derrubar o login.
+        let recursos: Record<string, boolean> = {};
+        try {
+          recursos = await featuresApi.meus();
+        } catch {
+          recursos = {};
+        }
+        setUser({ ...current, features: recursos });
         setStatus("authenticated");
         return;
       } catch (erro) {

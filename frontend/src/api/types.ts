@@ -24,6 +24,8 @@ export interface User {
   is_moderator?: boolean;
   /** Administra contas (lista de usuarios, banir). Mesma regra: so decide o que a tela mostra. */
   is_super_admin?: boolean;
+  /** Recursos ligados para este usuário (feature flags). Vem de GET /features. */
+  features?: Record<string, boolean>;
   /** Se ha foto. Os bytes vem por GET /profile/avatar. */
   has_avatar: boolean;
 }

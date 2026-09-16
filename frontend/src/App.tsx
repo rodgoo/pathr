@@ -11,6 +11,7 @@ import { AppShell } from "@/components/layout/AppShell";
 import { MarcaCarregando } from "@/components/ui/MarcaCarregando";
 import { useAppState } from "@/hooks/useAppState";
 import { useAuth } from "@/hooks/useAuth";
+import { telaLiberada } from "@/lib/features";
 import { useLocation } from "@/hooks/useLocation";
 import { BG, TEXT } from "@/lib/tokens";
 import type { Screen } from "@/types";
@@ -117,7 +118,12 @@ function abertoComoAppInstalado(): boolean {
 
 function AuthenticatedApp() {
   const { state } = useAppState();
-  const Screen = SCREENS[state.screen];
+  const { user } = useAuth();
+  // Se o recurso da tela estiver desligado (feature flag), cai no Início — a
+  // navegação já esconde o item, isto cobre quem chega pela URL. A rota da API
+  // tem a sua própria checagem; isto é só a camada visual.
+  const tela = telaLiberada(state.screen, user?.features) ? state.screen : "home";
+  const Screen = SCREENS[tela];
   return (
     <AppShell>
       <Screen />

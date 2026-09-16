@@ -9,6 +9,7 @@
 
 import { useState } from "react";
 import { english as englishApi, roadmap as roadmapApi, social } from "@/api/endpoints";
+import { telaLiberada } from "@/lib/features";
 import { useAppState } from "@/hooks/useAppState";
 import { useT } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
@@ -29,7 +30,7 @@ interface NavEntry {
 export function Sidebar() {
   const t = useT();
   const { state, dispatch } = useAppState();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const roadmap = useQuery(() => roadmapApi.current(), []);
   const english = useQuery(() => englishApi.profile(), []);
@@ -142,7 +143,7 @@ export function Sidebar() {
             >
               {group.label}
             </div>
-            {group.items.map((item) => (
+            {group.items.filter((item) => telaLiberada(item.screen, user?.features)).map((item) => (
               <NavButton
                 key={item.screen}
                 item={item}

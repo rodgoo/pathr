@@ -26,6 +26,7 @@ import { useState } from "react";
 import { useAppState } from "@/hooks/useAppState";
 import { useT } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
+import { telaLiberada } from "@/lib/features";
 import { ACC4, PANEL, TEXT } from "@/lib/tokens";
 import type { Screen } from "@/types";
 import { Icon, type IconName } from "@/components/ui/icons";
@@ -66,7 +67,9 @@ export const ALTURA_DA_BARRA = 58;
 export function MobileNav() {
   const t = useT();
   const { state, dispatch } = useAppState();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
+  const folha = FOLHA.filter((item) => telaLiberada(item.screen, user?.features));
+  const barra = BARRA.filter((item) => telaLiberada(item.screen, user?.features));
   const [abriuMais, setAbriuMais] = useState(false);
 
   const vaiPara = (screen: Screen) => {
@@ -78,7 +81,7 @@ export function MobileNav() {
   // apagar a barra inteira enquanto se lê um artigo tiraria a referência de
   // onde a pessoa está.
   const telaAtiva = state.screen === "material" ? state.resourceReturn : state.screen;
-  const naFolha = FOLHA.some((item) => item.screen === telaAtiva);
+  const naFolha = folha.some((item) => item.screen === telaAtiva);
 
   return (
     <>
@@ -127,7 +130,7 @@ export function MobileNav() {
               animation: "noc-in .16s ease-out",
             }}
           >
-            {FOLHA.map((item) => (
+            {folha.map((item) => (
               <ItemDaFolha
                 key={item.screen}
                 item={item}
@@ -158,7 +161,7 @@ export function MobileNav() {
           display: "grid",
           // Uma coluna por destino, mais a do "Mais". Fixar o número deixava
           // uma coluna vazia sempre que um destino mudava para a folha.
-          gridTemplateColumns: `repeat(${BARRA.length + 1},1fr)`,
+          gridTemplateColumns: `repeat(${barra.length + 1},1fr)`,
           background: PANEL,
           boxShadow: "0 -1px 0 0 #222228",
           // O indicador de gestos do iPhone mora aqui embaixo; em paisagem, a
@@ -169,7 +172,7 @@ export function MobileNav() {
           paddingRight: "var(--safe-right)",
         }}
       >
-        {BARRA.map((item) => (
+        {barra.map((item) => (
           <BotaoDaBarra
             key={item.screen}
             item={item}

@@ -20,6 +20,7 @@ import { ObjectiveTab } from "@/components/profile/ObjectiveTab";
 import { SkillsTab } from "@/components/profile/SkillsTab";
 import { ModeracaoRelatos } from "@/components/relatos/ModeracaoRelatos";
 import { ModeracaoUsuarios } from "@/components/moderacao/ModeracaoUsuarios";
+import { RecursosFlags } from "@/components/admin/RecursosFlags";
 import { useAuth } from "@/hooks/useAuth";
 
 const ABAS: readonly { value: SettingsTab; label: string; icon: IconName }[] = [
@@ -37,11 +38,17 @@ const ABAS: readonly { value: SettingsTab; label: string; icon: IconName }[] = [
  * conta —, mas mostrar uma aba vazia a todo mundo anunciaria que ela existe.
  */
 const ABA_MODERACAO = { value: "moderacao" as const, label: "Moderação", icon: "flag" as IconName };
+// Recursos (feature flags) — só o super admin liga/desliga funcionalidades.
+const ABA_RECURSOS = { value: "recursos" as const, label: "Recursos", icon: "cog" as IconName };
 
 export function SettingsPage() {
   const { state, dispatch } = useAppState();
   const { user } = useAuth();
-  const TABS = user?.is_moderator || user?.is_super_admin ? [...ABAS, ABA_MODERACAO] : ABAS;
+  const TABS = [
+    ...ABAS,
+    ...(user?.is_moderator || user?.is_super_admin ? [ABA_MODERACAO] : []),
+    ...(user?.is_super_admin ? [ABA_RECURSOS] : []),
+  ];
   // As cinco abas do desenho têm tela. "objetivo" e "avisos" ficaram meses
   // caindo aqui em "conta" por não terem uma — era por isso que a pessoa
   // clicava e nada mudava.
@@ -90,6 +97,7 @@ export function SettingsPage() {
       {/* Contas primeiro (só o super admin), relatos depois (quem modera). */}
       {tab === "moderacao" && user?.is_super_admin ? <ModeracaoUsuarios /> : null}
       {tab === "moderacao" && user?.is_moderator ? <ModeracaoRelatos /> : null}
+      {tab === "recursos" && user?.is_super_admin ? <RecursosFlags /> : null}
 
       {/* Em aba nova: o documento é longo, e voltar dele não deve custar a
           posição em que a pessoa estava nas configurações. */}

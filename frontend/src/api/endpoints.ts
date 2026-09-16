@@ -192,6 +192,11 @@ export const auth = {
     api.post<{ detail: string }>("/auth/mfa/disable", { current_password, new_password: "" }),
 };
 
+/** Feature flags do usuário atual: {recurso: ligado}, resolvido no servidor. */
+export const features = {
+  meus: () => api.get<Record<string, boolean>>("/features"),
+};
+
 /**
  * Chave de acesso. As opções vêm do servidor com um `challenge_id`, o
  * navegador faz a cerimônia com o aparelho, e a resposta volta para conferir.

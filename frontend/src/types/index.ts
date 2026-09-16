@@ -41,4 +41,4 @@ export type ModuleTab = "material" | "quiz" | "atividade";
 export type ActivityMode = "escrever" | "revisar";
 
 /** Seções da tela de configurações. */
-export type SettingsTab = "conta" | "objetivo" | "skills" | "idiomas" | "avisos" | "integracoes" | "moderacao";
+export type SettingsTab = "conta" | "objetivo" | "skills" | "idiomas" | "avisos" | "integracoes" | "moderacao" | "recursos";

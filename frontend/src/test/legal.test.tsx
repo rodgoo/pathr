@@ -59,7 +59,10 @@ it.each(PAGINAS)("%s abre com o título e não chama a API", async (path, titulo
 
   await new Promise((r) => setTimeout(r, 50));
   // A checagem (e a tentativa de renovar) da sessão é do app, não da página.
-  expect(servidor.calls.filter((c) => !c.url.startsWith("/auth"))).toHaveLength(0);
+  // /features entra no bootstrap da sessão, como /auth/me — não é chamada de app.
+  expect(
+    servidor.calls.filter((c) => !c.url.startsWith("/auth") && !c.url.startsWith("/features")),
+  ).toHaveLength(0);
 });
 
 it("as abas levam de um documento ao outro e marcam o atual", async () => {
@@ -90,7 +93,10 @@ it("abre também para quem está logado, sem passar pelo app", async () => {
   );
   expect(await screen.findByRole("heading", { level: 1, name: "Como protegemos sua conta" })).toBeInTheDocument();
   await new Promise((r) => setTimeout(r, 50));
-  expect(servidor.calls.filter((c) => !c.url.startsWith("/auth"))).toHaveLength(0);
+  // /features entra no bootstrap da sessão, como /auth/me — não é chamada de app.
+  expect(
+    servidor.calls.filter((c) => !c.url.startsWith("/auth") && !c.url.startsWith("/features")),
+  ).toHaveLength(0);
 });
 
 it("Voltar ao PathR leva à raiz", async () => {
