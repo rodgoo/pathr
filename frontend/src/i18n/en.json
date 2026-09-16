@@ -1,0 +1,351 @@
+{
+  "idioma": {
+    "rotulo": "Language",
+    "escolher": "Choose a language",
+    "atual": "Current language: {idioma}",
+    "doApp": "App Language",
+    "explicacao": "This applies to menus, app text, and the content that the AI writes for you.",
+    "salvando": "Saving…",
+    "salvo": "Language changed"
+  },
+  "nav": {
+    "grupoGeral": "General",
+    "grupoFerramentas": "Tools",
+    "grupoConta": "Account",
+    "inicio": "Home",
+    "roadmap": "Roadmap",
+    "trilha": "Current track",
+    "trilhaCurta": "Trail",
+    "cursos": "Courses",
+    "vagas": "Job Openings",
+    "candidaturas": "Applications",
+    "amigos": "Friends",
+    "codigo": "Code Lab",
+    "codigoCurto": "Code",
+    "treinoDeIdiomas": "Language Training",
+    "perfil": "Profile and tags",
+    "curriculo": "Resume",
+    "relatar": "Report",
+    "manual": "Flight Manual",
+    "config": "Settings",
+    "mais": "More",
+    "sair": "Log Out",
+    "principal": "Main Navigation",
+    "maisDestinos": "More destinations",
+    "fecharMenu": "Close menu"
+  },
+  "landing": {
+    "palavras": {
+      "deploy": {
+        "traducao": "implantar, publicar",
+        "sinonimos": "release, ship, roll out"
+      },
+      "version": {
+        "traducao": "versão",
+        "sinonimos": "release, build, edition"
+      },
+      "team": {
+        "traducao": "equipe, time",
+        "sinonimos": "squad, crew, group"
+      },
+      "Friday": {
+        "traducao": "sexta-feira",
+        "sinonimos": "fim da semana útil"
+      }
+    },
+    "pessoas": {
+      "marina": {
+        "nome": "Marina Costa",
+        "cidade": "Vitória",
+        "objetivo": "Java Backend with Spring",
+        "cargo": "Developer"
+      },
+      "lucas": {
+        "nome": "Lucas Rocha",
+        "cidade": "Vila Velha",
+        "objetivo": "Full-Stack TypeScript"
+      },
+      "convite": "Invitation sent to {nome} — this is just an example. Create a real account.",
+      "amigos": "Now you and {nome} are friends.",
+      "desfeito": "Undone."
+    },
+    "topo": {
+      "navSecoes": "Sections",
+      "navConta": "Account",
+      "comoFunciona": "How It Works",
+      "recursos": "Resources",
+      "seguranca": "Security",
+      "entrar": "Log In",
+      "criarConta": "Create an account"
+    },
+    "hero": {
+      "selo": "Curriculum for People Working in Technology",
+      "titulo": "From your resume to a plan that",
+      "tituloDestaque": "is corrected every week",
+      "sub": "Submit your resume and tell us where you want to go. PathR builds your learning path in phases, selects the right material for each module, assesses what you’ve actually learned, and adjusts your path based on your progress.",
+      "criarContaGratis": "Create a free account",
+      "jaTenhoConta": "I already have an account",
+      "janelaTitulo": "pathr.notter.com.br · Home",
+      "janelaDescricao": "Dashboard showing study sequence, plan progress, and time spent studying",
+      "dica": "Hover your mouse over the cards—and select modules on the track below to see your progress increase here."
+    },
+    "janela": {
+      "experimente": "Give it a try"
+    },
+    "comoFunciona": {
+      "rotulo": "How It Works",
+      "titulo": "Three steps, and the plan works for you",
+      "curriculo": {
+        "titulo": "Submit your resume",
+        "texto": "The AI analyzes your skills and the proficiency level of each one. No need to manually fill out a list of 200 technologies."
+      },
+      "trilha": {
+        "titulo": "Get the soundtrack",
+        "texto": "Phases and modules organized according to your goals and the number of hours you have available each week."
+      },
+      "ajuste": {
+        "titulo": "Study and let it settle",
+        "texto": "Quizzes, explanations in your own words, and spaced repetition will boost your skill level. The week falls into place on its own."
+      }
+    },
+    "recursos": {
+      "trilha": {
+        "rotulo": "Trail",
+        "titulo": "A progress bar that shows how much is left",
+        "texto": "Each module includes the right material—an article, video, documentation, or guided example—and the time it takes to complete. Check off what you've finished and watch your progress grow.",
+        "ponto1": "Order as required by your objective",
+        "ponto2": "Time per module based on the length of your week",
+        "ponto3": "With this phase complete, the next one takes it a step further",
+        "janelaTitulo": "Track · Current Phase",
+        "janelaDescricao": "Modules in the current phase that can be marked as completed"
+      },
+      "constancia": {
+        "rotulo": "Perseverance",
+        "titulo": "A map of the year showing what you studied each day",
+        "texto": "Each square represents a day. Hover your mouse over it to see what was done—the article, the video, the quiz—and how long it took. Switch between week, month, and year.",
+        "ponto1": "Sequence and record that you protect",
+        "ponto2": "Study time measured by what was read and watched",
+        "ponto3": "Week, month, and year on the same dashboard",
+        "janelaTitulo": "Home · Your Perseverance",
+        "janelaDescricao": "Annual heat map showing school days"
+      },
+      "codigo": {
+        "rotulo": "Code Lab",
+        "titulo": "Ready-made examples, explained line by line",
+        "texto": "Choose the language and topic. PathR writes a short program and shows what each line does—without requiring you to install any software to understand the concept.",
+        "ponto1": "The languages listed on your profile, with the logo for each one",
+        "ponto2": "A step-by-step breakdown of what happens during execution",
+        "ponto3": "Suggestions based on the module you're studying",
+        "janelaTitulo": "Code Lab",
+        "janelaDescricao": "Example generator with language selection and line-by-line explanations"
+      },
+      "idiomas": {
+        "rotulo": "Languages",
+        "titulo": "English for Work, at Your Actual Level",
+        "texto": "A CEFR level that adapts to your answers. Stuck on a word? Tap it: the translation and synonyms will appear, and the word will be added to your review list.",
+        "ponto1": "Adaptive Placement, from A1 to C2",
+        "ponto2": "A word lookup that turns into spaced repetition",
+        "ponto3": "Daily reading, listening, and writing practice",
+        "janelaTitulo": "Languages · Placement Testing",
+        "janelaDescricao": "Leveling question involving the translation of a looked-up word"
+      },
+      "pessoas": {
+        "rotulo": "People",
+        "titulo": "Study with people who are close to you and want to reach the same goal",
+        "texto": "PathR suggests accounts from your city and from people studying the same technologies. Each card shows their goal, tech stack, and what you have in common—never an email address.",
+        "ponto1": "Your @—just waiting to be found",
+        "ponto2": "Suggestions by city, stack, and goal",
+        "ponto3": "Whether you appear in the suggestions is up to you",
+        "janelaTitulo": "Friends · Suggestions",
+        "janelaDescricao": "Profile cards of suggested people, including their city, role, and technologies"
+      }
+    },
+    "atividade": {
+      "artigoSpring": "Spring Boot: Dependency Injection in Practice",
+      "videoJpa": "JPA and Hibernate from Scratch",
+      "docDocker": "Official Docker Documentation",
+      "artigoTestes": "Testing with JUnit 5 and Mockito",
+      "quiz": "Module Quiz"
+    },
+    "trilha": {
+      "fase": "Phase 2 · Backend with Spring",
+      "contagem": "{feitos} {total} modules ·",
+      "barraAria": "Progress on the sample trail",
+      "plano": "Complete plan: {feitos} from {total} modules · {pct}% — the progress chart above tracks your progress.",
+      "tipoEDuracao": "{tipo} · {minutos} min",
+      "faseConcluida": "Phase completed — the next one has already been set up one step higher.",
+      "faltam": "{horas}h and{minutos} are missing at this stage. Tap a module to mark it."
+    },
+    "modulos": {
+      "estrutura": {
+        "titulo": "Spring Boot: Project Structure",
+        "tipo": "Article + quiz"
+      },
+      "injecao": {
+        "titulo": "Dependency Injection in Practice",
+        "tipo": "Video + exercise"
+      },
+      "jpa": {
+        "titulo": "JPA and Hibernate: Mapping Entities",
+        "tipo": "Documentation + quiz"
+      },
+      "testes": {
+        "titulo": "Testing with JUnit 5 and Mockito",
+        "tipo": "Step-by-Step Example"
+      },
+      "docker": {
+        "titulo": "Docker for running the API locally",
+        "tipo": "Article + Practice"
+      }
+    },
+    "codigo": {
+      "linguagem": "Language",
+      "linha": "{n} Line"
+    },
+    "exemplos": {
+      "java": {
+        "assunto": "streams and lambdas",
+        "linhas": [
+          "Opens a stream on the list: nothing has been processed yet.",
+          "Eliminate anyone under 18 before proceeding to the next step.",
+          "Replace each person with their name — method reference.",
+          "Only here does the feed actually run and become a static list."
+        ]
+      },
+      "typescript": {
+        "assunto": "types and async/await",
+        "linhas": [
+          "Describes the format returned by the API.",
+          "Wait for the request without freezing the interface.",
+          "The type ensures that `nota` exists before it is used.",
+          "Sort from most compatible to least compatible."
+        ]
+      },
+      "python": {
+        "assunto": "understanding lists",
+        "linhas": [
+          "A common list of numbers.",
+          "Filter and display the new list on a single line.",
+          "Add them up and divide by the number of students who passed.",
+          "f-string with one decimal place: 8.2"
+        ]
+      },
+      "go": {
+        "assunto": "goroutines and channels",
+        "linhas": [
+          "Creates a channel for goroutines to communicate with each other.",
+          "Run the calculation in parallel, without blocking.",
+          "Wait for the price to reach that level through the channel.",
+          "Prints a message when the goroutine finishes."
+        ]
+      }
+    },
+    "idioma": {
+      "legenda": "reading · B1 · tap an underlined word",
+      "sinonimos": "synonyms: {lista}",
+      "entrouNaRevisao": "It's part of your vocabulary review for today."
+    },
+    "cuidados": {
+      "dados": {
+        "titulo": "Your data belongs to you",
+        "texto": "Export everything to a single file or delete the account whenever you want."
+      },
+      "visibilidade": {
+        "titulo": "You decide who finds you",
+        "texto": "Appearing in the suggestions is optional, and your email address is never shown to other accounts."
+      },
+      "sessao": {
+        "titulo": "Secure session",
+        "texto": "A strong password, two-factor authentication, and a device passcode, if you prefer."
+      },
+      "detalhesAntes": "The details are in the",
+      "linkPrivacidade": "privacy policy",
+      "detalhesMeio": "and on the page for",
+      "linkSeguranca": "safety"
+    },
+    "chamada": {
+      "titulo": "Your next step starts with the resume you already have",
+      "texto": "Create an account, submit your resume, and see your plan come together in just a few minutes.",
+      "botao": "Create a free account"
+    },
+    "rodape": {
+      "marca": "PathR · Curriculum",
+      "nav": "Terms and Policies",
+      "termos": "Terms of Use",
+      "privacidade": "Privacy",
+      "seguranca": "Security"
+    }
+  },
+  "auth": {
+    "campos": {
+      "email": "Email",
+      "senha": "Password"
+    },
+    "login": {
+      "titulo": "Log In",
+      "sub": "Your study plan picks up where it left off.",
+      "semConta": "Don't have an account yet?",
+      "criarConta": "Create an account",
+      "entrando": "Coming in…",
+      "confirmarCodigo": "Confirm code",
+      "esqueci": "I forgot my password",
+      "ou": "or",
+      "ouSenha": "or enter your password",
+      "entrarComChave": "Log in with your access key",
+      "aguardandoAparelho": "Waiting for the device…",
+      "semLink": "Didn't receive the link?",
+      "reenviar": "Resend confirmation",
+      "codigo": "Authenticator code",
+      "codigoDica": "Six digits from the app, or a backup code."
+    },
+    "cadastro": {
+      "titulo": "Create an account",
+      "sub": "Submit your resume, and the plan will be ready for you, broken down into phases.",
+      "jaTem": "Do you already have an account?",
+      "criando": "Loading…",
+      "nome": "What would you like to be called?",
+      "nascimento": "Date of Birth",
+      "requisitos": "Password Requirements",
+      "isca": "Website",
+      "confirme": "Confirm your email address",
+      "enviamosLink": "We sent a link to",
+      "validade": "The link is valid for three days. If you don't receive it, check your spam folder as well.",
+      "irParaEntrar": "Go to Sign In"
+    },
+    "recuperar": {
+      "titulo": "Recover Password",
+      "sub": "We've sent you a link to set a new password.",
+      "voltar": "Back to sign in",
+      "emailDaConta": "Account email address",
+      "enviando": "Sending…",
+      "enviarLink": "Send link",
+      "seHouver": "If there is an account with",
+      "aCaminho": ", the recovery link is on its way. It's valid for 1 hour."
+    },
+    "confirmacao": {
+      "confirmando": "Confirming…",
+      "umInstante": "Just a moment.",
+      "confirmado": "Email confirmed",
+      "tudoPronto": "Everything's ready to get started.",
+      "contaAtiva": "Your account is active.",
+      "irParaOApp": "Go to the app",
+      "voltarAoApp": "Back to the app",
+      "naoDeu": "I couldn't confirm it",
+      "semToken": "This address does not contain a confirmation token."
+    },
+    "novaSenha": {
+      "titulo": "New password",
+      "sub": "Choose a password that you don't use anywhere else.",
+      "dica": "At least 10 characters, including letters and numbers.",
+      "salvando": "Saving…",
+      "salvar": "Save password",
+      "linkInvalido": "Invalid link",
+      "semToken": "This address does not include a recovery token."
+    }
+  },
+  "sidebar": {
+    "meta": "Goal",
+    "progresso": "Roadmap Progress",
+    "modulos": "{pct}% · {feitos} de {total} modules"
+  }
+}

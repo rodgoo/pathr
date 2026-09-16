@@ -10,6 +10,7 @@
 import { useState } from "react";
 import { english as englishApi, roadmap as roadmapApi, social } from "@/api/endpoints";
 import { useAppState } from "@/hooks/useAppState";
+import { useT } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@/hooks/useApi";
 import { ACC4, PANEL, SURF, TEXT } from "@/lib/tokens";
@@ -26,6 +27,7 @@ interface NavEntry {
 }
 
 export function Sidebar() {
+  const t = useT();
   const { state, dispatch } = useAppState();
   const { logout } = useAuth();
 
@@ -45,23 +47,23 @@ export function Sidebar() {
 
   const groups: { label: string; items: NavEntry[] }[] = [
     {
-      label: "Geral",
+      label: t("nav.grupoGeral"),
       items: [
-        { label: "Início", screen: "home", icon: "home" },
+        { label: t("nav.inicio"), screen: "home", icon: "home" },
         {
-          label: "Roadmap",
+          label: t("nav.roadmap"),
           screen: "roadmap",
           icon: "road",
           badge: plan ? String(plan.total_nodes) : undefined,
         },
-        { label: "Trilha atual", screen: "modulo", icon: "book" },
-        { label: "Cursos", screen: "cursos", icon: "award" },
-        { label: "Vagas", screen: "vagas", icon: "suitcase" },
-        { label: "Candidaturas", screen: "candidaturas", icon: "send" },
+        { label: t("nav.trilha"), screen: "modulo", icon: "book" },
+        { label: t("nav.cursos"), screen: "cursos", icon: "award" },
+        { label: t("nav.vagas"), screen: "vagas", icon: "suitcase" },
+        { label: t("nav.candidaturas"), screen: "candidaturas", icon: "send" },
         // O contador é de convites RECEBIDOS: é o único número aqui que pede
         // uma ação, e sem ele o convite ficaria esperando alguém abrir a aba.
         {
-          label: "Amigos",
+          label: t("nav.amigos"),
           screen: "amigos",
           icon: "users",
           badge: convites ? String(convites) : undefined,
@@ -69,20 +71,22 @@ export function Sidebar() {
       ],
     },
     {
-      label: "Ferramentas",
+      label: t("nav.grupoFerramentas"),
       items: [
-        { label: "Laboratório de código", screen: "codigo", icon: "code" },
-        { label: "Idiomas", screen: "ingles", icon: "flag", badge: languageBadge },
+        { label: t("nav.codigo"), screen: "codigo", icon: "code" },
+        // "Idiomas" virou "Treino de idiomas": com o idioma do app agora
+        // trocável em Configurações, o nome antigo prometia a outra coisa.
+        { label: t("nav.treinoDeIdiomas"), screen: "ingles", icon: "flag", badge: languageBadge },
       ],
     },
     {
-      label: "Conta",
+      label: t("nav.grupoConta"),
       items: [
-        { label: "Perfil e tags", screen: "perfil", icon: "user" },
-        { label: "Currículo", screen: "cv", icon: "file" },
-        { label: "Relatar", screen: "relatar", icon: "flag" },
-        { label: "Manual de bordo", screen: "manual", icon: "info" },
-        { label: "Configurações", screen: "config", icon: "cog" },
+        { label: t("nav.perfil"), screen: "perfil", icon: "user" },
+        { label: t("nav.curriculo"), screen: "cv", icon: "file" },
+        { label: t("nav.relatar"), screen: "relatar", icon: "flag" },
+        { label: t("nav.manual"), screen: "manual", icon: "info" },
+        { label: t("nav.config"), screen: "config", icon: "cog" },
       ],
     },
   ];
@@ -160,17 +164,21 @@ export function Sidebar() {
               boxShadow: "0 0 0 1px #3f424d",
             }}
           >
-            <Kicker style={{ display: "block", marginBottom: 5.6 }}>Meta</Kicker>
+            <Kicker style={{ display: "block", marginBottom: 5.6 }}>{t("sidebar.meta")}</Kicker>
             <div style={{ fontSize: 12.5, lineHeight: 1.4, color: "rgba(233,233,237,.8)" }}>
               {plan.target_role || plan.title}
             </div>
             <Meter
               pct={plan.progress_pct}
-              label="Progresso do roadmap"
+              label={t("sidebar.progresso")}
               style={{ marginTop: 8.4 }}
             />
             <div style={{ marginTop: 5.6, fontSize: 11, color: TEXT.muted }}>
-              {plan.progress_pct}% · {plan.done_nodes} de {plan.total_nodes} módulos
+              {t("sidebar.modulos", {
+                pct: plan.progress_pct,
+                feitos: plan.done_nodes,
+                total: plan.total_nodes,
+              })}
             </div>
           </div>
         ) : null}
@@ -182,7 +190,7 @@ export function Sidebar() {
           onClick={() => void logout()}
         >
           <Icon name="signOut" size={15} />
-          Sair
+          {t("nav.sair")}
         </button>
       </div>
     </aside>

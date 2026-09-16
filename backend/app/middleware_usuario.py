@@ -17,7 +17,12 @@ from http.cookies import SimpleCookie
 
 from app.deps import ACCESS_COOKIE
 from app.security import decode_access_token
+from app.services import idioma as idioma_do_app
 from app.services.limites import usuario_da_requisicao
+
+# O idioma da tela, que o front manda em toda requisição. É o que faz o texto
+# que a IA escreve sair no mesmo idioma dos menus (app/services/idioma.py).
+CABECALHO_DE_IDIOMA = "x-pathr-idioma"
 
 
 def _token(scope) -> str | None:
@@ -51,8 +56,13 @@ class UsuarioDaRequisicao:
             carga = decode_access_token(token)
             if carga and carga.get("sub"):
                 usuario = str(carga["sub"])
+        cabecalhos = {k.decode("latin-1").lower(): v.decode("latin-1") for k, v in scope.get("headers", [])}
+        escolhido = idioma_do_app.normalizar(cabecalhos.get(CABECALHO_DE_IDIOMA))
+
         marca = usuario_da_requisicao.set(usuario)
+        marca_do_idioma = idioma_do_app.idioma_da_requisicao.set(escolhido)
         try:
             await self.app(scope, receive, send)
         finally:
+            idioma_do_app.idioma_da_requisicao.reset(marca_do_idioma)
             usuario_da_requisicao.reset(marca)

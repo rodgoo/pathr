@@ -16,9 +16,11 @@ import { auth as authApi } from "@/api/endpoints";
 import { errorMessage, isEmailUnverified, isMfaRequired, useAuth } from "@/hooks/useAuth";
 import { AuthShell, Field, PasswordField, FormError } from "@/components/auth/AuthShell";
 import { Icon } from "@/components/ui/icons";
+import { useT } from "@/lib/i18n";
 import { chaveSuportada, mensagemDeErroDaChave, temChaveNesteAparelho } from "@/lib/passkeys";
 
 export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }) {
+  const t = useT();
   const { login, loginWithPasskey } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -62,7 +64,7 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
       onClick={() => void entrarComChave()}
     >
       <Icon name="fingerprint" size={18} />
-      {passkeyPending ? "Aguardando o aparelho…" : "Entrar com chave de acesso"}
+      {passkeyPending ? t("auth.login.aguardandoAparelho") : t("auth.login.entrarComChave")}
     </button>
   );
 
@@ -92,14 +94,14 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
 
   return (
     <AuthShell
-      title="Entrar"
+      title={t("auth.login.titulo")}
       icon="logIn"
-      subtitle="Seu plano de estudos continua de onde parou."
+      subtitle={t("auth.login.sub")}
       footer={
         <>
-          Ainda não tem conta?{" "}
+          {t("auth.login.semConta")}{" "}
           <a href="/cadastro" onClick={(e) => { e.preventDefault(); onNavigate("/cadastro"); }}>
-            Criar conta
+            {t("auth.login.criarConta")}
           </a>
         </>
       }
@@ -107,7 +109,7 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
       {lembrada ? (
         <>
           {botaoDeChave(true)}
-          <div className="auth-divisor" style={{ margin: "16px 0 14px" }}>ou entre com a senha</div>
+          <div className="auth-divisor" style={{ margin: "16px 0 14px" }}>{t("auth.login.ouSenha")}</div>
         </>
       ) : null}
       <form onSubmit={submit} noValidate>
@@ -129,14 +131,14 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
               resent
             ) : (
               <>
-                Não recebeu o link?{" "}
+                {t("auth.login.semLink")}{" "}
                 <button
                   type="button"
                   className="btn btn-ghost"
                   style={{ fontSize: 12, padding: "2px 8px" }}
                   onClick={resendVerification}
                 >
-                  Reenviar confirmação
+                  {t("auth.login.reenviar")}
                 </button>
               </>
             )}
@@ -145,7 +147,7 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
 
         <Field
           id="login-email"
-          label="E-mail"
+          label={t("auth.campos.email")}
           icon="mail"
           type="email"
           autoComplete="email"
@@ -156,7 +158,7 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
         />
         <PasswordField
           id="login-password"
-          label="Senha"
+          label={t("auth.campos.senha")}
           icon="lock"
           autoComplete="current-password"
           required
@@ -168,8 +170,8 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
         {needsMfa ? (
           <Field
             id="login-mfa"
-            label="Código do autenticador"
-            hint="Seis dígitos do app, ou um código de backup."
+            label={t("auth.login.codigo")}
+            hint={t("auth.login.codigoDica")}
             inputMode="numeric"
             autoComplete="one-time-code"
             autoFocus
@@ -186,7 +188,7 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
           className={lembrada ? "btn btn-secondary btn-block" : "btn btn-primary btn-block"}
           disabled={pending}
         >
-          {pending ? "Entrando…" : needsMfa ? "Confirmar código" : "Entrar"}
+          {pending ? t("auth.login.entrando") : needsMfa ? t("auth.login.confirmarCodigo") : t("auth.login.titulo")}
           {pending ? null : <Icon name="seta" size={17} className="auth-seta" />}
         </button>
 
@@ -196,13 +198,13 @@ export function LoginPage({ onNavigate }: { onNavigate: (path: string) => void }
             className="auth-link-menor"
             onClick={(e) => { e.preventDefault(); onNavigate("/recuperar-senha"); }}
           >
-            Esqueci minha senha
+            {t("auth.login.esqueci")}
           </a>
         </div>
       </form>
       {suportada && !lembrada ? (
         <>
-          <div className="auth-divisor" aria-hidden="true">ou</div>
+          <div className="auth-divisor" aria-hidden="true">{t("auth.login.ou")}</div>
           {botaoDeChave(false)}
         </>
       ) : null}

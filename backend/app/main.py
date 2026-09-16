@@ -167,7 +167,7 @@ app.add_middleware(
     allow_methods=["GET", "POST", "PATCH", "PUT", "DELETE", "OPTIONS"],
     # `X-Pathr-Client` identifica a ABA que fez a escrita, para o aviso de
     # volta poder ser ignorado por ela mesma.
-    allow_headers=["Authorization", "Content-Type", "X-Pathr-Client"],
+    allow_headers=["Authorization", "Content-Type", "X-Pathr-Client", "X-Pathr-Idioma"],
     # Sem isto o navegador esconde do JavaScript qualquer cabeçalho que não
     # seja da lista segura do CORS, e o site (pathr.notter.com.br) fala com
     # outra origem (api.pathr.notter.com.br). Os dois abaixo carregam decisões

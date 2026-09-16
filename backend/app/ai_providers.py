@@ -68,6 +68,7 @@ import httpx
 from starlette.concurrency import run_in_threadpool
 
 from app.config import settings
+from app.services import idioma as idioma_do_app
 
 # Um currículo de duas páginas mandado como PDF é uma requisição bem maior que
 # um chat de texto; 45s dá folga sem deixar a rotação inteira estourar o
@@ -825,6 +826,7 @@ async def generate_json(
     gemini_schema: Optional[dict] = None,
     per_attempt_timeout: Optional[float] = None,
     rapido: bool = False,
+    traduzir_saida: bool = True,
 ) -> AiResult:
     """Tenta cada candidato configurado em ordem, rotacionando na falha.
 
@@ -838,10 +840,14 @@ async def generate_json(
     `per_attempt_timeout` limita cada candidato, para que um lento não gaste o
     orçamento inteiro sozinho. Sem ele, cada tentativa usa o que sobrar.
     """
+    # O que o modelo escreve vai direto para a tela: sai no idioma em que a
+    # pessoa está usando o app. `traduzir_saida=False` é para quem gera
+    # material do idioma ESTUDADO — ali o inglês é o conteúdo, não a interface.
+    sistema = system_prompt + (idioma_do_app.instrucao_para_o_modelo() if traduzir_saida else "")
     marca = _rapido.set(rapido)
     try:
         return await _rotate(
-            _text_candidates(), system_prompt, user_prompt, gemini_schema, _NO_PROVIDER,
+            _text_candidates(), sistema, user_prompt, gemini_schema, _NO_PROVIDER,
             per_attempt=per_attempt_timeout,
         )
     finally:

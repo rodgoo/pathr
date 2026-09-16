@@ -91,7 +91,7 @@ describe("barra lateral", () => {
     renderApp({ "GET /profile/overview": () => ({ body: anOverview() }) });
     const nav = within(await screen.findByRole("navigation", { name: "Navegação principal" }));
     await waitFor(() =>
-      expect(nav.getByRole("button", { name: /Idiomas/ })).toHaveTextContent("off"),
+      expect(nav.getByRole("button", { name: /Treino de idiomas/ })).toHaveTextContent("off"),
     );
   });
 

@@ -24,41 +24,47 @@
 
 import { useState } from "react";
 import { useAppState } from "@/hooks/useAppState";
+import { useT } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
 import { ACC4, PANEL, TEXT } from "@/lib/tokens";
 import type { Screen } from "@/types";
 import { Icon, type IconName } from "@/components/ui/icons";
 
 interface Destino {
-  label: string;
+  /** Chave do dicionário (lib/i18n), não o texto pronto. */
+  chave: string;
   screen: Screen;
   icon: IconName;
 }
 
+/** Os destinos, com a chave do rótulo — o texto sai no idioma da pessoa. */
 const BARRA: Destino[] = [
-  { label: "Início", screen: "home", icon: "home" },
-  { label: "Roadmap", screen: "roadmap", icon: "road" },
-  { label: "Trilha", screen: "modulo", icon: "book" },
+  { chave: "nav.inicio", screen: "home", icon: "home" },
+  { chave: "nav.roadmap", screen: "roadmap", icon: "road" },
+  { chave: "nav.trilhaCurta", screen: "modulo", icon: "book" },
 ];
 
 const FOLHA: Destino[] = [
-  { label: "Cursos", screen: "cursos", icon: "award" },
-  { label: "Vagas", screen: "vagas", icon: "suitcase" },
-  { label: "Candidaturas", screen: "candidaturas", icon: "send" },
-  { label: "Código", screen: "codigo", icon: "code" },
-  { label: "Idiomas", screen: "ingles", icon: "flag" },
-  { label: "Amigos", screen: "amigos", icon: "users" },
-  { label: "Perfil e tags", screen: "perfil", icon: "user" },
-  { label: "Currículo", screen: "cv", icon: "file" },
-  { label: "Relatar", screen: "relatar", icon: "flag" },
-  { label: "Manual de bordo", screen: "manual", icon: "info" },
-  { label: "Configurações", screen: "config", icon: "cog" },
+  { chave: "nav.cursos", screen: "cursos", icon: "award" },
+  { chave: "nav.vagas", screen: "vagas", icon: "suitcase" },
+  { chave: "nav.candidaturas", screen: "candidaturas", icon: "send" },
+  { chave: "nav.codigoCurto", screen: "codigo", icon: "code" },
+  // "Idiomas" virou "Treino de idiomas": o idioma do APP agora se troca em
+  // Configurações, e o nome antigo apontava para a coisa errada.
+  { chave: "nav.treinoDeIdiomas", screen: "ingles", icon: "flag" },
+  { chave: "nav.amigos", screen: "amigos", icon: "users" },
+  { chave: "nav.perfil", screen: "perfil", icon: "user" },
+  { chave: "nav.curriculo", screen: "cv", icon: "file" },
+  { chave: "nav.relatar", screen: "relatar", icon: "flag" },
+  { chave: "nav.manual", screen: "manual", icon: "info" },
+  { chave: "nav.config", screen: "config", icon: "cog" },
 ];
 
 /** A altura que o conteúdo precisa reservar para não ficar sob a barra. */
 export const ALTURA_DA_BARRA = 58;
 
 export function MobileNav() {
+  const t = useT();
   const { state, dispatch } = useAppState();
   const { logout } = useAuth();
   const [abriuMais, setAbriuMais] = useState(false);
@@ -83,7 +89,7 @@ export function MobileNav() {
               alcançá-la. */}
           <button
             type="button"
-            aria-label="Fechar menu"
+            aria-label={t("nav.fecharMenu")}
             onClick={() => setAbriuMais(false)}
             style={{
               position: "fixed",
@@ -95,7 +101,7 @@ export function MobileNav() {
           />
           <div
             role="dialog"
-            aria-label="Mais destinos"
+            aria-label={t("nav.maisDestinos")}
             style={{
               position: "fixed",
               insetInline: 0,
@@ -136,14 +142,14 @@ export function MobileNav() {
               onClick={() => void logout()}
             >
               <Icon name="signOut" size={17} />
-              Sair
+              {t("nav.sair")}
             </button>
           </div>
         </>
       ) : null}
 
       <nav
-        aria-label="Navegação principal"
+        aria-label={t("nav.principal")}
         style={{
           position: "fixed",
           insetInline: 0,
@@ -172,7 +178,7 @@ export function MobileNav() {
           />
         ))}
         <BotaoDaBarra
-          item={{ label: "Mais", screen: "config", icon: "dots" }}
+          item={{ chave: "nav.mais", screen: "config", icon: "dots" }}
           ativo={naFolha || abriuMais}
           expandido={abriuMais}
           onClick={() => setAbriuMais((aberto) => !aberto)}
@@ -193,6 +199,7 @@ function BotaoDaBarra({
   expandido?: boolean;
   onClick: () => void;
 }) {
+  const t = useT();
   return (
     <button
       type="button"
@@ -222,7 +229,7 @@ function BotaoDaBarra({
       {/* Cheio quando é a aba atual. É assim que o iOS diz "você está aqui", e
           quem usa iPhone lê isso antes de reparar na cor. */}
       <Icon name={item.icon} size={20} filled={ativo} />
-      <span>{item.label}</span>
+      <span>{t(item.chave)}</span>
     </button>
   );
 }
@@ -236,6 +243,7 @@ function ItemDaFolha({
   ativo: boolean;
   onClick: () => void;
 }) {
+  const t = useT();
   return (
     <button
       type="button"
@@ -258,7 +266,7 @@ function ItemDaFolha({
       }}
     >
       <Icon name={item.icon} size={17} />
-      {item.label}
+      {t(item.chave)}
     </button>
   );
 }

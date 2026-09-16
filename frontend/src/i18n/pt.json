@@ -1,0 +1,324 @@
+{
+  "idioma": {
+    "rotulo": "Idioma",
+    "escolher": "Escolher idioma",
+    "atual": "Idioma atual: {idioma}",
+    "doApp": "Idioma do aplicativo",
+    "explicacao": "Vale para os menus, os textos do app e o conteúdo que a IA escreve para você.",
+    "salvando": "Salvando…",
+    "salvo": "Idioma alterado"
+  },
+  "auth": {
+    "campos": {
+      "email": "E-mail",
+      "senha": "Senha"
+    },
+    "login": {
+      "titulo": "Entrar",
+      "sub": "Seu plano de estudos continua de onde parou.",
+      "semConta": "Ainda não tem conta?",
+      "criarConta": "Criar conta",
+      "entrando": "Entrando…",
+      "confirmarCodigo": "Confirmar código",
+      "esqueci": "Esqueci minha senha",
+      "ou": "ou",
+      "ouSenha": "ou entre com a senha",
+      "entrarComChave": "Entrar com chave de acesso",
+      "aguardandoAparelho": "Aguardando o aparelho…",
+      "semLink": "Não recebeu o link?",
+      "reenviar": "Reenviar confirmação",
+      "codigo": "Código do autenticador",
+      "codigoDica": "Seis dígitos do app, ou um código de backup."
+    },
+    "cadastro": {
+      "titulo": "Criar conta",
+      "sub": "Envie seu currículo e o plano sai pronto, dividido em fases.",
+      "jaTem": "Já tem conta?",
+      "criando": "Criando…",
+      "nome": "Como quer ser chamado",
+      "nascimento": "Data de nascimento",
+      "requisitos": "Requisitos da senha",
+      "isca": "Site",
+      "confirme": "Confirme seu e-mail",
+      "enviamosLink": "Enviamos um link para",
+      "validade": "O link vale por três dias. Se não chegar, olhe também o spam.",
+      "irParaEntrar": "Ir para entrar"
+    },
+    "recuperar": {
+      "titulo": "Recuperar senha",
+      "sub": "Enviamos um link para você definir uma nova senha.",
+      "voltar": "Voltar para entrar",
+      "emailDaConta": "E-mail da conta",
+      "enviando": "Enviando…",
+      "enviarLink": "Enviar link",
+      "seHouver": "Se houver conta com",
+      "aCaminho": ", o link de recuperação já está a caminho. Ele vale por 1 hora."
+    },
+    "confirmacao": {
+      "confirmando": "Confirmando…",
+      "umInstante": "Um instante.",
+      "confirmado": "E-mail confirmado",
+      "tudoPronto": "Tudo pronto para começar.",
+      "contaAtiva": "Sua conta está ativa.",
+      "irParaOApp": "Ir para o app",
+      "voltarAoApp": "Voltar ao app",
+      "naoDeu": "Não deu para confirmar",
+      "semToken": "Este endereço não traz um token de confirmação."
+    },
+    "novaSenha": {
+      "titulo": "Nova senha",
+      "sub": "Escolha uma senha que você não usa em outro lugar.",
+      "dica": "Ao menos 10 caracteres, com letra e número.",
+      "salvando": "Salvando…",
+      "salvar": "Salvar senha",
+      "linkInvalido": "Link inválido",
+      "semToken": "Este endereço não traz um token de recuperação."
+    }
+  },
+  "landing": {
+    "topo": {
+      "navSecoes": "Seções",
+      "navConta": "Conta",
+      "comoFunciona": "Como funciona",
+      "recursos": "Recursos",
+      "seguranca": "Segurança",
+      "entrar": "Entrar",
+      "criarConta": "Criar conta"
+    },
+    "hero": {
+      "selo": "Plano de estudos para quem trabalha com tecnologia",
+      "titulo": "Do seu currículo a um plano que",
+      "tituloDestaque": "se corrige toda semana",
+      "sub": "Envie o currículo e diga aonde quer chegar. O PathR monta a trilha em fases, separa o material certo para cada módulo, mede o que você aprendeu de verdade e ajusta a rota com o que viu.",
+      "criarContaGratis": "Criar conta grátis",
+      "jaTenhoConta": "Já tenho conta",
+      "janelaTitulo": "pathr.notter.com.br · Início",
+      "janelaDescricao": "Painel inicial com sequência de estudo, progresso do plano e tempo estudado",
+      "dica": "Passe o mouse nos cartões — e marque módulos na trilha mais abaixo para ver o progresso subir aqui."
+    },
+    "janela": {
+      "experimente": "Experimente"
+    },
+    "comoFunciona": {
+      "rotulo": "Como funciona",
+      "titulo": "Três passos, e o plano trabalha por você",
+      "curriculo": {
+        "titulo": "Envie o currículo",
+        "texto": "A IA lê suas competências e o nível de cada uma. Nada de preencher uma lista de 200 tecnologias à mão."
+      },
+      "trilha": {
+        "titulo": "Receba a trilha",
+        "texto": "Fases e módulos ordenados pelo que o seu objetivo exige, no tamanho das horas que você tem por semana."
+      },
+      "ajuste": {
+        "titulo": "Estude e deixe ajustar",
+        "texto": "Quiz, explicação com suas palavras e revisão espaçada movem o seu nível. A semana se remonta sozinha."
+      }
+    },
+    "recursos": {
+      "trilha": {
+        "rotulo": "Trilha",
+        "titulo": "Uma trilha em fases que mostra quanto falta",
+        "texto": "Cada módulo traz o material certo — artigo, vídeo, documentação ou exemplo guiado — e o tempo que leva. Marque o que terminou e veja o progresso andar.",
+        "ponto1": "Ordem pelo que o seu objetivo exige",
+        "ponto2": "Tempo por módulo no tamanho da sua semana",
+        "ponto3": "Fase concluída monta a próxima um degrau acima",
+        "janelaTitulo": "Trilha · Fase atual",
+        "janelaDescricao": "Módulos da fase atual que podem ser marcados como concluídos"
+      },
+      "constancia": {
+        "rotulo": "Constância",
+        "titulo": "Um mapa do ano que mostra o que você estudou em cada dia",
+        "texto": "Cada quadrado é um dia. Passe o mouse e veja o que foi feito — o artigo, o vídeo, o quiz — e quanto tempo levou. Troque entre semana, mês e ano.",
+        "ponto1": "Sequência e recorde que você protege",
+        "ponto2": "Tempo de estudo medido pelo que foi lido e assistido",
+        "ponto3": "Semana, mês e ano no mesmo painel",
+        "janelaTitulo": "Início · Sua constância",
+        "janelaDescricao": "Mapa de calor do ano com os dias de estudo"
+      },
+      "codigo": {
+        "rotulo": "Laboratório de código",
+        "titulo": "Exemplos prontos, explicados linha a linha",
+        "texto": "Escolha a linguagem e o assunto. O PathR escreve um programa curto e mostra o que cada linha faz — sem precisar de um ambiente instalado para entender a ideia.",
+        "ponto1": "As linguagens do seu perfil, com o logo de cada uma",
+        "ponto2": "O passo a passo do que acontece na execução",
+        "ponto3": "Sugestões a partir do módulo que você está estudando",
+        "janelaTitulo": "Laboratório de código",
+        "janelaDescricao": "Gerador de exemplos com seleção de linguagem e explicação por linha"
+      },
+      "idiomas": {
+        "rotulo": "Idiomas",
+        "titulo": "Inglês para o trabalho, no seu nível de verdade",
+        "texto": "Um nivelamento CEFR que se adapta às respostas. Travou numa palavra? Toque nela: a tradução e os sinônimos aparecem, e a palavra entra na sua revisão.",
+        "ponto1": "Nivelamento adaptativo, de A1 a C2",
+        "ponto2": "Consulta de palavra que vira revisão espaçada",
+        "ponto3": "Treinos diários de leitura, escuta e escrita",
+        "janelaTitulo": "Idiomas · Nivelamento",
+        "janelaDescricao": "Pergunta de nivelamento com a tradução de uma palavra consultada"
+      },
+      "pessoas": {
+        "rotulo": "Pessoas",
+        "titulo": "Estude com quem está perto e quer chegar no mesmo lugar",
+        "texto": "O PathR sugere contas da sua cidade e de quem estuda as mesmas tecnologias. Cada cartão mostra objetivo, stack e o que vocês têm em comum — nunca e-mail.",
+        "ponto1": "Seu @ próprio para ser encontrado",
+        "ponto2": "Sugestões por cidade, stack e objetivo",
+        "ponto3": "Aparecer nas sugestões é escolha sua",
+        "janelaTitulo": "Amigos · Sugestões",
+        "janelaDescricao": "Cartões de pessoas sugeridas com cidade, objetivo e tecnologias"
+      }
+    },
+    "atividade": {
+      "artigoSpring": "Spring Boot: injeção de dependência na prática",
+      "videoJpa": "JPA e Hibernate do zero",
+      "docDocker": "Documentação oficial do Docker",
+      "artigoTestes": "Testes com JUnit 5 e Mockito",
+      "quiz": "Quiz do módulo"
+    },
+    "trilha": {
+      "fase": "Fase 2 · Backend com Spring",
+      "contagem": "{feitos} de {total} módulos ·",
+      "barraAria": "Progresso da trilha de exemplo",
+      "plano": "Plano completo: {feitos} de {total} módulos · {pct}% — o cartão de progresso lá em cima acompanha.",
+      "tipoEDuracao": "{tipo} · {minutos} min",
+      "faseConcluida": "Fase concluída — a próxima já foi montada um degrau acima.",
+      "faltam": "Faltam {horas}h{minutos} nesta fase. Toque num módulo para marcar."
+    },
+    "modulos": {
+      "estrutura": { "titulo": "Spring Boot: estrutura de um projeto", "tipo": "Artigo + quiz" },
+      "injecao": { "titulo": "Injeção de dependência na prática", "tipo": "Vídeo + exercício" },
+      "jpa": { "titulo": "JPA e Hibernate: mapeando entidades", "tipo": "Documentação + quiz" },
+      "testes": { "titulo": "Testes com JUnit 5 e Mockito", "tipo": "Exemplo guiado" },
+      "docker": { "titulo": "Docker para rodar a API localmente", "tipo": "Artigo + prática" }
+    },
+    "codigo": {
+      "linguagem": "Linguagem",
+      "linha": "Linha {n}"
+    },
+    "exemplos": {
+      "java": {
+        "assunto": "streams e lambdas",
+        "linhas": [
+          "Abre um fluxo sobre a lista: nada é processado ainda.",
+          "Descarta quem tem menos de 18 antes de qualquer outra etapa.",
+          "Troca cada pessoa pelo nome dela — referência de método.",
+          "Só aqui o fluxo roda de verdade e vira uma lista imutável."
+        ]
+      },
+      "typescript": {
+        "assunto": "tipos e async/await",
+        "linhas": [
+          "Descreve o formato que a API devolve.",
+          "Espera a requisição sem travar a interface.",
+          "O tipo garante que `nota` existe antes de usar.",
+          "Ordena da maior compatibilidade para a menor."
+        ]
+      },
+      "python": {
+        "assunto": "compreensão de listas",
+        "linhas": [
+          "Uma lista comum de números.",
+          "Filtra e monta a nova lista numa linha só.",
+          "Soma e divide pela quantidade de aprovadas.",
+          "f-string com uma casa decimal: 8.2"
+        ]
+      },
+      "go": {
+        "assunto": "goroutines e canais",
+        "linhas": [
+          "Cria um canal para as goroutines conversarem.",
+          "Roda o cálculo em paralelo, sem bloquear.",
+          "Espera o valor chegar pelo canal.",
+          "Imprime quando a goroutine terminar."
+        ]
+      }
+    },
+    "idioma": {
+      "legenda": "reading · B1 · toque numa palavra sublinhada",
+      "sinonimos": "sinônimos: {lista}",
+      "entrouNaRevisao": "Entrou na sua revisão de vocabulário para hoje."
+    },
+    "palavras": {
+      "deploy": { "traducao": "implantar, publicar", "sinonimos": "release, ship, roll out" },
+      "version": { "traducao": "versão", "sinonimos": "release, build, edition" },
+      "team": { "traducao": "equipe, time", "sinonimos": "squad, crew, group" },
+      "Friday": { "traducao": "sexta-feira", "sinonimos": "fim da semana útil" }
+    },
+    "pessoas": {
+      "marina": {
+        "nome": "Marina Costa",
+        "cidade": "Vitória",
+        "objetivo": "Backend Java com Spring",
+        "cargo": "Desenvolvedora"
+      },
+      "lucas": {
+        "nome": "Lucas Rocha",
+        "cidade": "Vila Velha",
+        "objetivo": "Fullstack TypeScript"
+      },
+      "convite": "Convite enviado para {nome} — de exemplo. Crie a conta para valer.",
+      "amigos": "Agora você e {nome} são amigos.",
+      "desfeito": "Desfeito."
+    },
+    "cuidados": {
+      "dados": {
+        "titulo": "Seus dados são seus",
+        "texto": "Exporte tudo em um arquivo ou exclua a conta quando quiser."
+      },
+      "visibilidade": {
+        "titulo": "Você decide quem te acha",
+        "texto": "Aparecer nas sugestões é opcional, e e-mail nunca é mostrado a outra conta."
+      },
+      "sessao": {
+        "titulo": "Sessão protegida",
+        "texto": "Senha forte, segundo fator e chave de acesso do aparelho, se você preferir."
+      },
+      "detalhesAntes": "Os detalhes estão na",
+      "linkPrivacidade": "política de privacidade",
+      "detalhesMeio": "e na página de",
+      "linkSeguranca": "segurança"
+    },
+    "chamada": {
+      "titulo": "Seu próximo nível começa pelo currículo que você já tem",
+      "texto": "Crie a conta, envie o currículo e veja o plano sair pronto em poucos minutos.",
+      "botao": "Criar conta grátis"
+    },
+    "rodape": {
+      "marca": "PathR · plano de estudos",
+      "nav": "Termos e políticas",
+      "termos": "Termos de uso",
+      "privacidade": "Privacidade",
+      "seguranca": "Segurança"
+    }
+  },
+  "sidebar": {
+    "meta": "Meta",
+    "progresso": "Progresso do roadmap",
+    "modulos": "{pct}% · {feitos} de {total} módulos"
+  },
+  "nav": {
+    "grupoGeral": "Geral",
+    "grupoFerramentas": "Ferramentas",
+    "grupoConta": "Conta",
+    "inicio": "Início",
+    "roadmap": "Roadmap",
+    "trilha": "Trilha atual",
+    "trilhaCurta": "Trilha",
+    "cursos": "Cursos",
+    "vagas": "Vagas",
+    "candidaturas": "Candidaturas",
+    "amigos": "Amigos",
+    "codigo": "Laboratório de código",
+    "codigoCurto": "Código",
+    "treinoDeIdiomas": "Treino de idiomas",
+    "perfil": "Perfil e tags",
+    "curriculo": "Currículo",
+    "relatar": "Relatar",
+    "manual": "Manual de bordo",
+    "config": "Configurações",
+    "mais": "Mais",
+    "sair": "Sair",
+    "principal": "Navegação principal",
+    "maisDestinos": "Mais destinos",
+    "fecharMenu": "Fechar menu"
+  }
+}

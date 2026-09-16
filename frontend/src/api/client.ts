@@ -112,6 +112,21 @@ async function parseError(response: Response): Promise<ApiError> {
  * cru, sem cache nem reenfileiramento, para decidir entre insistir e
  * descartar.
  */
+/**
+ * O idioma escolhido, lido do aparelho.
+ *
+ * Do armazenamento e não do contexto do React: este módulo é chamado de fora
+ * de componente (fila offline, renovação de sessão), e `lib/i18n` guarda ali a
+ * escolha justamente por isso.
+ */
+function idiomaDaTela(): string {
+  try {
+    return window.localStorage.getItem("pathr:idioma") || "pt";
+  } catch {
+    return "pt";
+  }
+}
+
 async function send(path: string, options: RequestOptions = {}): Promise<Response> {
   const disparar = () =>
     fetch(`${BASE_URL}${path}`, {
@@ -122,6 +137,10 @@ async function send(path: string, options: RequestOptions = {}): Promise<Respons
       // e não reconsulta por causa da escrita que ela mesma acabou de fazer.
       headers: {
         "X-Pathr-Client": ID_DESTA_ABA,
+        // Em que idioma a tela está agora. O servidor usa isto para o texto
+        // que a IA escreve sair no mesmo idioma dos menus — ver
+        // backend/app/services/idioma.py.
+        "X-Pathr-Idioma": idiomaDaTela(),
         ...(options.formData || !options.body ? {} : { "Content-Type": "application/json" }),
       },
       body: options.formData ?? (options.body ? JSON.stringify(options.body) : undefined),

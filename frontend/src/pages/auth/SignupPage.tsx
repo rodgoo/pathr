@@ -20,6 +20,7 @@ import {
   PasswordField,
 } from "@/components/auth/AuthShell";
 import { Icon } from "@/components/ui/icons";
+import { useT } from "@/lib/i18n";
 import type { City } from "@/api/types";
 import { CidadeDoCadastro } from "@/components/auth/CidadeDoCadastro";
 import { Turnstile, turnstileLigado } from "@/components/auth/Turnstile";
@@ -45,6 +46,7 @@ function maxBirthDate(): string {
 }
 
 export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void }) {
+  const t = useT();
   const { signup } = useAuth();
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
@@ -106,17 +108,18 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
   // Passo seguinte ao envio: a conta existe, mas ninguém entra sem confirmar.
   if (done) {
     return (
-      <AuthShell title="Confirme seu e-mail" subtitle={done} icon="mail">
+      <AuthShell title={t("auth.cadastro.confirme")} subtitle={done} icon="mail">
         <p style={{ fontSize: 13, color: TEXT.faint, margin: "0 0 16.8px" }}>
-          Enviamos um link para <strong style={{ color: "rgba(233,233,237,.9)" }}>{email.trim()}</strong>.
-          O link vale por três dias. Se não chegar, olhe também o spam.
+          {t("auth.cadastro.enviamosLink")}{" "}
+          <strong style={{ color: "rgba(233,233,237,.9)" }}>{email.trim()}</strong>.{" "}
+          {t("auth.cadastro.validade")}
         </p>
         <button
           type="button"
           className="btn btn-primary btn-block"
           onClick={() => onNavigate("/entrar")}
         >
-          Ir para entrar
+          {t("auth.cadastro.irParaEntrar")}
           <Icon name="seta" size={17} className="auth-seta" />
         </button>
       </AuthShell>
@@ -125,14 +128,14 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
 
   return (
     <AuthShell
-      title="Criar conta"
+      title={t("auth.cadastro.titulo")}
       icon="userPlus"
-      subtitle="Envie seu currículo e o plano sai pronto, dividido em fases."
+      subtitle={t("auth.cadastro.sub")}
       footer={
         <>
-          Já tem conta?{" "}
+          {t("auth.cadastro.jaTem")}{" "}
           <a href="/entrar" onClick={(e) => { e.preventDefault(); onNavigate("/entrar"); }}>
-            Entrar
+            {t("auth.login.titulo")}
           </a>
         </>
       }
@@ -143,7 +146,7 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
         {/* Campo isca: fora da tela e fora do Tab; leitor de tela não o anuncia.
             Pessoa real nunca preenche; robô que completa tudo, sim. */}
         <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
-          <label htmlFor="signup-website">Site</label>
+          <label htmlFor="signup-website">{t("auth.cadastro.isca")}</label>
           <input
             id="signup-website"
             name="website"
@@ -157,7 +160,7 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
 
         <Field
           id="signup-name"
-          label="Como quer ser chamado"
+          label={t("auth.cadastro.nome")}
           icon="user"
           autoComplete="name"
           required
@@ -175,7 +178,7 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
         />
         <Field
           id="signup-email"
-          label="E-mail"
+          label={t("auth.campos.email")}
           icon="mail"
           type="email"
           autoComplete="email"
@@ -185,7 +188,7 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
         />
         <Field
           id="signup-birth-date"
-          label="Data de nascimento"
+          label={t("auth.cadastro.nascimento")}
           type="date"
           autoComplete="bday"
           hint={`É preciso ter ao menos ${IDADE_MINIMA} anos.`}
@@ -199,7 +202,7 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
 
         <PasswordField
           id="signup-password"
-          label="Senha"
+          label={t("auth.campos.senha")}
           icon="lock"
           autoComplete="new-password"
           required
@@ -208,7 +211,7 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
         />
 
         <ul
-          aria-label="Requisitos da senha"
+          aria-label={t("auth.cadastro.requisitos")}
           style={{ listStyle: "none", padding: 0, margin: "0 0 14px", fontSize: 12 }}
         >
           {["ao menos 10 caracteres", "ao menos uma letra", "ao menos um número"].map((rule) => {
@@ -226,7 +229,7 @@ export function SignupPage({ onNavigate }: { onNavigate: (path: string) => void 
 
         <button type="submit" className="btn btn-primary btn-block" disabled={pending || !ready}>
           {pending ? null : <Icon name="userPlus" size={17} />}
-          {pending ? "Criando…" : "Criar conta"}
+          {pending ? t("auth.cadastro.criando") : t("auth.cadastro.titulo")}
         </button>
       </form>
     </AuthShell>

@@ -16,6 +16,8 @@ import { ErrorState, Loading } from "@/components/ui/States";
 import { PasswordField } from "@/components/auth/AuthShell";
 import { Kicker, Panel } from "@/components/ui/primitives";
 import { Select } from "@/components/ui/Select";
+import { SeletorDeIdioma } from "@/components/ui/SeletorDeIdioma";
+import { useT, type Idioma } from "@/lib/i18n";
 import { PasskeysPanel } from "./PasskeysPanel";
 import { CampoUsername } from "@/components/social/CampoUsername";
 import type { SessaoAtiva } from "@/api/types";
@@ -42,6 +44,7 @@ const ROTULO_SENIORIDADE: Record<(typeof SENIORIDADES)[number], string> = {
 const SENIORIDADES = ["estagio", "junior", "pleno", "senior", "especialista", "lideranca"] as const;
 
 export function AccountTab() {
+  const t = useT();
   const { user, refresh } = useAuth();
   const profile = useQuery(() => profileApi.get(), []);
   const [name, setName] = useState(user?.name ?? "");
@@ -52,6 +55,15 @@ export function AccountTab() {
   const [years, setYears] = useState("");
   const [hours, setHours] = useState("8");
   const [saved, setSaved] = useState(false);
+  const [idiomaSalvo, setIdiomaSalvo] = useState(false);
+
+  // O idioma vive na conta (`locale`), e não só no aparelho: é o que faz a
+  // pessoa entrar no celular e encontrar o app no idioma que escolheu no PC.
+  const salvarIdioma = useMutation(async (codigo: Idioma) => {
+    const atualizado = await profileApi.updateAccount({ locale: codigo });
+    setIdiomaSalvo(true);
+    return atualizado;
+  });
 
   const save = useMutation(async () => {
     await authApi.me();
@@ -105,6 +117,30 @@ export function AccountTab() {
 
   return (
     <form onSubmit={submit} style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
+      {/* O idioma grava sozinho, sem esperar o "Salvar" do formulário: a tela
+          inteira muda de idioma na hora, e um botão de salvar depois disso
+          pareceria que a troca não valeu. */}
+      <Panel pad={16.8}>
+        <Kicker style={{ display: "block", marginBottom: 8.4 }}>{t("idioma.doApp")}</Kicker>
+        <p style={{ margin: "0 0 11.2px", fontSize: 12.5, color: TEXT.muted, maxWidth: "62ch" }}>
+          {t("idioma.explicacao")}
+        </p>
+        <div style={{ display: "flex", gap: 11.2, alignItems: "center", flexWrap: "wrap" }}>
+          <div style={{ minWidth: 220 }}>
+            <SeletorDeIdioma
+              id="conta-idioma"
+              disabled={salvarIdioma.pending}
+              aoTrocar={(codigo) => {
+                void salvarIdioma.run(codigo).then(() => refresh());
+              }}
+            />
+          </div>
+          <span style={{ fontSize: 11.5, color: TEXT.faint }}>
+            {salvarIdioma.pending ? t("idioma.salvando") : idiomaSalvo ? t("idioma.salvo") : ""}
+          </span>
+        </div>
+      </Panel>
+
       <Panel pad={16.8}>
         <Kicker style={{ display: "block", marginBottom: 14 }}>Dados pessoais</Kicker>
         <div

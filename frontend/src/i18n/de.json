@@ -1,0 +1,351 @@
+{
+  "idioma": {
+    "rotulo": "Sprache",
+    "escolher": "Sprache auswählen",
+    "atual": "Aktuelle Sprache: {idioma}",
+    "doApp": "Sprache der App",
+    "explicacao": "Das gilt für die Menüs, die Texte in der App und die Inhalte, die die KI für Sie verfasst.",
+    "salvando": "Wird gespeichert…",
+    "salvo": "Sprache geändert"
+  },
+  "nav": {
+    "grupoGeral": "Allgemeines",
+    "grupoFerramentas": "Werkzeuge",
+    "grupoConta": "Konto",
+    "inicio": "Startseite",
+    "roadmap": "Roadmap",
+    "trilha": "Aktueller Pfad",
+    "trilhaCurta": "Wanderweg",
+    "cursos": "Kurse",
+    "vagas": "Stellenangebote",
+    "candidaturas": "Bewerbungen",
+    "amigos": "Freunde",
+    "codigo": "Code-Labor",
+    "codigoCurto": "Code",
+    "treinoDeIdiomas": "Sprachtraining",
+    "perfil": "Profil und Tags",
+    "curriculo": "Lebenslauf",
+    "relatar": "Melden",
+    "manual": "Bordhandbuch",
+    "config": "Einstellungen",
+    "mais": "Mehr",
+    "sair": "Beenden",
+    "principal": "Hauptnavigation",
+    "maisDestinos": "Weitere Reiseziele",
+    "fecharMenu": "Menü schließen"
+  },
+  "landing": {
+    "palavras": {
+      "deploy": {
+        "traducao": "implantar, publicar",
+        "sinonimos": "release, ship, roll out"
+      },
+      "version": {
+        "traducao": "versão",
+        "sinonimos": "release, build, edition"
+      },
+      "team": {
+        "traducao": "equipe, time",
+        "sinonimos": "squad, crew, group"
+      },
+      "Friday": {
+        "traducao": "sexta-feira",
+        "sinonimos": "fim da semana útil"
+      }
+    },
+    "pessoas": {
+      "marina": {
+        "nome": "Marina Costa",
+        "cidade": "Vitória",
+        "objetivo": "Java-Backend mit Spring",
+        "cargo": "Entwicklerin"
+      },
+      "lucas": {
+        "nome": "Lucas Rocha",
+        "cidade": "Vila Velha",
+        "objetivo": "Full-Stack-TypeScript"
+      },
+      "convite": "Einladung an {nome} gesendet – nur als Beispiel. Erstellen Sie das Konto tatsächlich.",
+      "amigos": "Jetzt sind du und {nome} Freunde.",
+      "desfeito": "Aufgelöst."
+    },
+    "topo": {
+      "navSecoes": "Abschnitte",
+      "navConta": "Konto",
+      "comoFunciona": "So funktioniert es",
+      "recursos": "Ressourcen",
+      "seguranca": "Sicherheit",
+      "entrar": "Anmelden",
+      "criarConta": "Konto erstellen"
+    },
+    "hero": {
+      "selo": "Studienplan für Berufstätige im Technologiebereich",
+      "titulo": "Von Ihrem Lebenslauf zu einem Plan, der",
+      "tituloDestaque": "wird jede Woche korrigiert",
+      "sub": "Schick uns deinen Lebenslauf und sag uns, was du erreichen möchtest. PathR stellt den Lernpfad in einzelnen Phasen zusammen, wählt für jedes Modul das passende Material aus, misst, was du tatsächlich gelernt hast, und passt den Lernpfad entsprechend an.",
+      "criarContaGratis": "Kostenloses Konto erstellen",
+      "jaTenhoConta": "Ich habe bereits ein Konto",
+      "janelaTitulo": "pathr.notter.com.br · Startseite",
+      "janelaDescricao": "Startseite mit Lernablauf, Planfortschritt und Lernzeit",
+      "dica": "Führen Sie den Mauszeiger über die Karten – und markieren Sie Module auf der Leiste weiter unten, um zu sehen, wie der Fortschritt hier steigt."
+    },
+    "janela": {
+      "experimente": "Probieren Sie es aus"
+    },
+    "comoFunciona": {
+      "rotulo": "So funktioniert es",
+      "titulo": "Drei Schritte – und schon erledigt der Plan die Arbeit für Sie",
+      "curriculo": {
+        "titulo": "Bitte senden Sie Ihren Lebenslauf",
+        "texto": "Die KI analysiert Ihre Kompetenzen und den jeweiligen Kenntnisstand. Sie müssen also nicht von Hand eine Liste mit 200 Technologien ausfüllen."
+      },
+      "trilha": {
+        "titulo": "Laden Sie den Soundtrack herunter",
+        "texto": "Phasen und Module, die entsprechend Ihren Zielen zusammengestellt sind und sich nach der Anzahl der Stunden richten, die Ihnen pro Woche zur Verfügung stehen."
+      },
+      "ajuste": {
+        "titulo": "Lerne und lass dich darauf einstellen",
+        "texto": "Quiz, Erklärungen in eigenen Worten und verteilte Wiederholungen bringen Sie weiter. Die Woche läuft wie von selbst."
+      }
+    },
+    "recursos": {
+      "trilha": {
+        "rotulo": "Wanderweg",
+        "titulo": "Ein in Etappen unterteilter Weg, der anzeigt, wie weit es noch ist",
+        "texto": "Jedes Modul enthält das passende Material – Artikel, Video, Dokumentation oder Schritt-für-Schritt-Anleitung – sowie die dafür benötigte Zeit. Markieren Sie, was Sie bereits abgeschlossen haben, und verfolgen Sie Ihren Fortschritt.",
+        "ponto1": "Reihenfolge, wie es Ihr Ziel erfordert",
+        "ponto2": "Zeitaufwand pro Modul, entsprechend der Länge Ihrer Woche",
+        "ponto3": "Eine Phase ist abgeschlossen, die nächste beginnt eine Stufe höher",
+        "janelaTitulo": "Route · Aktuelle Etappe",
+        "janelaDescricao": "Module der aktuellen Phase, die als abgeschlossen markiert werden können"
+      },
+      "constancia": {
+        "rotulo": "Beständigkeit",
+        "titulo": "Eine Jahresübersicht, die zeigt, was du an jedem Tag gelernt hast",
+        "texto": "Jedes Quadrat steht für einen Tag. Fahren Sie mit der Maus darüber und sehen Sie, was erstellt wurde – der Artikel, das Video, das Quiz – und wie lange es gedauert hat. Wechseln Sie zwischen Woche, Monat und Jahr.",
+        "ponto1": "Reihenfolge und Datensatz, die Sie schützen",
+        "ponto2": "Lernzeit, gemessen an dem, was gelesen und angesehen wurde",
+        "ponto3": "Woche, Monat und Jahr auf einem Bildschirm",
+        "janelaTitulo": "Startseite · Ihre Beständigkeit",
+        "janelaDescricao": "Jahres-Heatmap mit den Schultagen"
+      },
+      "codigo": {
+        "rotulo": "Code-Labor",
+        "titulo": "Fertige Beispiele, Zeile für Zeile erklärt",
+        "texto": "Wählen Sie die Sprache und das Thema aus. PathR schreibt ein kurzes Programm und zeigt, was jede Zeile bewirkt – ohne dass eine installierte Umgebung erforderlich ist, um das Prinzip zu verstehen.",
+        "ponto1": "Die Sprachen in Ihrem Profil, jeweils mit dem entsprechenden Logo",
+        "ponto2": "Eine Schritt-für-Schritt-Anleitung zu den Abläufen bei der Ausführung",
+        "ponto3": "Vorschläge aus dem Modul, das Sie gerade bearbeiten",
+        "janelaTitulo": "Code-Labor",
+        "janelaDescricao": "Beispielgenerator mit Sprachauswahl und zeilenweiser Erläuterung"
+      },
+      "idiomas": {
+        "rotulo": "Sprachen",
+        "titulo": "Englisch für den Beruf – ganz auf Ihr Niveau zugeschnitten",
+        "texto": "Eine CEFR-Einstufung, die sich an Ihre Antworten anpasst. Sind Sie bei einem Wort hängen geblieben? Tippen Sie darauf: Die Übersetzung und die Synonyme werden angezeigt, und das Wort wird in Ihre Wiederholung aufgenommen.",
+        "ponto1": "Adaptive Einstufung, von A1 bis C2",
+        "ponto2": "Die Suche nach einem Wort führt zu einer Abstandsrevision",
+        "ponto3": "Tägliche Übungen zum Lesen, Hören und Schreiben",
+        "janelaTitulo": "Sprachen · Einstufung",
+        "janelaDescricao": "Einstufungsfrage mit der Übersetzung eines nachgeschlagenen Wortes"
+      },
+      "pessoas": {
+        "rotulo": "Personen",
+        "titulo": "Lerne gemeinsam mit denen, die dir nahestehen und die dasselbe Ziel verfolgen",
+        "texto": "PathR schlägt dir Profile aus deiner Stadt und von Personen vor, die sich mit denselben Technologien beschäftigen. Jede Karte zeigt das Ziel, den Tech-Stack und eure Gemeinsamkeiten an – niemals die E-Mail-Adresse.",
+        "ponto1": "Dein @ – damit man dich findet",
+        "ponto2": "Vorschläge nach Stadt, Stack und Ziel",
+        "ponto3": "Ob Sie in den Vorschlägen erscheinen, ist Ihre Entscheidung",
+        "janelaTitulo": "Freunde · Vorschläge",
+        "janelaDescricao": "Karten mit vorgeschlagenen Personen, einschließlich Stadt, Ziel und Technologien"
+      }
+    },
+    "atividade": {
+      "artigoSpring": "Spring Boot: Abhängigkeitsinjektion in der Praxis",
+      "videoJpa": "JPA und Hibernate von Grund auf",
+      "docDocker": "Offizielle Docker-Dokumentation",
+      "artigoTestes": "Tests mit JUnit 5 und Mockito",
+      "quiz": "Quiz zum Modul"
+    },
+    "trilha": {
+      "fase": "Phase 2 · Backend mit Spring",
+      "contagem": "{feitos} {total}-Module ·",
+      "barraAria": "Fortschritt des Beispielpfads",
+      "plano": "Vollständiger Plan: {feitos} von {total} Modulen · {pct}% — die Fortschrittsanzeige oben gibt Auskunft.",
+      "tipoEDuracao": "{tipo} · {minutos} min",
+      "faseConcluida": "Phase abgeschlossen – die nächste wurde bereits eine Stufe höher aufgebaut.",
+      "faltam": "{horas}h{minutos} fehlen in dieser Phase. Tippen Sie auf ein Modul, um es zu markieren."
+    },
+    "modulos": {
+      "estrutura": {
+        "titulo": "Spring Boot: Projektstruktur",
+        "tipo": "Artikel + Quiz"
+      },
+      "injecao": {
+        "titulo": "Abhängigkeitsinjektion in der Praxis",
+        "tipo": "Video + Übung"
+      },
+      "jpa": {
+        "titulo": "JPA und Hibernate: Entitäten zuordnen",
+        "tipo": "Unterlagen + Quiz"
+      },
+      "testes": {
+        "titulo": "Tests mit JUnit 5 und Mockito",
+        "tipo": "Anleitendes Beispiel"
+      },
+      "docker": {
+        "titulo": "Docker zum lokalen Ausführen der API",
+        "tipo": "Artikel + Praxis"
+      }
+    },
+    "codigo": {
+      "linguagem": "Sprache",
+      "linha": "{n}-Reihe"
+    },
+    "exemplos": {
+      "java": {
+        "assunto": "Streams und Lambdas",
+        "linhas": [
+          "Eröffnet einen Datenstrom für die Liste: Es wird noch nichts verarbeitet.",
+          "Schließe alle unter 18 Jahren vor jedem weiteren Schritt aus.",
+          "Ersetze jede Person durch ihren Namen – Methodenreferenz.",
+          "Erst hier läuft der Datenfluss wirklich und wird zu einer unveränderlichen Liste."
+        ]
+      },
+      "typescript": {
+        "assunto": "Typen und async/await",
+        "linhas": [
+          "Beschreibt das Format, in dem die API die Ergebnisse zurückgibt.",
+          "Wartet auf die Anfrage, ohne die Benutzeroberfläche zu blockieren.",
+          "Der Typ stellt sicher, dass `nota` vor der Verwendung vorhanden ist.",
+          "Ordne von der größten zur geringsten Kompatibilität."
+        ]
+      },
+      "python": {
+        "assunto": "Verständnis von Listen",
+        "linhas": [
+          "Eine gemeinsame Liste von Zahlen.",
+          "Filtere die Daten und füge die neue Liste in einer einzigen Zeile zusammen.",
+          "Addiere die Zahlen und teile sie durch die Anzahl der erfolgreichen Teilnehmerinnen.",
+          "f-String mit einer Dezimalstelle: 8.2"
+        ]
+      },
+      "go": {
+        "assunto": "Goroutinen und Kanäle",
+        "linhas": [
+          "Erstellt einen Kanal, über den die Goroutinen miteinander kommunizieren können.",
+          "Führe die Berechnung parallel aus, ohne zu blockieren.",
+          "Warte, bis der Wert über den Kanal eintrifft.",
+          "Gibt eine Meldung aus, sobald die Goroutine beendet ist."
+        ]
+      }
+    },
+    "idioma": {
+      "legenda": "Lesen · B1 · Tippen Sie auf ein unterstrichenes Wort",
+      "sinonimos": "Synonyme: {lista}",
+      "entrouNaRevisao": "Es wurde in Ihre heutige Vokabelwiederholung aufgenommen."
+    },
+    "cuidados": {
+      "dados": {
+        "titulo": "Ihre Daten gehören Ihnen",
+        "texto": "Exportieren Sie alles in eine Datei oder löschen Sie das Konto, wann immer Sie möchten."
+      },
+      "visibilidade": {
+        "titulo": "Du entscheidest, wer dich findet",
+        "texto": "Die Anzeige in den Vorschlägen ist optional, und die E-Mail-Adresse wird niemals einem anderen Konto angezeigt."
+      },
+      "sessao": {
+        "titulo": "Geschützte Sitzung",
+        "texto": "Ein sicheres Passwort, eine Zwei-Faktor-Authentifizierung und, falls Sie möchten, eine Gerätezugangs-PIN."
+      },
+      "detalhesAntes": "Die Einzelheiten finden Sie unter",
+      "linkPrivacidade": "Datenschutzerklärung",
+      "detalhesMeio": "und auf der Seite von",
+      "linkSeguranca": "Sicherheit"
+    },
+    "chamada": {
+      "titulo": "Dein nächster Schritt beginnt mit dem Lebenslauf, den du bereits hast",
+      "texto": "Erstellen Sie ein Konto, laden Sie Ihren Lebenslauf hoch und sehen Sie, wie der Plan in wenigen Minuten fertiggestellt wird.",
+      "botao": "Kostenloses Konto erstellen"
+    },
+    "rodape": {
+      "marca": "PathR · Studienplan",
+      "nav": "Nutzungsbedingungen und Richtlinien",
+      "termos": "Nutzungsbedingungen",
+      "privacidade": "Datenschutz",
+      "seguranca": "Sicherheit"
+    }
+  },
+  "auth": {
+    "campos": {
+      "email": "E-Mail",
+      "senha": "Passwort"
+    },
+    "login": {
+      "titulo": "Anmelden",
+      "sub": "Ihr Studienplan wird dort fortgesetzt, wo er unterbrochen wurde.",
+      "semConta": "Haben Sie noch kein Konto?",
+      "criarConta": "Konto erstellen",
+      "entrando": "Es geht los…",
+      "confirmarCodigo": "Code bestätigen",
+      "esqueci": "Ich habe mein Passwort vergessen",
+      "ou": "oder",
+      "ouSenha": "oder geben Sie das Passwort ein",
+      "entrarComChave": "Mit Zugangsschlüssel anmelden",
+      "aguardandoAparelho": "Warten auf das Gerät…",
+      "semLink": "Haben Sie den Link nicht erhalten?",
+      "reenviar": "Bestätigung erneut senden",
+      "codigo": "Authentifizierungscode",
+      "codigoDica": "Sechs Ziffern aus der App oder ein Backup-Code."
+    },
+    "cadastro": {
+      "titulo": "Konto erstellen",
+      "sub": "Senden Sie uns Ihren Lebenslauf, und schon erhalten Sie einen fertigen Plan, der in einzelne Phasen unterteilt ist.",
+      "jaTem": "Haben Sie bereits ein Konto?",
+      "criando": "Wird geladen…",
+      "nome": "Wie möchtest du genannt werden?",
+      "nascimento": "Geburtsdatum",
+      "requisitos": "Anforderungen an das Passwort",
+      "isca": "Website",
+      "confirme": "Bestätigen Sie Ihre E-Mail-Adresse",
+      "enviamosLink": "Wir haben einen Link an",
+      "validade": "Der Link ist drei Tage lang gültig. Falls Sie ihn nicht erhalten haben, schauen Sie bitte auch im Spam-Ordner nach.",
+      "irParaEntrar": "Weiter, um sich anzumelden"
+    },
+    "recuperar": {
+      "titulo": "Passwort wiederherstellen",
+      "sub": "Wir haben Ihnen einen Link geschickt, über den Sie ein neues Passwort festlegen können.",
+      "voltar": "Zurück zur Anmeldung",
+      "emailDaConta": "E-Mail-Adresse des Kontos",
+      "enviando": "Wird gesendet…",
+      "enviarLink": "Link senden",
+      "seHouver": "Falls ein Konto mit",
+      "aCaminho": ", der Link zur Passwortwiederherstellung ist bereits unterwegs. Er ist 1 Stunde lang gültig."
+    },
+    "confirmacao": {
+      "confirmando": "Bestätigung…",
+      "umInstante": "Einen Moment bitte.",
+      "confirmado": "E-Mail-Adresse bestätigt",
+      "tudoPronto": "Alles ist bereit für den Start.",
+      "contaAtiva": "Ihr Konto ist aktiviert.",
+      "irParaOApp": "Zur App wechseln",
+      "voltarAoApp": "Zurück zur App",
+      "naoDeu": "Das konnte nicht bestätigt werden",
+      "semToken": "Diese Adresse enthält kein Bestätigungstoken."
+    },
+    "novaSenha": {
+      "titulo": "Neues Passwort",
+      "sub": "Wählen Sie ein Passwort, das Sie nirgendwo anders verwenden.",
+      "dica": "Mindestens 10 Zeichen, bestehend aus Buchstaben und Zahlen.",
+      "salvando": "Wird gespeichert…",
+      "salvar": "Passwort speichern",
+      "linkInvalido": "Ungültiger Link",
+      "semToken": "Diese Adresse enthält kein Wiederherstellungstoken."
+    }
+  },
+  "sidebar": {
+    "meta": "Ziel",
+    "progresso": "Fortschritt bei der Roadmap",
+    "modulos": "{pct}% · {feitos} von {total} Modulen"
+  }
+}
