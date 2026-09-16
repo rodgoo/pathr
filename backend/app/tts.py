@@ -53,6 +53,7 @@ minuto — e cai a zero dentro do tier gratuito. Três coisas seguram isso:
 import asyncio
 import base64
 import hashlib
+import logging
 import struct
 from collections import OrderedDict
 from typing import Optional
@@ -61,6 +62,8 @@ import httpx
 
 from app.ai_providers import AiProviderError, _classify, _keys
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 
 # ── Dois dialetos, e por que os dois ────────────────────────────────────────
 #
@@ -79,14 +82,19 @@ from app.config import settings
 # e nenhuma das duas fontes declara (2) morta. Sem chave neste ambiente, não
 # houve como perguntar ao servidor quem está certo.
 #
-# Então a ordem é: tenta o documentado, cai para o clássico se ele recusar o
-# pedido (404 de modelo/rota inexistente, 400 de corpo que não entendeu). Um
-# dialeto errado custa uma requisição perdida na primeira fala; o mesmo
+# A ordem está em `_DIALETOS`: o CLÁSSICO primeiro, e o documentado como rede
+# de segurança. Parece invertido, mas o critério é custo — o 2.5 sai por cerca
+# de metade do 3.1 por minuto de áudio, e custo foi o eixo da decisão original
+# de nem ter TTS de servidor. Quem recusar o pedido (404 de rota ou modelo
+# inexistente, 400 de corpo que não entendeu) passa a vez para o outro.
+#
+# Um dialeto errado custa uma requisição perdida na primeira fala. O mesmo
 # dialeto, se fosse o único e estivesse errado, custaria a feature inteira
 # falhando calada — porque 503 aqui é indistinguível de "sem cota" e a tela
 # voltaria para a voz velha para sempre, sem ninguém perceber.
 #
-# Quando a verificação ao vivo disser quem responde, o outro sai daqui.
+# Quem decide é a produção: `_pede_ao_gemini` registra em log qual dialeto
+# respondeu, e a chave de Gemini só existe lá. Lido isso, o perdedor sai daqui.
 
 _URL_INTERACTIONS = "https://generativelanguage.googleapis.com/v1beta/interactions"
 _MODELO_INTERACTIONS = "gemini-3.1-flash-tts-preview"
@@ -369,13 +377,33 @@ _DIALETOS = (_via_generate_content, _via_interactions)
 
 
 async def _pede_ao_gemini(texto: str, idioma: str, voz: Optional[int], api_key: str) -> bytes:
-    """Tenta os dialetos com a MESMA chave, e para no primeiro que responder."""
+    """Tenta os dialetos com a MESMA chave, e para no primeiro que responder.
+
+    Registra em log qual respondeu, e isso não é telemetria de enfeite: é como
+    a dúvida entre as duas superfícies se resolve. A documentação não decide,
+    e a chave de Gemini só existe no backend — então quem responde a pergunta
+    é a produção, na primeira vez que alguém aperta "Ouvir". Com o log, basta
+    ler `flyctl logs` para saber qual dialeto apagar do código.
+
+    Em INFO e uma vez por geração (não por reprodução, que o cache absorve),
+    então não é ruído: um item de escuta ouvido gera uma linha.
+    """
     recusas: list[str] = []
     for dialeto in _DIALETOS:
         try:
-            return await dialeto(texto, idioma, voz, api_key)
+            audio = await dialeto(texto, idioma, voz, api_key)
         except _DialetoRecusado as erro:
             recusas.append(str(erro))
+            logger.info("TTS: dialeto %s recusou (%s)", dialeto.__name__, erro)
+            continue
+        logger.info(
+            "TTS: dialeto %s gerou %d bytes de WAV%s",
+            dialeto.__name__,
+            len(audio),
+            f" apos {len(recusas)} recusa(s)" if recusas else "",
+        )
+        return audio
+    logger.warning("TTS: nenhuma superficie aceitou o pedido (%s)", "; ".join(recusas))
     raise AiProviderError(
         "nenhuma superfície de TTS do Gemini aceitou o pedido: " + "; ".join(recusas)
     )

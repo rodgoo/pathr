@@ -198,6 +198,36 @@ async def test_o_cache_evita_o_segundo_pedido(monkeypatch):
 # voz é a MESMA nos dois, senão trocar de dialeto trocaria o interlocutor.
 
 
+def test_o_classico_e_tentado_primeiro_por_ser_mais_barato():
+    """A ordem não é arbitrária: o 2.5 custa cerca de metade do 3.1 por minuto
+    de áudio, e custo foi o eixo da decisão original de nem ter TTS."""
+    assert tts._DIALETOS[0] is tts._via_generate_content
+    assert tts._DIALETOS[1] is tts._via_interactions
+
+
+@pytest.mark.asyncio
+async def test_o_log_diz_qual_dialeto_respondeu(monkeypatch, caplog):
+    """O log é como a dúvida entre as superfícies se resolve: a chave só existe
+    no backend, então quem responde a pergunta é a produção."""
+    monkeypatch.setattr(tts.settings, "gemini_api_key", "k1", raising=False)
+    tts._cache.clear()
+
+    async def recusa(texto, idioma, voz, api_key):
+        raise tts._DialetoRecusado("HTTP 404")
+
+    async def aceita(texto, idioma, voz, api_key):
+        return tts._wav(b"\x00\x01" * 10)
+
+    monkeypatch.setattr(tts, "_DIALETOS", (recusa, aceita))
+
+    with caplog.at_level("INFO", logger="app.tts"):
+        await tts.narrar("Hello.", "en", 0)
+
+    registrado = "\n".join(r.getMessage() for r in caplog.records)
+    assert "recusa recusou" in registrado
+    assert "aceita gerou" in registrado
+
+
 def test_as_duas_formas_de_json_descrevem_a_mesma_escolha_de_voz():
     dialogo = "Ana: Hi.\nMarc: Hello."
 
