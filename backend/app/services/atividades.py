@@ -185,9 +185,29 @@ async def gerar(supabase: Client, user_id: str, node: dict[str, Any]) -> dict[st
         logger.info("atividade sem IA para o módulo (%s)", type(exc).__name__)
         dados = reserva(node, len(historico))
 
-    return (
-        supabase.table("pathr_activity_exercise")
-        .insert({"user_id": user_id, "node_id": node_id, **dados})
-        .execute()
-        .data[0]
-    )
+    try:
+        return (
+            supabase.table("pathr_activity_exercise")
+            .insert({"user_id": user_id, "node_id": node_id, **dados})
+            .execute()
+            .data[0]
+        )
+    except Exception:  # noqa: BLE001
+        # Corrida: dois cliques chegaram juntos, os dois passaram pela checagem
+        # de "não há atividade aberta" e tentaram inserir. O índice parcial
+        # único (migração 0038) recusa a segunda; em vez de estourar, devolve a
+        # atividade aberta que já existe — a que venceu a corrida.
+        aberta = (
+            supabase.table("pathr_activity_exercise")
+            .select("*")
+            .eq("user_id", user_id)
+            .eq("node_id", node_id)
+            .is_("answered_at", "null")
+            .order("created_at", desc=True)
+            .limit(1)
+            .execute()
+            .data
+        )
+        if aberta:
+            return aberta[0]
+        raise

@@ -134,3 +134,35 @@ def test_atividade_de_outra_pessoa_nao_serve(ia):
     with pytest.raises(HTTPException) as erro:
         asyncio.run(explanations.submit_explanation(corpo, EU, banco))
     assert erro.value.status_code == 404
+
+
+def test_corrida_devolve_a_aberta_em_vez_de_duplicar(ia):
+    """Se o índice único recusar a inserção (dois cliques ao mesmo tempo), a
+    geração devolve a atividade aberta que venceu, sem estourar nem duplicar."""
+    aberta = {
+        "id": EX1, "user_id": EU["id"], "node_id": NO, "statement": "x" * 30,
+        "kind": "pratica", "hints": [], "answered_at": None,
+        "created_at": "2026-09-12T09:00:00+00:00",
+    }
+    banco = _banco(pathr_activity_exercise=[aberta])
+    node = banco.linhas("pathr_roadmap_node")[0]
+
+    original = banco.table
+
+    def tabela(nome):
+        consulta = original(nome)
+        if nome == "pathr_activity_exercise":
+            def _conflito(_payload):
+                return SimpleNamespace(
+                    execute=lambda: (_ for _ in ()).throw(
+                        Exception("duplicate key value violates unique constraint ux_pathr_activity_open")
+                    )
+                )
+            consulta.insert = _conflito
+        return consulta
+
+    banco.table = tabela
+
+    saida = asyncio.run(atividades.gerar(banco, EU["id"], node))
+    assert saida["id"] == EX1
+    assert len(banco.linhas("pathr_activity_exercise")) == 1
