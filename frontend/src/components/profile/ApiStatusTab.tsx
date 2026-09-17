@@ -72,7 +72,6 @@ function Relatorio({
   onVerificar: () => void;
 }) {
   const t = useT();
-  const { idioma } = useIdioma();
   const grupos = ORDEM.map((categoria) => ({
     categoria,
     itens: dados.itens.filter((item) => item.categoria === categoria),
@@ -118,7 +117,7 @@ function Relatorio({
           </button>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 11.2, marginTop: 11.2 }}>
-          {(Object.keys(ESTADO) as ApiIntegrationState[]).map((estado) => (
+          {(Object.keys(CORES) as ApiIntegrationState[]).map((estado) => (
             <span
               key={estado}
               style={{ fontSize: 11.5, color: TEXT.faint, display: "inline-flex", alignItems: "center", gap: 6 }}
@@ -239,7 +238,7 @@ function Uso({ item }: { item: ApiIntegration }) {
           {t("apiStatus.deLimitePct", {
             usados: numero(uso.usados ?? 0, idioma),
             limite: numero(uso.limite, idioma),
-            unidade: uso.unidade,
+            unidade: uso.unidade ?? "",
             pct,
           })}
         </div>
