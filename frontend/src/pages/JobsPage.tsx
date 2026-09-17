@@ -322,10 +322,10 @@ function Regiao({ regiao }: { regiao: JobList["regiao"] }) {
     texto = t("vagas.regiao.cidade", {
       km: new Intl.NumberFormat(idioma).format(regiao.raio_km),
       cidade: regiao.cidade,
-      uf: regiao.uf,
+      uf: regiao.uf ?? "",
     });
   } else {
-    texto = t("vagas.regiao.uf", { uf: regiao.uf });
+    texto = t("vagas.regiao.uf", { uf: regiao.uf ?? "" });
   }
   return (
     <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
