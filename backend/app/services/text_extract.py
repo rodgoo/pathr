@@ -64,6 +64,32 @@ _ASSINATURAS_POR_TIPO: dict[str, tuple[bytes, ...]] = {
 }
 
 
+def _zip_confere(kind: str, data: bytes) -> bool:
+    """docx e odt são ZIP — a assinatura `PK` sozinha aceita QUALQUER zip
+    (inclusive um .jar, um .apk ou um zip de malware renomeado). Aqui o
+    conteiner precisa ter a estrutura interna do formato que diz ser:
+
+    - docx (OOXML): tem `word/document.xml`.
+    - odt (OpenDocument): tem `content.xml` e um arquivo `mimetype` cujo
+      conteúdo começa com o mimetype de texto do OpenDocument.
+    """
+    import zipfile
+
+    try:
+        with zipfile.ZipFile(io.BytesIO(data)) as arquivo:
+            nomes = set(arquivo.namelist())
+            if kind == "docx":
+                return "word/document.xml" in nomes
+            if kind == "odt":
+                if "content.xml" not in nomes or "mimetype" not in nomes:
+                    return False
+                mimetype = arquivo.read("mimetype").strip()
+                return mimetype.startswith(b"application/vnd.oasis.opendocument.text")
+    except (zipfile.BadZipFile, OSError, KeyError):
+        return False
+    return False
+
+
 def bytes_conferem(kind: str, data: bytes) -> bool:
     """Os bytes batem com o formato declarado pela extensão?
 
@@ -80,6 +106,10 @@ def bytes_conferem(kind: str, data: bytes) -> bool:
         # O `%PDF-` costuma abrir o arquivo, mas o padrão tolera alguns bytes
         # antes dele; aceitar no início do cabeçalho cobre esse caso raro.
         return b"%PDF-" in cabecalho
+    if kind in ("docx", "odt"):
+        # A assinatura ZIP é necessária mas NÃO suficiente: exige também a
+        # estrutura interna do formato, senão qualquer zip passa por docx/odt.
+        return any(cabecalho.startswith(a) for a in esperadas) and _zip_confere(kind, data)
     return any(cabecalho.startswith(a) for a in esperadas)
 
 

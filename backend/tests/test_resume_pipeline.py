@@ -49,13 +49,44 @@ class TestExtracaoDeTexto:
         # Formato binario tem de provar o que diz ser pela assinatura.
         assert bytes_conferem("pdf", b"%PDF-1.7 conteudo") is True
         assert bytes_conferem("pdf", b"<html>nao sou pdf") is False
-        assert bytes_conferem("docx", bytes([0x50, 0x4B, 0x03, 0x04]) + b"zip") is True
         assert bytes_conferem("docx", b"MZ executavel") is False
         assert bytes_conferem("doc", bytes([0xD0, 0xCF, 0x11, 0xE0, 0xA1, 0xB1, 0x1A, 0xE1])) is True
         assert bytes_conferem("rtf", b"{" + bytes([0x5C]) + b"rtf1") is True
         # txt e md sao texto puro: qualquer byte passa (o pior caso e texto ilegivel).
         assert bytes_conferem("txt", bytes([0x00, 0x01, 0x02])) is True
         assert bytes_conferem("md", b"# titulo") is True
+
+    def test_bytes_conferem_docx_odt_exigem_estrutura_do_zip(self):
+        """docx e odt sao ZIP: a assinatura `PK` sozinha aceitava qualquer zip
+        (jar, apk, zip de malware renomeado). Agora o conteiner tem de ter a
+        estrutura real do formato."""
+
+        def zipar(arquivos: dict[str, str]) -> bytes:
+            buffer = io.BytesIO()
+            with zipfile.ZipFile(buffer, "w") as archive:
+                for nome, conteudo in arquivos.items():
+                    archive.writestr(nome, conteudo)
+            return buffer.getvalue()
+
+        zip_qualquer = zipar({"nada.txt": "so um zip"})
+        assert bytes_conferem("docx", zip_qualquer) is False
+        assert bytes_conferem("odt", zip_qualquer) is False
+
+        docx_real = zipar({"[Content_Types].xml": "<x/>", "word/document.xml": "<w/>"})
+        assert bytes_conferem("docx", docx_real) is True
+
+        odt_real = zipar({
+            "mimetype": "application/vnd.oasis.opendocument.text",
+            "content.xml": "<o/>",
+        })
+        assert bytes_conferem("odt", odt_real) is True
+
+        # ODT com o mimetype de OUTRO tipo (planilha) nao passa como texto.
+        odt_planilha = zipar({
+            "mimetype": "application/vnd.oasis.opendocument.spreadsheet",
+            "content.xml": "<o/>",
+        })
+        assert bytes_conferem("odt", odt_planilha) is False
 
 
 class TestNormalizacaoDoParse:

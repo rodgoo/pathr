@@ -46,14 +46,13 @@ from app.routers.auth import _log_event
 from app.routers.passkeys import _consumir_desafio, _guardar_desafio
 from app.services import cifra
 from app.services import passkeys as chaves
+from app.services.busca import limpar_para_filtro
 from app.services.moderacao import e_super_admin
 
 router = APIRouter(prefix="/admin", tags=["administração"])
 
 _PROPOSITO = "moderacao"
 _NAO_ENCONTRADO = "Não encontrado."
-# O que o filtro `or=` do PostgREST lê como sintaxe. Numa busca é texto.
-_SINTAXE = set(',()*%\\":')
 _LIMITE = 300
 
 
@@ -114,7 +113,7 @@ def listar_usuarios(
     consulta = supabase.table("pathr_user").select(
         "id,name,username,email,avatar_path,created_at,email_verified_at,banned_at,banned_reason"
     )
-    termo = "".join(letra for letra in busca.strip().lstrip("@")[:100] if letra not in _SINTAXE)
+    termo = limpar_para_filtro(busca.strip().lstrip("@")[:100])
     if termo:
         consulta = consulta.or_(f"name.ilike.*{termo}*,username.ilike.*{termo}*,email.ilike.*{termo}*")
     linhas = consulta.order("created_at", desc=True).limit(_LIMITE).execute().data or []

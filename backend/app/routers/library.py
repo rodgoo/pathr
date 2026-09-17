@@ -28,6 +28,7 @@ from app.services import conhecimento
 from app.services import limites
 from app.services import resource_search
 from app.services import reader
+from app.services.busca import escapar_ilike
 from app.services.progress import log_activity, minutos_de_leitura
 
 router = APIRouter(prefix="/library", tags=["biblioteca"])
@@ -150,8 +151,7 @@ def list_resources(
     if q.strip():
         # Escapa %, _ e \: são curingas do ilike, e sem isto quem digita "%"
         # amplia a busca em vez de procurar o caractere literal.
-        termo = q.strip().replace(chr(92), chr(92)*2).replace("%", chr(92)+"%").replace("_", chr(92)+"_")
-        query = query.ilike("title", f"%{termo}%")
+        query = query.ilike("title", f"%{escapar_ilike(q.strip())}%")
     if only_mine:
         tag_ids = _user_tag_ids(supabase, user_id)
         if not tag_ids:

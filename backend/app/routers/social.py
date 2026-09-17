@@ -39,6 +39,7 @@ from app.config import settings
 from app.database import get_supabase
 from app.deps import client_ip, get_current_user
 from app.services import cifra, eventos, limites, noticias, sequencia_dupla, usernames
+from app.services.busca import limpar_para_filtro
 from app.services.progress import local_today
 
 router = APIRouter(prefix="/social", tags=["pessoas"])
@@ -213,12 +214,6 @@ def gravar_privacidade(
 # ---------------------------------------------------------------------------
 
 _NENHUM_ID = "00000000-0000-0000-0000-000000000000"
-
-# Caracteres que o filtro `or=(...)` do PostgREST interpreta como sintaxe:
-# numa busca, uma vírgula ou um parêntese digitado viraria operador, e um `*`
-# ou `%` viraria curinga para listar todo mundo.
-_SINTAXE_DO_FILTRO = frozenset("%_*,().:\\")
-
 
 def _relacoes(supabase: Client, user_id: str) -> dict[str, dict[str, Any]]:
     """Toda amizade e todo convite da pessoa, pelo id da outra ponta."""
@@ -430,7 +425,7 @@ def buscar(
     termo = usernames.normalizar(q)
     # Fora os caracteres que o filtro do PostgREST interpreta: numa busca, uma
     # vírgula ou parêntese digitado viraria sintaxe, não texto.
-    seguro = "".join(letra for letra in q.strip().lstrip("@") if letra not in _SINTAXE_DO_FILTRO)
+    seguro = limpar_para_filtro(q.strip().lstrip("@"))
     if len(seguro) < 2:
         return []
 

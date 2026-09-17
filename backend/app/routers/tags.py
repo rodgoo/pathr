@@ -18,6 +18,7 @@ from app.ai_providers import AiProviderError, generate_json
 from app.database import get_supabase
 from app.services import limites
 from app.deps import get_current_user
+from app.services.busca import escapar_ilike
 from app.services.tag_catalog import TagCatalog, normalize_category, slugify
 
 router = APIRouter(prefix="/tags", tags=["competências"])
@@ -59,8 +60,7 @@ def list_catalog(
         # ilike cobre o começo e o meio do nome; os apelidos ficam de fora
         # aqui porque a busca é interativa e o casamento por apelido é papel
         # da importação de currículo, não da digitação.
-        termo = q.strip().replace(chr(92), chr(92)*2).replace("%", chr(92)+"%").replace("_", chr(92)+"_")
-        query = query.ilike("name", f"%{termo}%")
+        query = query.ilike("name", f"%{escapar_ilike(q.strip())}%")
     return (
         query.order("popularity", desc=True)
         .order("name")
