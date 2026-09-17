@@ -64,23 +64,21 @@ export function CandidaturasPage() {
         <Kicker style={{ display: "block", marginBottom: 5.6 }}>{t("candidaturas.kicker")}</Kicker>
         <h1 style={{ fontSize: 23, fontWeight: 500, margin: 0 }}>{t("candidaturas.titulo")}</h1>
         <p style={{ fontSize: 13, color: TEXT.muted, margin: "8.4px 0 0", maxWidth: "72ch" }}>
-          Todo dia de manhã o PathR separa as vagas que mais combinam com o seu currículo e escreve uma
-          carta de apresentação para cada uma. Onde a vaga tem e-mail de contato, o envio sai daqui com o
-          currículo em anexo. Onde a vaga tem perguntas próprias, você recebe o link para abrir e responder.
+          {t("candidaturas.explicacao")}
         </p>
       </header>
 
-      {curriculos.loading && !curriculos.data ? <Loading label="Carregando…" /> : null}
+      {curriculos.loading && !curriculos.data ? <Loading label={t("candidaturas.carregando")} /> : null}
 
       {!curriculos.loading && !temCurriculo ? (
         <Panel pad={16.8}>
           <EmptyState
-            title="Comece pelo seu currículo"
-            description="É dele que saem as vagas escolhidas e a carta de apresentação. Envie o arquivo e deixe a IA ler uma vez — depois disso, a fila do dia vem sozinha."
+            title={t("candidaturas.semCurriculo.titulo")}
+            description={t("candidaturas.semCurriculo.descricao")}
             action={
               <button type="button" className="btn btn-primary" onClick={() => dispatch({ type: "navigate", screen: "cv" })}>
                 <Icon name="upload" size={15} />
-                Enviar meu currículo
+                {t("candidaturas.semCurriculo.enviar")}
               </button>
             }
           />
@@ -94,11 +92,16 @@ export function CandidaturasPage() {
         <Panel pad={16.8}>
           <div style={{ display: "flex", gap: 11.2, flexWrap: "wrap", alignItems: "center" }}>
             <div style={{ flex: 1, minWidth: 220 }}>
-              <Kicker style={{ display: "block", marginBottom: 4 }}>Hoje</Kicker>
+              <Kicker style={{ display: "block", marginBottom: 4 }}>{t("candidaturas.hoje")}</Kicker>
               <p style={{ margin: 0, fontSize: 13.5, color: TEXT.full }}>
+                {/* Singular e plural como frases inteiras: em alemão e francês a
+                    ordem das palavras muda, e montar "N" + "vagas separadas" no
+                    código deixa o tradutor sem como reordenar. */}
                 {hoje.length > 0
-                  ? `${hoje.length} ${hoje.length === 1 ? "vaga separada" : "vagas separadas"} para você`
-                  : "Nenhuma vaga nova hoje ainda."}
+                  ? t(hoje.length === 1 ? "candidaturas.umaVaga" : "candidaturas.variasVagas", {
+                      quantas: hoje.length,
+                    })
+                  : t("candidaturas.nenhumaHoje")}
               </p>
               {/* O que a pessoa pergunta todo dia: quantos currículos saíram. */}
               <div style={{ display: "flex", gap: 16.8, marginTop: 8.4, flexWrap: "wrap" }}>
@@ -118,7 +121,7 @@ export function CandidaturasPage() {
             </div>
             <button type="button" className="btn btn-secondary" disabled={gerar.pending} onClick={() => void buscarAgora()}>
               <Icon name="refresh" size={15} />
-              {gerar.pending ? "Buscando vagas…" : "Buscar vagas agora"}
+              {gerar.pending ? t("candidaturas.buscando") : t("candidaturas.buscarAgora")}
             </button>
           </div>
           {gerar.error ? <ErrorState message={gerar.error} /> : null}
@@ -127,7 +130,7 @@ export function CandidaturasPage() {
       ) : null}
 
       {fila.error ? <ErrorState message={fila.error} onRetry={fila.reload} /> : null}
-      {fila.loading && !fila.data ? <Loading label="Carregando suas candidaturas…" /> : null}
+      {fila.loading && !fila.data ? <Loading label={t("candidaturas.carregandoFila")} /> : null}
 
       {hoje.map((item) => (
         <Cartao key={item.id} item={item} onMudou={() => fila.reload()} onErro={setErro} />
@@ -135,7 +138,7 @@ export function CandidaturasPage() {
 
       {anteriores.length > 0 ? (
         <section style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
-          <Kicker style={{ display: "block" }}>Dias anteriores</Kicker>
+          <Kicker style={{ display: "block" }}>{t("candidaturas.diasAnteriores")}</Kicker>
           {anteriores.map((item) => (
             <Cartao key={item.id} item={item} onMudou={() => fila.reload()} onErro={setErro} />
           ))}
@@ -144,8 +147,8 @@ export function CandidaturasPage() {
 
       {temCurriculo && !fila.loading && lista.length === 0 ? (
         <EmptyState
-          title="A fila de hoje ainda não foi montada"
-          description="Ela chega de manhã, no seu horário, junto com um e-mail. Se quiser ver agora, use “Buscar vagas agora”."
+          title={t("candidaturas.filaVazia.titulo")}
+          description={t("candidaturas.filaVazia.descricao")}
         />
       ) : null}
     </div>
@@ -290,6 +293,7 @@ function PerguntasQueFaltam({
  * acima do corte — e o e-mail do dia diz o que saiu.
  */
 function EnvioAutomatico() {
+  const t = useT();
   const perfil = useQuery(() => profileApi.get(), []);
   const salvar = useMutation((corpo: Parameters<typeof profileApi.update>[0]) => profileApi.update(corpo));
 
@@ -330,15 +334,12 @@ function EnvioAutomatico() {
     <Panel pad={16.8}>
       <div style={{ display: "flex", gap: 11.2, alignItems: "flex-start", flexWrap: "wrap" }}>
         <div style={{ flex: 1, minWidth: 260 }}>
-          <Kicker style={{ display: "block", marginBottom: 4 }}>Envio automático</Kicker>
+          <Kicker style={{ display: "block", marginBottom: 4 }}>{t("candidaturas.automatico.kicker")}</Kicker>
           <p style={{ margin: 0, fontSize: 13, color: TEXT.muted, lineHeight: 1.55, maxWidth: "62ch" }}>
-            {ligado
-              ? "Ligado: todo dia de manhã o app envia seu currículo, sozinho, para as vagas que trazem e-mail de contato e combinam 70% ou mais — até 5 por dia. Você recebe um e-mail com o que foi enviado."
-              : "Desligado: o app separa as vagas e escreve a carta, e você clica para enviar. Ligando, ele envia sozinho as vagas que trazem e-mail de contato e combinam 70% ou mais, até 5 por dia."}
+            {t(ligado ? "candidaturas.automatico.ligado" : "candidaturas.automatico.desligado")}
           </p>
           <p style={{ margin: "6px 0 0", fontSize: 11.5, color: TEXT.faint, lineHeight: 1.5, maxWidth: "62ch" }}>
-            Vaga que só aceita candidatura pelo site (Gupy, LinkedIn, formulário próprio) continua vindo com o
-            link e as respostas prontas: lá quem responde é você.
+            {t("candidaturas.automatico.noSite")}
           </p>
         </div>
         <button
@@ -349,38 +350,41 @@ function EnvioAutomatico() {
           onClick={() => void alternar()}
         >
           <Icon name={ligado ? "check" : "send"} size={15} />
-          {ligado ? "Enviando sozinho" : "Enviar sozinho todo dia"}
+          {t(ligado ? "candidaturas.automatico.enviando" : "candidaturas.automatico.ligar")}
         </button>
       </div>
 
       <div style={{ display: "flex", gap: 11.2, flexWrap: "wrap", alignItems: "flex-end", marginTop: 14 }}>
         <label style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 200 }}>
-          <span style={{ fontSize: 11.5, color: TEXT.faint }}>Pretensão salarial</span>
+          <span style={{ fontSize: 11.5, color: TEXT.faint }}>{t("candidaturas.pretensao")}</span>
           <input
             className="input"
             value={pretensao}
             maxLength={120}
-            placeholder="R$ 8.000 CLT"
+            placeholder={t("candidaturas.pretensaoExemplo")}
             onChange={(evento) => setPretensao(evento.target.value)}
           />
         </label>
         <label style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 200 }}>
-          <span style={{ fontSize: 11.5, color: TEXT.faint }}>Disponibilidade para começar</span>
+          <span style={{ fontSize: 11.5, color: TEXT.faint }}>{t("candidaturas.disponibilidade")}</span>
           <input
             className="input"
             value={disponibilidade}
             maxLength={120}
-            placeholder="30 dias"
+            placeholder={t("candidaturas.disponibilidadeExemplo")}
             onChange={(evento) => setDisponibilidade(evento.target.value)}
           />
         </label>
         <button type="button" className="btn btn-ghost" disabled={salvar.pending} onClick={() => void salvarRespostas()}>
-          {salvar.pending ? "Salvando…" : salvo ? "Salvo" : "Salvar"}
+          {salvar.pending
+            ? t("candidaturas.salvando")
+            : salvo
+              ? t("candidaturas.salvo")
+              : t("candidaturas.salvar")}
         </button>
       </div>
       <p style={{ fontSize: 11, color: TEXT.faint, margin: "8.4px 0 0" }}>
-        São as duas perguntas que todo formulário faz e que o currículo não responde. Sem elas, a resposta
-        pronta devolve a pergunta em vez de inventar um número.
+        {t("candidaturas.porQueEssasDuas")}
       </p>
       {salvar.error ? <ErrorState message={salvar.error} /> : null}
     </Panel>
@@ -598,19 +602,19 @@ function Cartao({
           <p style={{ margin: "4px 0 0", fontSize: 12.5, color: TEXT.muted }}>
             {item.company}
             {item.location ? ` · ${item.location}` : ""}
-            {item.remote ? " · Remota" : ""}
+            {item.remote ? ` · ${t("candidaturas.remota")}` : ""}
           </p>
         </div>
         <span
           className="tag tag-outline"
-          title="O quanto esta vaga combina com o seu perfil"
+          title={t("candidaturas.combinaDica")}
           style={{ color: item.score >= 70 ? ACC4 : TEXT.muted }}
         >
-          {item.score}% combina
+          {t("candidaturas.combina", { pct: item.score })}
         </span>
         {enviada ? (
           <span className="tag" style={{ color: C.verde }}>
-            <Icon name="check" size={13} /> Enviada
+            <Icon name="check" size={13} /> {t("candidaturas.enviada")}
           </span>
         ) : null}
       </div>
@@ -659,7 +663,11 @@ function Cartao({
 
           <button type="button" className="btn btn-secondary" disabled={escrever.pending} onClick={() => void escreverCarta()}>
             <Icon name="pencil" size={15} />
-            {escrever.pending ? "Escrevendo…" : carta ? "Reescrever carta" : "Escrever carta"}
+            {escrever.pending
+              ? t("candidaturas.escrevendo")
+              : carta
+                ? t("candidaturas.reescreverCarta")
+                : t("candidaturas.escreverCarta")}
           </button>
 
           <button
@@ -675,23 +683,23 @@ function Cartao({
           >
             <Icon name="chat" size={15} />
             {prepararRespostas.pending
-              ? "Escrevendo…"
+              ? t("candidaturas.escrevendo")
               : respostas.length > 0
-                ? "Refazer respostas"
-                : "Respostas do formulário"}
+                ? t("candidaturas.refazerRespostas")
+                : t("candidaturas.respostasDoFormulario")}
           </button>
 
           {carta ? (
             <button type="button" className="btn btn-ghost" onClick={() => setAberta((valor) => !valor)}>
               <Icon name={aberta ? "eyeOff" : "eye"} size={15} />
-              {aberta ? "Esconder carta" : "Ver carta"}
+              {t(aberta ? "candidaturas.esconderCarta" : "candidaturas.verCarta")}
             </button>
           ) : null}
 
           {!enviada ? (
             <button type="button" className="btn btn-ghost" disabled={enviar.pending} onClick={() => void enviarAgora(false)}>
               <Icon name="check" size={15} />
-              Já me candidatei
+              {t("candidaturas.jaMeCandidatei")}
             </button>
           ) : null}
 
@@ -706,19 +714,19 @@ function Cartao({
             }}
           >
             <Icon name="trash" size={15} />
-            Não me interessa
+            {t("candidaturas.naoMeInteressa")}
           </button>
         </div>
       ) : (
         <p style={{ fontSize: 12.5, color: TEXT.faint, margin: "11.2px 0 0" }}>
-          Descartada — esta vaga não volta para a sua fila.
+          {t("candidaturas.descartada")}
         </p>
       )}
 
       {aberta && carta ? (
         <div style={{ marginTop: 14, borderTop: `1px solid ${HAIRLINE}`, paddingTop: 14 }}>
           <label style={{ display: "block", fontSize: 11.5, color: TEXT.faint, marginBottom: 4 }} htmlFor={`carta-${item.id}`}>
-            Carta de apresentação (você pode editar antes de enviar)
+            {t("candidaturas.rotuloDaCarta")}
           </label>
           <textarea
             id={`carta-${item.id}`}
@@ -733,7 +741,7 @@ function Cartao({
             <div style={{ display: "flex", gap: 8.4, flexWrap: "wrap", alignItems: "flex-end", marginTop: 11.2 }}>
               <label style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 220 }}>
                 <span style={{ fontSize: 11.5, color: TEXT.faint }}>
-                  E-mail da empresa (quando o anúncio tiver um)
+                  {t("candidaturas.emailDaEmpresa")}
                 </span>
                 <input
                   className="input"
@@ -750,21 +758,20 @@ function Cartao({
                 onClick={() => void enviarAgora(true)}
               >
                 <Icon name="send" size={15} />
-                {enviar.pending ? "Enviando…" : "Enviar com meu currículo"}
+                {enviar.pending ? t("candidaturas.enviando") : t("candidaturas.enviarComCurriculo")}
               </button>
             </div>
           ) : null}
 
           <p style={{ fontSize: 11, color: TEXT.faint, margin: "11.2px 0 0", lineHeight: 1.5 }}>
-            O e-mail sai pelo PathR, mas a resposta da empresa vai direto para o seu endereço. Seu currículo
-            vai em anexo, do jeito que você enviou.
+            {t("candidaturas.comoSaiOEmail")}
           </p>
         </div>
       ) : null}
 
       {respostas.length > 0 ? (
         <div style={{ marginTop: 14, borderTop: `1px solid ${HAIRLINE}`, paddingTop: 14 }}>
-          <Kicker style={{ display: "block", marginBottom: 8.4 }}>Respostas para o formulário da vaga</Kicker>
+          <Kicker style={{ display: "block", marginBottom: 8.4 }}>{t("candidaturas.respostasDaVaga")}</Kicker>
           <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 11.2 }}>
             {respostas.map((item_) => (
               <li key={item_.pergunta}>
@@ -785,7 +792,7 @@ function Cartao({
                       }
                     }}
                   >
-                    {copiada === item_.pergunta ? "Copiado" : "Copiar"}
+                    {copiada === item_.pergunta ? t("candidaturas.copiado") : t("candidaturas.copiar")}
                   </button>
                 </div>
                 <p style={{ margin: "4px 0 0", fontSize: 13, color: "rgba(233,233,237,.85)", lineHeight: 1.55 }}>
@@ -795,7 +802,7 @@ function Cartao({
             ))}
           </ul>
           <p style={{ fontSize: 11, color: TEXT.faint, margin: "11.2px 0 0", lineHeight: 1.5 }}>
-            Confira antes de colar: quem responde ao recrutador é você, e o formulário pode perguntar outra coisa.
+            {t("candidaturas.confiraAntes")}
           </p>
         </div>
       ) : null}
