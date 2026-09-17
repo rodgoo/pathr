@@ -25,8 +25,32 @@ PT = re.compile(r"[ãõáéíóúâêôàç]|\b(você|voce|seu|sua|não|nao|uma|
 TEXTO = re.compile(r">\s*([^<>{}]{8,400}?)\s*<", re.S)
 PROP = re.compile(r'\b(title|label|placeholder|description|aria-label|alt)=\{?"([^"\n]{8,300})"')
 
+# Frase escrita dentro de uma expressão: {"Salvo"}, {ok ? "Salvo" : "Salvar"},
+# label={pendente ? "Enviando…" : "Enviar"}. Sem acento nenhum, o primeiro
+# varredor passava direto por tudo isso — e "Save"/"Salvo" fixos são o caso
+# mais comum, porque rótulo curto raramente leva acento.
+FRASE = re.compile(r'"([A-ZÀ-Úa-zà-ú][^"\n]{2,120})"')
+
+# O que é código e não texto: nada disso vai para o dicionário. A primeira
+# alternativa cobre lista de classe CSS e de `rel` ("btn btn-ghost", "noopener
+# noreferrer"): palavras todas minúsculas, com hífen — rótulo escrito para gente
+# começa com maiúscula ou leva acento, e cai fora desta regra.
+TECNICO = re.compile(
+    r"^(?:[a-z][a-z0-9-]*(?:[ /][a-z][a-z0-9-]*)*|#[0-9a-f]{3,8}|\d[\d.,%a-z ]*|"
+    r"[\w.-]+\.(?:svg|png|json|ts|tsx)|https?://\S+|[a-z]+[A-Z]\w*|[\w.-]+@[\w.-]+|"
+    r"rgba?\([^)]*\)|\S{1,3})$"
+)
+
+# Duas fontes de ruído que só apareceram rodando: o `d` de um <path> de ícone
+# ("M15 6V21M15 6L21 3…") e o código de exemplo que a landing mostra na tela.
+# Nenhum é frase, e os dois aparecem às dezenas por arquivo — deixados de fora,
+# a lista de suspeitas volta a caber numa tela.
+CAMINHO_SVG = re.compile(r"^[MmLlHhVvCcSsQqTtAaZz][\d\s.,-]")
+CODIGO = re.compile(r"[;{}<>]|=>|\(\)|\bconst\b|\bawait\b|\breturn\b")
+
 achados = collections.Counter()
 detalhe = collections.defaultdict(list)
+suspeitas = collections.Counter()
 
 for arquivo in RAIZ.rglob("*.tsx"):
     caminho = arquivo.as_posix()
@@ -47,6 +71,27 @@ for arquivo in RAIZ.rglob("*.tsx"):
             achados[caminho] += 1
             detalhe[caminho].append(f"[{achado.group(1)}] {texto}")
 
+    # Segunda passada, mais solta: frase entre aspas que NÃO está dentro de um
+    # t(...). Aqui não se exige acento — por isso vai para uma lista separada,
+    # de suspeitas: rótulo de verdade e nome de ícone se parecem muito.
+    sem_t = re.sub(r"\bt\(\s*\"[^\"]+\"(?:\s*,\s*\{[^}]*\})?\s*\)", "", fonte)
+    sem_t = re.sub(r"\bt\(\s*[^)]*\)", "", sem_t)  # t(cond ? "a" : "b")
+    sem_t = re.sub(r"\bimport[^;]+;", "", sem_t)
+    for achado in FRASE.finditer(sem_t):
+        texto = achado.group(1).strip()
+        if TECNICO.match(texto) or PT.search(texto):
+            continue  # já contado acima, ou é código
+        if CAMINHO_SVG.match(texto) or CODIGO.search(texto):
+            continue
+        if " " in texto or texto[0].isupper():
+            suspeitas[caminho] += 1
+
 print("TOTAL:", sum(achados.values()), "trechos em", len(achados), "arquivos\n")
 for caminho, quantos in achados.most_common(25):
-    print(f"{quantos:3}  {caminho}")
+    print(f"{quantos:3}  {caminho}  (+{suspeitas.get(caminho, 0)} suspeitas)")
+
+restantes = [(c, n) for c, n in suspeitas.most_common() if c not in achados]
+if restantes:
+    print("\nSó suspeitas (frase entre aspas, sem acento, fora de t()):")
+    for caminho, quantos in restantes[:15]:
+        print(f"{quantos:3}  {caminho}")
