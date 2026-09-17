@@ -24,15 +24,17 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { candidaturas as candidaturasApi, profile as profileApi, resumes as resumesApi } from "@/api/endpoints";
-import type { Candidatura } from "@/api/types";
+import type { Candidatura, PassoDaCandidatura, PerguntaPendente } from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
 import { useMutation, useQuery } from "@/hooks/useApi";
-import { ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
+import { ACC, ACC4, C, HAIRLINE, TEXT, tint } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
+import { useT } from "@/lib/i18n";
 
 export function CandidaturasPage() {
+  const t = useT();
   const { dispatch } = useAppState();
   const fila = useQuery(() => candidaturasApi.list(), []);
   const curriculos = useQuery(() => resumesApi.list(), []);
@@ -54,8 +56,8 @@ export function CandidaturasPage() {
   return (
     <div style={{ ...SCREEN_IN, display: "flex", flexDirection: "column", gap: 16.8 }}>
       <header>
-        <Kicker style={{ display: "block", marginBottom: 5.6 }}>Candidaturas</Kicker>
-        <h1 style={{ fontSize: 23, fontWeight: 500, margin: 0 }}>Seu currículo indo para as vagas certas</h1>
+        <Kicker style={{ display: "block", marginBottom: 5.6 }}>{t("candidaturas.kicker")}</Kicker>
+        <h1 style={{ fontSize: 23, fontWeight: 500, margin: 0 }}>{t("candidaturas.titulo")}</h1>
         <p style={{ fontSize: 13, color: TEXT.muted, margin: "8.4px 0 0", maxWidth: "72ch" }}>
           Todo dia de manhã o PathR separa as vagas que mais combinam com o seu currículo e escreve uma
           carta de apresentação para cada uma. Onde a vaga tem e-mail de contato, o envio sai daqui com o
@@ -91,10 +93,22 @@ export function CandidaturasPage() {
                 {hoje.length > 0
                   ? `${hoje.length} ${hoje.length === 1 ? "vaga separada" : "vagas separadas"} para você`
                   : "Nenhuma vaga nova hoje ainda."}
-                {fila.data?.enviadas ? (
-                  <span style={{ color: TEXT.faint }}> · {fila.data.enviadas} enviadas no período</span>
-                ) : null}
               </p>
+              {/* O que a pessoa pergunta todo dia: quantos currículos saíram. */}
+              <div style={{ display: "flex", gap: 16.8, marginTop: 8.4, flexWrap: "wrap" }}>
+                {([
+                  ["hoje", "candidaturas.enviadasHoje"],
+                  ["ontem", "candidaturas.ontem"],
+                  ["ultimos7", "candidaturas.ultimos7"],
+                ] as const).map(([campo, rotulo]) => (
+                  <div key={campo}>
+                    <div style={{ fontSize: 18, fontWeight: 500, color: TEXT.full }}>
+                      {fila.data?.resumo?.[campo] ?? 0}
+                    </div>
+                    <div style={{ fontSize: 11, color: TEXT.faint }}>{t(rotulo)}</div>
+                  </div>
+                ))}
+              </div>
             </div>
             <button type="button" className="btn btn-secondary" disabled={gerar.pending} onClick={() => void buscarAgora()}>
               <Icon name="refresh" size={15} />
@@ -128,6 +142,135 @@ export function CandidaturasPage() {
           description="Ela chega de manhã, no seu horário, junto com um e-mail. Se quiser ver agora, use “Buscar vagas agora”."
         />
       ) : null}
+    </div>
+  );
+}
+
+/** Os passos do envio, na ordem — o mesmo `PASSOS` do servidor. */
+const PASSOS = ["anuncio", "curriculo", "carta", "respostas", "envio"] as const;
+
+const COR_DA_SITUACAO: Record<string, string> = {
+  feito: C.verde,
+  pendente: C.ambar,
+  falhou: C.rosa,
+  pulado: TEXT.faint,
+};
+
+/**
+ * O passo a passo de uma candidatura, acontecendo.
+ *
+ * Uma linha do tempo em vez de um "carregando": o que o app faz em nome da
+ * pessoa não pode ser caixa preta — ela precisa ver o currículo ser conferido,
+ * a carta ser escrita, as respostas preenchidas e o envio acontecer (ou parar,
+ * e onde parou).
+ */
+function LinhaDoTempo({ passos, rodando }: { passos: PassoDaCandidatura[]; rodando: boolean }) {
+  const t = useT();
+  const porNome = new Map(passos.map((passo) => [passo.passo, passo]));
+  const primeiroSemResultado = PASSOS.find((nome) => !porNome.has(nome));
+
+  return (
+    <ol
+      aria-label={t("candidaturas.passos.titulo")}
+      style={{ listStyle: "none", margin: "14px 0 0", padding: 0 }}
+    >
+      {PASSOS.map((nome, indice) => {
+        const passo = porNome.get(nome);
+        const fazendo = rodando && nome === primeiroSemResultado;
+        const cor = passo ? COR_DA_SITUACAO[passo.situacao] ?? TEXT.muted : fazendo ? ACC : HAIRLINE;
+        return (
+          <li key={nome} style={{ display: "flex", gap: 11.2, alignItems: "flex-start", minHeight: 34 }}>
+            {/* O ponto e a linha que liga ao próximo — menos no último. */}
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", alignSelf: "stretch" }}>
+              <span
+                aria-hidden
+                style={{
+                  width: 11,
+                  height: 11,
+                  borderRadius: "50%",
+                  marginTop: 5,
+                  background: cor,
+                  boxShadow: fazendo ? `0 0 0 4px ${tint(ACC, 18)}` : "none",
+                }}
+              />
+              {indice < PASSOS.length - 1 ? (
+                <span aria-hidden style={{ flex: 1, width: 2, background: HAIRLINE, marginTop: 2 }} />
+              ) : null}
+            </div>
+            <div style={{ paddingBottom: 8 }}>
+              <div style={{ fontSize: 13, color: passo || fazendo ? TEXT.full : TEXT.faint }}>
+                {t(`candidaturas.passos.${nome}`)}
+                {fazendo ? ` · ${t("candidaturas.passos.fazendo")}` : ""}
+              </div>
+              {passo?.detalhe ? (
+                <div style={{ fontSize: 11.5, color: TEXT.muted, marginTop: 2 }}>{passo.detalhe}</div>
+              ) : null}
+            </div>
+          </li>
+        );
+      })}
+    </ol>
+  );
+}
+
+/**
+ * As perguntas que o app não pode responder por você.
+ *
+ * Aparecem como campo, e o que você escreve entra no banco de respostas: a
+ * mesma pergunta, em qualquer outro site, já vem preenchida na próxima vez.
+ * Pergunta sensível (gênero, raça, deficiência) fica marcada e NÃO é guardada
+ * — é opcional no formulário, e a escolha é sua a cada vez.
+ */
+function PerguntasQueFaltam({
+  pendentes,
+  aoSalvar,
+  salvando,
+}: {
+  pendentes: PerguntaPendente[];
+  aoSalvar: (respostas: { pergunta: string; chave: string; resposta: string }[]) => void;
+  salvando: boolean;
+}) {
+  const t = useT();
+  const [digitadas, setDigitadas] = useState<Record<string, string>>({});
+  if (pendentes.length === 0) return null;
+
+  const preenchidas = pendentes
+    .map((item) => ({ pergunta: item.pergunta, chave: item.chave, resposta: (digitadas[item.chave] ?? "").trim() }))
+    .filter((item) => item.resposta);
+
+  return (
+    <div style={{ marginTop: 14, borderTop: `1px solid ${HAIRLINE}`, paddingTop: 14 }}>
+      <Kicker style={{ display: "block", marginBottom: 4 }}>{t("candidaturas.faltam.titulo")}</Kicker>
+      <p style={{ margin: "0 0 11.2px", fontSize: 12, color: TEXT.muted, maxWidth: "64ch", lineHeight: 1.5 }}>
+        {t("candidaturas.faltam.explicacao")}
+      </p>
+      <div style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
+        {pendentes.map((item) => (
+          <label key={item.chave} style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+            <span style={{ fontSize: 12.5, color: TEXT.full }}>
+              {item.pergunta}
+              {item.motivo === "sensivel" ? (
+                <span style={{ color: C.ambar, fontSize: 11.5 }}> · {t("candidaturas.faltam.sensivel")}</span>
+              ) : null}
+            </span>
+            <input
+              className="input"
+              value={digitadas[item.chave] ?? ""}
+              onChange={(evento) => setDigitadas((atuais) => ({ ...atuais, [item.chave]: evento.target.value }))}
+            />
+          </label>
+        ))}
+      </div>
+      <button
+        type="button"
+        className="btn btn-secondary"
+        style={{ marginTop: 11.2 }}
+        disabled={salvando || preenchidas.length === 0}
+        onClick={() => aoSalvar(preenchidas)}
+      >
+        <Icon name="check" size={15} />
+        {salvando ? t("candidaturas.faltam.salvando") : t("candidaturas.faltam.salvar")}
+      </button>
     </div>
   );
 }
@@ -248,14 +391,38 @@ function Cartao({
   onMudou: () => void;
   onErro: (mensagem: string | null) => void;
 }) {
+  const t = useT();
   const [carta, setCarta] = useState(item.letter ?? "");
   const [email, setEmail] = useState(item.to_email ?? "");
   const [aberta, setAberta] = useState(false);
   const [respostas, setRespostas] = useState(item.answers ?? []);
   const [copiada, setCopiada] = useState<string | null>(null);
 
+  const [passos, setPassos] = useState<PassoDaCandidatura[]>(item.steps ?? []);
+  const [pendentes, setPendentes] = useState<PerguntaPendente[]>(item.pending ?? []);
+
   const escrever = useMutation(() => candidaturasApi.carta(item.id));
   const prepararRespostas = useMutation(() => candidaturasApi.respostas(item.id));
+  const rodar = useMutation((enviar: boolean) => candidaturasApi.preparar(item.id, enviar));
+  const guardar = useMutation((respostas: { pergunta: string; chave: string; resposta: string }[]) =>
+    candidaturasApi.guardarRespostas(respostas),
+  );
+
+  /** Roda a candidatura e vai mostrando cada passo. `enviar` manda de verdade. */
+  async function executar(enviar: boolean) {
+    onErro(null);
+    setPassos([]);
+    const resposta = await rodar.run(enviar);
+    if (!resposta) {
+      if (rodar.error) onErro(rodar.error);
+      return;
+    }
+    setPassos(resposta.steps ?? []);
+    setPendentes(resposta.pending ?? []);
+    setRespostas(resposta.answers ?? []);
+    if (resposta.letter) setCarta(resposta.letter);
+    onMudou();
+  }
   const enviar = useMutation((corpo: { email?: string; carta?: string }) => candidaturasApi.enviar(item.id, corpo));
   const descartar = useMutation(() => candidaturasApi.descartar(item.id));
 
@@ -329,8 +496,28 @@ function Cartao({
             style={{ textDecoration: "none" }}
           >
             <Icon name="externalLink" size={15} />
-            Abrir vaga e responder
+            {t("candidaturas.abrirVaga")}
           </a>
+
+          {/* O envio de verdade: prepara tudo e, quando a vaga tem e-mail de
+              contato, manda o currículo nesta hora. A linha do tempo abaixo
+              mostra cada passo enquanto acontece. */}
+          {!enviada ? (
+            <button
+              type="button"
+              className="btn btn-primary"
+              disabled={rodar.pending}
+              onClick={() => void executar(true)}
+            >
+              <Icon name="send" size={15} />
+              {rodar.pending ? t("candidaturas.enviando") : t("candidaturas.enviarAgora")}
+            </button>
+          ) : null}
+
+          <button type="button" className="btn btn-ghost" disabled={rodar.pending} onClick={() => void executar(false)}>
+            <Icon name="refresh" size={15} />
+            {t("candidaturas.prepararSemEnviar")}
+          </button>
 
           <button type="button" className="btn btn-secondary" disabled={escrever.pending} onClick={() => void escreverCarta()}>
             <Icon name="pencil" size={15} />
@@ -474,6 +661,26 @@ function Cartao({
           </p>
         </div>
       ) : null}
+
+      {(passos.length > 0 || rodar.pending) && !descartada ? (
+        <LinhaDoTempo passos={passos} rodando={rodar.pending} />
+      ) : null}
+
+      <PerguntasQueFaltam
+        pendentes={pendentes}
+        salvando={guardar.pending}
+        aoSalvar={async (respostas) => {
+          onErro(null);
+          const guardadas = await guardar.run(respostas);
+          if (!guardadas) {
+            if (guardar.error) onErro(guardar.error);
+            return;
+          }
+          // Guardadas: rodar de novo já aproveita as respostas novas, e as
+          // que sobrarem continuam aparecendo aqui.
+          await executar(false);
+        }}
+      />
 
       {enviada && item.sent_at ? (
         <p style={{ fontSize: 11.5, color: TEXT.faint, margin: "11.2px 0 0" }}>

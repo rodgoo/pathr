@@ -30,6 +30,8 @@ const vaga: Candidatura = {
   snippet: "Java, Spring Boot e PostgreSQL no time de produto.",
   letter: null,
   answers: [],
+  steps: [],
+  pending: [],
   subject: null,
   to_email: null,
   status: "sugerida",
@@ -58,7 +60,13 @@ function monta(comCurriculo = true, automatico = false) {
     }),
     "GET /resumes": () => ({ body: comCurriculo ? [{ id: "r1", status: "parsed" }] : [] }),
     "GET /candidaturas": () => ({
-      body: { hoje: HOJE, por_dia: 5, enviadas: 0, candidaturas: comCurriculo ? [vaga] : [] },
+      body: {
+        hoje: HOJE,
+        por_dia: 5,
+        enviadas: 0,
+        resumo: { hoje: 0, ontem: 0, ultimos7: 0 },
+        candidaturas: comCurriculo ? [vaga] : [],
+      },
     }),
     "POST /candidaturas/c1/carta": () => ({
       body: { ...vaga, letter: "Trabalho com Java há três anos...", subject: "Candidatura — Dev Java" },
@@ -87,7 +95,9 @@ describe("candidaturas", () => {
     monta();
     expect(await screen.findByText("Pessoa Desenvolvedora Java")).toBeInTheDocument();
     expect(screen.getByText("1 vaga separada para você")).toBeInTheDocument();
-    const link = screen.getByRole("link", { name: /Abrir vaga e responder/ });
+    // Pelo endereço, e não pelo rótulo: o texto vem do dicionário e muda com
+    // o idioma — o que o teste precisa garantir é que o link da vaga está lá.
+    const link = screen.getByRole("link");
     expect(link).toHaveAttribute("href", vaga.url);
     expect(link).toHaveAttribute("target", "_blank");
   });
