@@ -1,0 +1,7 @@
+# PathR — plano de estudos em tecnologia. Rastreie à vontade.
+User-agent: *
+Allow: /
+
+# O sitemap lista as páginas públicas (landing e documentos legais). O resto
+# do app fica atrás de login e renderiza a mesma casca — não há o que indexar.
+Sitemap: https://pathr.notter.com.br/sitemap.xml
