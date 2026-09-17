@@ -2617,8 +2617,8 @@
     "copieAgora": "Copy it now: this key won't appear again.",
     "copiar": "Copy",
     "copiada": "Copied",
-    "usadaEm": "used at {data}",
+    "usadaEm": "used on {data}",
     "nuncaUsada": "not yet used",
-    "revogar": "Repeal"
+    "revogar": "Revoke"
   }
 }

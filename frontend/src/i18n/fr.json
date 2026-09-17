@@ -2617,8 +2617,8 @@
     "copieAgora": "Copiez-la maintenant : cette clé ne s'affichera plus.",
     "copiar": "Copier",
     "copiada": "Copiée",
-    "usadaEm": "utilisée sur {data}",
+    "usadaEm": "utilisée le {data}",
     "nuncaUsada": "pas encore utilisée",
-    "revogar": "Abroger"
+    "revogar": "Révoquer"
   }
 }

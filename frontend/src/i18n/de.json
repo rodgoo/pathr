@@ -2617,8 +2617,8 @@
     "copieAgora": "Jetzt kopieren: Dieser Schlüssel wird nicht noch einmal angezeigt.",
     "copiar": "Kopieren",
     "copiada": "Kopiert",
-    "usadaEm": "verwendet unter {data}",
+    "usadaEm": "verwendet am {data}",
     "nuncaUsada": "noch nicht verwendet",
-    "revogar": "Aufheben"
+    "revogar": "Widerrufen"
   }
 }

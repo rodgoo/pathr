@@ -2617,8 +2617,8 @@
     "copieAgora": "Cópiala ahora: esta clave no volverá a aparecer.",
     "copiar": "Copiar",
     "copiada": "Copiada",
-    "usadaEm": "utilizada en {data}",
+    "usadaEm": "usada el {data}",
     "nuncaUsada": "aún sin usar",
-    "revogar": "Derogar"
+    "revogar": "Revocar"
   }
 }
