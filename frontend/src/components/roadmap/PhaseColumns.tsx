@@ -6,6 +6,7 @@
  */
 
 import { useAppState } from "@/hooks/useAppState";
+import { useT } from "@/lib/i18n";
 import { moduleStatusStyle } from "@/lib/moduleStatus";
 import { C, SIZE, TEXT } from "@/lib/tokens";
 import type { Roadmap } from "@/api/types";
@@ -14,6 +15,7 @@ import { Panel } from "@/components/ui/primitives";
 const PHASE_COLORS = [C.verde, "#9184d9", C.teal, C.azul, C.ambar];
 
 export function PhaseColumns({ roadmap }: { roadmap: Roadmap }) {
+  const t = useT();
   const { dispatch } = useAppState();
 
   return (
@@ -33,11 +35,14 @@ export function PhaseColumns({ roadmap }: { roadmap: Roadmap }) {
               <span
                 style={{ fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", color }}
               >
-                Fase {index + 1}
+                {t("roadmap.fases.fase", { n: index + 1 })}
               </span>
               {phase.week_start ? (
                 <span style={{ marginLeft: "auto", fontSize: 11, color: TEXT.faint }}>
-                  sem. {phase.week_start}–{phase.week_end ?? phase.week_start}
+                  {t("roadmap.fases.semanaCurta", {
+                    inicio: phase.week_start,
+                    fim: phase.week_end ?? phase.week_start,
+                  })}
                 </span>
               ) : null}
             </div>

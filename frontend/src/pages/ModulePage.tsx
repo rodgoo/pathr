@@ -8,6 +8,7 @@
 
 import { roadmap as roadmapApi } from "@/api/endpoints";
 import type { RoadmapNode } from "@/api/types";
+import { useT } from "@/lib/i18n";
 import { useAppState } from "@/hooks/useAppState";
 import { useIsCompact } from "@/hooks/useMediaQuery";
 import { useMutation, useQuery } from "@/hooks/useApi";
@@ -22,13 +23,14 @@ import { MaterialTab } from "@/components/quiz/MaterialTab";
 import { QuizTab } from "@/components/quiz/QuizTab";
 import { ActivityPanel } from "@/components/quiz/ActivityPanel";
 
-const TABS: readonly { value: ModuleTab; label: string }[] = [
-  { value: "material", label: "Material" },
-  { value: "quiz", label: "Quiz" },
-  { value: "atividade", label: "Atividade" },
+const TABS: readonly { value: ModuleTab; labelKey: string }[] = [
+  { value: "material", labelKey: "modulo.abas.material" },
+  { value: "quiz", labelKey: "modulo.abas.quiz" },
+  { value: "atividade", labelKey: "modulo.abas.atividade" },
 ];
 
 export function ModulePage() {
+  const t = useT();
   const { state, dispatch } = useAppState();
   const compacto = useIsCompact();
   const plan = useQuery(() => roadmapApi.current(), []);
@@ -36,12 +38,12 @@ export function ModulePage() {
     roadmapApi.patchNode(nodeId, { status: "done", minutes: 30 }),
   );
 
-  if (plan.loading) return <Loading label="Carregando a trilha…" />;
+  if (plan.loading) return <Loading label={t("modulo.pagina.carregandoTrilha")} />;
   if (plan.status === 404) {
     return (
       <EmptyState
-        title="Você ainda não tem um plano"
-        description="Gere o roadmap para ter uma trilha em andamento."
+        title={t("modulo.pagina.semPlanoTitulo")}
+        description={t("modulo.pagina.semPlanoDescricao")}
         action={
           <button
             type="button"
@@ -49,7 +51,7 @@ export function ModulePage() {
             onClick={() => dispatch({ type: "navigate", screen: "roadmap" })}
           >
             <Icon name="plus" size={15} />
-            Gerar plano
+            {t("modulo.pagina.gerarPlano")}
           </button>
         }
       />
@@ -68,8 +70,8 @@ export function ModulePage() {
   if (!node) {
     return (
       <EmptyState
-        title="Plano concluído"
-        description="Todos os módulos foram entregues. Gere um novo objetivo para continuar."
+        title={t("modulo.pagina.planoConcluidoTitulo")}
+        description={t("modulo.pagina.planoConcluidoDescricao")}
       />
     );
   }
@@ -84,7 +86,7 @@ export function ModulePage() {
           uma com a própria entrada no menu — um "voltar" sugeria que a Trilha
           mora dentro do Roadmap, e duplicava o que o menu já faz. */}
       <div style={{ fontSize: 12.5, color: TEXT.muted }}>
-        {phase?.title ?? "Trilha"} · {node.kind}
+        {phase?.title ?? t("modulo.pagina.trilha")} · {node.kind}
         {node.level ? ` · ${node.level}` : ""}
       </div>
       <h1 style={{ fontSize: 26, margin: "0 0 16.8px" }}>{node.title}</h1>
@@ -139,7 +141,7 @@ export function ModulePage() {
                     boxShadow: active ? `inset 0 -2px 0 0 ${ACC}` : "none",
                   }}
                 >
-                  {tab.label}
+                  {t(tab.labelKey)}
                 </button>
               );
             })}
@@ -158,10 +160,9 @@ export function ModulePage() {
             onOpen={(id) => dispatch({ type: "openNode", nodeId: id })}
           />
           <Panel>
-            <Kicker style={{ display: "block", marginBottom: 8.4 }}>Concluir</Kicker>
+            <Kicker style={{ display: "block", marginBottom: 8.4 }}>{t("modulo.pagina.concluir")}</Kicker>
             <p style={{ fontSize: 12, color: TEXT.muted, margin: "0 0 11.2px" }}>
-              Marcar como concluído registra o estudo e sobe a proficiência das tecnologias deste
-              módulo.
+              {t("modulo.pagina.concluirDescricao")}
             </p>
             <button
               type="button"
@@ -173,10 +174,10 @@ export function ModulePage() {
               }}
             >
               {node.status === "done"
-                ? "Concluído"
+                ? t("modulo.pagina.concluido")
                 : complete.pending
-                  ? "Registrando…"
-                  : "Marcar como concluído"}
+                  ? t("modulo.pagina.registrando")
+                  : t("modulo.pagina.marcarConcluido")}
             </button>
           </Panel>
         </div>
@@ -194,10 +195,11 @@ export function ModulePage() {
  * elimina o N+1". Mostrá-los aqui é o que permite alguém julgar se concluiu.
  */
 function Objectives({ node }: { node: RoadmapNode }) {
+  const t = useT();
   if (node.objectives.length === 0) return null;
   return (
     <Panel>
-      <Kicker style={{ display: "block", marginBottom: 11.2 }}>Ao final você consegue</Kicker>
+      <Kicker style={{ display: "block", marginBottom: 11.2 }}>{t("modulo.pagina.aoFinalVoceConsegue")}</Kicker>
       <ul style={{ margin: 0, paddingLeft: 16, display: "flex", flexDirection: "column", gap: 5.6 }}>
         {node.objectives.map((objective) => (
           <li key={objective} style={{ fontSize: 13, lineHeight: 1.45 }}>
@@ -218,10 +220,11 @@ function PhaseModules({
   activeId: string;
   onOpen: (id: string) => void;
 }) {
+  const t = useT();
   if (modules.length === 0) return null;
   return (
     <Panel>
-      <Kicker style={{ display: "block", marginBottom: 11.2 }}>Módulos da fase</Kicker>
+      <Kicker style={{ display: "block", marginBottom: 11.2 }}>{t("modulo.pagina.modulosDaFase")}</Kicker>
       <div style={{ display: "flex", flexDirection: "column", gap: 8.4 }}>
         {modules.map((module) => {
           const style = moduleStatusStyle(module.status);

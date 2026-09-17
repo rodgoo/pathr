@@ -22,6 +22,7 @@ import { social } from "@/api/endpoints";
 import type { NovidadeDeAmizade } from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
 import { useQuery } from "@/hooks/useApi";
+import { useT } from "@/lib/i18n";
 import { ACC, ACC3, C, TEXT, tint } from "@/lib/tokens";
 import { dataRevision } from "@/offline/status";
 import { FotoDePessoa } from "@/components/social/CartaoPessoa";
@@ -89,6 +90,7 @@ export function AvisosDeAmizade({ duracaoMs = VISIVEL_MS }: { duracaoMs?: number
 }
 
 function Aviso({ item, duracaoMs, onFechar }: { item: NovidadeDeAmizade; duracaoMs: number; onFechar: () => void }) {
+  const t = useT();
   const { dispatch } = useAppState();
   const [pausado, setPausado] = useState(false);
   const [ocupado, setOcupado] = useState(false);
@@ -116,7 +118,7 @@ function Aviso({ item, duracaoMs, onFechar }: { item: NovidadeDeAmizade; duracao
       dataRevision.bump();
       onFechar();
     } catch (caught) {
-      setErro(caught instanceof Error ? caught.message : "Não consegui responder.");
+      setErro(caught instanceof Error ? caught.message : t("amigos.avisos.erroResponder"));
       setOcupado(false);
     }
   }
@@ -124,7 +126,7 @@ function Aviso({ item, duracaoMs, onFechar }: { item: NovidadeDeAmizade; duracao
   return (
     <div
       role={item.tipo === "convite" ? "alertdialog" : "status"}
-      aria-label={item.tipo === "convite" ? `${pessoa.name} te mandou um convite de amizade` : `${pessoa.name} aceitou seu convite`}
+      aria-label={item.tipo === "convite" ? t("amigos.avisos.ariaConvite", { nome: pessoa.name }) : t("amigos.avisos.ariaAceite", { nome: pessoa.name })}
       onMouseEnter={() => setPausado(true)}
       onMouseLeave={() => setPausado(false)}
       onFocus={() => setPausado(true)}
@@ -146,17 +148,17 @@ function Aviso({ item, duracaoMs, onFechar }: { item: NovidadeDeAmizade; duracao
           <div style={{ fontSize: 13.5, color: TEXT.strong, lineHeight: 1.35 }}>
             {item.tipo === "convite" ? (
               <>
-                <strong>{primeiro}</strong> te mandou um convite de amizade
+                <strong>{primeiro}</strong> {t("amigos.avisos.mandouConvite")}
               </>
             ) : (
               <>
-                <strong>{primeiro}</strong> aceitou seu convite
+                <strong>{primeiro}</strong> {t("amigos.avisos.aceitouConvite")}
               </>
             )}
           </div>
           <div style={{ fontSize: 12, color: ACC3 }}>@{pessoa.username}</div>
         </div>
-        <IconButton icon="x" label="Fechar aviso" onClick={onFechar} style={{ alignSelf: "flex-start" }} />
+        <IconButton icon="x" label={t("amigos.avisos.fecharAviso")} onClick={onFechar} style={{ alignSelf: "flex-start" }} />
       </div>
 
       {pessoa.stack.length ? (
@@ -190,7 +192,7 @@ function Aviso({ item, duracaoMs, onFechar }: { item: NovidadeDeAmizade; duracao
               onClick={() => void responder(() => social.aceitar(item.friendship_id))}
             >
               <Icon name="check" size={15} />
-              Aceitar
+              {t("amigos.avisos.aceitar")}
             </button>
             <button
               type="button"
@@ -199,7 +201,7 @@ function Aviso({ item, duracaoMs, onFechar }: { item: NovidadeDeAmizade; duracao
               onClick={() => void responder(() => social.desfazer(item.friendship_id))}
             >
               <Icon name="x" size={15} />
-              Recusar
+              {t("amigos.avisos.recusar")}
             </button>
           </>
         ) : (
@@ -212,7 +214,7 @@ function Aviso({ item, duracaoMs, onFechar }: { item: NovidadeDeAmizade; duracao
             }}
           >
             <Icon name="users" size={15} />
-            Ver amigos
+            {t("amigos.avisos.verAmigos")}
           </button>
         )}
       </div>

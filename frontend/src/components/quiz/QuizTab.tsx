@@ -10,6 +10,7 @@ import { quizzes as quizzesApi } from "@/api/endpoints";
 import type { Quiz, RoadmapNode } from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
 import { useMutation } from "@/hooks/useApi";
+import { useT } from "@/lib/i18n";
 import { TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { EmptyState, ErrorState } from "@/components/ui/States";
@@ -57,6 +58,7 @@ function esquecerQuiz(nodeId: string | undefined): void {
 }
 
 export function QuizTab({ node }: { node: RoadmapNode | null }) {
+  const t = useT();
   const { dispatch } = useAppState();
   // Inicializador preguicoso: le o storage uma vez, na montagem.
   const [quiz, setQuiz] = useState<Quiz | null>(() => lerQuizAberto(node?.id));
@@ -105,8 +107,8 @@ export function QuizTab({ node }: { node: RoadmapNode | null }) {
   if (!node) {
     return (
       <EmptyState
-        title="Nenhum módulo aberto"
-        description="Abra um módulo do roadmap para gerar um quiz sobre ele."
+        title={t("modulo.quiz.nenhumModuloTitulo")}
+        description={t("modulo.quiz.nenhumModuloDescricao")}
       />
     );
   }
@@ -114,12 +116,10 @@ export function QuizTab({ node }: { node: RoadmapNode | null }) {
   return (
     <Panel pad={22.4}>
       <h3 style={{ fontSize: 18, margin: "0 0 8.4px", fontWeight: 500 }}>
-        Quiz de {node.title}
+        {t("modulo.quiz.quizDe", { titulo: node.title })}
       </h3>
       <p style={{ fontSize: 13.5, color: "rgba(233,233,237,.7)", maxWidth: "60ch" }}>
-        Seis questões escritas na hora, sobre as tecnologias deste módulo e calibradas pelo seu
-        nível atual. O resultado atualiza a proficiência no seu perfil — é a única evidência de
-        domínio que o app coleta.
+        {t("modulo.quiz.descricao")}
       </p>
 
       {generate.error ? <ErrorState message={generate.error} onRetry={start} /> : null}
@@ -127,16 +127,20 @@ export function QuizTab({ node }: { node: RoadmapNode | null }) {
       <div style={{ display: "flex", gap: 8.4, alignItems: "center", marginTop: 14, flexWrap: "wrap" }}>
         <button type="button" className="btn btn-primary" onClick={start} disabled={generate.pending}>
           <Icon name="playSolid" size={15} />
-          {generate.pending ? "Escrevendo as questões…" : "Começar quiz"}
+          {generate.pending ? t("modulo.quiz.escrevendoQuestoes") : t("modulo.quiz.comecarQuiz")}
         </button>
         <span style={{ fontSize: 11.5, color: TEXT.faint }}>
-          {generate.pending ? "A IA leva alguns segundos." : "Leva cerca de 10 minutos."}
+          {generate.pending ? t("modulo.quiz.iaLevaSegundos") : t("modulo.quiz.levaCerca")}
         </span>
       </div>
       <ProgressoDaTarefa
         ativo={generate.pending}
         chave="quiz-gerar"
-        etapas={["Lendo o módulo e o seu nível", "Escrevendo as questões", "Conferindo o gabarito"]}
+        etapas={[
+          t("modulo.quiz.gerarEtapa1"),
+          t("modulo.quiz.gerarEtapa2"),
+          t("modulo.quiz.gerarEtapa3"),
+        ]}
         duracaoMs={20_000}
         style={{ marginTop: 14 }}
       />

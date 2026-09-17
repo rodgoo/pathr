@@ -38,8 +38,9 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { locucao, SEM_VOZ_DO_IDIOMA, vozesDoIdioma } from "@/lib/fala";
+import { locucao, vozesDoIdioma } from "@/lib/fala";
 import { audiosDasFalas } from "@/lib/vozNeural";
+import { useT } from "@/lib/i18n";
 import { ACC, ACC3, HAIRLINE, TEXT } from "@/lib/tokens";
 import { IconButton } from "@/components/ui/IconButton";
 
@@ -102,6 +103,7 @@ export function ListeningPlayer({
   /** Código do idioma do item — o mesmo do nivelamento. */
   idioma?: string;
 }) {
+  const t = useT();
   const falas = separarFalas(contexto);
   const { vozes, semVozDoIdioma } = useVozes(idioma);
   const [tocando, setTocando] = useState(false);
@@ -263,12 +265,12 @@ export function ListeningPlayer({
           icon={tocando ? "stop" : "playSolid"}
           label={
             preparando
-              ? "Preparando o áudio…"
+              ? t("idiomas.listening.preparandoAudio")
               : tocando
-                ? "Parar"
+                ? t("idiomas.listening.parar")
                 : atual === -1
-                  ? "Ouvir o diálogo"
-                  : "Ouvir de novo"
+                  ? t("idiomas.listening.ouvirDialogo")
+                  : t("idiomas.listening.ouvirDeNovo")
           }
           tone="secondary"
           onClick={() => (tocando ? parar() : void tocar())}
@@ -276,14 +278,16 @@ export function ListeningPlayer({
 
         <IconButton
           icon={mostrarTexto ? "eyeOff" : "eye"}
-          label={mostrarTexto ? "Esconder transcrição" : "Ver transcrição"}
+          label={mostrarTexto ? t("idiomas.listening.esconderTranscricao") : t("idiomas.listening.verTranscricao")}
           pressed={mostrarTexto}
           color={ACC3}
           onClick={() => setMostrarTexto((atual) => !atual)}
         />
 
         <span style={{ fontSize: 11, color: TEXT.faint, marginLeft: "auto" }}>
-          {falas.length} falas
+          {falas.length === 1
+            ? t("idiomas.listening.falasUm", { n: falas.length })
+            : t("idiomas.listening.falasVarias", { n: falas.length })}
         </span>
       </div>
 
@@ -293,7 +297,7 @@ export function ListeningPlayer({
           servidor responde, nada disso importa e o aviso não aparece. */}
       {naVozDoNavegador && (semVozDoIdioma || !temSintese) ? (
         <p role="note" style={{ margin: "8.4px 0 0", fontSize: 11.5, color: "#cfa25e", lineHeight: 1.5 }}>
-          {temSintese ? SEM_VOZ_DO_IDIOMA : "Este navegador não tem voz para reproduzir o diálogo."}
+          {temSintese ? t("idiomas.semVozDoIdioma") : t("idiomas.listening.semVozNavegador")}
         </p>
       ) : null}
 

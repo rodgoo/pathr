@@ -15,6 +15,7 @@ import { useAppState } from "@/hooks/useAppState";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@/hooks/useApi";
 import { useIsCompact } from "@/hooks/useMediaQuery";
+import { useIdioma, useT } from "@/lib/i18n";
 import { TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
@@ -27,16 +28,17 @@ import { StreakCard } from "@/components/dashboard/StreakCard";
 import { WeeklyChecklist } from "@/components/dashboard/WeeklyChecklist";
 import { TrackProgress } from "@/components/dashboard/TrackProgress";
 
-const TODAY = new Intl.DateTimeFormat("pt-BR", {
-  weekday: "short",
-  day: "numeric",
-  month: "long",
-});
-
 export function HomePage() {
+  const t = useT();
+  const { idioma } = useIdioma();
   const compacto = useIsCompact();
   const { user } = useAuth();
   const { dispatch } = useAppState();
+  const hoje = new Intl.DateTimeFormat(idioma, {
+    weekday: "short",
+    day: "numeric",
+    month: "long",
+  });
   const overview = useQuery((signal) => profileApi.overview(signal), []);
   // O plano completo só é buscado quando existe — sem isso, toda abertura do
   // painel de quem ainda não gerou nada bateria num 404 previsível.
@@ -44,7 +46,7 @@ export function HomePage() {
     enabled: Boolean(overview.data?.roadmap),
   });
 
-  if (overview.loading) return <Loading label="Carregando seu painel…" />;
+  if (overview.loading) return <Loading label={t("home.carregandoPainel")} />;
   if (overview.error) return <ErrorState message={overview.error} onRetry={overview.reload} />;
   if (!overview.data) return null;
 
@@ -59,9 +61,9 @@ export function HomePage() {
       <header style={{ display: "flex", flexWrap: "wrap", alignItems: "flex-end", gap: 11.2 }}>
         <div>
           <div style={{ fontSize: 12.5, color: TEXT.muted }}>
-            Bem-vindo de volta{firstName ? `, ${firstName}` : ""}
+            {firstName ? t("home.boasVindasNome", { nome: firstName }) : t("home.boasVindas")}
           </div>
-          <h1 style={{ fontSize: 26, lineHeight: 1.2, margin: 0 }}>{TODAY.format(new Date())}</h1>
+          <h1 style={{ fontSize: 26, lineHeight: 1.2, margin: 0 }}>{hoje.format(new Date())}</h1>
         </div>
         {roadmap?.current_node ? (
           <button
@@ -77,15 +79,15 @@ export function HomePage() {
             }
           >
             <Icon name="play" size={15} />
-            Retomar estudo
+            {t("home.retomarEstudo")}
           </button>
         ) : null}
       </header>
 
       {!roadmap ? (
         <EmptyState
-          title="Seu plano ainda não existe"
-          description="Envie seu currículo e eu monto o roadmap a partir do que você já sabe — você revisa tudo antes de eu gerar."
+          title={t("home.semPlanoTitulo")}
+          description={t("home.semPlanoDescricao")}
           action={
             <button
               type="button"
@@ -93,7 +95,7 @@ export function HomePage() {
               onClick={() => dispatch({ type: "navigate", screen: "cv" })}
             >
               <Icon name="upload" size={15} />
-              Enviar currículo
+              {t("home.enviarCurriculo")}
             </button>
           }
         />

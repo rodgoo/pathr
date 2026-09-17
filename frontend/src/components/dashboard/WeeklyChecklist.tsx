@@ -24,6 +24,7 @@ import { plan as planApi } from "@/api/endpoints";
 import type { WeeklyItem, WeeklyPlan } from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
 import { useQuery } from "@/hooks/useApi";
+import { useT } from "@/lib/i18n";
 import type { ModuleTab } from "@/types";
 import { ACC, ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
 import { IconButton } from "@/components/ui/IconButton";
@@ -40,10 +41,11 @@ const ABA: Record<WeeklyItem["tipo"], ModuleTab> = {
   desafio: "atividade",
 };
 
+/** A chave de tradução de cada nível; texto vindo com outro valor fica cru. */
 const NIVEL: Record<string, string> = {
-  iniciante: "iniciante",
-  intermediario: "intermediário",
-  avancado: "avançado",
+  iniciante: "home.checklist.nivIniciante",
+  intermediario: "home.checklist.nivIntermediario",
+  avancado: "home.checklist.nivAvancado",
 };
 
 function horas(minutos: number): string {
@@ -52,6 +54,7 @@ function horas(minutos: number): string {
 }
 
 export function WeeklyChecklist() {
+  const t = useT();
   const { dispatch } = useAppState();
   const semana = useQuery(() => planApi.week(), []);
   const [plano, setPlano] = useState<WeeklyPlan | null>(null);
@@ -61,7 +64,7 @@ export function WeeklyChecklist() {
     if (semana.data) setPlano(semana.data);
   }, [semana.data]);
 
-  if (semana.loading && !plano) return <Loading label="Montando a sua semana…" />;
+  if (semana.loading && !plano) return <Loading label={t("home.checklist.montando")} />;
   if (semana.error && !plano) return <ErrorState message={semana.error} onRetry={semana.reload} />;
   if (!plano) return null;
 
@@ -75,7 +78,7 @@ export function WeeklyChecklist() {
       setPlano((atual) => (atual ? { ...atual, resumo: resposta.resumo } : atual));
     } catch (caught) {
       setPlano((atual) => (atual ? trocar(atual, item.id, !feito) : atual));
-      setErro(caught instanceof Error ? caught.message : "Não consegui salvar.");
+      setErro(caught instanceof Error ? caught.message : t("home.checklist.naoSalvou"));
     }
   }
 
@@ -84,17 +87,19 @@ export function WeeklyChecklist() {
   return (
     <Panel pad={16.8}>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: 11.2 }}>
-        <Kicker>Semana {plano.semana} do plano</Kicker>
+        <Kicker>{t("home.checklist.semanaDoPlano", { n: plano.semana })}</Kicker>
         <span style={{ fontSize: 12, color: TEXT.muted }}>
-          {resumo.feitos} de {resumo.total} feitos · {horas(resumo.minutos_feitos)} de{" "}
-          {horas(resumo.minutos)}
+          {t("home.checklist.resumo", {
+            feitos: resumo.feitos,
+            total: resumo.total,
+            feitosMin: horas(resumo.minutos_feitos),
+            totalMin: horas(resumo.minutos),
+          })}
         </span>
       </div>
 
       <p style={{ fontSize: 12, color: TEXT.faint, margin: "5.6px 0 11.2px", maxWidth: "76ch" }}>
-        A lista segue o seu nível em cada módulo — quem está começando estuda antes de ser
-        testado; quem já domina vai direto para explicar e aplicar — e cabe nas{" "}
-        {horas(plano.orcamento_min)} que você tem para a semana.
+        {t("home.checklist.explicacao", { horas: horas(plano.orcamento_min) })}
       </p>
 
       {plano.ajustes.length > 0 ? (
@@ -109,8 +114,9 @@ export function WeeklyChecklist() {
             color: ACC4,
           }}
         >
-          Sua rota foi ajustada nesta virada de semana ({plano.ajustes.length}{" "}
-          {plano.ajustes.length === 1 ? "mudança" : "mudanças"}).{" "}
+          {plano.ajustes.length === 1
+            ? t("home.checklist.rotaAjustadaUm")
+            : t("home.checklist.rotaAjustada", { n: plano.ajustes.length })}{" "}
           <button
             type="button"
             onClick={() => dispatch({ type: "navigate", screen: "roadmap" })}
@@ -124,15 +130,14 @@ export function WeeklyChecklist() {
               padding: 0,
             }}
           >
-            Ver o que mudou
+            {t("home.checklist.verMudou")}
           </button>
         </div>
       ) : null}
 
       {plano.itens.length === 0 ? (
         <p style={{ fontSize: 13, color: TEXT.muted, margin: 0 }}>
-          Nada pendente nesta semana. Os próximos módulos entram aqui assim que houver o que
-          puxar.
+          {t("home.checklist.nadaPendente")}
         </p>
       ) : (
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
@@ -169,9 +174,11 @@ export function WeeklyChecklist() {
                 </label>
                 <div style={{ fontSize: 11.5, color: TEXT.faint, marginTop: 2 }}>
                   <span style={{ color: ACC4 }}>{item.pilar}</span> · {item.minutos} min
-                  {item.nivel ? ` · nível ${NIVEL[item.nivel] ?? item.nivel}` : ""}
+                  {item.nivel
+                    ? ` · ${t("home.checklist.nivel", { nivel: NIVEL[item.nivel] ? t(NIVEL[item.nivel]) : item.nivel })}`
+                    : ""}
                   {item.verificado ? (
-                    <span style={{ color: C.verde }}> · confirmado pelo que você fez</span>
+                    <span style={{ color: C.verde }}> · {t("home.checklist.confirmado")}</span>
                   ) : null}
                 </div>
                 {!item.feito ? (
@@ -183,7 +190,7 @@ export function WeeklyChecklist() {
               {!item.feito ? (
                 <IconButton
                   icon="arrowRight"
-                  label="Abrir"
+                  label={t("home.checklist.abrir")}
                   onClick={() =>
                     dispatch({
                       type: "navigate",

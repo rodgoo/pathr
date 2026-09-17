@@ -35,6 +35,7 @@ import type {
 } from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
 import { messageFor, useMutation, useQuery } from "@/hooks/useApi";
+import { useIdioma, useT, type Traduzir } from "@/lib/i18n";
 import { vagasGuardadas } from "@/lib/vagasGuardadas";
 import { ACC, ACC4, C, HAIRLINE, SIZE, TEXT, tint } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
@@ -47,35 +48,43 @@ import { linkExterno } from "@/lib/linkExterno";
 type Filtro = "todas" | "remotas";
 type Alcance = "todas" | "nacionais" | "internacionais";
 
-const FILTROS: readonly { value: Filtro; label: string }[] = [
-  { value: "todas", label: "Todas" },
-  { value: "remotas", label: "Remotas" },
+const filtros = (t: Traduzir): readonly { value: Filtro; label: string }[] => [
+  { value: "todas", label: t("vagas.filtro.todas") },
+  { value: "remotas", label: t("vagas.filtro.remotas") },
 ];
 
-const ALCANCES: readonly { value: Alcance; label: string }[] = [
-  { value: "todas", label: "Brasil e exterior" },
-  { value: "nacionais", label: "Nacionais" },
-  { value: "internacionais", label: "Internacionais" },
+const alcances = (t: Traduzir): readonly { value: Alcance; label: string }[] => [
+  { value: "todas", label: t("vagas.alcance.todas") },
+  { value: "nacionais", label: t("vagas.alcance.nacionais") },
+  { value: "internacionais", label: t("vagas.alcance.internacionais") },
 ];
 
-const NOME_DA_FONTE: Record<keyof JobList["fontes"], string> = {
+const nomeDaFonte = (t: Traduzir): Record<keyof JobList["fontes"], string> => ({
   gupy: "Gupy",
   remotive: "Remotive",
   adzuna: "Adzuna",
-  busca: "Sites de vaga (LinkedIn, Vagas.com, Indeed…)",
-};
+  busca: t("vagas.fonte.busca"),
+});
 
-const ESTADO_DA_FONTE = { ok: "ativa", erro: "fora do ar agora", sem_chave: "sem chave configurada" } as const;
+const estadoDaFonte = (t: Traduzir): Record<"ok" | "erro" | "sem_chave", string> => ({
+  ok: t("vagas.estadoFonte.ok"),
+  erro: t("vagas.estadoFonte.erro"),
+  sem_chave: t("vagas.estadoFonte.semChave"),
+});
 
-const NIVEL = { junior: "Júnior", pleno: "Pleno", senior: "Sênior" } as const;
+const nivelLabel = (t: Traduzir): Record<"junior" | "pleno" | "senior", string> => ({
+  junior: t("vagas.nivel.junior"),
+  pleno: t("vagas.nivel.pleno"),
+  senior: t("vagas.nivel.senior"),
+});
 
-const SITUACAO: Record<JobRequirement["situacao"], { rotulo: string; cor: string }> = {
-  sem_nivel: { rotulo: "faça o nivelamento", cor: C.azul },
-  tem: { rotulo: "você tem", cor: C.verde },
-  parcial: { rotulo: "começando", cor: C.ambar },
-  falta: { rotulo: "falta", cor: C.rosa },
-  desconhecido: { rotulo: "fora do catálogo", cor: TEXT.faint },
-};
+const situacaoLabel = (t: Traduzir): Record<JobRequirement["situacao"], { rotulo: string; cor: string }> => ({
+  sem_nivel: { rotulo: t("vagas.situacao.semNivel"), cor: C.azul },
+  tem: { rotulo: t("vagas.situacao.tem"), cor: C.verde },
+  parcial: { rotulo: t("vagas.situacao.parcial"), cor: C.ambar },
+  falta: { rotulo: t("vagas.situacao.falta"), cor: C.rosa },
+  desconhecido: { rotulo: t("vagas.situacao.desconhecido"), cor: TEXT.faint },
+});
 
 /** Quantas lacunas o cartão mostra antes do "ver todas". */
 const LACUNAS_VISIVEIS = 4;
@@ -84,27 +93,28 @@ function corDaNota(nota: number): string {
   return nota >= 70 ? C.verde : nota >= 40 ? C.ambar : C.rosa;
 }
 
-function haQuanto(dias: number | null): string | null {
+function haQuanto(dias: number | null, t: Traduzir): string | null {
   if (dias === null) return null;
-  if (dias === 0) return "hoje";
-  return dias === 1 ? "há 1 dia" : `há ${dias} dias`;
+  if (dias === 0) return t("vagas.tempo.hoje");
+  return dias === 1 ? t("vagas.tempo.umDia") : t("vagas.tempo.dias", { n: dias });
 }
 
-function minutosDesde(iso?: string): string | null {
+function minutosDesde(iso: string | undefined, t: Traduzir): string | null {
   if (!iso) return null;
   const minutos = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
-  if (minutos < 1) return "agora";
-  if (minutos < 60) return `há ${minutos} min`;
+  if (minutos < 1) return t("vagas.tempo.agora");
+  if (minutos < 60) return t("vagas.tempo.min", { n: minutos });
   const horas = Math.round(minutos / 60);
-  return horas === 1 ? "há 1 hora" : `há ${horas} horas`;
+  return horas === 1 ? t("vagas.tempo.umaHora") : t("vagas.tempo.horas", { n: horas });
 }
 
-function juntar(nomes: string[]): string {
+function juntar(nomes: string[], e: string): string {
   if (nomes.length <= 1) return nomes.join("");
-  return `${nomes.slice(0, -1).join(", ")} e ${nomes[nomes.length - 1]}`;
+  return `${nomes.slice(0, -1).join(", ")} ${e} ${nomes[nomes.length - 1]}`;
 }
 
 export function JobsPage() {
+  const t = useT();
   const [filtro, setFiltro] = useState<Filtro>("todas");
   const [alcance, setAlcance] = useState<Alcance>("todas");
   const [busca, setBusca] = useState("");
@@ -145,10 +155,9 @@ export function JobsPage() {
   return (
     <div style={SCREEN_IN}>
       <header style={{ marginBottom: 16.8 }}>
-        <h1 style={{ fontSize: 28, margin: 0 }}>Vagas para você</h1>
+        <h1 style={{ fontSize: 28, margin: 0 }}>{t("vagas.titulo")}</h1>
         <p style={{ margin: "5.6px 0 0", fontSize: SIZE.corpo, color: TEXT.strong, maxWidth: "72ch" }}>
-          Vagas reais de fontes confiáveis, na sua região ou remotas, da que mais tem a cara da sua stack e do
-          seu objetivo para a que menos. Em cada uma, o que falta e como chegar lá.
+          {t("vagas.subtitulo")}
         </p>
       </header>
 
@@ -158,15 +167,15 @@ export function JobsPage() {
       >
         <input
           className="input"
-          aria-label="Buscar outro cargo ou tecnologia"
-          placeholder="Outro cargo ou tecnologia (ex.: Desenvolvedor Java)"
+          aria-label={t("vagas.buscarAria")}
+          placeholder={t("vagas.buscarPlaceholder")}
           value={busca}
           onChange={(evento) => setBusca(evento.target.value)}
           style={{ flex: "1 1 260px" }}
         />
         <button type="submit" className="btn btn-secondary">
           <Icon name="search" size={15} />
-          Buscar
+          {t("vagas.buscar")}
         </button>
         {termo ? (
           <button
@@ -178,32 +187,34 @@ export function JobsPage() {
             }}
           >
             <Icon name="arrowLeft" size={15} />
-            Voltar ao meu perfil
+            {t("vagas.voltarPerfil")}
           </button>
         ) : null}
       </form>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 8.4, marginBottom: 11.2, alignItems: "center" }}>
-        <Segmented name="vagas-alcance" label="Onde" value={alcance} options={ALCANCES} onChange={setAlcance} />
-        <Segmented name="vagas-filtro" label="Tipo de vaga" value={filtro} options={FILTROS} onChange={setFiltro} />
+        <Segmented name="vagas-alcance" label={t("vagas.onde")} value={alcance} options={alcances(t)} onChange={setAlcance} />
+        <Segmented name="vagas-filtro" label={t("vagas.tipoVaga")} value={filtro} options={filtros(t)} onChange={setFiltro} />
         {lista.data && !lista.data.sem_perfil ? (
           <span style={{ marginLeft: "auto", display: "inline-flex", alignItems: "center", gap: 8.4 }}>
             <span style={{ fontSize: 11.5, color: TEXT.faint }}>
-              {atualizando ? "procurando vagas novas…" : `atualizado ${minutosDesde(lista.data.buscado_em) ?? ""}`}
+              {atualizando
+                ? t("vagas.procurandoNovas")
+                : t("vagas.atualizadoEm", { tempo: minutosDesde(lista.data.buscado_em, t) ?? "" })}
             </span>
             <button type="button" className="btn btn-secondary" onClick={() => void atualizar()} disabled={atualizando}>
               <Icon name="refresh" size={15} />
-              {atualizando ? "Atualizando…" : "Atualizar"}
+              {atualizando ? t("vagas.atualizando") : t("vagas.atualizar")}
             </button>
           </span>
         ) : null}
       </div>
       {erroAoAtualizar ? (
         <p role="alert" style={{ margin: "0 0 11.2px", fontSize: 12.5, color: C.ambar }}>
-          Não consegui atualizar agora ({erroAoAtualizar}). A lista abaixo é a anterior.
+          {t("vagas.erroAtualizar", { erro: erroAoAtualizar })}
         </p>
       ) : null}
 
-      {lista.loading ? <Loading label="Procurando vagas nas fontes…" /> : null}
+      {lista.loading ? <Loading label={t("vagas.carregando")} /> : null}
       {lista.error ? <ErrorState message={lista.error} onRetry={lista.reload} /> : null}
       {lista.data && !lista.loading ? <Resultado dados={lista.data} filtro={filtro} alcance={alcance} /> : null}
 
@@ -215,13 +226,18 @@ export function JobsPage() {
 }
 
 function Resultado({ dados, filtro, alcance }: { dados: JobList; filtro: Filtro; alcance: Alcance }) {
+  const t = useT();
+  const { idioma } = useIdioma();
+  const nf = new Intl.NumberFormat(idioma);
   const { dispatch } = useAppState();
+  const NOME_DA_FONTE = nomeDaFonte(t);
+  const ESTADO_DA_FONTE = estadoDaFonte(t);
 
   if (dados.sem_perfil) {
     return (
       <EmptyState
-        title="Diga o que você faz ou quer fazer"
-        description="As vagas saem das suas competências e do seu objetivo. Cadastre suas tecnologias — ou busque um cargo acima."
+        title={t("vagas.semPerfil.titulo")}
+        description={t("vagas.semPerfil.desc")}
         action={
           <button
             type="button"
@@ -229,7 +245,7 @@ function Resultado({ dados, filtro, alcance }: { dados: JobList; filtro: Filtro;
             onClick={() => dispatch({ type: "navigate", screen: "config", settingsTab: "skills" })}
           >
             <Icon name="plus" size={15} />
-            Cadastrar tecnologias
+            {t("vagas.cadastrarTecnologias")}
           </button>
         }
       />
@@ -246,8 +262,8 @@ function Resultado({ dados, filtro, alcance }: { dados: JobList; filtro: Filtro;
   return (
     <>
       <div style={{ fontSize: 12, color: TEXT.muted, marginBottom: 11.2, lineHeight: 1.6 }}>
-        Buscando por <span style={{ color: TEXT.full }}>{dados.termos.join(" · ")}</span> ·{" "}
-        {visiveis.length} {visiveis.length === 1 ? "vaga" : "vagas"} · seu inglês:{" "}
+        {t("vagas.buscandoPor")} <span style={{ color: TEXT.full }}>{dados.termos.join(" · ")}</span> ·{" "}
+        {nf.format(visiveis.length)} {visiveis.length === 1 ? t("vagas.vaga") : t("vagas.vagas")} · {t("vagas.seuIngles")}{" "}
         {dados.nivel_ingles ? (
           <span style={{ color: TEXT.full }}>{dados.nivel_ingles}</span>
         ) : (
@@ -257,12 +273,12 @@ function Resultado({ dados, filtro, alcance }: { dados: JobList; filtro: Filtro;
             style={{ fontSize: 12, padding: 0, minHeight: 0 }}
             onClick={() => dispatch({ type: "navigate", screen: "ingles" })}
           >
-            sem nivelamento — fazer agora
+            {t("vagas.semNivelamentoFazer")}
           </button>
         )}
         <Regiao regiao={dados.regiao} />
         <div style={{ color: TEXT.faint }}>
-          Fontes:{" "}
+          {t("vagas.fontes")}{" "}
           {fontes.map((fonte, posicao) => {
             const estado = dados.fontes[fonte] ?? "erro";
             return (
@@ -278,8 +294,8 @@ function Resultado({ dados, filtro, alcance }: { dados: JobList; filtro: Filtro;
 
       {visiveis.length === 0 ? (
         <EmptyState
-          title="Nenhuma vaga encontrada agora"
-          description="As fontes não trouxeram vagas para estes termos e filtros. Tente outro cargo ou tecnologia, aumente o raio da sua região ou aperte Atualizar."
+          title={t("vagas.vazio.titulo")}
+          description={t("vagas.vazio.desc")}
         />
       ) : (
         <div style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
@@ -294,16 +310,22 @@ function Resultado({ dados, filtro, alcance }: { dados: JobList; filtro: Filtro;
 
 /** Onde as vagas presenciais podem estar, e o atalho para mudar. */
 function Regiao({ regiao }: { regiao: JobList["regiao"] }) {
+  const t = useT();
+  const { idioma } = useIdioma();
   const { dispatch } = useAppState();
   let texto: string;
   if (!regiao) {
-    texto = "Sem cidade no perfil: vagas presenciais de todo o Brasil aparecem.";
+    texto = t("vagas.regiao.semCidade");
   } else if (regiao.raio_km === 0) {
-    texto = "Só vagas remotas.";
+    texto = t("vagas.regiao.soRemotas");
   } else if (regiao.cidade) {
-    texto = `Presenciais e híbridas até ${regiao.raio_km} km de ${regiao.cidade} - ${regiao.uf} · remotas de qualquer lugar.`;
+    texto = t("vagas.regiao.cidade", {
+      km: new Intl.NumberFormat(idioma).format(regiao.raio_km),
+      cidade: regiao.cidade,
+      uf: regiao.uf,
+    });
   } else {
-    texto = `Presenciais e híbridas em ${regiao.uf} · remotas de qualquer lugar.`;
+    texto = t("vagas.regiao.uf", { uf: regiao.uf });
   }
   return (
     <div style={{ display: "flex", alignItems: "center", flexWrap: "wrap", gap: 6 }}>
@@ -316,13 +338,16 @@ function Regiao({ regiao }: { regiao: JobList["regiao"] }) {
         onClick={() => dispatch({ type: "navigate", screen: "config", settingsTab: "objetivo" })}
       >
         <Icon name="pencil" size={13} />
-        {regiao ? "Mudar região" : "Definir região"}
+        {regiao ? t("vagas.mudarRegiao") : t("vagas.definirRegiao")}
       </button>
     </div>
   );
 }
 
 function CartaoDaVaga({ vaga, cursos }: { vaga: Job; cursos: Record<string, JobCourse[]> }) {
+  const t = useT();
+  const { idioma } = useIdioma();
+  const NIVEL = nivelLabel(t);
   const [aberta, setAberta] = useState(false);
   const [descricao, setDescricao] = useState(false);
   const analise = useMutation(() => jobsApi.analyze({ vaga_id: vaga.id }));
@@ -344,9 +369,12 @@ function CartaoDaVaga({ vaga, cursos }: { vaga: Job; cursos: Record<string, JobC
   }
 
   const onde = vaga.distancia_km !== null && vaga.distancia_km !== undefined && vaga.remota !== true
-    ? `${vaga.local ?? "Presencial"} · a ${vaga.distancia_km} km`
+    ? t("vagas.ondeDistancia", {
+        local: vaga.local ?? t("vagas.presencial"),
+        km: new Intl.NumberFormat(idioma).format(vaga.distancia_km),
+      })
     : vaga.local;
-  const detalhes = [vaga.empresa, onde, vaga.nivel ? NIVEL[vaga.nivel] : null, haQuanto(vaga.publicada_ha_dias)]
+  const detalhes = [vaga.empresa, onde, vaga.nivel ? NIVEL[vaga.nivel] : null, haQuanto(vaga.publicada_ha_dias, t)]
     .filter(Boolean)
     .join(" · ");
   const pedidas = [...tem, ...parcial, ...falta];
@@ -360,9 +388,9 @@ function CartaoDaVaga({ vaga, cursos }: { vaga: Job; cursos: Record<string, JobC
           <div style={{ flex: "1 1 280px", minWidth: 0 }}>
             <h2 style={{ fontSize: 15.5, fontWeight: 500, margin: 0, lineHeight: 1.35 }}>{vaga.titulo}</h2>
             <div style={{ fontSize: 12, color: TEXT.muted, marginTop: 3 }}>
-              {vaga.internacional ? <span style={{ color: C.azul }}>Internacional · </span> : null}
-              {detalhes ? `${detalhes} · ` : ""}via {vaga.fonte}
-              {vaga.na_sua_regiao ? <span style={{ color: C.verde }}> · na sua região</span> : null}
+              {vaga.internacional ? <span style={{ color: C.azul }}>{t("vagas.internacional")} · </span> : null}
+              {detalhes ? `${detalhes} · ` : ""}{t("vagas.via", { fonte: vaga.fonte })}
+              {vaga.na_sua_regiao ? <span style={{ color: C.verde }}> · {t("vagas.naSuaRegiao")}</span> : null}
             </div>
           </div>
           <Nota nota={nota} estimada={!lido} />
@@ -377,10 +405,10 @@ function CartaoDaVaga({ vaga, cursos }: { vaga: Job; cursos: Record<string, JobC
         ) : null}
         {pedidas.length ? (
           <p style={{ margin: "5.6px 0 0", fontSize: 12.5, color: TEXT.muted }}>
-            <span style={{ color: TEXT.faint }}>Para quem: </span>
-            {vaga.nivel ? `nível ${NIVEL[vaga.nivel]}, ` : ""}
-            com {juntar(pedidas.slice(0, 6))}
-            {pedidas.length > 6 ? ` e mais ${pedidas.length - 6}` : ""}.
+            <span style={{ color: TEXT.faint }}>{t("vagas.paraQuem")} </span>
+            {vaga.nivel ? t("vagas.paraQuemNivel", { nivel: NIVEL[vaga.nivel] }) : ""}
+            {t("vagas.paraQuemCom", { lista: juntar(pedidas.slice(0, 6), t("vagas.conectorE")) })}
+            {pedidas.length > 6 ? t("vagas.paraQuemMais", { n: pedidas.length - 6 }) : ""}.
           </p>
         ) : null}
 
@@ -404,7 +432,7 @@ function CartaoDaVaga({ vaga, cursos }: { vaga: Job; cursos: Record<string, JobC
             style={{ fontSize: 12, marginTop: 8.4, padding: "2px 4px" }}
           >
             <Icon name="chevronDown" size={14} style={{ transform: descricao ? "rotate(180deg)" : undefined }} />
-            {descricao ? "Esconder descrição" : "Ver descrição da vaga"}
+            {descricao ? t("vagas.esconderDescricao") : t("vagas.verDescricao")}
           </button>
         ) : null}
         {descricao && sobre ? <Descricao sobre={sobre} /> : null}
@@ -413,9 +441,7 @@ function CartaoDaVaga({ vaga, cursos }: { vaga: Job; cursos: Record<string, JobC
           <OQueFalta lacunas={vaga.lacunas ?? []} cursos={cursos} />
         ) : (
           <p style={{ margin: "11.2px 0 0", fontSize: 12, color: TEXT.faint }}>
-            {vaga.so_trecho
-              ? "A fonte mandou só um trecho do anúncio: a nota é estimada pelo título. Leia o anúncio completo para ver o que falta."
-              : "Encontrada por buscador: o anúncio não foi lido aqui, e a nota é estimada pelo título."}
+            {vaga.so_trecho ? t("vagas.soTrecho") : t("vagas.soBuscador")}
           </p>
         )}
 
@@ -427,20 +453,20 @@ function CartaoDaVaga({ vaga, cursos }: { vaga: Job; cursos: Record<string, JobC
             rel="noreferrer noopener"
             style={{ textDecoration: "none" }}
           >
-            Ver vaga
+            {t("vagas.verVaga")}
             <Icon name="externalLink" size={14} />
           </a>
           {!lido ? (
             <button type="button" className="btn btn-secondary" aria-expanded={aberta} onClick={() => void lerAnuncio()}>
               <Icon name="search" size={15} />
-              {aberta ? "Esconder análise" : "Ler o anúncio completo"}
+              {aberta ? t("vagas.esconderAnalise") : t("vagas.lerAnuncio")}
             </button>
           ) : null}
         </div>
 
         {aberta ? (
           <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${HAIRLINE}` }}>
-            {analise.pending ? <Loading label="Lendo os requisitos da vaga…" /> : null}
+            {analise.pending ? <Loading label={t("vagas.lendoRequisitos")} /> : null}
             {analise.error ? <ErrorState message={analise.error} /> : null}
             {resultado ? <Analise analise={resultado} /> : null}
           </div>
@@ -451,10 +477,11 @@ function CartaoDaVaga({ vaga, cursos }: { vaga: Job; cursos: Record<string, JobC
 }
 
 function Descricao({ sobre }: { sobre: NonNullable<Job["sobre"]> }) {
+  const t = useT();
   const partes: [string, string[]][] = [
-    ["O que você vai fazer", sobre.faz],
-    ["O que pede", sobre.pede],
-    ["Diferenciais", sobre.diferenciais],
+    [t("vagas.descricao.faz"), sobre.faz],
+    [t("vagas.descricao.pede"), sobre.pede],
+    [t("vagas.descricao.diferenciais"), sobre.diferenciais],
   ];
   return (
     <div
@@ -486,22 +513,28 @@ function Descricao({ sobre }: { sobre: NonNullable<Job["sobre"]> }) {
 
 /** As lacunas da vaga, já calculadas na listagem. */
 function OQueFalta({ lacunas, cursos }: { lacunas: JobListGap[]; cursos: Record<string, JobCourse[]> }) {
+  const t = useT();
+  const { idioma } = useIdioma();
+  const nf = new Intl.NumberFormat(idioma);
   const [todas, setTodas] = useState(false);
   if (!lacunas.length) {
     return (
       <p style={{ margin: "11.2px 0 0", fontSize: 12.5, color: C.verde, display: "flex", alignItems: "center", gap: 5 }}>
         <Icon name="check" size={14} />
-        Você tem tudo o que o anúncio cita do catálogo.
+        {t("vagas.temTudo")}
       </p>
     );
   }
   const obrigatorias = lacunas.filter((l) => l.obrigatorio).length;
   const mostradas = todas ? lacunas : lacunas.slice(0, LACUNAS_VISIVEIS);
   return (
-    <section aria-label="O que falta para a vaga" style={{ marginTop: 11.2 }}>
+    <section aria-label={t("vagas.oQueFaltaAria")} style={{ marginTop: 11.2 }}>
       <div style={{ fontSize: 11.5, color: TEXT.faint, marginBottom: 5.6 }}>
-        O que falta · {lacunas.length} {lacunas.length === 1 ? "item" : "itens"}
-        {obrigatorias ? `, ${obrigatorias} ${obrigatorias === 1 ? "obrigatório" : "obrigatórios"}` : ""}
+        {t("vagas.oQueFalta")} · {nf.format(lacunas.length)}{" "}
+        {lacunas.length === 1 ? t("vagas.item") : t("vagas.itens")}
+        {obrigatorias
+          ? `, ${nf.format(obrigatorias)} ${obrigatorias === 1 ? t("vagas.obrigatorioUm") : t("vagas.obrigatoriosVarios")}`
+          : ""}
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 5.6 }}>
         {mostradas.map((lacuna) => (
@@ -517,7 +550,7 @@ function OQueFalta({ lacunas, cursos }: { lacunas: JobListGap[]; cursos: Record<
           style={{ fontSize: 12, marginTop: 4, padding: "2px 4px" }}
         >
           <Icon name="chevronDown" size={14} style={{ transform: todas ? "rotate(180deg)" : undefined }} />
-          {todas ? "Mostrar menos" : `Ver todas as ${lacunas.length}`}
+          {todas ? t("vagas.mostrarMenos") : t("vagas.verTodasLacunas", { n: nf.format(lacunas.length) })}
         </button>
       ) : null}
     </section>
@@ -546,6 +579,7 @@ function AcaoDaLacuna({
 }: {
   lacuna: { idioma?: boolean; situacao: string; no_roadmap: boolean; tag_id: string | null; user_tag_id: string | null; e_meta: boolean };
 }) {
+  const t = useT();
   const { dispatch } = useAppState();
   const { meta, executar, pending, error } = useMarcarMeta(lacuna);
   if (lacuna.idioma) {
@@ -557,16 +591,16 @@ function AcaoDaLacuna({
         onClick={() => dispatch({ type: "navigate", screen: "ingles" })}
       >
         <Icon name="globe" size={14} />
-        {lacuna.situacao === "sem_nivel" ? "Fazer o nivelamento" : "Treinar inglês"}
+        {lacuna.situacao === "sem_nivel" ? t("vagas.fazerNivelamento") : t("vagas.treinarIngles")}
       </button>
     );
   }
-  if (lacuna.no_roadmap) return <span style={{ color: ACC4, fontSize: 12 }}>já está no seu roadmap</span>;
+  if (lacuna.no_roadmap) return <span style={{ color: ACC4, fontSize: 12 }}>{t("vagas.jaNoRoadmap")}</span>;
   if (meta) {
     return (
       <span style={{ color: C.verde, fontSize: 12, display: "inline-flex", alignItems: "center", gap: 4 }}>
         <Icon name="check" size={13} />
-        meta marcada
+        {t("vagas.metaMarcada")}
       </span>
     );
   }
@@ -576,13 +610,14 @@ function AcaoDaLacuna({
       {error ? <span style={{ fontSize: 11.5, color: C.ambar }}>{error}</span> : null}
       <button type="button" className="btn btn-ghost" disabled={pending} style={{ fontSize: 12 }} onClick={() => void executar()}>
         <Icon name="flag" size={14} />
-        {pending ? "Marcando…" : "Marcar como meta"}
+        {pending ? t("vagas.marcando") : t("vagas.marcarMeta")}
       </button>
     </span>
   );
 }
 
 function LacunaCompacta({ lacuna, cursos }: { lacuna: JobListGap; cursos: JobCourse[] }) {
+  const t = useT();
   const curso = cursos[0];
   return (
     <div
@@ -601,9 +636,9 @@ function LacunaCompacta({ lacuna, cursos }: { lacuna: JobListGap; cursos: JobCou
         <span style={{ flex: 1, minWidth: 0, display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: "2px 8px" }}>
           <span style={{ fontSize: 13, color: lacuna.situacao === "falta" ? C.rosa : C.ambar }}>{lacuna.nome}</span>
           <span style={{ fontSize: 11, color: lacuna.obrigatorio ? TEXT.muted : TEXT.faint }}>
-            {lacuna.obrigatorio ? "obrigatório" : "diferencial"}
-            {lacuna.situacao === "parcial" ? (lacuna.idioma ? " · um degrau abaixo" : " · você está começando") : ""}
-            {lacuna.situacao === "sem_nivel" ? " · sem nivelamento" : ""}
+            {lacuna.obrigatorio ? t("vagas.obrigatorio") : t("vagas.diferencial")}
+            {lacuna.situacao === "parcial" ? (lacuna.idioma ? t("vagas.degrauAbaixo") : t("vagas.comecando")) : ""}
+            {lacuna.situacao === "sem_nivel" ? t("vagas.semNivelamentoSufixo") : ""}
           </span>
         </span>
         <span style={{ flex: "none" }}>
@@ -619,7 +654,7 @@ function LacunaCompacta({ lacuna, cursos }: { lacuna: JobListGap; cursos: JobCou
           target="_blank"
           rel="noreferrer noopener"
           style={{ fontSize: 12, color: ACC, lineHeight: 1.45 }}
-          title={`${curso.emissor} · certificado ${curso.gratuito ? "gratuito" : "pago"}`}
+          title={`${curso.emissor} · ${curso.gratuito ? t("vagas.certificadoGratuito") : t("vagas.certificadoPago")}`}
         >
           <Icon
             name="award"
@@ -627,22 +662,26 @@ function LacunaCompacta({ lacuna, cursos }: { lacuna: JobListGap; cursos: JobCou
             style={{ color: curso.gratuito ? C.verde : C.ambar, verticalAlign: "-2px", marginRight: 4 }}
           />
           {curso.titulo}
-          <span style={{ color: TEXT.faint, whiteSpace: "nowrap" }}> · {curso.gratuito ? "gratuito" : "pago"}</span>
+          <span style={{ color: TEXT.faint, whiteSpace: "nowrap" }}> · {curso.gratuito ? t("vagas.gratuito") : t("vagas.pago")}</span>
         </a>
       ) : null}
     </div>
   );
 }
 
-const INGLES: Record<NonNullable<JobEnglish["situacao"]>, { cor: string; texto: (i: JobEnglish) => string }> = {
-  tem: { cor: C.verde, texto: (i) => `Inglês ${i.exigido} pedido · você tem ${i.seu}` },
-  parcial: { cor: C.ambar, texto: (i) => `Inglês ${i.exigido} pedido · você ${i.seu}, um degrau abaixo` },
-  falta: { cor: C.rosa, texto: (i) => `Inglês ${i.exigido} pedido · você ${i.seu}` },
-  sem_nivel: { cor: C.azul, texto: (i) => `Inglês ${i.exigido} pedido · faça o nivelamento para comparar` },
-};
+const inglesLabel = (
+  t: Traduzir,
+): Record<NonNullable<JobEnglish["situacao"]>, { cor: string; texto: (i: JobEnglish) => string }> => ({
+  tem: { cor: C.verde, texto: (i) => t("vagas.ingles.tem", { exigido: i.exigido ?? "", seu: i.seu ?? "" }) },
+  parcial: { cor: C.ambar, texto: (i) => t("vagas.ingles.parcial", { exigido: i.exigido ?? "", seu: i.seu ?? "" }) },
+  falta: { cor: C.rosa, texto: (i) => t("vagas.ingles.falta", { exigido: i.exigido ?? "", seu: i.seu ?? "" }) },
+  sem_nivel: { cor: C.azul, texto: (i) => t("vagas.ingles.semNivel", { exigido: i.exigido ?? "" }) },
+});
 
 /** Por que esta vaga está na lista: a stack que ela pede e o objetivo. */
 function Afinidade({ afinidade }: { afinidade?: Job["afinidade"] }) {
+  const t = useT();
+  const { idioma } = useIdioma();
   if (!afinidade) return null;
   const quantas = afinidade.stack_em_comum.length;
   if (!quantas && !afinidade.objetivo) return null;
@@ -651,13 +690,16 @@ function Afinidade({ afinidade }: { afinidade?: Job["afinidade"] }) {
       {quantas ? (
         <span title={afinidade.stack_em_comum.join(", ")} style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
           <Icon name="code" size={13} style={{ color: C.verde }} />
-          {quantas} {quantas === 1 ? "tecnologia" : "tecnologias"} da sua stack
+          {t("vagas.tecnologiasDaStack", {
+            n: new Intl.NumberFormat(idioma).format(quantas),
+            tecnologias: quantas === 1 ? t("vagas.tecnologia") : t("vagas.tecnologias"),
+          })}
         </span>
       ) : null}
       {afinidade.objetivo ? (
         <span style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
           <Icon name="flag" size={13} style={{ color: ACC4 }} />
-          combina com seu objetivo
+          {t("vagas.combinaObjetivo")}
         </span>
       ) : null}
     </div>
@@ -665,8 +707,9 @@ function Afinidade({ afinidade }: { afinidade?: Job["afinidade"] }) {
 }
 
 function SeloDeIngles({ ingles }: { ingles: JobEnglish }) {
+  const t = useT();
   if (!ingles.situacao) return null;
-  const { cor, texto } = INGLES[ingles.situacao];
+  const { cor, texto } = inglesLabel(t)[ingles.situacao];
   return (
     <div style={{ marginTop: 8.4, fontSize: 12, color: cor, display: "flex", alignItems: "center", gap: 5 }}>
       <Icon name="globe" size={13} />
@@ -676,14 +719,16 @@ function SeloDeIngles({ ingles }: { ingles: JobEnglish }) {
 }
 
 function Nota({ nota, estimada }: { nota: number | null | undefined; estimada?: boolean }) {
+  const t = useT();
+  const { idioma } = useIdioma();
   if (nota === null || nota === undefined) {
-    return <span style={{ fontSize: 11.5, color: TEXT.faint, whiteSpace: "nowrap" }}>anúncio não lido</span>;
+    return <span style={{ fontSize: 11.5, color: TEXT.faint, whiteSpace: "nowrap" }}>{t("vagas.anuncioNaoLido")}</span>;
   }
   const cor = corDaNota(nota);
   return (
     <div
       role="meter"
-      aria-label="Compatibilidade com o seu perfil"
+      aria-label={t("vagas.compatibilidadeAria")}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={nota}
@@ -694,9 +739,9 @@ function Nota({ nota, estimada }: { nota: number | null | undefined; estimada?: 
       style={{ width: 150, maxWidth: "100%" }}
     >
       <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
-        <span style={{ fontSize: 20, lineHeight: 1, color: cor }}>{nota}%</span>
+        <span style={{ fontSize: 20, lineHeight: 1, color: cor }}>{t("vagas.porcentagem", { n: new Intl.NumberFormat(idioma).format(nota) })}</span>
         <span style={{ fontSize: 11, color: TEXT.faint }}>
-          {estimada ? "estimado pelo título" : "combina com você"}
+          {estimada ? t("vagas.estimadoTitulo") : t("vagas.combinaComVoce")}
         </span>
       </div>
       <div style={{ height: 5, marginTop: 6, borderRadius: 3, background: "rgba(233,233,237,.1)" }}>
@@ -731,6 +776,7 @@ function Pilula({ cor, texto, comCheck }: { cor: string; texto: string; comCheck
 // ---------------------------------------------------------------------------
 
 function AnalisarVaga() {
+  const t = useT();
   const [entrada, setEntrada] = useState("");
   const [resultado, setResultado] = useState<JobAnalysis | null>(null);
   const analise = useMutation((valor: string) =>
@@ -746,17 +792,16 @@ function AnalisarVaga() {
 
   return (
     <Panel pad={16.8}>
-      <Kicker style={{ display: "block", marginBottom: 5.6 }}>Analisar uma vaga específica</Kicker>
+      <Kicker style={{ display: "block", marginBottom: 5.6 }}>{t("vagas.analisarTitulo")}</Kicker>
       <p style={{ margin: "0 0 11.2px", fontSize: 12.5, color: TEXT.muted }}>
-        Achou uma vaga fora desta lista? Cole o link ou o texto do anúncio. Vaga do LinkedIn costuma pedir login
-        para abrir — nesse caso, cole o texto.
+        {t("vagas.analisarDesc")}
       </p>
       <form onSubmit={analisar} style={{ display: "flex", flexDirection: "column", gap: 8.4 }}>
         <textarea
           className="input"
           rows={3}
-          aria-label="Link ou texto da vaga"
-          placeholder="https://… ou o texto completo da vaga"
+          aria-label={t("vagas.analisarAria")}
+          placeholder={t("vagas.analisarPlaceholder")}
           value={entrada}
           onChange={(evento) => setEntrada(evento.target.value)}
           style={{ width: "100%", resize: "vertical" }}
@@ -764,14 +809,14 @@ function AnalisarVaga() {
         <div>
           <button type="submit" className="btn btn-primary" disabled={analise.pending || entrada.trim().length < 8}>
             <Icon name="search" size={15} />
-            {analise.pending ? "Analisando…" : "Ver o que falta"}
+            {analise.pending ? t("vagas.analisando") : t("vagas.verOQueFalta")}
           </button>
         </div>
       </form>
       <ProgressoDaTarefa
         ativo={analise.pending}
         chave="vaga-analisar"
-        etapas={["Lendo a vaga", "Separando os requisitos", "Comparando com o seu perfil"]}
+        etapas={[t("vagas.etapa.lendo"), t("vagas.etapa.separando"), t("vagas.etapa.comparando")]}
         duracaoMs={18_000}
         style={{ marginTop: 11.2 }}
       />
@@ -794,12 +839,13 @@ function AnalisarVaga() {
 // ---------------------------------------------------------------------------
 
 function Analise({ analise, mostrarTitulo }: { analise: JobAnalysis; mostrarTitulo?: boolean }) {
+  const t = useT();
   const { dispatch } = useAppState();
   const obrigatorios = analise.requisitos.filter((r) => r.obrigatorio);
   const desejaveis = analise.requisitos.filter((r) => !r.obrigatorio);
 
   return (
-    <section aria-label="Análise completa da vaga">
+    <section aria-label={t("vagas.analiseCompletaAria")}>
       <div style={{ display: "flex", gap: 14, flexWrap: "wrap", alignItems: "flex-start" }}>
         <div style={{ flex: "1 1 280px" }}>
           {mostrarTitulo ? (
@@ -815,18 +861,18 @@ function Analise({ analise, mostrarTitulo }: { analise: JobAnalysis; mostrarTitu
           ) : null}
           {!analise.usou_ia ? (
             <p style={{ margin: "3px 0 0", fontSize: 11.5, color: TEXT.faint }}>
-              Análise simplificada: as tecnologias citadas no anúncio, todas tratadas como obrigatórias.
+              {t("vagas.analiseSimplificada")}
             </p>
           ) : null}
         </div>
         <Nota nota={analise.nota} />
       </div>
 
-      <Requisitos titulo="Obrigatórios" lista={obrigatorios} />
-      <Requisitos titulo="Desejáveis" lista={desejaveis} />
+      <Requisitos titulo={t("vagas.obrigatorios")} lista={obrigatorios} />
+      <Requisitos titulo={t("vagas.desejaveis")} lista={desejaveis} />
 
       <Kicker style={{ display: "block", margin: "16.8px 0 8.4px" }}>
-        {analise.lacunas.length ? "O que falta, e como chegar lá" : "Nada falta no que o catálogo reconhece"}
+        {analise.lacunas.length ? t("vagas.oQueFaltaComoChegar") : t("vagas.nadaFalta")}
       </Kicker>
       <div style={{ display: "flex", flexDirection: "column", gap: 8.4 }}>
         {analise.lacunas.map((lacuna) => (
@@ -841,7 +887,7 @@ function Analise({ analise, mostrarTitulo }: { analise: JobAnalysis; mostrarTitu
           onClick={() => dispatch({ type: "navigate", screen: "cursos" })}
         >
           <Icon name="award" size={15} />
-          Ver todos os cursos com certificado
+          {t("vagas.verTodosCursos")}
         </button>
       ) : null}
     </section>
@@ -849,6 +895,8 @@ function Analise({ analise, mostrarTitulo }: { analise: JobAnalysis; mostrarTitu
 }
 
 function Requisitos({ titulo, lista }: { titulo: string; lista: JobRequirement[] }) {
+  const t = useT();
+  const SITUACAO = situacaoLabel(t);
   if (!lista.length) return null;
   return (
     <div style={{ marginTop: 11.2 }}>
@@ -877,14 +925,15 @@ function Requisitos({ titulo, lista }: { titulo: string; lista: JobRequirement[]
 }
 
 function Lacuna({ lacuna }: { lacuna: JobGap }) {
+  const t = useT();
   return (
     <div style={{ padding: "11.2px 12.6px", borderRadius: 8, background: "rgba(233,233,237,.04)" }}>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8.4 }}>
         <span style={{ fontSize: 14, color: TEXT.full }}>{lacuna.nome}</span>
         <span style={{ fontSize: 11, color: lacuna.obrigatorio ? C.rosa : TEXT.faint }}>
-          {lacuna.obrigatorio ? "obrigatório" : "desejável"}
-          {lacuna.situacao === "parcial" ? (lacuna.idioma ? " · um degrau abaixo" : " · você está começando") : ""}
-          {lacuna.situacao === "sem_nivel" ? " · sem nivelamento para comparar" : ""}
+          {lacuna.obrigatorio ? t("vagas.obrigatorio") : t("vagas.desejavel")}
+          {lacuna.situacao === "parcial" ? (lacuna.idioma ? t("vagas.degrauAbaixo") : t("vagas.comecando")) : ""}
+          {lacuna.situacao === "sem_nivel" ? t("vagas.semNivelamentoComparar") : ""}
         </span>
         <span style={{ marginLeft: "auto", fontSize: 12 }}>
           <AcaoDaLacuna lacuna={lacuna} />
@@ -901,14 +950,14 @@ function Lacuna({ lacuna }: { lacuna: JobGap }) {
                 {curso.titulo}
               </a>
               <span style={{ color: TEXT.faint }}>
-                {curso.emissor} · certificado {curso.gratuito ? "gratuito" : "pago"}
+                {curso.emissor} · {curso.gratuito ? t("vagas.certificadoGratuito") : t("vagas.certificadoPago")}
               </span>
             </li>
           ))}
         </ul>
       ) : (
         <div style={{ fontSize: 12, color: TEXT.faint, marginTop: 4 }}>
-          Sem curso com certificado para isto no catálogo. Marcar como meta leva o tema para o seu roadmap.
+          {t("vagas.semCursoCatalogo")}
         </div>
       )}
     </div>

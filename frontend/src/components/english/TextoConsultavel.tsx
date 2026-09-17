@@ -24,6 +24,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { english as englishApi } from "@/api/endpoints";
 import type { WordMeaning } from "@/api/types";
 import { useMutation } from "@/hooks/useApi";
+import { useT } from "@/lib/i18n";
 import { ACC, ACC3, HAIRLINE, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 
@@ -65,6 +66,7 @@ export function TextoConsultavel({
   /** O estilo do bloco de texto — quem usa decide se é contexto ou enunciado. */
   style?: CSSProperties;
 }) {
+  const t = useT();
   const bloco = useRef<HTMLSpanElement | null>(null);
   const [alvo, setAlvo] = useState<Alvo | null>(null);
   const [significado, setSignificado] = useState<WordMeaning | null>(null);
@@ -132,7 +134,7 @@ export function TextoConsultavel({
               key={`${pedaco}-${indiceDoTrecho}-${posicao}`}
               type="button"
               className="palavra"
-              aria-label={`Consultar "${pedaco}"`}
+              aria-label={t("idiomas.texto.consultar", { palavra: pedaco })}
               aria-expanded={alvo?.palavra === pedaco}
               onClick={(evento) => void consultar(pedaco, evento.currentTarget)}
             >
@@ -186,6 +188,7 @@ function Balao({
   significado: WordMeaning | null;
   onFechar: () => void;
 }) {
+  const t = useT();
   // Encostado à esquerda da palavra, mas sem sair do bloco: numa palavra no
   // fim da linha o balão escaparia pela direita e metade dele ficaria fora da
   // tela do celular.
@@ -194,7 +197,7 @@ function Balao({
   return (
     <span
       role="dialog"
-      aria-label={`O que "${alvo.palavra}" quer dizer`}
+      aria-label={t("idiomas.texto.oQueQuerDizer", { palavra: alvo.palavra })}
       style={{
         // `span` pelo mesmo motivo do bloco acima: isto pode estar dentro de
         // um `<h2>`, onde só cabe conteúdo de frase.
@@ -223,8 +226,8 @@ function Balao({
         <button
           type="button"
           className="btn btn-ghost"
-          aria-label="Fechar"
-          title="Fechar"
+          aria-label={t("idiomas.texto.fechar")}
+          title={t("idiomas.texto.fechar")}
           style={{ marginLeft: "auto", padding: 4, minHeight: 0, color: TEXT.faint }}
           onClick={onFechar}
         >
@@ -237,7 +240,7 @@ function Balao({
           role="status"
           style={{ display: "block", margin: "5.6px 0 0", color: TEXT.faint }}
         >
-          Consultando…
+          {t("idiomas.texto.consultando")}
         </span>
       ) : null}
 
@@ -257,7 +260,7 @@ function Balao({
           ) : null}
           {significado.synonyms.length > 0 ? (
             <span style={{ display: "block", margin: "5.6px 0 0", color: TEXT.faint }}>
-              sinônimos: {significado.synonyms.join(", ")}
+              {t("idiomas.texto.sinonimos", { lista: significado.synonyms.join(", ") })}
             </span>
           ) : null}
           {significado.example ? (
@@ -272,7 +275,7 @@ function Balao({
               app anotou a lacuna e vai trazê-la de volta. */}
           {significado.card ? (
             <span style={{ display: "block", margin: "8.4px 0 0", fontSize: 11.5, color: ACC }}>
-              Entrou na sua revisão de vocabulário para hoje.
+              {t("idiomas.texto.entrouRevisao")}
             </span>
           ) : null}
         </>

@@ -16,6 +16,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
+import { useT } from "@/lib/i18n";
 import { ACC, TEXT } from "@/lib/tokens";
 
 /** De quanto em quanto tempo a posição é gravada no servidor. Curto o
@@ -89,6 +90,7 @@ export function VideoPlayer({
    * gravar — este componente não fala com a API. */
   onProgresso: (segundos: number, fracao: number) => void;
 }) {
+  const t = useT();
   const caixa = useRef<HTMLDivElement | null>(null);
   const player = useRef<YTPlayer | null>(null);
   const [pronto, setPronto] = useState(false);
@@ -168,13 +170,13 @@ export function VideoPlayer({
               fontSize: 12.5,
             }}
           >
-            Carregando o vídeo…
+            {t("modulo.video.carregando")}
           </span>
         ) : null}
       </div>
       {comecarEm > 0 ? (
         <p style={{ fontSize: 11.5, color: ACC, margin: "8.4px 0 0" }}>
-          Retomando de {formatarTempo(comecarEm)}.
+          {t("modulo.video.retomandoDe", { tempo: formatarTempo(comecarEm) })}
         </p>
       ) : null}
     </div>

@@ -1057,5 +1057,1529 @@
     "dialogoAria": "Erfolg: „{dias}“ Tage in Folge mit „{nome}“",
     "imagemAlt": "Karte: {dias} Tage hintereinander mit {nome} lernen",
     "textoCompartilhar": "{dias} Mehrere Tage hintereinander Lernreihe mit @{username} auf PathR! {url}"
+  },
+  "candidaturas": {
+    "titulo": "Ihr Lebenslauf gelangt zu den passenden Stellenangeboten",
+    "kicker": "Bewerbungen",
+    "enviarAgora": "Jetzt senden",
+    "prepararSemEnviar": "Vorbereiten, ohne zu versenden",
+    "abrirVaga": "Stellenangebot veröffentlichen und darauf antworten",
+    "enviadasHoje": "Heute versandt",
+    "ontem": "Gestern",
+    "ultimos7": "Letzte 7 Tage",
+    "enviando": "Wird gesendet…",
+    "passos": {
+      "titulo": "Schritt-für-Schritt-Anleitung für diese Bewerbung",
+      "fazendo": "jetzt dabei",
+      "anuncio": "Die Anzeige lesen",
+      "curriculo": "Seinen Lebenslauf durchsehen",
+      "carta": "Das Schreiben des Briefes",
+      "respostas": "Ausfüllen der Antworten",
+      "envio": "Wird gesendet"
+    },
+    "faltam": {
+      "titulo": "Was musst du noch beantworten?",
+      "explicacao": "Die App erfindet keine Antworten in Ihrem Namen. Was Sie hier eingeben, wird gespeichert und füllt die nächsten Felder aus – auch auf einer anderen Website, auf der die Frage anders benannt ist.",
+      "sensivel": "optional, und nur du antwortest",
+      "salvar": "Antworten speichern",
+      "salvando": "Wird gespeichert…"
+    }
+  },
+  "amigos": {
+    "voceEh": "Du bist",
+    "titulo": "Freunde",
+    "convitesRecebidos": "Einladungen für dich",
+    "procurar": "Personen suchen",
+    "buscaPlaceholder": "@Benutzername oder Name",
+    "procurando": "Suche…",
+    "nadaEncontrado": "Es wurde niemand gefunden. Um jemanden zu finden, der nicht in den Vorschlägen erscheint, gib das vollständige @ ein.",
+    "sugestoes": "Vorschläge für Sie",
+    "procurandoPerto": "Auf der Suche nach Menschen in Ihrer Nähe…",
+    "semSugestoes": "Es gibt noch keine Vorschläge. Diese stammen von Leuten, die in deiner Nähe wohnen und ähnliche Fächer wie du studieren.",
+    "carregandoAmigos": "Wird geladen…",
+    "seusAmigos": "Seine Freunde",
+    "nenhumAmigo": "Noch keine Freunde",
+    "nenhumAmigoDesc": "Füge jemanden aus den Vorschlägen hinzu oder suche mit dem @-Zeichen nach jemandem, den du bereits kennst.",
+    "convitesEnviados": "Versendete Einladungen",
+    "erroBuscar": "Ich konnte es nicht abholen.",
+    "avisos": {
+      "erroResponder": "Ich konnte nicht antworten.",
+      "ariaConvite": "{nome} Er hat dir eine Freundschaftsanfrage geschickt.",
+      "ariaAceite": "{nome} hat seine Einladung angenommen",
+      "mandouConvite": "Er hat dir eine Freundschaftsanfrage geschickt.",
+      "aceitouConvite": "hat seine Einladung angenommen",
+      "fecharAviso": "Meldung schließen",
+      "aceitar": "Akzeptieren",
+      "recusar": "Ablehnen",
+      "verAmigos": "Freunde anzeigen"
+    },
+    "campoUsername": {
+      "label": "Benutzername",
+      "placeholder": "deinName",
+      "conferindo": "Ich schaue mal nach…",
+      "seuAtual": "Das ist Ihr aktuelles @.",
+      "estaLivre": "ist frei.",
+      "seVazio": "Wenn Sie das Feld leer lassen, werden Sie",
+      "usar": "Verwenden Sie @{usuario}"
+    },
+    "privacidade": {
+      "erroSalvar": "Ich konnte es nicht speichern.",
+      "titulo": "Personen",
+      "aparecer": "In den Freundschaftsvorschlägen erscheinen",
+      "explicacao": "Wenn du deaktiviert bist, erscheinst du weder in den Vorschlägen noch bei der Suche nach Namen. Wer deinen @-Namen bereits hat, kann dich weiterhin finden und einladen."
+    }
+  },
+  "idiomas": {
+    "semVozDoIdioma": "Ihr Browser verfügt in dieser Sprache nicht über eine Sprachausgabe, daher wird der Ton mit falscher Aussprache wiedergegeben. In Edge oder Chrome ist die Sprachausgabe bereits vorinstalliert; unter Windows können Sie sie unter „Einstellungen“ › „Uhrzeit und Sprache“ › „Sprache“ installieren.",
+    "carregandoModulo": "Das Sprachmodul wird geladen…",
+    "moduloOpcional": "Optionales Modul",
+    "tituloTrabalho": "Sprache am Arbeitsplatz",
+    "descricao": "Läuft parallel zur technischen Roadmap. Ist auf CEFR-Niveau abgestimmt und vermittelt den Wortschatz, den man als Backend-Entwickler in einem internationalen Team benötigt.",
+    "ativado": "Aktiviert",
+    "desativado": "Deaktiviert",
+    "desativadoAviso": "Modul deaktiviert. Aktivieren Sie es oben, um {min} min Englisch pro Tag in den Tarif aufzunehmen.",
+    "seuNivel": "Ihr Niveau",
+    "meta": "Ziel {nivel}",
+    "nivelDivergente": "Gemessen anhand der Einstufung. In den Trainingseinheiten schneidest du wie {nivel} ab – die Übersicht nach Fähigkeiten zeigt, wo du noch Nachholbedarf hast. Führe die Einstufung erneut durch, wenn du diesen Wert aktualisieren möchtest.",
+    "nivelConfirma": "Gemessen bei der Nivellierung, und die Trainingsergebnisse bestätigen dies. Führen Sie die Nivellierung erneut durch, wenn Sie einen neuen Messwert wünschen.",
+    "semNivel": "Noch keine Einstufung. Die Zahl stammt aus den Trainingseinheiten; der Test dauert etwa 12 Minuten und liefert den Referenzwert.",
+    "preparandoTeste": "Vorbereitung des Tests…",
+    "refazerNivelamento": "Neu ausrichten",
+    "fazerNivelamento": "Ausgleichen",
+    "nivelamentoEmAndamento": "Nivellierung im Gange",
+    "respondidasProgresso": "{feito} {total}-Antworten · {pct}%",
+    "continuarDeOndeParei": "Dort weitermachen, wo ich aufgehört habe",
+    "recomecarDoZero": "Von vorne anfangen",
+    "pontosDeMelhora": "Verbesserungsmöglichkeiten",
+    "paraRever": "{n} zur Überprüfung",
+    "nadaPendente": "Es gibt nichts Offenes. Was du beim Leveln oder beim Training falsch machst, wird hier angezeigt und taucht im täglichen Training wieder auf – mit anderen Worten.",
+    "habilidades": {
+      "grammar": "Grammatik",
+      "vocabulary": "Vokabeln",
+      "reading": "Lesen",
+      "listening": "Hör mal",
+      "writing": "Schriftlich",
+      "speaking": "Sag mal",
+      "business": "Unternehmen"
+    },
+    "confianca": {
+      "alta": "verbindliche Schätzung",
+      "media": "vernünftige Schätzung",
+      "inicial": "erste Schätzung – trainieren Sie mehr, um sich zu festigen",
+      "semDados": "noch keine Antworten"
+    },
+    "situacao": {
+      "reforcar": "zu verstärken",
+      "progredindo": "Fortschritte",
+      "dominado": "beherrscht",
+      "poucosDados": "wenige Daten"
+    },
+    "quadro": {
+      "porHabilidade": "Nach Fähigkeit",
+      "nosTreinos": "beim Training: {nivel}",
+      "semDados": "Machen Sie das heutige Leveling oder Training, um zu sehen, auf welchem Niveau Sie bei den einzelnen Fähigkeiten stehen.",
+      "topicoReforcar": "{n} Thema, das vertieft werden soll",
+      "topicosReforcar": "{n} Themen, die vertieft werden sollen",
+      "respostaUm": "{n} Antwort",
+      "respostaVarias": "{n} Antworten",
+      "correctDe": "{correct} von {total}"
+    },
+    "config": {
+      "erroSalvar": "Ich konnte es nicht speichern.",
+      "titulo": "Sprachen",
+      "nenhumNoPlano": "keines im Plan",
+      "noPlanoUm": "{n} Sprache auf der Ebene",
+      "noPlanoVarios": "{n} Sprachen im Plan",
+      "introA": "Aktivieren Sie die Sprachen, die in Ihrem Abonnement enthalten sind, und wählen Sie aus, auf welcher Skala Sie Ihr Sprachniveau verfolgen möchten. Die Einstufung erfolgt stets nach dem GER und wird in die von Ihnen gewählte Prüfung umgerechnet —",
+      "naoAplica": "Die App bietet keine IELTS-, TOEFL- oder JLPT-Prüfungen an.",
+      "introB": ", es schätzt ab, wo du dich befindest, und zeigt es auf dem Lineal an, das du verwendest.",
+      "semNivelamento": "ohne Nivellierung",
+      "acompanharEscala": "Den Füllstand auf der Skala beobachten",
+      "meta": "Ziel",
+      "metaNoExame": "Tor auf {exame}",
+      "equivaleComNota": "{nota} — entspricht dem Niveau „{cefr}“ des GERS",
+      "equivale": "Entspricht dem CEFR-Niveau „{cefr}“",
+      "metaEscolhida": "Ziel{alvo}",
+      "metaMedida": " — Die App wird dies als „{cefr}“ gemäß dem CEFR einstufen.",
+      "tempoPorDia": "Zeitaufwand pro Tag – entspricht dem in der Roadmap vorgesehenen Stundenbudget",
+      "minUnidade": "{n} min"
+    },
+    "listening": {
+      "preparandoAudio": "Audio wird vorbereitet…",
+      "parar": "Anhalten",
+      "ouvirDialogo": "Den Dialog anhören",
+      "ouvirDeNovo": "Noch einmal anhören",
+      "esconderTranscricao": "Transkript ausblenden",
+      "verTranscricao": "Transkript anzeigen",
+      "falasUm": "{n} Sag mal",
+      "falasVarias": "{n} Dialoge",
+      "semVozNavegador": "Dieser Browser verfügt nicht über eine Sprachausgabe zur Wiedergabe der Dialoge."
+    },
+    "placement": {
+      "preparandoProximas": "Die nächsten Fragen vorbereiten…",
+      "continuar": "Weiter",
+      "titulo": "Einstufungstest",
+      "perguntaDe": "Frage {n} von {total} · Der Schwierigkeitsgrad passt sich Ihren Antworten an",
+      "respostasPossiveis": "Mögliche Antworten",
+      "corrigindo": "Korrektur…",
+      "carregando": "Wird geladen…",
+      "proxima": "Weiter",
+      "nivelMedido": "Dies ist Ihr gemessener Stand. Er gilt ab sofort für den Tagesplan und die Zielfrist.",
+      "verMeuNivel": "Mein Level anzeigen"
+    },
+    "texto": {
+      "consultar": "Siehe „{palavra}“",
+      "oQueQuerDizer": "Was bedeutet „{palavra}“?",
+      "fechar": "Schließen",
+      "consultando": "Wird abgefragt…",
+      "sinonimos": "Synonyme: {lista}",
+      "entrouRevisao": "Es wurde in Ihre heutige Vokabelwiederholung aufgenommen."
+    },
+    "formato": {
+      "mcq": "Wählen Sie",
+      "gap": "Fertigstellen",
+      "reorder": "Setze den Satz zusammen",
+      "match": "Mitglied werden",
+      "listening": "Hör mal",
+      "dictation": "Sprichwort",
+      "image": "Bild",
+      "speaking": "Sag mal"
+    },
+    "treino": {
+      "origem": {
+        "revisao": "Überprüfung der Fehler, die du gemacht hast",
+        "reforco": "Stärkung eines schwachen Themas",
+        "novo": "Neu"
+      },
+      "ponto": {
+        "novoPonto": "Dieser Fehler ist zu einem Punkt geworden, an dem noch Verbesserungsbedarf besteht: Er wird also in den nächsten Trainingseinheiten wieder auftauchen, mit anderen Worten.",
+        "subiu": "Der Punkt, an dem es besser wurde, ist wieder da. Er kehrt später in einer anspruchsvolleren Form zurück, bis er fest verankert ist.",
+        "voltaHoje": "Das ist noch nicht geklärt: Auf diesen Punkt werden wir in Kürze zurückkommen, beginnend mit der Anerkennung."
+      },
+      "erroCorrigir": "Ich konnte das nicht korrigieren. Versuche es noch einmal.",
+      "erroPreparar": "Ich habe es nicht geschafft, die nächsten vorzubereiten.",
+      "sairDoTreino": "Das Training verlassen",
+      "progressoAria": "Fortschritte beim heutigen Training",
+      "deTotal": "{feito} von {total}",
+      "tentarDeNovo": "Es noch einmal versuchen",
+      "preparandoProximos": "Vorbereitung der nächsten Übungen…",
+      "nenhumPronto": "Derzeit gibt es keine fertigen Übungen.",
+      "carregarProximos": "Die nächsten laden",
+      "pulado": "Übersprungen – zählt nicht als Fehler.",
+      "certo": "Klar!",
+      "aindaNao": "Noch nicht.",
+      "continuar": "Weiter",
+      "concluido": "Das heutige Training ist beendet",
+      "recuperou": "Sie haben {recuperados} von {total} Punkte, die Sie zuvor falsch berechnet hatten, korrigiert.",
+      "nadaVencia": "Heute gab es keinen Punkt, an dem Verbesserungen möglich waren.",
+      "seuNivelHoje": "Ihr heutiges Niveau",
+      "avancouDentro": "{nome}: hat sich im „{nivel}“ durchgesetzt",
+      "porTopico": "Nach Thema",
+      "voltarAoIdioma": "Zurück zur Sprache",
+      "treinoDeHoje": "Das heutige Training",
+      "feitoHoje": "Heute erstellt · {correct} von {total}",
+      "proximoAmanha": "Der nächste ist morgen fertig, mit den Themen, die bei der Wiederholung beherrscht werden müssen, und den Themen, die noch vertieft werden müssen.",
+      "verResumo": "Zusammenfassung anzeigen",
+      "emAndamentoDesc": "{feito} von {total} erstellt. Mach dort weiter, wo du aufgehört hast.",
+      "novoDesc": "Wiederholung der Fehler, Vertiefung der Schwachpunkte und Aufgaben, die etwas über Ihrem Niveau liegen – in acht verschiedenen Formaten, mit sofortiger Korrektur.",
+      "preparandoExercicios": "Vorbereitung der Übungen…",
+      "continuarTreino": "Das Training fortsetzen",
+      "comecarTreino": "Mit dem Training beginnen",
+      "primeirosSegundos": "Die ersten dauern ein paar Sekunden; der Rest ist fertig, während Sie antworten."
+    },
+    "exercicio": {
+      "imagemAria": "Abbildung zur Übung",
+      "voz": "Stimme",
+      "alternativas": "Alternativen",
+      "lacunaAria": "Lücke",
+      "fraseMontada": "Zusammengefügter Satz",
+      "conferir": "Nachsehen",
+      "recomecar": "Neuanfang",
+      "toqueTermo": "Tippen Sie links auf einen Begriff und anschließend auf die Übersetzung.",
+      "preparando": "Wird vorbereitet…",
+      "tocando": "Es läuft…",
+      "ouvir": "Anhören",
+      "maisDevagar": "Langsamer",
+      "semVozDitado": "Dieser Browser unterstützt die Sprachausgabe für das Sprichwort nicht. Versuchen Sie es mit Chrome, Edge oder Safari.",
+      "oQueOuviu": "Was hast du gehört?",
+      "escrevaOuviu": "Schreiben Sie genau das auf, was Sie gehört haben",
+      "semMicrofone": "Der Browser hat keinen Zugriff auf das Mikrofon gewährt.",
+      "naoOuvi": "Ich konnte dich nicht hören. Versuch es noch einmal, komm näher ans Mikrofon.",
+      "ouvirComoSeDiz": "Anhören, wie man es ausspricht",
+      "ouvindoFale": "Ich höre zu… sprich jetzt",
+      "falar": "Sprechen",
+      "semReconhecimento": "Dieser Browser erkennt keine Sprache.",
+      "naoPossoFalar": "Ich kann gerade nicht sprechen.",
+      "respostaCerta": "Richtige Antwort:",
+      "aFraseEra": "Der Satz lautete",
+      "oTextoEra": "Der Text lautete",
+      "naoReconheci": "Ich habe es nicht erkannt",
+      "faltouDiferente": "Es fehlte oder war anders",
+      "atencaoAcentos": "Das hast du richtig gesagt, aber achte auf die Akzente."
+    }
+  },
+  "biblioteca": {
+    "filtro": {
+      "todos": "Alles",
+      "video": "Videos",
+      "article": "Artikel",
+      "doc": "Dokumentation",
+      "exercise": "Übungen"
+    },
+    "kind": {
+      "video": "Video",
+      "article": "Artikel",
+      "course": "Kurs",
+      "doc": "Dokumentation",
+      "book": "Buch",
+      "podcast": "Podcast",
+      "repo": "Repository",
+      "exercise": "Übung"
+    }
+  },
+  "comum": {
+    "carregando": "Wird geladen…",
+    "tentarDeNovo": "Es noch einmal versuchen",
+    "status": {
+      "concluido": "abgeschlossen",
+      "emCurso": "im Gange",
+      "bloqueado": "gesperrt",
+      "pulado": "übersprungen",
+      "aFazer": "zu erledigen"
+    }
+  },
+  "config": {
+    "titulo": "Einstellungen",
+    "subtitulo": "Konto, Studienziel, Kompetenzen, Sprachen, Hinweise und der Status der Integrationen. Jede Änderung hier führt zu einer Neuberechnung des Plans in der nächsten Generation.",
+    "abasAria": "Einstellungsbereiche",
+    "abas": {
+      "conta": "Konto",
+      "objetivo": "Ziel",
+      "skills": "Fähigkeiten",
+      "idiomas": "Sprachen",
+      "avisos": "Hinweise und Datenschutz",
+      "integracoes": "Status der APIs",
+      "moderacao": "Moderation",
+      "recursos": "Ressourcen"
+    },
+    "legaisAria": "Rechtliche Dokumente",
+    "legais": {
+      "termos": "Nutzungsbedingungen",
+      "privacidade": "Datenschutzerklärung",
+      "seguranca": "Sicherheit"
+    },
+    "creditos": {
+      "rotulo": "Symbole:",
+      "deSob": ", von Kryston Schwarze, unter",
+      "chamaMedalha": "; Fackel und Medaille der",
+      "licencaIsc": ", unter der ISC-Lizenz."
+    }
+  },
+  "codelab": {
+    "kicker": "Code-Labor",
+    "titulo": "Code fertig, Zeile für Zeile durchgesehen",
+    "intro": "Wählen Sie das Thema aus und lassen Sie die Sprache automatisch zuweisen, oder wählen Sie sie selbst aus. Sie erhalten den Code oder die Konfiguration, die tatsächlich verwendet wird – eine oder mehrere Dateien, wie beispielsweise den GitHub-Workflow und den damit ausgeführten Test oder Controller, Service und Entity – sowie eine Schritt-für-Schritt-Anleitung zur Ausführung: welche Zeile aus welcher Datei ausgeführt wird, welchen Wert jede Variable in diesem Moment hat und was im Terminal ausgegeben wurde.",
+    "carregandoExemplos": "Ihre Beispiele werden geladen…",
+    "escrevendoExemplo": "Das Beispiel schreiben…",
+    "semPassoAPasso": "ohne Schritt-für-Schritt-Anleitung",
+    "passoN": "Schritt {n}",
+    "linhaN": "{linha}-Reihe",
+    "niveis": {
+      "iniciante": "Anfänger",
+      "intermediario": "Zwischenstufe",
+      "avancado": "Fortgeschritten"
+    },
+    "sugestoes": {
+      "montando": "Wir stellen Vorschläge für Sie zusammen…",
+      "semPerfilTitulo": "Markieren Sie die Sprachen, die Sie lernen",
+      "semPerfilDescricao": "Das Labor zeigt nur die Programmiersprachen aus Ihrem Profil an und schlägt Beispiele vor, die Ihrem Niveau und Ihrem Lernplan entsprechen. Derzeit werden alle im untenstehenden Generator angezeigt.",
+      "escolherLinguagens": "Sprachen auswählen",
+      "titulo": "Vorschläge für Sie",
+      "descricao": "Anhand Ihrer Roadmap, Ihres Kenntnisstands in den einzelnen Sprachen und der Themen, die Sie noch nicht behandelt haben. Mit einem Klick wird das Beispiel mit der Schritt-für-Schritt-Anleitung angezeigt.",
+      "gerarAria": "Beispiel generieren: {assunto} auf {linguagem}"
+    },
+    "etapas": {
+      "arquivos": "Auswahl der Dateien",
+      "codigo": "Den Code schreiben",
+      "conferindo": "Prüfen, ob das tatsächlich so verwendet wird",
+      "passoAPasso": "Schritt-für-Schritt-Anleitung"
+    },
+    "gerador": {
+      "linguagemOuArquivo": "Sprache oder Datei",
+      "linguagem": "Sprache",
+      "assunto": "Betreff",
+      "assuntoPlaceholder": "GitHub Actions führen die Tests aus, API mit Controller und Entity, Closures…",
+      "nivel": "Stufe",
+      "gerar": "Beispiel erstellen",
+      "aviso": "Es dauert ein paar Sekunden: Die Dateien und der Ausführungsablauf werden gemeinsam angezeigt. Bevor sie hier erscheinen, wird der Inhalt überprüft (Syntax, aktuelle Versionen, tatsächliche Projektstruktur) und der Ablauf für jede einzelne Datei."
+    },
+    "depurador": {
+      "fecharAria": "Beispiel schließen",
+      "fechar": "Schließen",
+      "arquivosAria": "Beispieldateien",
+      "arquivoLabel": "Archiv „{caminho}“",
+      "passoDeTotal": "Schritt {n} von {total}",
+      "semTraco": "Die Schritt-für-Schritt-Anleitung zu diesem Beispiel stimmt nicht mit dem Code überein und wird daher nicht angezeigt – die Darstellung einer Ablaufverfolgung, die nicht mit dem Programm übereinstimmt, würde zu falschen Schlussfolgerungen führen. Der obige Code gilt weiterhin; generieren Sie ihn erneut, um eine andere Ablaufverfolgung zu versuchen.",
+      "execucaoComentada": "Die Ausführung wird hier nur erläutert, nicht getestet: Die Schritt-für-Schritt-Anleitung wurde parallel zum Code verfasst und mit diesem abgeglichen, doch das Programm wird nicht in einem echten Interpreter ausgeführt. Damit das Beispiel als sicher gilt, führen Sie es bitte selbst aus."
+    },
+    "controles": {
+      "inicio": "Zurück zum Anfang",
+      "anterior": "Vorheriger Schritt",
+      "proximo": "Nächster Schritt",
+      "pausarAria": "Die automatische Ausführung anhalten",
+      "executarAria": "Schritt für Schritt selbst ausführen",
+      "pausar": "Pause",
+      "executar": "Ausführen",
+      "passoAria": "Ausführungsschritt"
+    },
+    "estado": {
+      "titulo": "Variablen jetzt",
+      "vazio": "Es wurde noch keine Variable definiert."
+    },
+    "saida": {
+      "titulo": "Ausgang bis hierhin",
+      "vazio": "Am Terminal ist noch nichts angezeigt worden."
+    },
+    "biblioteca": {
+      "vazioTitulo": "Noch keine Beispiele",
+      "vazioDescricao": "Wählen Sie oben die Sprache und das Thema aus. Das Beispiel wird hier gespeichert, sodass Sie es so oft aufrufen können, wie Sie möchten.",
+      "titulo": "Ihre Beispiele",
+      "arquivosN": "{n} Dateien",
+      "passosN": "{n} Schritte",
+      "removendo": "Wird entfernt…",
+      "remover": "Entfernen"
+    }
+  },
+  "moderacao": {
+    "relatos": {
+      "titulo": "Moderation",
+      "situacaoLabel": "Stand der Berichte",
+      "situacoes": {
+        "abertos": "Offen",
+        "resolvidos": "Gelöst",
+        "todos": "Alle"
+      },
+      "statusLabel": "Status",
+      "status": {
+        "aberto": "Erhalten",
+        "em_analise": "In Bearbeitung",
+        "resolvido": "Gelöst"
+      },
+      "erroSalvar": "Ich konnte es nicht speichern.",
+      "reclamacao": "Beschwerde",
+      "sugestao": "Vorschlag",
+      "contaRemovida": "Konto gelöscht",
+      "resposta": "Antwort an den Verfasser des Berichts",
+      "respostaPlaceholder": "Optional – erscheint in Ihren Berichten",
+      "salvando": "Wird gespeichert…",
+      "salvar": "Speichern",
+      "relato": "Bericht",
+      "relatos": "Berichte",
+      "carregando": "Wird geladen…",
+      "vazioAbertos": "Keine offenen Berichte.",
+      "vazioGeral": "Hier gibt es keinen Bericht."
+    },
+    "usuarios": {
+      "confirmacaoCancelada": "Bestätigung abgebrochen. Es wurden keine Änderungen vorgenommen.",
+      "erroConcluir": "Ich konnte es nicht zu Ende bringen.",
+      "semNome": "Ohne Namen",
+      "selos": {
+        "voce": "du",
+        "admin": "admin",
+        "banido": "gesperrt",
+        "emailNaoConfirmado": "E-Mail-Adresse nicht bestätigt"
+      },
+      "entrouEm": "Er hat sich unter {data} angemeldet",
+      "banidoEm": " · auf {data} gesperrt",
+      "motivoLabel": "Grund: {motivo}",
+      "desbanir": "Entzaubern",
+      "banir": "Sperren",
+      "desbanirAria": "{nome} entfernen",
+      "banirAria": "{nome} sperren",
+      "avisoDesbanir": "Das Konto funktioniert wieder wie gewohnt und wird den Freunden angezeigt.",
+      "avisoBanir": "Die Person wird sofort von allen Geräten abgemeldet, kann sich nicht mehr anmelden und verschwindet aus der Suche und aus der Freundesliste. Es wird nichts gelöscht: Man kann die Sperre später aufheben.",
+      "motivoCampo": "Grund (wird festgehalten)",
+      "aguardandoChave": "Warten auf die Auslosung…",
+      "confirmarChave": "Mit Zugangsschlüssel bestätigen",
+      "cancelar": "Abbrechen",
+      "secaoAria": "Registrierte Nutzer",
+      "titulo": "Benutzer",
+      "conta": "Konto",
+      "contas": "Konten",
+      "maisRecentes": " (die neuesten – Suche verfeinern)",
+      "situacaoLabel": "Finanzlage",
+      "situacoes": {
+        "todos": "Alle",
+        "ativos": "Vermögenswerte",
+        "banidos": "Gebannt"
+      },
+      "buscar": "Suchen",
+      "buscarPlaceholder": "Name, @ oder E-Mail-Adresse",
+      "carregando": "Wird geladen…",
+      "vazio": "Es wurde kein Konto gefunden."
+    }
+  },
+  "cursos": {
+    "filtro": {
+      "todos": "Alle",
+      "gratuitos": "Kostenlos",
+      "pagos": "Bezahlt"
+    },
+    "escopo": {
+      "voce": "Für Sie",
+      "catalogo": "Gesamter Katalog"
+    },
+    "ordem": {
+      "relevancia": "Für Sie besonders relevant",
+      "maisProcurados": "Die meistgesuchten zuerst",
+      "menosProcurados": "Zuerst die am wenigsten gesuchten"
+    },
+    "nivel": {
+      "iniciante": "Anfänger",
+      "intermediario": "Zwischenstufe",
+      "avancado": "Fortgeschritten"
+    },
+    "motivo": {
+      "meta": "Ihr Ziel",
+      "queroAprender": "Ich möchte lernen",
+      "roadmap": "In Ihrer Roadmap",
+      "objetivo": "Ihr Ziel"
+    },
+    "carregando": "Auf der Suche nach Kursen mit Zertifikat…",
+    "contador": "{n} {cursos} · {gratuitos} mit kostenlosem Zertifikat",
+    "curso": "Kurs",
+    "cursos": "Kurse",
+    "titulo": "Kurse mit Zertifikat",
+    "subtitulo": "Ausgewählt nach dem, was Sie lernen möchten, um es auf LinkedIn zu veröffentlichen. Für alle Kurse wird ein Zertifikat ausgestellt, und die kostenlosen Kurse stehen immer an erster Stelle.",
+    "quaisCursos": "Welche Kurse",
+    "buscar": "Suchen",
+    "buscarPlaceholder": "Studiengang, Anbieter oder Technologie",
+    "categoria": "Kategorie",
+    "todasCategorias": "Alle Kategorien",
+    "stack": "Stack",
+    "todasTecnologias": "Alle Technologien",
+    "ordenar": "Sortieren",
+    "tipoCertificado": "Art des Zertifikats",
+    "limparFiltros": "Filter löschen",
+    "esconderPossuidos": "Die ausblenden, die ich bereits besitze",
+    "mostrarPossuidos": "Die anzeigen, die ich bereits besitze ({n})",
+    "saiuDaLista": "Es wurde aus der Liste entfernt und unter „Profil und Tags“ verschoben.",
+    "desfazer": "Rückgängig machen",
+    "vazioPossuiTodos": {
+      "titulo": "Sie haben bereits alle Kurse auf dieser Liste absolviert",
+      "descVoce": "Sie finden sie unter „Profil“ und „Tags“. Durchsuchen Sie den gesamten Katalog, um weitere Zertifikate zu finden.",
+      "descCatalogo": "Sie befinden sich unter „Profil“ und „Tags“."
+    },
+    "buscarCatalogo": "Den gesamten Katalog durchsuchen",
+    "vazioFiltros": {
+      "titulo": "Es gibt keine Kurse mit diesen Filtern",
+      "descVoce": "Versuchen Sie es mit einer anderen Suche oder stöbern Sie im gesamten Katalog, der auch Titel enthält, die Sie noch nicht bestellt haben.",
+      "descCatalogo": "Versuchen Sie es mit einer anderen Suche, einer anderen Kategorie oder einer anderen Technologie."
+    },
+    "vazioSemCurso": {
+      "titulo": "Es gibt noch keine seriöse Zertifizierung für das, was Sie angefordert haben.",
+      "desc": "Es werden nur Kurse mit einem Zertifikat einer anerkannten Stelle berücksichtigt. Wenn man weitere Technologien als Ziel festlegt, wird die Liste immer länger."
+    },
+    "escolherTecnologias": "Technologien auswählen",
+    "vazioSemPedido": {
+      "titulo": "Sag uns, was du lernen möchtest",
+      "desc": "Die Kurse weichen von ihrem Ziel und den als Ziel festgelegten Technologien ab. Ohne diese Angaben ist eine Auswahl nicht möglich."
+    },
+    "definirObjetivo": "Ziel festlegen",
+    "blocoGratuito": "Kostenloses Zertifikat",
+    "blocoPago": "Bezahlte Bescheinigung",
+    "vazioGratuito": "Es gibt keinen kostenlosen Kurs zu dem, was Sie angefragt haben.",
+    "vazioPago": "Es gibt keinen kostenpflichtigen Kurs zu dem, was du angefragt hast.",
+    "rodapePrecos": "Preise und kostenlose Angebote finden Sie unter {mes}. Die Festlegung erfolgt durch den Aussteller, und die Bedingungen können sich ändern: Informieren Sie sich bitte auf der Website, bevor Sie beginnen.",
+    "erroSalvar": "Ich konnte es nicht speichern.",
+    "portugues": "Portugiesisch",
+    "ingles": "Englisch",
+    "horas": "~{h}h",
+    "irParaCurso": "Zum Kurs gehen",
+    "possuoTitleSim": "Wird unter „Profil“ und „Tags“ angezeigt. Klicken Sie hier, um die Auswahl aufzuheben.",
+    "possuoTitleNao": "Kreuzen Sie an, ob Sie dieses Zertifikat bereits besitzen.",
+    "jaPossuo": "Ich besitze bereits",
+    "jaPossuoPergunta": "Habe ich das schon?",
+    "linkedinTitle": "Nach Erhalt des Zertifikats",
+    "adicionarLinkedin": "Zu LinkedIn hinzufügen",
+    "procuraNoMercado": "Nachfrage auf dem Markt"
+  },
+  "vagas": {
+    "filtro": {
+      "todas": "Alle",
+      "remotas": "Fernbedienungen"
+    },
+    "alcance": {
+      "todas": "Brasilien und das Ausland",
+      "nacionais": "Inländische",
+      "internacionais": "Internationale Spiele"
+    },
+    "fonte": {
+      "busca": "Stellenportale (LinkedIn, Vagas.com, Indeed…)"
+    },
+    "estadoFonte": {
+      "ok": "aktiv",
+      "erro": "derzeit nicht auf Sendung",
+      "semChave": "kein Schlüssel konfiguriert"
+    },
+    "nivel": {
+      "junior": "Junior",
+      "pleno": "Plenarsitzung",
+      "senior": "Senior"
+    },
+    "situacao": {
+      "semNivel": "Führen Sie die Nivellierung durch",
+      "tem": "hast du",
+      "parcial": "zu Beginn",
+      "falta": "Fehler",
+      "desconhecido": "nicht im Katalog enthalten"
+    },
+    "tempo": {
+      "hoje": "heute",
+      "umDia": "vor 1 Tag",
+      "dias": "vor {n} Tagen",
+      "agora": "jetzt",
+      "min": "vor {n} Minuten",
+      "umaHora": "vor 1 Stunde",
+      "horas": "vor {n} Stunden"
+    },
+    "titulo": "Stellenangebote für Sie",
+    "subtitulo": "Echte Stellenangebote aus zuverlässigen Quellen – in Ihrer Region oder im Homeoffice –, von denen eines am besten zu Ihrem Tech-Stack und Ihren Zielen passt und eines am wenigsten. Bei jedem einzelnen: Was fehlt noch und wie kommt man dorthin?",
+    "buscarAria": "Eine andere Position oder Technologie suchen",
+    "buscarPlaceholder": "Eine andere Position oder Technologie (z. B.: Java-Entwickler)",
+    "buscar": "Suchen",
+    "voltarPerfil": "Zurück zu meinem Profil",
+    "onde": "Wo",
+    "tipoVaga": "Art der Stelle",
+    "procurandoNovas": "auf der Suche nach neuen Stellenangeboten…",
+    "atualizadoEm": "Aktualisiert am {tempo}",
+    "atualizando": "Wird aktualisiert…",
+    "atualizar": "Aktualisieren",
+    "erroAtualizar": "Ich konnte die Liste gerade nicht aktualisieren ({erro}). Die untenstehende Liste ist die vorherige.",
+    "carregando": "Auf der Suche nach Stellenangeboten in den Quellen…",
+    "semPerfil": {
+      "titulo": "Sag, was du tust oder tun möchtest",
+      "desc": "Die Stellenangebote entsprechen nicht Ihren Kompetenzen und Zielen. Tragen Sie Ihre Technologien ein – oder suchen Sie nach einer höheren Position."
+    },
+    "cadastrarTecnologias": "Technologien registrieren",
+    "buscandoPor": "Suche nach",
+    "vaga": "Stelle",
+    "vagas": "Stellenangebote",
+    "seuIngles": "Ihr Englisch:",
+    "semNivelamentoFazer": "ohne Nivellierung – jetzt ausführen",
+    "fontes": "Quellen:",
+    "vazio": {
+      "titulo": "Derzeit wurden keine Stellenangebote gefunden",
+      "desc": "Die Quellen haben keine Stellenangebote für diese Suchbegriffe und Filter ergeben. Versuchen Sie es mit einer anderen Position oder Technologie, erweitern Sie den Umkreis Ihrer Region oder klicken Sie auf „Aktualisieren“."
+    },
+    "regiao": {
+      "semCidade": "Keine Stadt im Profil angegeben: Es werden Präsenzstellen aus ganz Brasilien angezeigt.",
+      "soRemotas": "Nur Stellen im Homeoffice.",
+      "cidade": "Präsenz- und Hybridveranstaltungen bis zu {km} km von {cidade} – {uf} · Fernveranstaltungen von jedem Ort aus.",
+      "uf": "Präsenz- und Hybridkurse unter {uf} · Fernkurse von überall aus."
+    },
+    "mudarRegiao": "Region ändern",
+    "definirRegiao": "Region festlegen",
+    "ondeDistancia": "{local} · die „{km}“ km",
+    "presencial": "Präsenzunterricht",
+    "internacional": "International",
+    "via": "Quelle: {fonte}",
+    "naSuaRegiao": "in Ihrer Region",
+    "paraQuem": "Für wen:",
+    "paraQuemNivel": "{nivel}-Ebene, ",
+    "paraQuemCom": "mit {lista}",
+    "paraQuemMais": " und mehr unter {n}",
+    "conectorE": "und",
+    "esconderDescricao": "Beschreibung ausblenden",
+    "verDescricao": "Stellenbeschreibung anzeigen",
+    "soTrecho": "Die Quelle hat nur einen Auszug aus der Anzeige geschickt: Der Inhalt lässt sich anhand der Überschrift erahnen. Lesen Sie die vollständige Anzeige, um zu sehen, was noch fehlt.",
+    "soBuscador": "Über eine Suchmaschine gefunden: Die Anzeige wurde hier nicht gelesen, und die Bewertung basiert auf der Überschrift.",
+    "verVaga": "Stellenangebot anzeigen",
+    "esconderAnalise": "Analyse ausblenden",
+    "lerAnuncio": "Die vollständige Anzeige lesen",
+    "lendoRequisitos": "Ich lese mir die Stellenanforderungen durch…",
+    "descricao": {
+      "faz": "Was wirst du tun?",
+      "pede": "Was wird verlangt?",
+      "diferenciais": "Besonderheiten"
+    },
+    "temTudo": "Sie haben alles, was in der Anzeige aus dem Katalog aufgeführt ist.",
+    "oQueFaltaAria": "Was fehlt noch für die Stelle?",
+    "oQueFalta": "Was fehlt?",
+    "item": "Punkt",
+    "itens": "Punkte",
+    "obrigatorioUm": "obligatorisch",
+    "obrigatoriosVarios": "obligatorisch",
+    "mostrarMenos": "Weniger anzeigen",
+    "verTodasLacunas": "Alle „{n}“ anzeigen",
+    "fazerNivelamento": "Ausgleichen",
+    "treinarIngles": "Englisch lernen",
+    "jaNoRoadmap": "Das steht bereits auf Ihrer Roadmap",
+    "metaMarcada": "markiertes Ziel",
+    "marcando": "Markieren…",
+    "marcarMeta": "Als Ziel festlegen",
+    "obrigatorio": "obligatorisch",
+    "diferencial": "Differential",
+    "desejavel": "wünschenswert",
+    "degrauAbaixo": " · eine Stufe tiefer",
+    "comecando": " · Du fängst gerade erst an",
+    "semNivelamentoSufixo": " · ohne Nivellierung",
+    "semNivelamentoComparar": " · ohne Normalisierung zum Vergleich",
+    "certificadoGratuito": "kostenloses Zertifikat",
+    "certificadoPago": "bezahlte Bescheinigung",
+    "gratuito": "kostenlos",
+    "pago": "bezahlt",
+    "ingles": {
+      "tem": "Englisch: „{exigido}“ Frage: „{seu}“",
+      "parcial": "Englisch{exigido}r Antrag · Sie {seu}, eine Stufe tiefer",
+      "falta": "Englisch{exigido}, bitte · Sie{seu}",
+      "semNivel": "Englisch{exigido}-Anfrage · Bitte führen Sie eine Nivellierung durch, um einen Vergleich anzustellen"
+    },
+    "tecnologiasDaStack": "{n} {tecnologias} aus Ihrem Stack",
+    "tecnologia": "Technologie",
+    "tecnologias": "Technologien",
+    "combinaObjetivo": "passt zu Ihrem Ziel",
+    "anuncioNaoLido": "ungelesene Nachricht",
+    "compatibilidadeAria": "Kompatibilität mit Ihrem Profil",
+    "porcentagem": "{n}",
+    "estimadoTitulo": "geschätzt anhand des Titels",
+    "combinaComVoce": "passt zu dir",
+    "analisarTitulo": "Eine bestimmte Stellenausschreibung prüfen",
+    "analisarDesc": "Haben Sie eine Stellenanzeige gefunden, die nicht auf dieser Liste steht? Fügen Sie den Link oder den Text der Anzeige ein. Bei Stellenanzeigen auf LinkedIn ist oft eine Anmeldung erforderlich, um sie zu öffnen – in diesem Fall fügen Sie bitte den Text ein.",
+    "analisarAria": "Link oder Stellenbeschreibung",
+    "analisarPlaceholder": "https://… oder der vollständige Stellentext",
+    "analisando": "Wird analysiert…",
+    "verOQueFalta": "Sehen, was noch fehlt",
+    "etapa": {
+      "lendo": "Die Stellenanzeige lesen",
+      "separando": "Die Anforderungen aufschlüsseln",
+      "comparando": "Im Vergleich zu Ihrem Profil"
+    },
+    "analiseCompletaAria": "Ausführliche Stellenbeschreibung",
+    "analiseSimplificada": "Vereinfachte Analyse: Die in der Ausschreibung genannten Technologien werden alle als obligatorisch behandelt.",
+    "obrigatorios": "Obligatorisch",
+    "desejaveis": "Wünschenswert",
+    "oQueFaltaComoChegar": "Was fehlt noch, und wie kommen wir dorthin?",
+    "nadaFalta": "Es fehlt nichts, was im Katalog aufgeführt ist",
+    "verTodosCursos": "Alle Kurse mit Zertifikat anzeigen",
+    "semCursoCatalogo": "Im Katalog ist kein Kurs mit Zertifikat zu diesem Thema aufgeführt. Wenn Sie dies als Ziel markieren, wird das Thema in Ihre Roadmap aufgenommen."
+  },
+  "home": {
+    "boasVindas": "Willkommen zurück",
+    "boasVindasNome": "Willkommen zurück, {nome}",
+    "retomarEstudo": "Das Studium wieder aufnehmen",
+    "carregandoPainel": "Ihr Dashboard wird geladen…",
+    "semPlanoTitulo": "Ihr Plan existiert noch nicht",
+    "semPlanoDescricao": "Schicken Sie mir Ihren Lebenslauf, und ich erstelle auf der Grundlage Ihrer bisherigen Kenntnisse einen Lernplan – Sie können alles noch einmal durchsehen, bevor ich ihn fertigstelle.",
+    "enviarCurriculo": "Lebenslauf senden",
+    "continue": {
+      "kicker": "Weiter",
+      "modulos": "{feitos} {total}-Module",
+      "planoConcluido": "Plan abgeschlossen",
+      "retomeDescricao": "Machen Sie dort weiter, wo Sie aufgehört haben: Material, Quiz und Aufgabe dieses Moduls.",
+      "todosConcluidos": "Alle Module dieses Plans wurden abgeschlossen. Erstelle ein neues Ziel, um fortzufahren.",
+      "progressoDoPlano": "Fortschritt des Plans",
+      "retomar": "Wieder aufnehmen",
+      "verRoadmap": "Roadmap anzeigen",
+      "semana": "{intervalo}-Woche"
+    },
+    "semana": {
+      "atual": "Aktuelle Woche",
+      "dia": "Tag",
+      "dias": "Tage",
+      "aria": "In dieser Woche untersuchte Tage",
+      "estudado": "{dia}: untersucht",
+      "semEstudo": "{dia}: keine Angaben",
+      "sequenciaRotulo": "Sequenz",
+      "recordeRotulo": "Rekord"
+    },
+    "fases": {
+      "titulo": "Fortschritt nach Phasen",
+      "modulos": "{feitos} {total}-Module"
+    },
+    "checklist": {
+      "montando": "So sieht Ihre Woche aus…",
+      "semanaDoPlano": "{n}-Woche des Plans",
+      "resumo": "{feitos} von {total} · {feitosMin} von {totalMin}",
+      "explicacao": "Die Liste richtet sich nach Ihrem Kenntnisstand in den einzelnen Modulen – Anfänger lernen erst, bevor sie getestet werden; wer den Stoff bereits beherrscht, geht direkt zum Erklären und Anwenden über – und passt in die „{horas}“, die Ihnen für die Woche zur Verfügung stehen.",
+      "rotaAjustadaUm": "Ihre Route wurde am Wochenende angepasst (1 Änderung).",
+      "rotaAjustada": "Die Route wurde am Wochenende angepasst (Änderungen unter {n}).",
+      "verMudou": "Sehen, was sich geändert hat",
+      "nadaPendente": "Diese Woche steht nichts an. Die nächsten Module werden hier veröffentlicht, sobald es etwas Neues gibt.",
+      "nivel": "{nivel}-Ebene",
+      "nivIniciante": "Anfänger",
+      "nivIntermediario": "Zwischenstufe",
+      "nivAvancado": "fortgeschritten",
+      "confirmado": "bestätigt durch das, was du getan hast",
+      "abrir": "Öffnen",
+      "naoSalvou": "Ich konnte es nicht speichern."
+    }
+  },
+  "modulo": {
+    "abas": {
+      "material": "Material",
+      "quiz": "Quiz",
+      "atividade": "Aktivität"
+    },
+    "pagina": {
+      "carregandoTrilha": "Der Track wird geladen…",
+      "semPlanoTitulo": "Sie haben noch keinen Tarif",
+      "semPlanoDescricao": "Erstellen Sie die Roadmap, um einen Plan für die weitere Vorgehensweise zu haben.",
+      "gerarPlano": "Plan erstellen",
+      "planoConcluidoTitulo": "Plan abgeschlossen",
+      "planoConcluidoDescricao": "Alle Module wurden geliefert. Erstelle ein neues Ziel, um fortzufahren.",
+      "trilha": "Wanderweg",
+      "concluir": "Abschließen",
+      "concluirDescricao": "Wenn Sie die Aufgabe als abgeschlossen markieren, wird die Lerneinheit erfasst und die Kompetenz in den Technologien dieses Moduls erhöht.",
+      "concluido": "Abgeschlossen",
+      "registrando": "Aufzeichnung…",
+      "marcarConcluido": "Als abgeschlossen markieren",
+      "aoFinalVoceConsegue": "Am Ende schaffst du es",
+      "modulosDaFase": "Phasenmodule"
+    },
+    "recurso": {
+      "trilha": "Wanderweg",
+      "nenhumMaterialTitulo": "Kein offenes Material",
+      "nenhumMaterialDescricao": "Wählen Sie hier einen Eintrag aus dem Modulinhalt aus, um ihn zu öffnen.",
+      "voltar": "Zurück",
+      "abrindoMaterial": "Das Material auspacken…",
+      "naoEncontradoTitulo": "Material nicht gefunden",
+      "naoEncontradoDescricao": "Möglicherweise hat er Ihren Plan verlassen, seit dieser Bildschirm geöffnet wurde.",
+      "voltarPara": "Zurück zu „{destino}“",
+      "telaAnterior": "der vorherige Bildschirm",
+      "portugues": "Portugiesisch",
+      "ingles": "Englisch",
+      "abrirNaFonte": "In der Originalquelle öffnen",
+      "concluido": "Abgeschlossen",
+      "pctConsumido": "{pct}Verbrauchsanteil in %",
+      "aindaNaoComecou": "Es hat noch nicht angefangen",
+      "parouEm": " · endete bei {tempo}",
+      "concluidoMinusculo": "abgeschlossen",
+      "progressoNesteMaterial": "Fortschritte bei diesem Thema"
+    },
+    "artigo": {
+      "minLeitura": "{min} Lesezeit: min",
+      "pctLido": "{pct}% gelesen",
+      "lerNoSite": "Auf der Original-Website lesen",
+      "retomadoDe": "Weiter dort, wo Sie aufgehört haben ({pct}%).",
+      "voltarAoInicio": "Zurück zum Anfang",
+      "textoNaoBuscado": "Ich habe den Text zu diesem Material noch nicht herausgesucht.",
+      "podeLerNaFonte": "Das kann man auf der Original-Website nachlesen – und der Fortschritt wird hier weiterhin dokumentiert.",
+      "abrirNoSite": "Auf der Original-Website öffnen"
+    },
+    "curar": {
+      "procurarMaterial": "Material suchen",
+      "procurando": "Suche…",
+      "materialNovo": "neues Material",
+      "materiaisNovos": "neue Materialien",
+      "nadaNovo": "Diesmal nichts Neues.",
+      "buscaFalhou": "Die Suche war erfolglos."
+    },
+    "linha": {
+      "salvo": "außer",
+      "emCurso": "im Gange",
+      "concluido": "abgeschlossen",
+      "dispensado": "befreit",
+      "marcarComo": "Als „{estado}“ markieren",
+      "marcarComoEmCurso": "Als „in Bearbeitung“ markieren",
+      "marcar": "markieren",
+      "portugues": "Portugiesisch",
+      "ingles": "Englisch",
+      "pareiEm": "Ich habe auf {nota} Halt gemacht",
+      "marcarOndeParei": "Markieren, wo ich aufgehört habe",
+      "ondeParou": "Wo sind Sie in diesem Material stehen geblieben?",
+      "pareiPlaceholder": "23:10, Kapitel 4…"
+    },
+    "viewer": {
+      "buscandoTexto": "Suche nach dem Text des Artikels…",
+      "videoNaoYoutube": "Dieses Video stammt nicht von YouTube, daher kann ich es hier nicht abspielen.",
+      "abrirNoSite": "Auf der Original-Website öffnen",
+      "ultimaPosicao": "Zuletzt gespeicherte Position: {tempo}",
+      "perguntarMaterial": "Fragen zu diesem Material stellen"
+    },
+    "video": {
+      "carregando": "Das Video wird geladen…",
+      "retomandoDe": "Aus: {tempo}."
+    },
+    "atividade": {
+      "tipoCodigo": "Code",
+      "tipoComandos": "Befehle",
+      "tipoExplicacao": "Erläuterung",
+      "tipoConfiguracao": "Konfiguration",
+      "tipoPratica": "Praxis",
+      "etapaGerar1": "Noch einmal durchlesen, was du bereits gemacht hast",
+      "etapaGerar2": "Die nächste Herausforderung auswählen",
+      "etapaGerar3": "Das Problem formulieren",
+      "etapaCorrigir1": "Ich lese Ihre Antwort",
+      "etapaCorrigir2": "Im Vergleich zu dem, was angefordert wurde",
+      "etapaCorrigir3": "Die Korrektur schreiben",
+      "erroGerar": "Ich konnte die nächste Aktivität nicht generieren.",
+      "erroCorrigir": "Ich konnte das jetzt nicht korrigieren.",
+      "atividadePratica": "Praktische Übung",
+      "semIA": "ohne KI",
+      "feitaNeste": "in diesem Modul durchgeführt",
+      "feitasNeste": "in diesem Modul durchgeführt",
+      "entregueOque": "Geben Sie das ein, was das Modul verlangt:",
+      "escrevaSolucaoInteira": ". Schreiben Sie die gesamte Lösung auf – die Lösung wird mit der Vorlage verglichen und es wird aufgezeigt, wo Abweichungen bestehen.",
+      "escrevaSolucaoModulo": "Schreiben Sie Ihre Lösung für dieses Modul auf. Die Korrektur vergleicht sie mit der Referenzlösung und zeigt auf, worin die Unterschiede bestehen.",
+      "tentarDeNovo": "Es noch einmal versuchen",
+      "atividadeAtual": "Aktuelle Tätigkeit",
+      "atividadeNumero": "· Aktivität {n}",
+      "verDica": "Tipp anzeigen",
+      "verDicas": "Tipps anzeigen",
+      "perguntarAtividade": "Fragen zu dieser Aktivität stellen",
+      "suaResposta": "Ihre Antwort",
+      "respostaPlaceholder": "Schreibe hier von Grund auf neu.\n\ngit push  // Kommentare erklären, was der Befehl bewirkt",
+      "comentariosContam1": "Kommentare",
+      "comentariosContam2": " Geben Sie dies als Ihre Erklärung an. Für diese Aufgabe gilt nur diese Antwort.",
+      "proximaAtividade": "Nächste Aktivität",
+      "corrigindo": "Korrektur…",
+      "enviarCorrecao": "Zur Korrektur senden",
+      "escrevaAlgumasFrases": "Schreiben Sie mindestens ein paar Sätze – eine Zeile ist keine Erklärung.",
+      "caracteresEscritos": "{n} geschriebene Zeichen",
+      "carregandoRascunho": "Der Entwurf wird geladen…",
+      "gravando": "Aufnahme läuft…",
+      "gravadoNaConta": "in Ihrem Konto gespeichert",
+      "naoGravou": "Ich konnte es nicht aufzeichnen – der Text geht hier weiter",
+      "atividadesFeitas": "In diesem Modul durchgeführte Aktivitäten ({n})",
+      "naoPareceResposta": "Das scheint keine Antwort auf diese Aufgabe zu sein.",
+      "escrevaSolucaoPedida": "Schreiben Sie die Lösung für die Aufgabe auf, die im Modul gestellt wird.",
+      "nadaEntrouRevisao": "Nichts wurde in die Übersichtsarbeit aufgenommen oder als Studie gewertet.",
+      "de100": "von 100 – inwieweit die Erklärung für sich allein steht",
+      "oQueFicouPelaMetade": "Was unvollendet blieb",
+      "nenhumaLacuna": "Es wurden keine Lücken festgestellt. Sie konnten es ohne Hilfsmittel erklären.",
+      "umaLacunaRevisao": "In Ihrer Korrektur ist eine Lücke aufgetreten",
+      "lacunasRevisao": "{n} In Ihrer Überarbeitung sind Lücken aufgetreten",
+      "voltaComoQuestao": "und taucht als Frage – mit anderen Worten – im nächsten Quiz dieses Parcours wieder auf."
+    },
+    "material": {
+      "langPt": "Portugiesisch",
+      "langEn": "Englisch",
+      "langAmbos": "Beide",
+      "buscarMaterial": "Material suchen",
+      "buscarPlaceholder": "In Ihrem gesamten Material suchen",
+      "idioma": "Sprache",
+      "idiomaDoMaterial": "Sprache des Materials",
+      "filtrarPorTipo": "Nach Typ filtern",
+      "buscandoMaterial": "Wird nach Material gesucht…",
+      "curarEtapa1": "Suche nach Artikeln, Videos und Dokumentationen",
+      "curarEtapa2": "Überprüfen, ob sich jeder Link öffnen lässt",
+      "curarEtapa3": "Die Besten auswählen",
+      "nadaEmPortuguesTitulo": "Nichts auf Portugiesisch",
+      "nadaEmPortuguesDescricao": "Zu diesem Ausschnitt gibt es kein Material auf Portugiesisch – es gibt jedoch {n} auf Englisch.",
+      "mostrarIngles": "Auch auf Englisch anzeigen",
+      "nadaEncontradoTitulo": "Es wurde nichts gefunden",
+      "nadaEncontradoDescricao": "In Ihrem Lernplan gibt es keine Inhalte zu diesem Begriff. Löschen Sie die Suchanfrage, um zu den Inhalten dieses Moduls zurückzukehren.",
+      "semMaterialTitulo": "Für dieses Modul gibt es noch kein Material",
+      "semMaterialDescricao": "Ich habe bereits die Technologien dieses Moduls durchsucht und nichts gefunden, was die Überprüfung bestanden hätte. Ein späterer erneuter Versuch führt meist zum Erfolg.",
+      "materialSingular": "Material",
+      "materiaisPlural": "Materialien",
+      "emTodoPlano": "in seiner Gesamtheit.",
+      "paraTecnologias": "für die Technologien dieses Moduls.",
+      "concluidoSingular": "abgeschlossen",
+      "concluidosPlural": "abgeschlossen",
+      "tudoConcluido": "Alles in diesem Ausschnitt ist bereits abgeschlossen.",
+      "concluidosSecao": "Abgeschlossen",
+      "concluidoRotulo": "Abgeschlossen"
+    },
+    "quiz": {
+      "nenhumModuloTitulo": "Es ist kein Modul geöffnet",
+      "nenhumModuloDescricao": "Öffnen Sie ein Modul der Roadmap, um ein Quiz dazu zu erstellen.",
+      "quizDe": "{titulo}-Quiz",
+      "descricao": "Sechs spontan zu verfassende schriftliche Fragen zu den Technologien dieses Moduls, die auf Ihr aktuelles Niveau abgestimmt sind. Das Ergebnis aktualisiert die Kompetenzangaben in Ihrem Profil – es ist der einzige Nachweis für Ihre Kenntnisse, den die App erfasst.",
+      "escrevendoQuestoes": "Die Fragen aufschreiben…",
+      "comecarQuiz": "Quiz starten",
+      "iaLevaSegundos": "Die KI braucht ein paar Sekunden.",
+      "levaCerca": "Das dauert etwa 10 Minuten.",
+      "gerarEtapa1": "Das Modul und dessen Stufe auslesen",
+      "gerarEtapa2": "Das Verfassen der Fragen",
+      "gerarEtapa3": "Die Lösungen überprüfen"
+    },
+    "quizRunner": {
+      "perguntaXdeY": "Frage {atual} von {total}",
+      "respondidas": "{n} beantwortet",
+      "trechoDaQuestao": "Auszug aus der Frage",
+      "opcoesDeResposta": "Antwortmöglichkeiten",
+      "voltar": "Zurück",
+      "corrigindo": "Korrektur…",
+      "enviarRespostas": "Antworten senden",
+      "proxima": "Weiter",
+      "escolhaAlternativa": "Wählen Sie eine Alternative aus.",
+      "bomResultado": "Gutes Ergebnis – die Kompetenzstufe der Tags in diesem Quiz ist in deinem Profil gestiegen.",
+      "abaixoDe70": "Unter 70 %. Überprüfen Sie das Material, bevor Sie fortfahren; das Profil ist nicht gestiegen.",
+      "perguntaN": "Frage{n}",
+      "acertou": "hat getroffen",
+      "errou": "hat sich geirrt",
+      "correta": "Richtig:",
+      "vocEscolheu": "Sie haben gewählt:",
+      "perguntarQuestao": "Zu diesem Thema nachfragen",
+      "gerarOutroQuiz": "Ein weiteres Quiz erstellen",
+      "umConceitoAcertou": "Ein Konzept, das du zuvor falsch verstanden hattest, kam wieder zur Sprache, und diesmal hast du es richtig verstanden.",
+      "conceitosAcertou": "{n} Begriffe, die du zuvor falsch verstanden hattest, sind dir wieder in den Sinn gekommen, und du hast sie richtig verstanden.",
+      "raearAteSumir": "Sie werden immer seltener, bis sie schließlich ganz verschwinden.",
+      "umConceitoVolta": "1 Konzept zurück",
+      "conceitosVoltam": "{n} Begriffe kehren zurück",
+      "noProximoQuiz": "im nächsten Quiz dieses Parcours, mit anderen Worten:"
+    },
+    "duvidas": {
+      "perguntar": "Fragen",
+      "erroTutor": "Ich konnte den Tutor gerade nicht erreichen.",
+      "perguntarAoTutor": "Den Tutor fragen",
+      "tirarUmaDuvida": "Eine Frage klären",
+      "ficaGuardada": "wird gespeichert, um es später noch einmal durchzugehen",
+      "novaDuvida": "Eine neue Frage",
+      "fechar": "Schließen",
+      "promptVazio": "Haben Sie etwas nicht verstanden? Fragen Sie einfach – der Tutor erklärt es Ihnen anhand der Informationen auf diesem Bildschirm.",
+      "conversa": "Gespräch",
+      "voce": "Du",
+      "tutor": "Tutor",
+      "abrirNoDepurador": "Im Debugger öffnen",
+      "querVerRodando": "Möchtest du sehen, wie es Schritt für Schritt funktioniert?",
+      "exemplosParaDepurar": "Beispiele zum Debuggen",
+      "gerarExemplo": "Beispiel zum Debuggen generieren:",
+      "tutorEscrevendoExemplo": "Der Tutor schreibt gerade das Beispiel",
+      "tutorEscrevendo": "Der Tutor schreibt gerade",
+      "escrevendoExemplo": "Das Beispiel aufschreiben",
+      "explicacaoClara": "Ist die Erklärung verständlich?",
+      "simEntendi": "Ja, ich habe es verstanden",
+      "aindaNao": "Noch nicht",
+      "aindaNaoEntendi": "Das habe ich noch nicht verstanden.",
+      "suaDuvida": "Ihre Frage",
+      "placeholderContinuar": "Erfahren Sie mehr darüber…",
+      "placeholderNova": "Schreiben Sie Ihre Frage auf…",
+      "enviar": "Senden",
+      "enviarEnter": "Senden (Enter)",
+      "codigoEm": "Code unter {linguagem}",
+      "codigo": "Code"
+    }
+  },
+  "perfil": {
+    "carregando": "Dein Profil wird geladen…",
+    "titulo": "Profil und Tags",
+    "subtitulo": "Was hier markiert ist, fließt in die Roadmap ein. Wenn man ein Tag abwählt, werden die damit verbundenen Module aus der nächsten Generation entfernt; wenn man ein neues markiert, wird der Zeitrahmen neu berechnet.",
+    "escalaDominio": "Dominanzskala",
+    "vazio": {
+      "titulo": "Noch keine Kompetenz",
+      "descricao": "Senden Sie mir Ihren Lebenslauf, damit ich die Technologien daraus extrahieren kann, oder fügen Sie sie einzeln unter „Einstellungen“ auf der Registerkarte „Fähigkeiten“ hinzu.",
+      "enviarCurriculo": "Lebenslauf senden"
+    },
+    "grupos": {
+      "voceDomina": "Beherrschst du · {n}",
+      "voceDominaDica": "N3 oder höher – werden als kurze Wiederholung behandelt: der schwierige Fall, die Produktionsfalle und Übungen für Fortgeschrittene. Niemals von Grund auf",
+      "comecaPorAqui": "Der Plan beginnt hier · {n}",
+      "comecaPorAquiDica": "N1 und N2 – dienen der Vertiefung und kommen an erster Stelle: Der Weg ist kurz, und das Ergebnis zeigt sich bereits in den ersten Wochen",
+      "doZero": "Von Grund auf · {n}",
+      "doZeroDica": "N0 – kommen ebenfalls rein. Was für das Ziel erforderlich ist, kommt früh dran, da es am längsten dauert; der Rest bleibt bis zum Schluss und wird als Erstes herausgenommen, falls die Zeit nicht ausreicht."
+    },
+    "certificados": {
+      "titulo": "Zertifikate",
+      "tituloComContagem": "Zertifikate · {n}",
+      "verCursos": "Kurse anzeigen",
+      "marcados": "Auf der Registerkarte „Kurse“ als „bereits vorhanden“ markiert",
+      "nenhum": "Noch keine. Wählen Sie unter „Kurse“ bei den Zertifikaten, die Sie besitzen, die Option „Ich besitze sie bereits“ aus.",
+      "adicionarLinkedIn": "Zu LinkedIn hinzufügen"
+    },
+    "identidade": {
+      "cargo": "Position",
+      "senioridade": "Dienstalter",
+      "experiencia": "Erfahrung",
+      "anos": "{n} Jahre",
+      "disponibilidade": "Verfügbarkeit",
+      "horasPorSemana": "{h}h pro Woche",
+      "sequencia": "Sequenz",
+      "dias": "{n} Tage",
+      "xp": "XP",
+      "editarPerfil": "Profil bearbeiten",
+      "progressoResumo": "{feitos} von {total} · {pct}%",
+      "progressoPlano": "Fortschritt des Plans"
+    },
+    "niveis": {
+      "querAprender": "möchte lernen",
+      "contatoInicial": "Erster Kontakt",
+      "comApoio": "mit Unterstützung",
+      "autonomo": "selbstständig",
+      "referencia": "Referenz",
+      "especialista": "Experte"
+    },
+    "skills": {
+      "erroAdicionar": "Ich konnte es nicht hinzufügen.",
+      "erroRemover": "Ich konnte es nicht entfernen.",
+      "erroNivel": "Ich konnte das Level nicht speichern.",
+      "tituloPlano": "Fähigkeiten des Plans",
+      "noPerfil": "{n} im Profil",
+      "explicacao": "Markieren Sie, was Teil Ihres Plans ist, und geben Sie an, welches Niveau Sie bereits erreicht haben. Der Fahrplan deckt den Weg von Ihrem aktuellen Stand bis zum Niveau N3 ab – was bereits in N3 oder darüber enthalten ist, wird nicht erneut behandelt.",
+      "filtrar": "Nach Name filtern",
+      "filtrarPlaceholder": "z. B.: Kafka, Terraform",
+      "noPlano": "{n} {total} im Plan",
+      "semResultado": "Keine Technologie mit „{termo}“. Versuchen Sie es mit einem anderen Begriff oder fügen Sie ihn über den Lebenslauf hinzu – was dort aufgeführt ist und hier fehlt, wird in den Katalog aufgenommen.",
+      "nivelEm": "{nome}-Level",
+      "foraDoPlano": "außerhalb des Plans",
+      "jaDominado": "bereits gemeistert",
+      "aEvoluir": "sich weiterentwickeln",
+      "categorias": {
+        "linguagem": "Sprachen",
+        "frontend": "Frontend",
+        "backend": "Backend",
+        "banco": "Datenbanken",
+        "dados": "Daten",
+        "ia": "KI",
+        "devops": "DevOps",
+        "cloud": "Cloud",
+        "arquitetura": "Architektur",
+        "testes": "Tests",
+        "seguranca": "Sicherheit",
+        "mobile": "Mobil",
+        "ferramenta": "Werkzeuge",
+        "metodologia": "Methodik",
+        "soft-skill": "Verhaltensbezogen"
+      }
+    },
+    "sugestoes": {
+      "demanda": {
+        "consolidada": "konsolidiert",
+        "emAlta": "im Aufwind",
+        "aposta": "Wette"
+      },
+      "erroAdicionar": "Ich konnte es nicht hinzufügen.",
+      "titulo": "Empfehlungen für Ihr Ziel",
+      "rever": "überprüfen",
+      "aPartirDe": "Ausgehend von „{objetivo}“. Durch das Hinzufügen wird die Technologie in Ihren Plan auf Stufe N0 aufgenommen, und die Roadmap deckt sie fortan ab.",
+      "adicionando": "Weiter…",
+      "adicionar": "Zum Tarif hinzufügen"
+    },
+    "tag": {
+      "origem": {
+        "cv": "aus dem Lebenslauf",
+        "manual": "von Ihnen festgelegt",
+        "quiz": "im Quiz nachgewiesen",
+        "roadmap": "im Plan geprüft"
+      },
+      "titulo": "N{n} · {origem} · Vertrauen {conf}%"
+    },
+    "tutorial": {
+      "comoFunciona": "Wie funktionieren die Stufen?",
+      "titulo": "Wie funktionieren die Stufen?",
+      "resumo": "Zusammenfassung",
+      "contador": "{atual} von {total}",
+      "fechar": "Tutorial schließen",
+      "introducao": "Geben Sie für jede Technologie an, ob sie in Ihren Plan passt, und wählen Sie das Niveau aus, auf dem Sie sich derzeit befinden. Seien Sie ehrlich: Das Niveau entscheidet darüber, was in der Roadmap behandelt wird und was ausgelassen wird.",
+      "niveisLabel": "Stufen",
+      "resumoN0N2Rotulo": "N0 bis N2",
+      "resumoN0N2Texto": ": Die Roadmap vermittelt Wissen und dient als Lernziel.",
+      "resumoN3Rotulo": "N3 oder höher",
+      "resumoN3Texto": ": beherrscht — in der Roadmap wird das nicht noch einmal behandelt, und die Technologie wird in den Stellenanzeigen als Teil des Tech-Stacks aufgeführt.",
+      "resumoMudou": "Haben Sie die Stufe gewechselt? Hier können Sie jederzeit umstellen: Der Tarif wird in der nächsten Woche angepasst.",
+      "anterior": "Zurück",
+      "entendi": "Verstanden, ich werde meine Fähigkeiten eintragen.",
+      "proximo": "Weiter",
+      "pular": "Tutorial überspringen",
+      "n0": {
+        "exemplo": "Ich habe es noch nicht benutzt, aber ich möchte es lernen.",
+        "plano": "Machen Sie es sich zum Ziel: Der Roadmap vermittelt das Wissen von Grund auf, und „Cursos“ empfiehlt Zertifikate."
+      },
+      "n1": {
+        "exemplo": "Ich habe das schon einmal in einem Tutorial oder in einem Studienprojekt gesehen.",
+        "plano": "Der Fahrplan beginnt mit den Grundlagen, ohne dabei zu sehr auf die Grundlagen einzugehen."
+      },
+      "n2": {
+        "exemplo": "Ich kann es nutzen, indem ich die Dokumentation und Beispiele zu Rate ziehe.",
+        "plano": "Die Roadmap führt dich so weit, bis du es selbst schaffst."
+      },
+      "n3": {
+        "exemplo": "Einsatz am Arbeitsplatz ohne Hilfe, von Anfang bis Ende.",
+        "plano": "Beherrscht: Der Roadmap vermittelt keine neuen Kenntnisse, sondern dient lediglich der Wiederholung. Gib dies in den Stellenanzeigen als Teil deines Skill-Stacks an."
+      },
+      "n4": {
+        "exemplo": "Ich löse schwierige Probleme und berate andere Menschen.",
+        "plano": "Das wird bei den Stellenangeboten und den Empfehlungen von Freunden als Pluspunkt gewertet."
+      },
+      "n5": {
+        "exemplo": "Schwerpunkte: Architektur, Leistung, Innenausstattung.",
+        "plano": "Das ist eine Stärke, und der Plan stützt sich darauf für die nächsten Schritte."
+      }
+    },
+    "regiao": {
+      "titulo": "Region und Geltungsbereich der Stellenangebote",
+      "descricao": "Präsenz- und Hybrid-Stellenangebote werden nur bis zu dieser Entfernung von Ihrer Stadt angezeigt. Remote-Stellenangebote werden immer angezeigt, unabhängig vom Standort.",
+      "ateQueDistancia": "Bis zu welcher Entfernung",
+      "raioLabel": "Umkreis der Präsenzkurse",
+      "soRemotas": "Nur abgelegene Orte",
+      "km": "{km} km",
+      "ou": "oder",
+      "outroRaio": "Ein weiterer Blitz in km",
+      "outro": "ein anderes",
+      "kmSufixo": "km",
+      "resumoSoRemotas": "Es werden ausschließlich Stellen im Homeoffice angezeigt.",
+      "resumoComCidade": "Präsenz- und Hybridveranstaltungen bis zu {raio} km von {cidade} entfernt.",
+      "resumoSemCidade": "Wählen Sie Ihre Stadt aus, damit die Präsenzveranstaltungen nach Entfernung sortiert angezeigt werden.",
+      "padrao": " (Standard)",
+      "erroBusca": "Ich konnte gerade keine Städte abrufen.",
+      "cidadeLabel": "Die Stadt, in der du wohnst",
+      "cidadePlaceholder": "Geben Sie Folgendes ein: Vit…",
+      "cidadesSugeridas": "Vorgeschlagene Städte",
+      "capital": "Hauptstadt"
+    },
+    "avatar": {
+      "erroEnviar": "Ich konnte das Bild nicht versenden.",
+      "erroRemover": "Ich konnte das Bild nicht entfernen.",
+      "alt": "Profilfoto von {nome}",
+      "enviando": "Wird gesendet…",
+      "alterar": "Ändern",
+      "enviarFoto": "Foto senden",
+      "remover": "Entfernen"
+    },
+    "objetivo": {
+      "erroSalvar": "Ich konnte es nicht speichern.",
+      "ondeChegar": "Wohin möchten Sie gelangen?",
+      "escolhaOuDescreva": "Wählen Sie ein Reiseziel aus oder beschreiben Sie es unten",
+      "areaLabel": "Bereich",
+      "destinoPlanoLabel": "Zweck des Plans",
+      "destinoLivre": "Dein aktuelles Ziel hast du selbst festgelegt: „{destino}“. Wenn du einen Eintrag aus der Liste auswählst, wird dieser ersetzt.",
+      "textoLivre": "Beschreiben Sie dies in Freitext",
+      "geraPlanoInteiro": "erzeugt den gesamten Plan",
+      "textoLivreDescricao": "Geben Sie an, wo Sie gerade stehen, wohin Sie wollen und was Ihnen dabei im Weg steht. Darauf aufbauend wird der Fahrplan in einzelnen Phasen erstellt, die Bibliothek sucht Videos und Artikel zu den passenden Technologien heraus, und die Quizfragen werden Ihrem Niveau angepasst.",
+      "contextoLabel": "Hintergrund zur Erstellung des Plans",
+      "contextoPlaceholder": "Beispiel: Ich arbeite seit drei Jahren als Frontend-Entwickler und möchte Full-Stack-Java-Entwickler werden, ohne beim Programmieren auf KI angewiesen zu sein. Ich habe 8 Stunden pro Woche Zeit und möchte bis Juni ein technisches Vorstellungsgespräch auf Englisch bestehen.",
+      "salvaSozinho": "Die Speicherung erfolgt automatisch, sobald Sie das Feld verlassen – Sie müssen keinen Knopf drücken.",
+      "horasPorSemana": "Stunden pro Woche",
+      "horasDescricao": "Der Plan richtet sich danach und nicht nach dem Idealbild des Themas. Ein Plan, der von jemandem, der 6 Stunden Zeit hat, 20 Stunden verlangt, ist nicht ehrgeizig – er wird bereits in der dritten Woche aufgegeben.",
+      "salvando": "Wird gespeichert…",
+      "salvo": "außer",
+      "naoSalvou": "nicht gespeichert — {mensagem}"
+    }
+  },
+  "curriculo": {
+    "carregando": "Ihre Lebensläufe werden geladen…",
+    "kicker": "Grundlage Ihres Plans",
+    "envio": {
+      "titulo": "Senden Sie uns Ihren Lebenslauf",
+      "descricao": "Ich lese die Datei, entnehme daraus die Kompetenzen, schätze das Niveau jeder einzelnen ein und erstelle anhand der noch fehlenden Elemente einen Fahrplan. Du überprüfst alles, bevor ich es erstelle.",
+      "enviando": "Wird gesendet…",
+      "arraste": "Ziehen Sie die Datei hierher oder klicken Sie, um sie auszuwählen",
+      "limites": "PDF, DOCX, ODT, RTF, TXT oder MD · bis zu 10 MB · bleibt in Ihrem Konto, wird nicht weitergegeben"
+    },
+    "leitura": {
+      "titulo": "Lebenslauf lesen",
+      "passo1": "Unterteilung in Abschnitte: Berufserfahrung, Ausbildung, Projekte",
+      "passo2": "Erkennen der genannten Technologien und ihres Anwendungskontexts",
+      "passo3": "Einstufung nach Nutzungsdauer und Verantwortungsgrad",
+      "passo4": "Abgleich mit dem Ziel, um Lücken zu finden",
+      "erroVisual": "{erro}. Ich werde die gesamte Datei schicken, damit der Modellierer sie sich ansehen kann.",
+      "lerCurriculo": "Lebenslauf lesen",
+      "enviarOutro": "Eine weitere Datei senden"
+    },
+    "revisao": {
+      "titulo": "Überprüfe, was ich gelesen habe",
+      "descricao": "Ich habe den Schwierigkeitsgrad jeder Technologie anhand der Nutzungsdauer und der beschriebenen Aufgaben bewertet. Bitte korrigiere eventuelle Fehler – der Plan wird auf dieser Grundlage erstellt.",
+      "extraido": "Auszug aus dem Lebenslauf",
+      "nome": "Name",
+      "cargoAtual": "Derzeitige Position",
+      "senioridade": "Dienstalter",
+      "experiencia": "Erfahrung",
+      "anos": "{n} Jahre",
+      "cidade": "Stadt",
+      "tecnologias": "Technologien · {n}",
+      "ajusteOuRemova": "Passen Sie die Stufe an oder entfernen Sie alles, was nicht Teil des Plans ist",
+      "importando": "Importieren…",
+      "importar": "{n}e Kompetenzen importieren",
+      "entramComoMeta": "{n} werden als Untersuchungsgegenstand herangezogen",
+      "escala": "Maßstab:",
+      "semFrase": "ohne Begleittext im Lebenslauf",
+      "nivelDe": "{nome}-Stufe",
+      "foraDoPlano": "außerhalb des Plans"
+    }
+  },
+  "relatar": {
+    "titulo": "Melden",
+    "subtitulo": "Haben Sie ein Problem entdeckt oder eine Idee? Die Meldung geht direkt an die Verantwortlichen von PathR.",
+    "tipo": {
+      "reclamacao": "Beschwerde",
+      "sugestao": "Vorschlag"
+    },
+    "status": {
+      "recebido": "Erhalten",
+      "emAnalise": "In Bearbeitung",
+      "resolvido": "Gelöst"
+    },
+    "erro": {
+      "formatoFoto": "Das Foto muss im JPG-, PNG- oder WebP-Format vorliegen.",
+      "fotoGrande": "Das Foto ist größer als {mb} MB.",
+      "curto": "Erzählen Sie etwas mehr darüber: mindestens 10 Zeichen.",
+      "envioFalhou": "Ich konnte es nicht versenden."
+    },
+    "aviso": {
+      "enviado": "Meldung gesendet. Danke – sie wird bereits geprüft."
+    },
+    "form": {
+      "intro": "Hat etwas nicht funktioniert oder könnte es besser sein? Schreiben Sie es hier. Ein Screenshot hilft dabei, zu verstehen, was Sie gesehen haben.",
+      "tipoLabel": "Art des Berichts",
+      "oQueAconteceu": "Was ist passiert?",
+      "oQueSugere": "Was schlägst du vor?",
+      "placeholderReclamacao": "Beispiel: Als ich das Ziel gespeichert habe, sprang der Bildschirm zurück zum Anfang und ich habe verloren, was ich geschrieben hatte",
+      "placeholderSugestao": "Beispiel: Den Wochenplan als PDF exportieren können",
+      "trocarFoto": "Foto austauschen",
+      "anexarFoto": "Foto anhängen",
+      "previaAlt": "Vorschau des angehängten Fotos",
+      "remover": "Entfernen",
+      "fotoOpcional": "Optional · JPG, PNG oder WebP bis zu {mb} MB",
+      "enviando": "Wird gesendet…",
+      "enviar": "Bericht senden"
+    },
+    "meus": {
+      "titulo": "Ihre Berichte",
+      "resposta": "Antwort:"
+    },
+    "midia": {
+      "erroAbrir": "Ich konnte die Datei gerade nicht öffnen.",
+      "abrirTitulo": "Das Foto in voller Größe in einem neuen Tab öffnen",
+      "abrindo": "Eröffnung…",
+      "rotulo": "Angehängte Datei",
+      "carregando": "Das Foto wird geladen…"
+    }
+  },
+  "manual": {
+    "kicker": "Bordhandbuch",
+    "titulo": "So funktioniert PathR",
+    "precisaDe": "Sie benötigen:",
+    "abrir": "{nome} öffnen",
+    "termos": "Die Nutzungsbedingungen, Datenschutzbestimmungen und Sicherheitshinweise finden Sie unter pathr.notter.com.br/termos, /datenschutz und /sicherheit.",
+    "intro": {
+      "p1": "PathR erstellt einen Lernplan, der von deinen Vorkenntnissen bis zu deinen Zielen reicht, und stellt dir darauf aufbauend Zertifikatskurse, passende Stellenangebote, Sprachkurse und Mitlernende zusammen. Fast alles hängt von zwei Dingen ab, die nur du beantworten kannst: ",
+      "objetivo": "sein Ziel",
+      "e": " und ",
+      "skills": "deine Fähigkeiten auf diesem Niveau",
+      "p2": ". Fangen Sie mit diesen an."
+    },
+    "grupos": {
+      "estudar": "Lernen",
+      "carreira": "Karriere",
+      "pessoas": "Personen",
+      "configuracoes": "Einstellungen"
+    },
+    "areas": {
+      "inicio": {
+        "nome": "Startseite",
+        "oQueFaz": "Ihr Tagesüberblick: das Modul „Weitermachen“, die Wochenliste, die Tagesfolge und die Konstanzkarte.",
+        "precisaDe": "Ein Fahrplan, der erstellt wurde, um aufzuzeigen, wie es weitergehen soll."
+      },
+      "roadmap": {
+        "nome": "Roadmap",
+        "oQueFaz": "Der gesamte Plan in Phasen und Modulen, mit den jeweiligen Stundenangaben. Jede Woche wird er entsprechend dem, was du erledigt hast, angepasst (Routenanpassungen).",
+        "precisaDe": "Ziel und erfüllte Anforderungen vor der Erstellung."
+      },
+      "trilha": {
+        "nome": "Aktueller Pfad",
+        "oQueFaz": "Das Modul, in dem Sie sich gerade befinden: Lernmaterial, ein Quiz, um das Gelernte zu überprüfen, und eine praktische Übung.",
+        "precisaDe": "Eine erstellte Roadmap."
+      },
+      "laboratorio": {
+        "nome": "Code-Labor",
+        "oQueFaz": "Code-Beispiele, die Zeile für Zeile durchlaufen werden, mit den Werten der Variablen bei jedem Schritt. Schlägt Beispiele entsprechend Ihrer Roadmap und Ihrem Niveau vor.",
+        "precisaDe": "In „Skills“ markierte Sprachen."
+      },
+      "idiomas": {
+        "nome": "Sprachen",
+        "oQueFaz": "Englisch-Niveaustufen (A1 bis C2), tägliches Training auf Ihrem Niveau und Übersetzung von Wörtern mit einem Fingertipp."
+      },
+      "cursos": {
+        "nome": "Kurse",
+        "oQueFaz": "Zertifikatskurse für LinkedIn – zunächst kostenlos, je nachdem, wie gefragt das Thema ist. Markieren Sie „Ich habe bereits“, damit es in Ihrem Profil angezeigt wird.",
+        "precisaDe": "In „Skills“ festgelegte Ziele oder ein Ziel."
+      },
+      "vagas": {
+        "nome": "Stellenangebote",
+        "oQueFaz": "Echte Stellenangebote in Ihrer Region oder im Homeoffice – von der Stelle, die am besten zu Ihnen passt, bis hin zu der, die am wenigsten zu Ihnen passt, mit den jeweiligen Anforderungen und den entsprechenden Weiterbildungen, um dorthin zu gelangen.",
+        "precisaDe": "Markierte Fähigkeiten und die Stadt unter „Einstellungen“ › „Ziel“."
+      },
+      "curriculo": {
+        "nome": "Lebenslauf",
+        "oQueFaz": "Senden Sie Ihren Lebenslauf: Die KI liest ihn und schlägt Ihnen passende Technologien vor, die Sie überprüfen und importieren können."
+      },
+      "perfil": {
+        "nome": "Profil und Tags",
+        "oQueFaz": "Dein Profil in der App im Überblick: Was du beherrschst, was du gerade lernst, was du lernen möchtest und deine Zertifikate."
+      },
+      "amigos": {
+        "nome": "Freunde",
+        "oQueFaz": "Einladungen, Vorschläge von Nachbarn oder Kommilitonen sowie das gemeinsame Lernen zu zweit – mit einer Karte, die nach 7, 30, 60 und 90 Tagen geteilt werden kann.",
+        "precisaDe": "Ein @ (bei der Registrierung ausgewählt, kann unter „Einstellungen“ › „Konto“ bearbeitet werden)."
+      },
+      "relatar": {
+        "nome": "Melden",
+        "oQueFaz": "Senden Sie uns eine Beschwerde oder einen Vorschlag – gerne auch mit Foto – und verfolgen Sie die Antwort der Moderation."
+      },
+      "conta": {
+        "nome": "Konto",
+        "oQueFaz": "Name, @, Foto, Passwort, Passkey und Zwei-Faktor-Authentifizierung."
+      },
+      "objetivo": {
+        "nome": "Ziel",
+        "oQueFaz": "Wo Sie hin möchten, die Wochenstunden und die Region, in der die Stellen angeboten werden (Stadt und Umkreis in km)."
+      },
+      "skills": {
+        "nome": "Fähigkeiten",
+        "oQueFaz": "Die Technologien Ihres Plans und das jeweilige Niveau, von N0 (ich möchte lernen) bis N5 (Experte)."
+      },
+      "avisos": {
+        "nome": "Hinweise und Datenschutz",
+        "oQueFaz": "Welche E-Mails Sie erhalten, ob Sie in den Freundschaftsvorschlägen erscheinen, alle Ihre Daten exportieren oder das Konto löschen."
+      },
+      "integracoes": {
+        "nome": "Integrationen",
+        "oQueFaz": "Der Status der Dienste, die die App nutzt (KI, Stellenangebote, Übersetzung, E-Mail) – nützlich, wenn etwas nicht zu funktionieren scheint."
+      }
+    },
+    "passos": {
+      "titulo": "Erste Schritte",
+      "conferindo": "überprüfen…",
+      "progresso": "{feitos} {total}-Essenzien, die hergestellt wurden",
+      "manualDeBordo": "Bordhandbuch",
+      "pular": "Überspringen",
+      "proximoPasso": "Nächster Schritt:",
+      "opcional": "optional",
+      "feito": "fertig",
+      "emSeguida": "Als Nächstes:",
+      "irPara": "Weiter zu: {titulo}",
+      "ir": "Gehen",
+      "regiao": {
+        "titulo": "Sag mir, wo du wohnst",
+        "onde": "Einstellungen › Zielsetzung › Region und Umfang der Stellenangebote",
+        "oQueFazer": "Wählen Sie Ihre Stadt aus und geben Sie an, wie viele Kilometer Sie für eine Stelle vor Ort zurücklegen würden.",
+        "depois": "„Vagas“ zeigt nun nur noch Präsenzveranstaltungen in Ihrer Umgebung an (Online-Veranstaltungen werden weiterhin angezeigt), und Ihr Studientag richtet sich nach Ihrer Zeitzone."
+      },
+      "objetivo": {
+        "titulo": "Wählen Sie Ihr Ziel aus",
+        "onde": "Einstellungen › Ziel",
+        "oQueFazer": "Wählen Sie ein vorgefertigtes Ziel aus oder geben Sie in freiem Text an, wohin Sie gelangen möchten, und wie viele Stunden pro Woche.",
+        "depois": "Der Fahrplan wird auf dieses Ziel hin ausgerichtet, und bei den Stellenangeboten und Kursen wird den Anforderungen des Fahrplans Vorrang eingeräumt."
+      },
+      "curriculo": {
+        "titulo": "Senden Sie uns Ihren Lebenslauf",
+        "onde": "Lebenslauf",
+        "oQueFazer": "Laden Sie die PDF- oder DOCX-Datei hoch: Die KI liest den Text und schlägt Ihnen Technologien mit einer geschätzten Stufe vor, die Sie überprüfen können.",
+        "depois": "Die Skills werden im nächsten Schritt bereits ausgefüllt angezeigt – Sie müssen nur noch die Stufen überprüfen."
+      },
+      "skills": {
+        "titulo": "Markieren Sie Ihre Fähigkeiten und die Stufen",
+        "onde": "Einstellungen › Skills",
+        "oQueFazer": "Kreuzen Sie die Technologien Ihres Plans an und geben Sie für jede das jeweilige Niveau an (N0 = ich möchte es lernen … N5 = Experte).",
+        "depois": "„Kurse“ schlägt nun Zertifikate vor, „Stellenangebote“ vergleicht Ihren Tech-Stack und das „Labor“ zeigt Ihre Programmiersprachen an."
+      },
+      "roadmap": {
+        "titulo": "Erstellen Sie Ihre Roadmap",
+        "onde": "Roadmap",
+        "oQueFazer": "Erstellen Sie den Plan: Phasen und Module, ausgehend von Ihrem aktuellen Wissensstand bis hin zum Ziel, ganz nach Ihrem wöchentlichen Rhythmus.",
+        "depois": "Auf der Startseite werden der aktuelle Plan, die Wochenliste und der Fortschritt angezeigt, und der Plan wird jede Woche neu angepasst."
+      },
+      "idioma": {
+        "titulo": "Machen Sie den Englischtest",
+        "onde": "Sprachen",
+        "oQueFazer": "Machen Sie den Einstufungstest: Er ermittelt Ihr tatsächliches CEFR-Niveau (A1 bis C2).",
+        "depois": "Vagas vergleicht das gewünschte Englischniveau mit Ihrem eigenen, und die täglichen Übungen werden an Ihr Niveau angepasst."
+      },
+      "amigos": {
+        "titulo": "Freunde hinzufügen",
+        "onde": "Freunde",
+        "oQueFazer": "Suche nach @ oder schau dir die Vorschläge von Leuten an, die in deiner Nähe wohnen oder dasselbe studieren wie du.",
+        "depois": "Wenn ihr am selben Tag lernt, bildet ihr gemeinsam eine Sequenz – mit einer Karte, die ihr bei jedem Meilenstein teilen könnt."
+      }
+    }
+  },
+  "roadmap": {
+    "page": {
+      "carregando": "Ihr Tarif wird geladen…",
+      "meta": "{semanas} Wochen · {horas}h pro Woche · {pct}% abgeschlossen",
+      "formato": "Format der Roadmap",
+      "novoPlano": "Einen neuen Plan erstellen",
+      "historicoNota": "Der aktuelle Plan wird im Verlauf gespeichert – das Erstellen eines neuen Plans löscht diesen nicht.",
+      "views": {
+        "timeline": "Zeitleiste",
+        "fases": "Phasen",
+        "matriz": "Matrix"
+      },
+      "notas": {
+        "a": "Vertikale Zeitleiste: Die Reihenfolge gibt den Ton an, die Frist steht links.",
+        "b": "Phasen nebeneinander, um den gesamten Umfang auf einen Blick zu sehen.",
+        "c": "Kompetenzmatrix: Wo stehen Sie und wie weit reicht der Plan?"
+      }
+    },
+    "matriz": {
+      "vazio": "Dieser Plan enthält noch keine Angaben zu den für Ihr Profil erforderlichen Kompetenzen.",
+      "celula": "{nome} · N{nivel} · {estado}",
+      "estado": {
+        "atingido": "erreicht",
+        "proximo": "nächste Ebene des Plans",
+        "alem": "über diesen Plan hinaus"
+      },
+      "legendaPreenchido": "ausgefüllt = in Ihrem Profil hinterlegter Wert",
+      "legendaContorno": "Umriss = nächste Ebene, die diese Ebene erreicht"
+    },
+    "gerar": {
+      "titulo": "Ihren Plan erstellen",
+      "intro": "Ich stelle die Phasen anhand der {n} Kompetenzen Ihres Profils und des unten genannten Ziels zusammen.",
+      "objetivoLabel": "Wohin möchten Sie gelangen?",
+      "objetivoPlaceholder": "Beispiel: Vollzeit-Full-Stack-Java-Entwickler mit Schwerpunkt auf internationalen Stellenangeboten",
+      "prazo": "Frist",
+      "prazoLabel": "Laufzeit des Plans",
+      "horas": "Stunden pro Woche",
+      "horasLabel": "Stunden pro Woche",
+      "horizontes": {
+        "s8": "8 Wochen",
+        "s12": "12 Wochen",
+        "s26": "26 Wochen",
+        "ano": "1 Jahr"
+      },
+      "montando": "Den Plan ausarbeiten…",
+      "gerar": "Plan erstellen",
+      "cancelar": "Abbrechen",
+      "dicaMontando": "Die KI schreibt gerade die Phasen – das dauert in der Regel weniger als 20 Sekunden.",
+      "dica": "Es dauert nur ein paar Sekunden: Der Plan wird individuell auf Sie zugeschnitten.",
+      "etapas": {
+        "lendo": "Beim Durchlesen Ihres Lebenslaufs und Ihrer Fähigkeiten",
+        "fases": "Die Phasen skizzieren",
+        "modulos": "Die Module schreiben",
+        "ordem": "Die Lernreihenfolge festlegen"
+      },
+      "chips": {
+        "entrevistaIngles": "Ich möchte ein Vorstellungsgespräch auf Englisch",
+        "semIa": "Ohne sich beim Programmieren auf KI zu verlassen",
+        "pratico": "Ich ziehe praktische Projekte dem Lesen vor",
+        "fimDeSemana": "Ich habe das Wochenende frei"
+      },
+      "contextoLabel": "Was sollte ich noch wissen (optional)",
+      "contextoPlaceholder": "Beispiel: Ich arbeite seit 3 Jahren als Frontend-Entwickler, möchte zum Full-Stack-Java-Entwickler wechseln, und das Vorstellungsgespräch findet im Juni statt.",
+      "semSkills": {
+        "titulo": "Zunächst muss ich wissen, was du bereits weißt",
+        "descricao": "Der Plan deckt den Weg zwischen dem, was Sie bereits beherrschen, und dem, was Sie erreichen möchten, ab. Schicken Sie mir Ihren Lebenslauf, den ich durchlese und aus dem ich die Technologien herausfiltere, oder markieren Sie Ihre Kompetenzen einfach selbst.",
+        "enviarCv": "Lebenslauf senden",
+        "marcar": "Kompetenzen zuweisen"
+      }
+    },
+    "fases": {
+      "fase": "Phase „{n}“",
+      "semanaCurta": "{inicio}–{fim}"
+    },
+    "timeline": {
+      "fase": "Phase „{n}“",
+      "semanas": "{inicio}Wochen –{fim}"
+    },
+    "ajustes": {
+      "titulo": "Kurskorrekturen",
+      "conferindo": "Ich schaue mal nach…",
+      "reajustar": "Jetzt neu berechnen",
+      "explicacao": "Der Plan wird jede Woche anhand der gemessenen Ergebnisse angepasst: Nachgewiesene Kenntnisse in einem Quiz werden zu einer kurzen Wiederholung, wiederkehrende Wissenslücken erhalten mehr Zeit, und der Zeitplan richtet sich nach dem tatsächlichen Fortschritt.",
+      "semAjuste": "Es sind keine Anpassungen erforderlich – der Plan stimmt mit den gemessenen Werten überein.",
+      "aplicadoUm": "{n} vorgenommene Anpassung.",
+      "aplicadoVarios": "{n} vorgenommene Anpassungen.",
+      "erroFallback": "Ich konnte die Route nicht anpassen.",
+      "ultimo": "Letzte Anpassung · Woche {semana} · {data}",
+      "horas": "{antes}h → {depois}h",
+      "reagenda": "endet in dieser Woche {antes} → {depois}",
+      "tipo": {
+        "compactar": "Komprimiert",
+        "reforcar": "Verstärkt",
+        "reagendar": "Zeitplan"
+      }
+    }
   }
 }

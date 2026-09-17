@@ -195,20 +195,20 @@ export function IdiomaProvider({
   return <IdiomaContexto.Provider value={valor}>{children}</IdiomaContexto.Provider>;
 }
 
+/** O contexto de fora do provider. É uma CONSTANTE — e não um objeto novo a
+ * cada render — porque `t` entra em dependências de `useEffect`/`useCallback`:
+ * um `t` recriado a cada render dispararia esses efeitos em laço (um componente
+ * que busca dados ao montar nunca estabilizaria). `traduzirPt` já é estável. */
+const SEM_PROVIDER: Contexto = {
+  idioma: IDIOMA_PADRAO,
+  trocarIdioma: () => {},
+  t: traduzirPt,
+};
+
 function usarContexto(): Contexto {
-  const valor = useContext(IdiomaContexto);
   // Fora do provider (um teste que renderiza um componente solto): português,
   // sem quebrar a tela.
-  return (
-    valor ?? {
-      idioma: IDIOMA_PADRAO,
-      trocarIdioma: () => {},
-      t: (chave, valores) => {
-        const achado = buscar(pt as Dicionario, chave);
-        return typeof achado === "string" ? aplicar(achado, valores) : chave;
-      },
-    }
-  );
+  return useContext(IdiomaContexto) ?? SEM_PROVIDER;
 }
 
 export function useT(): Traduzir {

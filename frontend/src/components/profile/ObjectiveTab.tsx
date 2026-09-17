@@ -24,6 +24,7 @@ import { useEffect, useRef, useState } from "react";
 import { profile as profileApi } from "@/api/endpoints";
 import type { Profile } from "@/api/types";
 import { useQuery } from "@/hooks/useApi";
+import { useT } from "@/lib/i18n";
 import { ACC, ACC4, C, SIZE, TEXT } from "@/lib/tokens";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel } from "@/components/ui/primitives";
@@ -117,6 +118,7 @@ function metas(texto: string): string[] {
 }
 
 export function ObjectiveTab() {
+  const t = useT();
   const carregado = useQuery(() => profileApi.get(), []);
   const [perfil, setPerfil] = useState<Profile | null>(null);
   const [contexto, setContexto] = useState("");
@@ -161,7 +163,7 @@ export function ObjectiveTab() {
       setSalvamento({
         campo,
         estado: "erro",
-        mensagem: caught instanceof Error ? caught.message : "Não consegui salvar.",
+        mensagem: caught instanceof Error ? caught.message : t("perfil.objetivo.erroSalvar"),
       });
     }
   }
@@ -173,15 +175,15 @@ export function ObjectiveTab() {
     <div style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
       <Panel pad={16.8}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 11.2, marginBottom: 11.2 }}>
-          <Kicker>Onde você quer chegar</Kicker>
+          <Kicker>{t("perfil.objetivo.ondeChegar")}</Kicker>
           <span style={{ fontSize: 11.5, color: TEXT.faint }}>
-            escolha um destino ou descreva o seu abaixo
+            {t("perfil.objetivo.escolhaOuDescreva")}
           </span>
           <Estado salvamento={salvamento} campo="destino" />
         </div>
 
         {/* Muitos destinos: a área filtra, e "Todas" mostra a lista inteira. */}
-        <div role="group" aria-label="Área" style={{ display: "flex", flexWrap: "wrap", gap: 5.6, marginBottom: 11.2 }}>
+        <div role="group" aria-label={t("perfil.objetivo.areaLabel")} style={{ display: "flex", flexWrap: "wrap", gap: 5.6, marginBottom: 11.2 }}>
           {(["Todas", ...AREAS] as const).map((opcao) => {
             const ativa = area === opcao;
             return (
@@ -209,7 +211,7 @@ export function ObjectiveTab() {
 
         <div
           role="radiogroup"
-          aria-label="Destino do plano"
+          aria-label={t("perfil.objetivo.destinoPlanoLabel")}
           style={{
             display: "grid",
             gridTemplateColumns: "repeat(auto-fit, minmax(260px, 1fr))",
@@ -269,15 +271,14 @@ export function ObjectiveTab() {
 
         {destinoLivre ? (
           <p style={{ fontSize: 11.5, color: TEXT.faint, margin: "11.2px 0 0" }}>
-            Seu destino atual foi escrito por você: “{perfil.target_role}”. Escolher um da lista
-            substitui.
+            {t("perfil.objetivo.destinoLivre", { destino: perfil.target_role ?? "" })}
           </p>
         ) : null}
       </Panel>
 
       <Panel pad={16.8}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 11.2, marginBottom: 5.6 }}>
-          <Kicker>Descreva em texto livre</Kicker>
+          <Kicker>{t("perfil.objetivo.textoLivre")}</Kicker>
           <span
             style={{
               fontSize: 10.5,
@@ -287,23 +288,21 @@ export function ObjectiveTab() {
               color: ACC4,
             }}
           >
-            gera o plano inteiro
+            {t("perfil.objetivo.geraPlanoInteiro")}
           </span>
         </div>
         <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 11.2px", maxWidth: "70ch" }}>
-          Conte onde você está, para onde quer ir e o que atrapalha. A partir disso o roadmap sai
-          por fases, a Biblioteca busca vídeo e artigo das tecnologias certas, e os quizzes saem no
-          seu nível.
+          {t("perfil.objetivo.textoLivreDescricao")}
         </p>
 
         <div className="field">
-          <label htmlFor="objetivo-livre">Contexto para a geração do plano</label>
+          <label htmlFor="objetivo-livre">{t("perfil.objetivo.contextoLabel")}</label>
           <textarea
             id="objetivo-livre"
             className="input"
             rows={5}
             style={{ resize: "vertical", lineHeight: 1.5 }}
-            placeholder="ex: sou frontend há 3 anos, quero virar fullstack Java sem depender de IA para codar, tenho 8h por semana e quero passar em entrevista técnica em inglês até junho"
+            placeholder={t("perfil.objetivo.contextoPlaceholder")}
             value={contexto}
             onChange={(event) => setContexto(event.target.value)}
             // Salva ao sair do campo. Um botão faria a pessoa achar que perdeu
@@ -331,7 +330,7 @@ export function ObjectiveTab() {
             }}
           >
             <span style={{ fontSize: 11.5, color: TEXT.faint }}>
-              Salva sozinho quando você sai do campo — não há botão a apertar.
+              {t("perfil.objetivo.salvaSozinho")}
             </span>
             <Estado salvamento={salvamento} campo="contexto" />
           </div>
@@ -366,12 +365,11 @@ export function ObjectiveTab() {
 
       <Panel pad={16.8}>
         <div style={{ display: "flex", alignItems: "baseline", gap: 11.2, marginBottom: 5.6 }}>
-          <Kicker>Horas por semana</Kicker>
+          <Kicker>{t("perfil.objetivo.horasPorSemana")}</Kicker>
           <Estado salvamento={salvamento} campo="horas" />
         </div>
         <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 11.2px", maxWidth: "70ch" }}>
-          O plano é dimensionado por isto, e não pelo ideal do assunto. Um plano que exige 20h de
-          quem tem 6h não é ambicioso — é um plano abandonado na terceira semana.
+          {t("perfil.objetivo.horasDescricao")}
         </p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 5.6 }}>
           {HORAS.map((horas) => {
@@ -417,6 +415,7 @@ export function ObjectiveTab() {
  * que ela não está olhando.
  */
 function Estado({ salvamento, campo }: { salvamento: Salvamento; campo: Campo }) {
+  const t = useT();
   if (!salvamento || salvamento.campo !== campo) return null;
   const cor =
     salvamento.estado === "salvo" ? C.verde : salvamento.estado === "erro" ? C.rosa : TEXT.faint;
@@ -425,9 +424,9 @@ function Estado({ salvamento, campo }: { salvamento: Salvamento; campo: Campo })
       role="status"
       style={{ fontSize: 11.5, color: cor, whiteSpace: "nowrap" }}
     >
-      {salvamento.estado === "salvando" ? "salvando…" : null}
-      {salvamento.estado === "salvo" ? "salvo" : null}
-      {salvamento.estado === "erro" ? `não salvou — ${salvamento.mensagem}` : null}
+      {salvamento.estado === "salvando" ? t("perfil.objetivo.salvando") : null}
+      {salvamento.estado === "salvo" ? t("perfil.objetivo.salvo") : null}
+      {salvamento.estado === "erro" ? t("perfil.objetivo.naoSalvou", { mensagem: salvamento.mensagem }) : null}
     </span>
   );
 }

@@ -16,14 +16,16 @@ import { resumes as resumesApi } from "@/api/endpoints";
 import type { ParsedTechnology, Resume } from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
 import { useMutation, useQuery } from "@/hooks/useApi";
+import { useT } from "@/lib/i18n";
 import { ACC, C, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
 import { ProgressoDaTarefa } from "@/components/ui/ProgressoDaTarefa";
-import { MASTERY_LABELS, TechnologyRow } from "@/components/profile/TechnologyRow";
+import { MASTERY_KEYS, TechnologyRow } from "@/components/profile/TechnologyRow";
 
 export function CvPage() {
+  const t = useT();
   const { state, dispatch } = useAppState();
   const list = useQuery(() => resumesApi.list(), []);
   const [current, setCurrent] = useState<Resume | null>(null);
@@ -31,7 +33,7 @@ export function CvPage() {
   const resume =
     current ?? list.data?.find((item) => item.id === state.activeResumeId) ?? null;
 
-  if (list.loading && !resume) return <Loading label="Carregando seus currículos…" />;
+  if (list.loading && !resume) return <Loading label={t("curriculo.carregando")} />;
 
   return (
     <div style={{ maxWidth: 1000, ...SCREEN_IN }}>
@@ -44,7 +46,7 @@ export function CvPage() {
           marginBottom: 8.4,
         }}
       >
-        Base do seu plano
+        {t("curriculo.kicker")}
       </div>
 
       {!resume ? (
@@ -67,6 +69,7 @@ export function CvPage() {
 
 /** Passo 1: o arquivo. */
 function Upload({ onUploaded }: { onUploaded: (resume: Resume) => void }) {
+  const t = useT();
   const upload = useMutation((file: File) => resumesApi.upload(file));
   const [dragging, setDragging] = useState(false);
 
@@ -78,10 +81,9 @@ function Upload({ onUploaded }: { onUploaded: (resume: Resume) => void }) {
 
   return (
     <>
-      <h1 style={{ fontSize: 32, margin: "0 0 8.4px" }}>Envie seu currículo</h1>
+      <h1 style={{ fontSize: 32, margin: "0 0 8.4px" }}>{t("curriculo.envio.titulo")}</h1>
       <p style={{ maxWidth: "62ch", color: "rgba(233,233,237,.7)", fontSize: 14 }}>
-        Leio o arquivo, extraio suas competências, estimo o nível de cada uma e monto o roadmap a
-        partir do que falta. Você revisa tudo antes de eu gerar.
+        {t("curriculo.envio.descricao")}
       </p>
 
       {upload.error ? <ErrorState message={upload.error} /> : null}
@@ -117,10 +119,10 @@ function Upload({ onUploaded }: { onUploaded: (resume: Resume) => void }) {
           <Icon name="upload" size={30} />
         </span>
         <div style={{ fontSize: 16 }}>
-          {upload.pending ? "Enviando…" : "Arraste o arquivo aqui ou clique para escolher"}
+          {upload.pending ? t("curriculo.envio.enviando") : t("curriculo.envio.arraste")}
         </div>
         <div style={{ fontSize: 12.5, color: TEXT.muted }}>
-          PDF, DOCX, ODT, RTF, TXT ou MD · até 10 MB · fica na sua conta, não é compartilhado
+          {t("curriculo.envio.limites")}
         </div>
         <input
           type="file"
@@ -161,6 +163,7 @@ function Parse({
   onParsed: (resume: Resume) => void;
   onRestart: () => void;
 }) {
+  const t = useT();
   const parse = useMutation(() => resumesApi.parse(resume.id));
 
   async function run() {
@@ -169,15 +172,15 @@ function Parse({
   }
 
   const steps = [
-    "Separando seções: experiência, formação, projetos",
-    "Reconhecendo tecnologias citadas e o contexto de uso",
-    "Estimando nível por tempo de uso e responsabilidade",
-    "Cruzando com a meta para achar as lacunas",
+    t("curriculo.leitura.passo1"),
+    t("curriculo.leitura.passo2"),
+    t("curriculo.leitura.passo3"),
+    t("curriculo.leitura.passo4"),
   ];
 
   return (
     <>
-      <h1 style={{ fontSize: 32, margin: "0 0 8.4px" }}>Ler o currículo</h1>
+      <h1 style={{ fontSize: 32, margin: "0 0 8.4px" }}>{t("curriculo.leitura.titulo")}</h1>
       <p style={{ maxWidth: "62ch", color: "rgba(233,233,237,.7)", fontSize: 14 }}>
         {resume.filename} · {Math.round(resume.size_bytes / 1024)} KB
       </p>
@@ -194,7 +197,7 @@ function Parse({
             fontSize: 12.5,
           }}
         >
-          {resume.error}. Vou mandar o arquivo inteiro para o modelo ler visualmente.
+          {t("curriculo.leitura.erroVisual", { erro: resume.error })}
         </p>
       ) : null}
 
@@ -235,11 +238,11 @@ function Parse({
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8.4, alignItems: "center" }}>
             <button type="button" className="btn btn-primary" onClick={run}>
               <Icon name="file" size={15} />
-              Ler currículo
+              {t("curriculo.leitura.lerCurriculo")}
             </button>
             <button type="button" className="btn btn-ghost" onClick={onRestart}>
               <Icon name="upload" size={15} />
-              Enviar outro arquivo
+              {t("curriculo.leitura.enviarOutro")}
             </button>
           </div>
         )}
@@ -257,6 +260,7 @@ function Parse({
  * anos liderando ou de uma linha na lista de palavras-chave.
  */
 function Review({ resume, onDone }: { resume: Resume; onDone: () => void }) {
+  const t = useT();
   const parsed = "tecnologias" in resume.parsed ? resume.parsed : null;
   const [technologies, setTechnologies] = useState<ParsedTechnology[]>(
     parsed?.tecnologias ?? [],
@@ -278,10 +282,9 @@ function Review({ resume, onDone }: { resume: Resume; onDone: () => void }) {
 
   return (
     <>
-      <h1 style={{ fontSize: 32, margin: "0 0 8.4px" }}>Revise o que eu li</h1>
+      <h1 style={{ fontSize: 32, margin: "0 0 8.4px" }}>{t("curriculo.revisao.titulo")}</h1>
       <p style={{ maxWidth: "62ch", color: "rgba(233,233,237,.7)", fontSize: 14 }}>
-        Estimei o nível de cada tecnologia pelo tempo de uso e pela responsabilidade descrita.
-        Ajuste o que estiver errado — o plano é montado a partir disto.
+        {t("curriculo.revisao.descricao")}
       </p>
 
       {apply.error ? <ErrorState message={apply.error} onRetry={confirm} /> : null}
@@ -295,17 +298,17 @@ function Review({ resume, onDone }: { resume: Resume; onDone: () => void }) {
         }}
       >
         <Panel>
-          <Kicker style={{ display: "block", marginBottom: 11.2 }}>Extraído do currículo</Kicker>
+          <Kicker style={{ display: "block", marginBottom: 11.2 }}>{t("curriculo.revisao.extraido")}</Kicker>
           <div style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
             {[
-              { label: "Nome", value: parsed?.nome },
-              { label: "Cargo atual", value: parsed?.cargo_atual },
-              { label: "Senioridade", value: parsed?.senioridade },
+              { label: t("curriculo.revisao.nome"), value: parsed?.nome },
+              { label: t("curriculo.revisao.cargoAtual"), value: parsed?.cargo_atual },
+              { label: t("curriculo.revisao.senioridade"), value: parsed?.senioridade },
               {
-                label: "Experiência",
-                value: parsed?.anos_experiencia ? `${parsed.anos_experiencia} anos` : "",
+                label: t("curriculo.revisao.experiencia"),
+                value: parsed?.anos_experiencia ? t("curriculo.revisao.anos", { n: parsed.anos_experiencia }) : "",
               },
-              { label: "Cidade", value: parsed?.cidade },
+              { label: t("curriculo.revisao.cidade"), value: parsed?.cidade },
             ]
               .filter((field) => field.value)
               .map((field) => (
@@ -329,9 +332,9 @@ function Review({ resume, onDone }: { resume: Resume; onDone: () => void }) {
               marginBottom: 11.2,
             }}
           >
-            <Kicker>Tecnologias · {kept.length}</Kicker>
+            <Kicker>{t("curriculo.revisao.tecnologias", { n: kept.length })}</Kicker>
             <span style={{ fontSize: 11.5, color: TEXT.muted }}>
-              ajuste o nível ou remova o que não faz parte do plano
+              {t("curriculo.revisao.ajusteOuRemova")}
             </span>
           </div>
 
@@ -375,17 +378,22 @@ function Review({ resume, onDone }: { resume: Resume; onDone: () => void }) {
               onClick={confirm}
               disabled={apply.pending || kept.length === 0}
             >
-              {apply.pending ? "Importando…" : `Importar ${kept.length} competências`}
+              {apply.pending
+                ? t("curriculo.revisao.importando")
+                : t("curriculo.revisao.importar", { n: kept.length })}
             </button>
             <span style={{ fontSize: 12, color: TEXT.muted }}>
-              {kept.filter((item) => item.proficiencia === 0).length} entram como meta de estudo
+              {t("curriculo.revisao.entramComoMeta", {
+                n: kept.filter((item) => item.proficiencia === 0).length,
+              })}
             </span>
           </div>
         </Panel>
       </div>
 
       <p style={{ marginTop: 14, fontSize: 11.5, color: TEXT.faint }}>
-        Escala: {MASTERY_LABELS.map((label, index) => `N${index} ${label}`).join(" · ")}
+        {t("curriculo.revisao.escala")}{" "}
+        {MASTERY_KEYS.map((chave, index) => `N${index} ${t(chave)}`).join(" · ")}
       </p>
     </>
   );

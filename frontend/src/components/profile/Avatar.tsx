@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import { esquecerFoto, fotoDe } from "@/lib/fotos";
 import { profile as profileApi } from "@/api/endpoints";
 import { useAuth } from "@/hooks/useAuth";
+import { useT } from "@/lib/i18n";
 import { ACC3, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 
@@ -47,6 +48,7 @@ function iniciais(nome: string): string {
 const ACEITOS = "image/jpeg,image/png,image/webp";
 
 export function Avatar({ nome, editavel = false }: { nome: string; editavel?: boolean }) {
+  const t = useT();
   const { user, refresh } = useAuth();
   const [url, setUrl] = useState<string | null>(null);
   const [ocupado, setOcupado] = useState(false);
@@ -80,7 +82,7 @@ export function Avatar({ nome, editavel = false }: { nome: string; editavel?: bo
       // achando que não há foto e nem tentaria buscá-la.
       await refresh();
     } catch (caught) {
-      setErro(caught instanceof Error ? caught.message : "Não consegui enviar a imagem.");
+      setErro(caught instanceof Error ? caught.message : t("perfil.avatar.erroEnviar"));
     } finally {
       setOcupado(false);
     }
@@ -94,7 +96,7 @@ export function Avatar({ nome, editavel = false }: { nome: string; editavel?: bo
       esquecerFoto("eu");
       await refresh();
     } catch (caught) {
-      setErro(caught instanceof Error ? caught.message : "Não consegui remover a imagem.");
+      setErro(caught instanceof Error ? caught.message : t("perfil.avatar.erroRemover"));
     } finally {
       setOcupado(false);
     }
@@ -114,7 +116,7 @@ export function Avatar({ nome, editavel = false }: { nome: string; editavel?: bo
   const figura = url ? (
     <img
       src={url}
-      alt={`Foto de perfil de ${nome}`}
+      alt={t("perfil.avatar.alt", { nome })}
       style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
     />
   ) : (
@@ -148,7 +150,7 @@ export function Avatar({ nome, editavel = false }: { nome: string; editavel?: bo
           }}
         >
           <Icon name={temFoto ? "pencil" : "upload"} size={13} />
-          {ocupado ? "Enviando…" : temFoto ? "Alterar" : "Enviar foto"}
+          {ocupado ? t("perfil.avatar.enviando") : temFoto ? t("perfil.avatar.alterar") : t("perfil.avatar.enviarFoto")}
           <input
             type="file"
             accept={ACEITOS}
@@ -172,7 +174,7 @@ export function Avatar({ nome, editavel = false }: { nome: string; editavel?: bo
             style={{ ...ACAO, color: TEXT.muted }}
           >
             <Icon name="trash" size={13} />
-            Remover
+            {t("perfil.avatar.remover")}
           </button>
         ) : null}
       </div>

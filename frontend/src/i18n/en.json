@@ -1057,5 +1057,1529 @@
     "dialogoAria": "Achievement: {dias} consecutive days with {nome}",
     "imagemAlt": "Card: {dias} days of consecutive study sessions with {nome}",
     "textoCompartilhar": "{dias} A series of study days with @{username} on PathR! {url}"
+  },
+  "candidaturas": {
+    "titulo": "Your resume getting to the right job openings",
+    "kicker": "Applications",
+    "enviarAgora": "Send Now",
+    "prepararSemEnviar": "Prepare without sending",
+    "abrirVaga": "Post a job opening and respond",
+    "enviadasHoje": "Sent today",
+    "ontem": "Yesterday",
+    "ultimos7": "Last 7 days",
+    "enviando": "Sending…",
+    "passos": {
+      "titulo": "Step-by-Step Guide to This Application",
+      "fazendo": "doing it now",
+      "anuncio": "Reading the ad",
+      "curriculo": "Reviewing your resume",
+      "carta": "Writing the letter",
+      "respostas": "Filling in the answers",
+      "envio": "Sending"
+    },
+    "faltam": {
+      "titulo": "What do you still need to answer?",
+      "explicacao": "The app doesn't make up answers for you. Whatever you type here is saved and will fill in the next blanks—even on another website that refers to the question by a different name.",
+      "sensivel": "optional, and only you answer",
+      "salvar": "Save answers",
+      "salvando": "Saving…"
+    }
+  },
+  "amigos": {
+    "voceEh": "You are",
+    "titulo": "Friends",
+    "convitesRecebidos": "Invitations for You",
+    "procurar": "Search for people",
+    "buscaPlaceholder": "@username or name",
+    "procurando": "Searching…",
+    "nadaEncontrado": "No one found. To find someone who doesn't appear in the suggestions, type the full @ symbol.",
+    "sugestoes": "Suggestions for You",
+    "procurandoPerto": "Looking for people near you…",
+    "semSugestoes": "There aren't any suggestions yet. They come from people who live nearby and are studying similar subjects to you.",
+    "carregandoAmigos": "Loading your friends…",
+    "seusAmigos": "Your friends",
+    "nenhumAmigo": "No friends yet",
+    "nenhumAmigoDesc": "Add someone from the suggestions, or search for the @ handle of someone you already know.",
+    "convitesEnviados": "Invitations sent",
+    "erroBuscar": "I wasn't able to pick it up.",
+    "avisos": {
+      "erroResponder": "I couldn't answer.",
+      "ariaConvite": "{nome} sent you a friend request",
+      "ariaAceite": "{nome} accepted his invitation",
+      "mandouConvite": "sent you a friend request",
+      "aceitouConvite": "accepted his invitation",
+      "fecharAviso": "Close notification",
+      "aceitar": "Accept",
+      "recusar": "Decline",
+      "verAmigos": "View Friends"
+    },
+    "campoUsername": {
+      "label": "Username",
+      "placeholder": "yourname",
+      "conferindo": "Checking…",
+      "seuAtual": "This is your current @.",
+      "estaLivre": "It's free.",
+      "seVazio": "If you leave it blank, you will be",
+      "usar": "Use @{usuario}"
+    },
+    "privacidade": {
+      "erroSalvar": "I couldn't save it.",
+      "titulo": "People",
+      "aparecer": "Appear in friend suggestions",
+      "explicacao": "If you're offline, you won't appear in suggestions or in name searches. People who already have your @ handle can still find you and invite you."
+    }
+  },
+  "idiomas": {
+    "semVozDoIdioma": "Your browser doesn't support speech in this language, so the audio plays with incorrect pronunciation. In Edge or Chrome, the speech feature is already enabled; in Windows, you can set it up in Settings › Time &amp; Language › Speech.",
+    "carregandoModulo": "Loading the language module…",
+    "moduloOpcional": "Optional module",
+    "tituloTrabalho": "Language for Work",
+    "descricao": "It runs parallel to the technical roadmap. It is aligned with the CEFR and provides training using the vocabulary of backend developers working on an international team.",
+    "ativado": "Enabled",
+    "desativado": "Disabled",
+    "desativadoAviso": "Module disabled. Enable it above to include {min} minutes of English per day in your plan.",
+    "seuNivel": "Your level",
+    "meta": "meta {nivel}",
+    "nivelDivergente": "Measured during the leveling assessment. In practice, your performance is at the level of {nivel} — the skill matrix shows what’s holding you back. Repeat the leveling assessment whenever you want to update this number.",
+    "nivelConfirma": "Measured during leveling, and practice sessions confirm this. Repeat the leveling process whenever you want a new measurement.",
+    "semNivel": "No leveling yet. The number comes from the training sessions; the test takes about 12 minutes and provides a baseline measurement.",
+    "preparandoTeste": "Preparing for the test…",
+    "refazerNivelamento": "Re-level",
+    "fazerNivelamento": "Level the surface",
+    "nivelamentoEmAndamento": "Leveling in progress",
+    "respondidasProgresso": "{feito} {total}s answered · {pct}%",
+    "continuarDeOndeParei": "Pick up where I left off",
+    "recomecarDoZero": "Starting Over from Scratch",
+    "pontosDeMelhora": "Areas for improvement",
+    "paraRever": "{n} to review",
+    "nadaPendente": "Nothing left to do. Any mistakes you make in leveling up or during training show up here and reappear in your daily training—in other words.",
+    "habilidades": {
+      "grammar": "Grammar",
+      "vocabulary": "Vocabulary",
+      "reading": "Reading",
+      "listening": "Listen",
+      "writing": "Writing",
+      "speaking": "Hey",
+      "business": "Corporate"
+    },
+    "confianca": {
+      "alta": "firm estimate",
+      "media": "reasonable estimate",
+      "inicial": "initial estimate — train more to solidify it",
+      "semDados": "No replies yet"
+    },
+    "situacao": {
+      "reforcar": "to strengthen",
+      "progredindo": "making progress",
+      "dominado": "dominated",
+      "poucosDados": "limited data"
+    },
+    "quadro": {
+      "porHabilidade": "By skill",
+      "nosTreinos": "during practice: {nivel}",
+      "semDados": "Complete today's leveling or training to see your level in each skill.",
+      "topicoReforcar": "{n} topic to emphasize",
+      "topicosReforcar": "{n} topics to reinforce",
+      "respostaUm": "{n} answer",
+      "respostaVarias": "{n} answers",
+      "correctDe": "{correct} by {total}"
+    },
+    "config": {
+      "erroSalvar": "I couldn't save it.",
+      "titulo": "Languages",
+      "nenhumNoPlano": "none in the plan",
+      "noPlanoUm": "{n} language in the plan",
+      "noPlanoVarios": "{n} languages in the plan",
+      "introA": "Select the languages included in your plan and choose the scale you want to use to track your level. Level assessments are always based on the CEFR and converted to the test of your choice —",
+      "naoAplica": "The app does not administer the IELTS, TOEFL, or JLPT",
+      "introB": ", it estimates your location and displays it on the ruler you're using.",
+      "semNivelamento": "without leveling",
+      "acompanharEscala": "Check the level on the scale of",
+      "meta": "Goal",
+      "metaNoExame": "Goal on {exame}",
+      "equivaleComNota": "{nota} — corresponds to “{cefr}” on the CEFR",
+      "equivale": "Equivalent to \"{cefr}\" on the CEFR",
+      "metaEscolhida": "{alvo} Goal",
+      "metaMedida": " — The app will rate this as \"{cefr}\" on the CEFR scale.",
+      "tempoPorDia": "Time per day — comes from the same hourly budget as the roadmap",
+      "minUnidade": "{n} min"
+    },
+    "listening": {
+      "preparandoAudio": "Preparing the audio…",
+      "parar": "Stop",
+      "ouvirDialogo": "Listen to the dialogue",
+      "ouvirDeNovo": "Listen Again",
+      "esconderTranscricao": "Hide transcript",
+      "verTranscricao": "View transcript",
+      "falasUm": "{n} say",
+      "falasVarias": "{n} lines",
+      "semVozNavegador": "This browser does not have a voice to play the dialogue."
+    },
+    "placement": {
+      "preparandoProximas": "Preparing the next questions…",
+      "continuar": "Continue",
+      "titulo": "Placement Test",
+      "perguntaDe": "Question {n} from {total} · The difficulty level adjusts based on your answers",
+      "respostasPossiveis": "Possible answers",
+      "corrigindo": "Correction…",
+      "carregando": "Loading…",
+      "proxima": "Next",
+      "nivelMedido": "This is your measured level. It applies to both the daily plan and the goal deadline.",
+      "verMeuNivel": "View my level"
+    },
+    "texto": {
+      "consultar": "See \"{palavra}\"",
+      "oQueQuerDizer": "What does “{palavra}” mean?",
+      "fechar": "Close",
+      "consultando": "Checking…",
+      "sinonimos": "synonyms: {lista}",
+      "entrouRevisao": "It's part of your vocabulary review for today."
+    },
+    "formato": {
+      "mcq": "Choose",
+      "gap": "Complete",
+      "reorder": "Put the sentence together",
+      "match": "Join",
+      "listening": "Listen",
+      "dictation": "Proverb",
+      "image": "Image",
+      "speaking": "Hey"
+    },
+    "treino": {
+      "origem": {
+        "revisao": "Review of What You Got Wrong",
+        "reforco": "Strengthening a Weak Topic",
+        "novo": "New"
+      },
+      "ponto": {
+        "novoPonto": "That mistake has become an area for improvement: in other words, it will come up again in future training sessions.",
+        "subiu": "Improvement has been restored. It will return later in a more rigorous form until it becomes stable.",
+        "voltaHoje": "It hasn't been finalized yet: we'll come back to this point soon, starting with acknowledging it."
+      },
+      "erroCorrigir": "I couldn't correct it. Please try again.",
+      "erroPreparar": "I wasn't able to prepare the next ones.",
+      "sairDoTreino": "Leave practice",
+      "progressoAria": "Progress from today's workout",
+      "deTotal": "{feito} by {total}",
+      "tentarDeNovo": "Try again",
+      "preparandoProximos": "Preparing for the next exercises…",
+      "nenhumPronto": "There are no exercises available right now.",
+      "carregarProximos": "Load the next ones",
+      "pulado": "Skipped — does not count as an error.",
+      "certo": "Okay!",
+      "aindaNao": "Not yet.",
+      "continuar": "Continue",
+      "concluido": "Today's workout is done",
+      "recuperou": "You recovered {recuperados} from {total} points of improvement that you had previously miscalculated.",
+      "nadaVencia": "No improvement was expected today.",
+      "seuNivelHoje": "Your level today",
+      "avancouDentro": "{nome}: He advanced within the \"{nivel}\"",
+      "porTopico": "By topic",
+      "voltarAoIdioma": "Back to language",
+      "treinoDeHoje": "Today's Workout",
+      "feitoHoje": "{correct} by {total}, posted today",
+      "proximoAmanha": "The next one will be ready tomorrow, covering what we covered in the review and the topics that still need more practice.",
+      "verResumo": "View the summary",
+      "emAndamentoDesc": "{feito} by {total}. Continue where you left off.",
+      "novoDesc": "Review what you got wrong, reinforce your weaker topics, and tackle material slightly above your level—in eight different formats, with immediate feedback.",
+      "preparandoExercicios": "Preparing the exercises…",
+      "continuarTreino": "Continue the workout",
+      "comecarTreino": "Start your workout",
+      "primeirosSegundos": "The first few take a few seconds; the rest will be ready while you answer."
+    },
+    "exercicio": {
+      "imagemAria": "Image from the exercise",
+      "voz": "Voice",
+      "alternativas": "Alternatives",
+      "lacunaAria": "gap",
+      "fraseMontada": "Made-up phrase",
+      "conferir": "Check it out",
+      "recomecar": "Start Over",
+      "toqueTermo": "Tap a term on the left, then tap the translation.",
+      "preparando": "Preparing…",
+      "tocando": "Now playing…",
+      "ouvir": "Listen",
+      "maisDevagar": "Slower",
+      "semVozDitado": "This browser does not support voice output for this phrase. Try Chrome, Edge, or Safari.",
+      "oQueOuviu": "What you heard",
+      "escrevaOuviu": "Write down exactly what you heard",
+      "semMicrofone": "The browser did not grant access to the microphone.",
+      "naoOuvi": "I couldn't hear you. Try again, closer to the microphone.",
+      "ouvirComoSeDiz": "Listen to how it's said",
+      "ouvindoFale": "Listening… speak now",
+      "falar": "To speak",
+      "semReconhecimento": "This browser does not recognize speech.",
+      "naoPossoFalar": "I can't talk right now",
+      "respostaCerta": "Correct answer:",
+      "aFraseEra": "The sentence was",
+      "oTextoEra": "The text was",
+      "naoReconheci": "I didn't recognize it",
+      "faltouDiferente": "It was missing or came out differently",
+      "atencaoAcentos": "It's correct, but pay attention to the accents."
+    }
+  },
+  "biblioteca": {
+    "filtro": {
+      "todos": "Everything",
+      "video": "Videos",
+      "article": "Articles",
+      "doc": "Documentation",
+      "exercise": "Exercises"
+    },
+    "kind": {
+      "video": "video",
+      "article": "article",
+      "course": "course",
+      "doc": "documentation",
+      "book": "book",
+      "podcast": "podcast",
+      "repo": "repository",
+      "exercise": "exercise"
+    }
+  },
+  "comum": {
+    "carregando": "Loading…",
+    "tentarDeNovo": "Try again",
+    "status": {
+      "concluido": "completed",
+      "emCurso": "in progress",
+      "bloqueado": "blocked",
+      "pulado": "skipped",
+      "aFazer": "to do"
+    }
+  },
+  "config": {
+    "titulo": "Settings",
+    "subtitulo": "Account, study objective, skills, languages, notices, and the status of integrations. Any changes made here will cause the plan to be recalculated in the next generation.",
+    "abasAria": "Settings Sections",
+    "abas": {
+      "conta": "Account",
+      "objetivo": "Objective",
+      "skills": "Skills",
+      "idiomas": "Languages",
+      "avisos": "Notices and Privacy",
+      "integracoes": "API Status",
+      "moderacao": "Moderation",
+      "recursos": "Resources"
+    },
+    "legaisAria": "Legal Documents",
+    "legais": {
+      "termos": "Terms of Use",
+      "privacidade": "Privacy Policy",
+      "seguranca": "Security"
+    },
+    "creditos": {
+      "rotulo": "Icons:",
+      "deSob": ", by Kryston Schwarze, under",
+      "chamaMedalha": "; flag and medal of the",
+      "licencaIsc": ", under the ISC license."
+    }
+  },
+  "codelab": {
+    "kicker": "Code Lab",
+    "titulo": "Code ready, gone through line by line",
+    "intro": "Choose the topic and let the language be selected automatically, or choose it yourself. You’ll receive the actual code or configuration—one file or several, such as a GitHub workflow and the test it runs, or a Controller, Service, and Entity—along with a step-by-step guide to its execution: which line of which file runs, what each variable is set to at that moment, and what was displayed in the terminal.",
+    "carregandoExemplos": "Loading your examples…",
+    "escrevendoExemplo": "Writing the example…",
+    "semPassoAPasso": "without step-by-step instructions",
+    "passoN": "Step {n}",
+    "linhaN": "{linha} line",
+    "niveis": {
+      "iniciante": "Beginner",
+      "intermediario": "Intermediary",
+      "avancado": "Advanced"
+    },
+    "sugestoes": {
+      "montando": "Putting together some suggestions for you…",
+      "semPerfilTitulo": "Check the programming languages you are studying",
+      "semPerfilDescricao": "The lab shows only the programming languages listed in your profile and suggests examples based on your level and your roadmap. For now, they all appear in the generator below.",
+      "escolherLinguagens": "Choose languages",
+      "titulo": "Suggestions for You",
+      "descricao": "Based on your roadmap, your proficiency level in each language, and what you haven't started yet. One click generates the example with step-by-step instructions.",
+      "gerarAria": "Generate example: {assunto} at {linguagem}"
+    },
+    "etapas": {
+      "arquivos": "Selecting the files",
+      "codigo": "Writing the code",
+      "conferindo": "Checking to see if that's what people actually use",
+      "passoAPasso": "Step-by-Step Guide"
+    },
+    "gerador": {
+      "linguagemOuArquivo": "Language or file",
+      "linguagem": "Language",
+      "assunto": "Subject",
+      "assuntoPlaceholder": "GitHub Actions running tests, an API with a Controller and an Entity, closures…",
+      "nivel": "Level",
+      "gerar": "Generate example",
+      "aviso": "It takes a few seconds: the files and the execution trace are displayed together. Before they appear here, the content is checked (syntax, current versions, actual project structure) and the trace is compared against each file."
+    },
+    "depurador": {
+      "fecharAria": "Close example",
+      "fechar": "Close",
+      "arquivosAria": "Example Files",
+      "arquivoLabel": "{caminho} Archive",
+      "passoDeTotal": "Step {n} from {total}",
+      "semTraco": "The step-by-step instructions for this example do not match the code, so they are not displayed—showing a trace that doesn't match the program would lead to misunderstandings. The code above is still valid; run it again to try a different trace.",
+      "execucaoComentada": "The execution here is described, not tested: the step-by-step instructions were written alongside the code and checked against it, but the program does not run in an actual interpreter. For the example to be considered accurate, run it yourself."
+    },
+    "controles": {
+      "inicio": "Back to the top",
+      "anterior": "Previous step",
+      "proximo": "Next step",
+      "pausarAria": "Pause automatic execution",
+      "executarAria": "Walk through the steps on your own",
+      "pausar": "Pause",
+      "executar": "Run",
+      "passoAria": "Execution Step"
+    },
+    "estado": {
+      "titulo": "Variables Now",
+      "vazio": "No variables have been defined yet."
+    },
+    "saida": {
+      "titulo": "Exit here",
+      "vazio": "Nothing has come out of the terminal yet."
+    },
+    "biblioteca": {
+      "vazioTitulo": "No examples yet",
+      "vazioDescricao": "Select the language and topic above. The example will be saved here so you can come back to it as often as you like.",
+      "titulo": "Their examples",
+      "arquivosN": "{n} files",
+      "passosN": "{n} steps",
+      "removendo": "Removing…",
+      "remover": "Remove"
+    }
+  },
+  "moderacao": {
+    "relatos": {
+      "titulo": "Moderation",
+      "situacaoLabel": "Status of Reports",
+      "situacoes": {
+        "abertos": "Open",
+        "resolvidos": "Resolved",
+        "todos": "Everyone"
+      },
+      "statusLabel": "Status",
+      "status": {
+        "aberto": "Received",
+        "em_analise": "Under review",
+        "resolvido": "Resolved"
+      },
+      "erroSalvar": "I couldn't save it.",
+      "reclamacao": "Complaint",
+      "sugestao": "Suggestion",
+      "contaRemovida": "Account removed",
+      "resposta": "Response to the person who reported this",
+      "respostaPlaceholder": "Optional — appears in Your reports",
+      "salvando": "Saving…",
+      "salvar": "Save",
+      "relato": "report",
+      "relatos": "reports",
+      "carregando": "Loading…",
+      "vazioAbertos": "No open reports.",
+      "vazioGeral": "No reports here."
+    },
+    "usuarios": {
+      "confirmacaoCancelada": "Confirmation canceled. Nothing has been changed.",
+      "erroConcluir": "I wasn't able to finish it.",
+      "semNome": "Untitled",
+      "selos": {
+        "voce": "you",
+        "admin": "admin",
+        "banido": "banned",
+        "emailNaoConfirmado": "Email address not confirmed"
+      },
+      "entrouEm": "Go to {data}",
+      "banidoEm": " · Banned at {data}",
+      "motivoLabel": "Reason: {motivo}",
+      "desbanir": "Dispel",
+      "banir": "Ban",
+      "desbanirAria": "Exorcise {nome}",
+      "banirAria": "Ban {nome}",
+      "avisoDesbanir": "The account will resume normal activity and will be visible to friends again.",
+      "avisoBanir": "The person is immediately disconnected from all devices, can't log back in, and disappears from search results and friends lists. Nothing is deleted: you can unblock them later.",
+      "motivoCampo": "Reason (for the record)",
+      "aguardandoChave": "Waiting for the key…",
+      "confirmarChave": "Confirm with an access key",
+      "cancelar": "Cancel",
+      "secaoAria": "Registered users",
+      "titulo": "Users",
+      "conta": "account",
+      "contas": "accounts",
+      "maisRecentes": " (the most recent — refine your search)",
+      "situacaoLabel": "Financial Status",
+      "situacoes": {
+        "todos": "Everyone",
+        "ativos": "Assets",
+        "banidos": "Banned"
+      },
+      "buscar": "Search",
+      "buscarPlaceholder": "Name, @, or email address",
+      "carregando": "Loading…",
+      "vazio": "No accounts found."
+    }
+  },
+  "cursos": {
+    "filtro": {
+      "todos": "Everyone",
+      "gratuitos": "Free",
+      "pagos": "Paid"
+    },
+    "escopo": {
+      "voce": "For you",
+      "catalogo": "Entire catalog"
+    },
+    "ordem": {
+      "relevancia": "Most Relevant to You",
+      "maisProcurados": "Most Popular First",
+      "menosProcurados": "Least Popular First"
+    },
+    "nivel": {
+      "iniciante": "Beginner",
+      "intermediario": "Intermediary",
+      "avancado": "Advanced"
+    },
+    "motivo": {
+      "meta": "Your goal",
+      "queroAprender": "I want to learn",
+      "roadmap": "In its roadmap",
+      "objetivo": "Its goal"
+    },
+    "carregando": "Looking for courses that offer a certificate…",
+    "contador": "{n} {cursos} · {gratuitos} with a free certificate",
+    "curso": "course",
+    "cursos": "courses",
+    "titulo": "Certificate Courses",
+    "subtitulo": "Chosen based on what you want to learn, to add to your LinkedIn profile. All of them offer certificates, and the free ones are always listed first.",
+    "quaisCursos": "What courses",
+    "buscar": "Search",
+    "buscarPlaceholder": "Course, issuer, or technology",
+    "categoria": "Category",
+    "todasCategorias": "All categories",
+    "stack": "Stack",
+    "todasTecnologias": "All technologies",
+    "ordenar": "Sort",
+    "tipoCertificado": "Certificate Type",
+    "limparFiltros": "Clear filters",
+    "esconderPossuidos": "Hide the ones I already have",
+    "mostrarPossuidos": "Show the ones I already have ({n})",
+    "saiuDaLista": "It was removed from the list and moved to \"Profile and Tags.\"",
+    "desfazer": "Undo",
+    "vazioPossuiTodos": {
+      "titulo": "You already have all the courses on this list",
+      "descVoce": "They're under \"Profile\" and \"Tags.\" Search the entire catalog to see other certificates.",
+      "descCatalogo": "They are under \"Profile\" and \"Tags.\""
+    },
+    "buscarCatalogo": "Search the entire catalog",
+    "vazioFiltros": {
+      "titulo": "No courses match these filters",
+      "descVoce": "Try another search or browse the entire catalog, which also includes items you haven't ordered yet.",
+      "descCatalogo": "Try a different search, category, or technology."
+    },
+    "vazioSemCurso": {
+      "titulo": "There is still no reliable certification for what you requested",
+      "desc": "Only courses from recognized providers are accepted. Add other technologies to the list, and it grows."
+    },
+    "escolherTecnologias": "Choosing Technologies",
+    "vazioSemPedido": {
+      "titulo": "Tell us what you want to learn",
+      "desc": "Courses stray from their objectives and the technologies they’re meant to focus on. Without that, there’s no way to choose."
+    },
+    "definirObjetivo": "Set a goal",
+    "blocoGratuito": "Free certificate",
+    "blocoPago": "Paid certificate",
+    "vazioGratuito": "There are no free courses for what you asked for.",
+    "vazioPago": "There are no paid courses for what you requested.",
+    "rodapePrecos": "Prices and free offers are available at {mes}. The issuer sets the terms, and conditions are subject to change: check the website before you begin.",
+    "erroSalvar": "I wasn't able to save it.",
+    "portugues": "Portuguese",
+    "ingles": "English",
+    "horas": "~{h}h",
+    "irParaCurso": "Go to the course",
+    "possuoTitleSim": "Appears in Profile and tags. Click to uncheck.",
+    "possuoTitleNao": "Check this box if you already have this certificate.",
+    "jaPossuo": "I already have",
+    "jaPossuoPergunta": "Do I already have it?",
+    "linkedinTitle": "After receiving the certificate",
+    "adicionarLinkedin": "Add to LinkedIn",
+    "procuraNoMercado": "Market demand"
+  },
+  "vagas": {
+    "filtro": {
+      "todas": "All",
+      "remotas": "Remote"
+    },
+    "alcance": {
+      "todas": "Brazil and abroad",
+      "nacionais": "Domestic",
+      "internacionais": "International"
+    },
+    "fonte": {
+      "busca": "Job search websites (LinkedIn, Vagas.com, Indeed…)"
+    },
+    "estadoFonte": {
+      "ok": "active",
+      "erro": "off the air now",
+      "semChave": "no key configured"
+    },
+    "nivel": {
+      "junior": "Junior",
+      "pleno": "Plenary Session",
+      "senior": "Senior"
+    },
+    "situacao": {
+      "semNivel": "Level the surface",
+      "tem": "do you have",
+      "parcial": "starting",
+      "falta": "absence",
+      "desconhecido": "out of print"
+    },
+    "tempo": {
+      "hoje": "today",
+      "umDia": "1 day ago",
+      "dias": "{n} days ago",
+      "agora": "now",
+      "min": "{n} min ago",
+      "umaHora": "1 hour ago",
+      "horas": "{n} hours ago"
+    },
+    "titulo": "Job Openings for You",
+    "subtitulo": "Real job openings from reliable sources—in your area or remote—ranging from those that best match your tech stack and career goals to those that do so the least. For each one, what’s missing and how to get there.",
+    "buscarAria": "Search for another position or technology",
+    "buscarPlaceholder": "Another position or technology (e.g., Java Developer)",
+    "buscar": "Search",
+    "voltarPerfil": "Back to my profile",
+    "onde": "Where",
+    "tipoVaga": "Job Type",
+    "procurandoNovas": "looking for new job openings…",
+    "atualizadoEm": "Updated{tempo}",
+    "atualizando": "Updating…",
+    "atualizar": "Update",
+    "erroAtualizar": "I wasn't able to update it right now ({erro}). The list below is the previous one.",
+    "carregando": "Looking for job openings in the sources…",
+    "semPerfil": {
+      "titulo": "Tell us what you do or what you want to do",
+      "desc": "Job openings are based on your skills and your career goals. List your technologies—or look for a higher-level position."
+    },
+    "cadastrarTecnologias": "Register Technologies",
+    "buscandoPor": "Searching for",
+    "vaga": "vacancy",
+    "vagas": "job openings",
+    "seuIngles": "Your English:",
+    "semNivelamentoFazer": "no leveling — do it now",
+    "fontes": "Sources:",
+    "vazio": {
+      "titulo": "No openings found at this time",
+      "desc": "The sources did not return any results for these terms and filters. Try another job title or technology, expand the radius of your location, or click \"Refresh.\""
+    },
+    "regiao": {
+      "semCidade": "If no city is specified in the profile: in-person job openings from all over Brazil will appear.",
+      "soRemotas": "Remote positions only.",
+      "cidade": "In-person and hybrid sessions up to {km} km from {cidade} - {uf} · remote sessions from anywhere.",
+      "uf": "In-person and hybrid classes at {uf} · remote classes from anywhere."
+    },
+    "mudarRegiao": "Change region",
+    "definirRegiao": "Set region",
+    "ondeDistancia": "{local} ·{km} km",
+    "presencial": "In-person",
+    "internacional": "International",
+    "via": "via {fonte}",
+    "naSuaRegiao": "in your area",
+    "paraQuem": "For whom:",
+    "paraQuemNivel": "{nivel} level, ",
+    "paraQuemCom": "with {lista}",
+    "paraQuemMais": " and more at {n}",
+    "conectorE": "and",
+    "esconderDescricao": "Hide description",
+    "verDescricao": "View job description",
+    "soTrecho": "The source sent only an excerpt from the ad: the headline provides the context. Read the full ad to see what's missing.",
+    "soBuscador": "Found via a search engine: The ad wasn't read here, and the content is judged by the title.",
+    "verVaga": "View Job Opening",
+    "esconderAnalise": "Hide analysis",
+    "lerAnuncio": "Read the full ad",
+    "lendoRequisitos": "Reading the job requirements…",
+    "descricao": {
+      "faz": "What are you going to do?",
+      "pede": "What it requires",
+      "diferenciais": "Key Features"
+    },
+    "temTudo": "You have everything listed in the catalog that the ad mentions.",
+    "oQueFaltaAria": "What's missing for the opening",
+    "oQueFalta": "What's Missing",
+    "item": "item",
+    "itens": "items",
+    "obrigatorioUm": "required",
+    "obrigatoriosVarios": "required",
+    "mostrarMenos": "Show less",
+    "verTodasLacunas": "View all {n}",
+    "fazerNivelamento": "Level the surface",
+    "treinarIngles": "Practice English",
+    "jaNoRoadmap": "It's already on your roadmap",
+    "metaMarcada": "target selected",
+    "marcando": "Tagging…",
+    "marcarMeta": "Set as a goal",
+    "obrigatorio": "required",
+    "diferencial": "differential",
+    "desejavel": "desirable",
+    "degrauAbaixo": " · one step down",
+    "comecando": " · You're just getting started",
+    "semNivelamentoSufixo": " · without leveling",
+    "semNivelamentoComparar": " · no standardization for comparison",
+    "certificadoGratuito": "free certificate",
+    "certificadoPago": "paid certificate",
+    "gratuito": "free",
+    "pago": "paid",
+    "ingles": {
+      "tem": "English{exigido}'s request · Do you have {seu}",
+      "parcial": "English{exigido}'s request · you{seu} one step down",
+      "falta": "English{exigido}' request · you{seu}",
+      "semNivel": "English{exigido}'s request · Please level it to compare"
+    },
+    "tecnologiasDaStack": "{n} {tecnologias} from your stack",
+    "tecnologia": "technology",
+    "tecnologias": "technologies",
+    "combinaObjetivo": "fits with your goal",
+    "anuncioNaoLido": "unread message",
+    "compatibilidadeAria": "Compatibility with your profile",
+    "porcentagem": "{n}",
+    "estimadoTitulo": "estimated by the title",
+    "combinaComVoce": "suits you",
+    "analisarTitulo": "Review a specific job opening",
+    "analisarDesc": "Did you find a job opening not on this list? Paste the link or the text of the ad. LinkedIn job postings usually require you to log in to view them—in that case, paste the text.",
+    "analisarAria": "Link or job description",
+    "analisarPlaceholder": "https://… or the full job posting",
+    "analisando": "Analyzing…",
+    "verOQueFalta": "See what's missing",
+    "etapa": {
+      "lendo": "Reading the job posting",
+      "separando": "Breaking Down the Requirements",
+      "comparando": "Compared to your profile"
+    },
+    "analiseCompletaAria": "Complete Job Description",
+    "analiseSimplificada": "Simplified analysis: The technologies mentioned in the ad are all treated as mandatory.",
+    "obrigatorios": "Required",
+    "desejaveis": "Desirable",
+    "oQueFaltaComoChegar": "What's Missing, and How to Get There",
+    "nadaFalta": "Nothing is missing from what the catalog lists",
+    "verTodosCursos": "View all courses with a certificate",
+    "semCursoCatalogo": "There is no course with a certificate for this in the catalog. Marking it as a goal adds the topic to your roadmap."
+  },
+  "home": {
+    "boasVindas": "Welcome back",
+    "boasVindasNome": "Welcome back, {nome}",
+    "retomarEstudo": "Resume studies",
+    "carregandoPainel": "Loading your dashboard…",
+    "semPlanoTitulo": "Your plan doesn't exist yet",
+    "semPlanoDescricao": "Send me your resume, and I'll put together a roadmap based on what you already know—you'll review everything before I finalize it.",
+    "enviarCurriculo": "Submit Resume",
+    "continue": {
+      "kicker": "Continue",
+      "modulos": "{feitos} {total} modules",
+      "planoConcluido": "Plan completed",
+      "retomeDescricao": "Pick up where you left off: the material, quiz, and activity for this module.",
+      "todosConcluidos": "All modules in this plan have been completed. Create a new goal to continue.",
+      "progressoDoPlano": "Plan Progress",
+      "retomar": "Resume",
+      "verRoadmap": "View roadmap",
+      "semana": "{intervalo} Week"
+    },
+    "semana": {
+      "atual": "This Week",
+      "dia": "day",
+      "dias": "days",
+      "aria": "Days studied this week",
+      "estudado": "{dia}s: studied",
+      "semEstudo": "{dia}s: no study",
+      "sequenciaRotulo": "Sequence",
+      "recordeRotulo": "Record"
+    },
+    "fases": {
+      "titulo": "Progress by Phase",
+      "modulos": "{feitos} {total} modules"
+    },
+    "checklist": {
+      "montando": "Planning your week…",
+      "semanaDoPlano": "{n}'s Week of the Plan",
+      "resumo": "{feitos} by {total} · {feitosMin} by {totalMin}",
+      "explicacao": "The list is organized by your level in each module—beginners study before taking the test; those who have already mastered the material go straight to explaining and applying it—and fits within the “{horas}” you have for the week.",
+      "rotaAjustadaUm": "Its route was adjusted this weekend (1 change).",
+      "rotaAjustada": "Its route was adjusted this weekend ({n} changes).",
+      "verMudou": "See what has changed",
+      "nadaPendente": "Nothing pending this week. The next modules will be posted here as soon as they're available.",
+      "nivel": "{nivel} level",
+      "nivIniciante": "beginner",
+      "nivIntermediario": "intermediate",
+      "nivAvancado": "advanced",
+      "confirmado": "as evidenced by what you did",
+      "abrir": "Open",
+      "naoSalvou": "I couldn't save it."
+    }
+  },
+  "modulo": {
+    "abas": {
+      "material": "Material",
+      "quiz": "Quiz",
+      "atividade": "Activity"
+    },
+    "pagina": {
+      "carregandoTrilha": "Loading the track…",
+      "semPlanoTitulo": "You don't have a plan yet",
+      "semPlanoDescricao": "Create a roadmap to keep things on track.",
+      "gerarPlano": "Generate plan",
+      "planoConcluidoTitulo": "Plan completed",
+      "planoConcluidoDescricao": "All modules have been delivered. Generate a new objective to continue.",
+      "trilha": "Trail",
+      "concluir": "Finish",
+      "concluirDescricao": "Marking it as complete records the study and increases your proficiency in the technologies covered in this module.",
+      "concluido": "Completed",
+      "registrando": "Recording…",
+      "marcarConcluido": "Mark as complete",
+      "aoFinalVoceConsegue": "In the end, you'll be able to",
+      "modulosDaFase": "Phase Modules"
+    },
+    "recurso": {
+      "trilha": "Trail",
+      "nenhumMaterialTitulo": "No open materials",
+      "nenhumMaterialDescricao": "Select an item from a module's content to open it here.",
+      "voltar": "Back",
+      "abrindoMaterial": "Opening the package…",
+      "naoEncontradoTitulo": "Material not found",
+      "naoEncontradoDescricao": "He may have left your plan since this screen opened.",
+      "voltarPara": "Back to {destino}",
+      "telaAnterior": "the previous screen",
+      "portugues": "Portuguese",
+      "ingles": "English",
+      "abrirNaFonte": "Open in the original source",
+      "concluido": "Completed",
+      "pctConsumido": "{pct}% consumed",
+      "aindaNaoComecou": "It hasn't started yet",
+      "parouEm": " · stopped at {tempo}",
+      "concluidoMinusculo": "completed",
+      "progressoNesteMaterial": "Progress on this topic"
+    },
+    "artigo": {
+      "minLeitura": "{min} min read",
+      "pctLido": "{pct}% read",
+      "lerNoSite": "Read on the original website",
+      "retomadoDe": "Picking up where you left off ({pct}%).",
+      "voltarAoInicio": "Back to the top",
+      "textoNaoBuscado": "I haven't looked up the text for this material yet.",
+      "podeLerNaFonte": "You can read about it on the original website—and we'll continue to track its progress here.",
+      "abrirNoSite": "Open on the original website"
+    },
+    "curar": {
+      "procurarMaterial": "Search for material",
+      "procurando": "Searching…",
+      "materialNovo": "new material",
+      "materiaisNovos": "new materials",
+      "nadaNovo": "Nothing new this time.",
+      "buscaFalhou": "The search failed."
+    },
+    "linha": {
+      "salvo": "except",
+      "emCurso": "in progress",
+      "concluido": "completed",
+      "dispensado": "dismissed",
+      "marcarComo": "Mark as \"{estado}\"",
+      "marcarComoEmCurso": "Mark as in progress",
+      "marcar": "mark",
+      "portugues": "Portuguese",
+      "ingles": "English",
+      "pareiEm": "I stopped at {nota}",
+      "marcarOndeParei": "mark where I left off",
+      "ondeParou": "Where did you leave off in this material?",
+      "pareiPlaceholder": "23:10, Chapter 4…"
+    },
+    "viewer": {
+      "buscandoTexto": "Searching for the article text…",
+      "videoNaoYoutube": "This video isn't from YouTube, so I can't play it here.",
+      "abrirNoSite": "Open on the original website",
+      "ultimaPosicao": "Last saved position: {tempo}",
+      "perguntarMaterial": "Ask about this material"
+    },
+    "video": {
+      "carregando": "Loading the video…",
+      "retomandoDe": "Reposted from {tempo}."
+    },
+    "atividade": {
+      "tipoCodigo": "Code",
+      "tipoComandos": "Commands",
+      "tipoExplicacao": "Explanation",
+      "tipoConfiguracao": "Configuration",
+      "tipoPratica": "Practice",
+      "etapaGerar1": "Reviewing what you've already done",
+      "etapaGerar2": "Choosing the Next Challenge",
+      "etapaGerar3": "Writing the problem statement",
+      "etapaCorrigir1": "Reading your response",
+      "etapaCorrigir2": "Compared to what was requested",
+      "etapaCorrigir3": "Writing the correction",
+      "erroGerar": "I was unable to generate the next activity.",
+      "erroCorrigir": "I wasn't able to correct it right now.",
+      "atividadePratica": "Hands-on activity",
+      "semIA": "without AI",
+      "feitaNeste": "done in this module",
+      "feitasNeste": "completed in this module",
+      "entregueOque": "Provide what the module asks for:",
+      "escrevaSolucaoInteira": ". Write out the entire solution—the answer key compares it to the reference and points out the differences.",
+      "escrevaSolucaoModulo": "Write your solution for this module. The answer key compares your work to the reference solution and points out the differences.",
+      "tentarDeNovo": "Try again",
+      "atividadeAtual": "Current Activity",
+      "atividadeNumero": "· activity {n}",
+      "verDica": "See tip",
+      "verDicas": "See tips",
+      "perguntarAtividade": "Ask about this activity",
+      "suaResposta": "Your response",
+      "respostaPlaceholder": "Write here, starting from scratch.\n\ngit push  // Comments explain what the command does",
+      "comentariosContam1": "Comments",
+      "comentariosContam2": " Include this as your explanation. Only the answer to this activity counts.",
+      "proximaAtividade": "Next Activity",
+      "corrigindo": "Correction…",
+      "enviarCorrecao": "Submit for correction",
+      "escrevaAlgumasFrases": "Write at least a few sentences—one line isn't an explanation.",
+      "caracteresEscritos": "{n} written characters",
+      "carregandoRascunho": "Loading the draft…",
+      "gravando": "Recording…",
+      "gravadoNaConta": "credited to your account",
+      "naoGravou": "I couldn't save it — the text continues here",
+      "atividadesFeitas": "Activities completed in this module ({n})",
+      "naoPareceResposta": "That doesn't seem like an answer to this activity.",
+      "escrevaSolucaoPedida": "Write the solution to the problem stated in the module.",
+      "nadaEntrouRevisao": "Nothing was included in the review or counted as a study.",
+      "de100": "out of 100 — how well the explanation stands on its own",
+      "oQueFicouPelaMetade": "What Was Left Half-Done",
+      "nenhumaLacuna": "No gaps were found. You were able to explain it without any support.",
+      "umaLacunaRevisao": "1 gap was included in your review",
+      "lacunasRevisao": "{n} There were some omissions in your review",
+      "voltaComoQuestao": "and it will come up again—in other words—in the next quiz in this series."
+    },
+    "material": {
+      "langPt": "Portuguese",
+      "langEn": "English",
+      "langAmbos": "Both",
+      "buscarMaterial": "Search for material",
+      "buscarPlaceholder": "Search all your material",
+      "idioma": "language",
+      "idiomaDoMaterial": "Language of the material",
+      "filtrarPorTipo": "Filter by type",
+      "buscandoMaterial": "Loading content…",
+      "curarEtapa1": "Searching for articles, videos, and documentation",
+      "curarEtapa2": "Checking to see if each link opens",
+      "curarEtapa3": "Choosing the Best",
+      "nadaEmPortuguesTitulo": "Nothing in Portuguese",
+      "nadaEmPortuguesDescricao": "There is no material in Portuguese for this excerpt—there is {n} in English.",
+      "mostrarIngles": "Show in English as well",
+      "nadaEncontradoTitulo": "Nothing found",
+      "nadaEncontradoDescricao": "None of the materials in your plan match this term. Clear your search to return to the materials in this module.",
+      "semMaterialTitulo": "No material for this module yet",
+      "semMaterialDescricao": "I've already looked through the technologies in this module and didn't find anything that passed the check. Trying again later usually works.",
+      "materialSingular": "material",
+      "materiaisPlural": "materials",
+      "emTodoPlano": "throughout its entire scope.",
+      "paraTecnologias": "for the technologies covered in this module.",
+      "concluidoSingular": "completed",
+      "concluidosPlural": "completed",
+      "tudoConcluido": "Everything in this section has already been completed.",
+      "concluidosSecao": "Completed",
+      "concluidoRotulo": "Completed"
+    },
+    "quiz": {
+      "nenhumModuloTitulo": "No modules are open",
+      "nenhumModuloDescricao": "Open a roadmap module to create a quiz about it.",
+      "quizDe": "{titulo} Quiz",
+      "descricao": "Six questions answered on the spot about the technologies covered in this module, tailored to your current level. The result updates your proficiency level in your profile—it’s the only evidence of mastery that the app collects.",
+      "escrevendoQuestoes": "Writing the questions…",
+      "comecarQuiz": "Start the quiz",
+      "iaLevaSegundos": "The AI takes a few seconds.",
+      "levaCerca": "It takes about 10 minutes.",
+      "gerarEtapa1": "Reading the module and its level",
+      "gerarEtapa2": "Writing the questions",
+      "gerarEtapa3": "Checking the answer key"
+    },
+    "quizRunner": {
+      "perguntaXdeY": "Question {atual} from {total}",
+      "respondidas": "{n} answered",
+      "trechoDaQuestao": "Excerpt from the question",
+      "opcoesDeResposta": "Answer options",
+      "voltar": "Back",
+      "corrigindo": "Correction…",
+      "enviarRespostas": "Submit responses",
+      "proxima": "Next",
+      "escolhaAlternativa": "Choose an option.",
+      "bomResultado": "Good result—your proficiency with the tags in this quiz has gone up on your profile.",
+      "abaixoDe70": "Below 70%. Review the material before continuing; the profile hasn't gone up.",
+      "perguntaN": "Question{n}",
+      "acertou": "got it right",
+      "errou": "made a mistake",
+      "correta": "Correct:",
+      "vocEscolheu": "You chose:",
+      "perguntarQuestao": "Ask about this issue",
+      "gerarOutroQuiz": "Create another quiz",
+      "umConceitoAcertou": "One concept you had misunderstood came up again, and this time you got it right.",
+      "conceitosAcertou": "{n} Concepts you had gotten wrong came up again, and you got them right.",
+      "raearAteSumir": "They'll become fewer and fewer until they disappear.",
+      "umConceitoVolta": "1 concept returns",
+      "conceitosVoltam": "{n} concepts return",
+      "noProximoQuiz": "In the next quiz in this track, in other words:"
+    },
+    "duvidas": {
+      "perguntar": "Ask",
+      "erroTutor": "I wasn't able to talk to the tutor just now.",
+      "perguntarAoTutor": "Ask the tutor",
+      "tirarUmaDuvida": "Ask a question",
+      "ficaGuardada": "I'll save this to review later",
+      "novaDuvida": "New question",
+      "fechar": "Close",
+      "promptVazio": "Didn't understand something? Ask your question in your own words—the tutor will explain based on what's on this screen.",
+      "conversa": "Conversation",
+      "voce": "You",
+      "tutor": "Tutor",
+      "abrirNoDepurador": "Open in the debugger",
+      "querVerRodando": "Want to see it in action, step by step?",
+      "exemplosParaDepurar": "Examples for debugging",
+      "gerarExemplo": "Generate a sample for debugging:",
+      "tutorEscrevendoExemplo": "The tutor is writing the example",
+      "tutorEscrevendo": "Tutor is writing",
+      "escrevendoExemplo": "writing the example",
+      "explicacaoClara": "Is that clear?",
+      "simEntendi": "Yes, I understand",
+      "aindaNao": "Not yet",
+      "aindaNaoEntendi": "I still don't get it.",
+      "suaDuvida": "Your question",
+      "placeholderContinuar": "Ask more about this…",
+      "placeholderNova": "Write your question…",
+      "enviar": "Send",
+      "enviarEnter": "Send (Enter)",
+      "codigoEm": "Code at {linguagem}",
+      "codigo": "Code"
+    }
+  },
+  "perfil": {
+    "carregando": "Loading your profile…",
+    "titulo": "Profile and tags",
+    "subtitulo": "What is checked here feeds into the roadmap. Unchecking a tag removes the modules associated with it from the next generation; checking a new one recalculates the timeline.",
+    "escalaDominio": "Domain Scale",
+    "vazio": {
+      "titulo": "No skills yet",
+      "descricao": "Send me your resume so I can extract the technologies, or add them one by one under Settings, on the Skills tab.",
+      "enviarCurriculo": "Submit Resume"
+    },
+    "grupos": {
+      "voceDomina": "You've got it down · {n}",
+      "voceDominaDica": "N3 or higher — these are covered in a short review: the difficult case, the production trap, and advanced-level exercises. Never from scratch",
+      "comecaPorAqui": "The plan starts here · {n}",
+      "comecaPorAquiDica": "N1 and N2 — they join to delve deeper, and they come first: the distance is short, and results are seen within the first few weeks",
+      "doZero": "From Scratch · {n}",
+      "doZeroDica": "N0 — they're included, too. The one required by the objective goes in first, since it's the longest; the rest are saved for last and are the first to be removed if there aren't enough hours"
+    },
+    "certificados": {
+      "titulo": "Certificates",
+      "tituloComContagem": "Certificates · {n}",
+      "verCursos": "View courses",
+      "marcados": "Marked as \"I already have\" in the Courses tab",
+      "nenhum": "None yet. Under \"Courses,\" check \"I already have\" for the certificates you hold.",
+      "adicionarLinkedIn": "Add to LinkedIn"
+    },
+    "identidade": {
+      "cargo": "Position",
+      "senioridade": "Seniority",
+      "experiencia": "Experience",
+      "anos": "{n} years",
+      "disponibilidade": "Availability",
+      "horasPorSemana": "{h}h per week",
+      "sequencia": "Sequence",
+      "dias": "{n} days",
+      "xp": "XP",
+      "editarPerfil": "Edit Profile",
+      "progressoResumo": "{feitos} by {total} · {pct}%",
+      "progressoPlano": "Plan Progress"
+    },
+    "niveis": {
+      "querAprender": "want to learn",
+      "contatoInicial": "initial contact",
+      "comApoio": "with support",
+      "autonomo": "self-employed",
+      "referencia": "reference",
+      "especialista": "expert"
+    },
+    "skills": {
+      "erroAdicionar": "I wasn't able to add it.",
+      "erroRemover": "I couldn't remove it.",
+      "erroNivel": "I couldn't save the level.",
+      "tituloPlano": "Plan Skills",
+      "noPerfil": "{n} on the profile",
+      "explicacao": "Check off what's part of your plan and indicate your current level. The roadmap covers the path from where you are now to N3—it doesn't repeat material that's already covered in N3 or higher.",
+      "filtrar": "Filter by name",
+      "filtrarPlaceholder": "e.g., Kafka, Terraform",
+      "noPlano": "{n} {total}'s plan",
+      "semResultado": "No technology with “{termo}.” Try another term, or add it via the curriculum—whatever it mentions that’s missing here will be included in the catalog.",
+      "nivelEm": "Level at {nome}",
+      "foraDoPlano": "off-plan",
+      "jaDominado": "already mastered",
+      "aEvoluir": "evolving",
+      "categorias": {
+        "linguagem": "Languages",
+        "frontend": "Front End",
+        "backend": "Backend",
+        "banco": "Databases",
+        "dados": "Data",
+        "ia": "AI",
+        "devops": "DevOps",
+        "cloud": "Cloud",
+        "arquitetura": "Architecture",
+        "testes": "Tests",
+        "seguranca": "Security",
+        "mobile": "Mobile",
+        "ferramenta": "Tools",
+        "metodologia": "Methodology",
+        "soft-skill": "Behavioral"
+      }
+    },
+    "sugestoes": {
+      "demanda": {
+        "consolidada": "consolidated",
+        "emAlta": "on the rise",
+        "aposta": "bet"
+      },
+      "erroAdicionar": "I wasn't able to add it.",
+      "titulo": "Recommended for your goal",
+      "rever": "review",
+      "aPartirDe": "Starting with “{objetivo}.” Adding it places the technology at level N0 in your plan, and the roadmap now covers it.",
+      "adicionando": "Adding…",
+      "adicionar": "Add to plan"
+    },
+    "tag": {
+      "origem": {
+        "cv": "from the resume",
+        "manual": "as you define it",
+        "quiz": "verified in a quiz",
+        "roadmap": "studied in the plan"
+      },
+      "titulo": "N{n} · {origem} · confidence {conf}%"
+    },
+    "tutorial": {
+      "comoFunciona": "How do the levels work?",
+      "titulo": "How Levels Work",
+      "resumo": "abstract",
+      "contador": "{atual} by {total}",
+      "fechar": "Close tutorial",
+      "introducao": "For each technology, check whether it’s part of your plan and select the level you’re currently at. Be honest: your level determines what the roadmap covers and what it skips.",
+      "niveisLabel": "Levels",
+      "resumoN0N2Rotulo": "N0 through N2",
+      "resumoN0N2Texto": ": The roadmap serves as a learning tool and becomes a study goal.",
+      "resumoN3Rotulo": "N3 or higher",
+      "resumoN3Texto": ": mastered — the roadmap doesn't cover this again, and the technology counts as part of your tech stack in job postings.",
+      "resumoMudou": "Did you change your tier? You can switch here at any time: your plan will be updated next week.",
+      "anterior": "Previous",
+      "entendi": "Got it, I'll list my skills.",
+      "proximo": "Next",
+      "pular": "Skip tutorial",
+      "n0": {
+        "exemplo": "I haven't used it yet, but I want to learn how.",
+        "plano": "Set a goal: The roadmap teaches you from scratch, and Courses offers certificates."
+      },
+      "n1": {
+        "exemplo": "I've seen it in a tutorial or a study project.",
+        "plano": "The roadmap starts with the fundamentals, without going over the basics too much."
+      },
+      "n2": {
+        "exemplo": "I can use it by referring to the documentation and examples.",
+        "plano": "The roadmap takes you step by step until you can do it on your own."
+      },
+      "n3": {
+        "exemplo": "I used it at work on my own, from start to finish.",
+        "plano": "Mastered: The roadmap doesn't teach you anything new; it just reviews what you already know. List it as part of your tech stack in job postings."
+      },
+      "n4": {
+        "exemplo": "I solve difficult problems and mentor others.",
+        "plano": "It counts as a strength in job listings and friend recommendations."
+      },
+      "n5": {
+        "exemplo": "Key topics: architecture, performance, interior details.",
+        "plano": "It's a strength, and the plan uses it as a foundation for what comes next."
+      }
+    },
+    "regiao": {
+      "titulo": "Region and Scope of Open Positions",
+      "descricao": "In-person and hybrid job openings are listed only within this distance from your city. Remote job openings are always listed, no matter where you are.",
+      "ateQueDistancia": "Up to what distance",
+      "raioLabel": "Radius of In-Person Class Locations",
+      "soRemotas": "Remote only",
+      "km": "{km} km",
+      "ou": "or",
+      "outroRaio": "Another radius in km",
+      "outro": "another",
+      "kmSufixo": "km",
+      "resumoSoRemotas": "Only remote job openings will be posted.",
+      "resumoComCidade": "In-person and hybrid classes up to {raio} km from {cidade}.",
+      "resumoSemCidade": "Select your city to see the in-person classes listed by distance.",
+      "padrao": " (default)",
+      "erroBusca": "I wasn't able to retrieve any cities right now.",
+      "cidadeLabel": "City where you live",
+      "cidadePlaceholder": "Start typing: Vit…",
+      "cidadesSugeridas": "Suggested Cities",
+      "capital": "capital"
+    },
+    "avatar": {
+      "erroEnviar": "I wasn't able to send the image.",
+      "erroRemover": "I wasn't able to remove the image.",
+      "alt": "{nome}'s profile photo",
+      "enviando": "Sending…",
+      "alterar": "Change",
+      "enviarFoto": "Upload a photo",
+      "remover": "Remove"
+    },
+    "objetivo": {
+      "erroSalvar": "I wasn't able to save it.",
+      "ondeChegar": "Where do you want to go?",
+      "escolhaOuDescreva": "Choose a destination or describe yours below",
+      "areaLabel": "Area",
+      "destinoPlanoLabel": "Purpose of the plan",
+      "destinoLivre": "You wrote your current destination: “{destino}.” Choosing one from the list will replace it.",
+      "textoLivre": "Describe in free-form text",
+      "geraPlanoInteiro": "generates the entire plan",
+      "textoLivreDescricao": "Tell us where you are, where you want to go, and what’s holding you back. Based on that, the roadmap is broken down into phases, the Library finds videos and articles on the right technologies, and the quizzes are tailored to your level.",
+      "contextoLabel": "Context for plan generation",
+      "contextoPlaceholder": "e.g., I've been a front-end developer for 3 years; I want to become a full-stack Java developer without relying on AI to write code; I have 8 hours per week and want to pass a technical interview in English by June",
+      "salvaSozinho": "It saves automatically when you leave the field—there's no button to press.",
+      "horasPorSemana": "Hours per week",
+      "horasDescricao": "The plan is based on this reality, not on an idealized view of the subject. A plan that demands 20 hours from someone who has only 6 hours isn't ambitious—it's a plan that gets abandoned by the third week.",
+      "salvando": "Saving…",
+      "salvo": "except",
+      "naoSalvou": "didn't save — {mensagem}"
+    }
+  },
+  "curriculo": {
+    "carregando": "Loading your resumes…",
+    "kicker": "Your Plan's Basis",
+    "envio": {
+      "titulo": "Submit your resume",
+      "descricao": "I read the file, identify the skills listed, assess the level of each one, and put together a roadmap based on what’s missing. You review everything before I generate it.",
+      "enviando": "Sending…",
+      "arraste": "Drag the file here or click to select it",
+      "limites": "PDF, DOCX, ODT, RTF, TXT, or MD · up to 10 MB · stored in your account, not shared"
+    },
+    "leitura": {
+      "titulo": "Read the resume",
+      "passo1": "Separating sections: experience, education, projects",
+      "passo2": "Recognizing the technologies mentioned and their context of use",
+      "passo3": "Estimating Level Based on Duration of Use and Responsibility",
+      "passo4": "Cross-referencing with the goal to identify gaps",
+      "erroVisual": "{erro}. I'll send the entire file so the model can read it visually.",
+      "lerCurriculo": "Read resume",
+      "enviarOutro": "Upload another file"
+    },
+    "revisao": {
+      "titulo": "Check what I read",
+      "descricao": "I estimated the level of each technology based on the time spent using it and the responsibilities described. Please correct any errors—the plan is based on this.",
+      "extraido": "Excerpt from the resume",
+      "nome": "Name",
+      "cargoAtual": "Current Position",
+      "senioridade": "Seniority",
+      "experiencia": "Experience",
+      "anos": "{n} years",
+      "cidade": "City",
+      "tecnologias": "Technologies · {n}",
+      "ajusteOuRemova": "Adjust the level or remove anything that isn't part of the plan",
+      "importando": "Importing…",
+      "importar": "Import {n} skills",
+      "entramComoMeta": "{n} are included as a focus of study",
+      "escala": "Scale:",
+      "semFrase": "no supporting statement on the resume",
+      "nivelDe": "{nome} Level",
+      "foraDoPlano": "off-plan"
+    }
+  },
+  "relatar": {
+    "titulo": "Report",
+    "subtitulo": "Did you encounter a problem or have an idea? Your report goes directly to the PathR team.",
+    "tipo": {
+      "reclamacao": "Complaint",
+      "sugestao": "Suggestion"
+    },
+    "status": {
+      "recebido": "Received",
+      "emAnalise": "Under review",
+      "resolvido": "Resolved"
+    },
+    "erro": {
+      "formatoFoto": "The photo must be in JPG, PNG, or WebP format.",
+      "fotoGrande": "The photo is larger th{mb} MB.",
+      "curto": "Tell us a little more: at least 10 characters.",
+      "envioFalhou": "I couldn't send it."
+    },
+    "aviso": {
+      "enviado": "Report submitted. Thank you—it's already being reviewed."
+    },
+    "form": {
+      "intro": "Did something not work, or could it be improved? Tell us here. A screenshot helps us understand what you saw.",
+      "tipoLabel": "Report Type",
+      "oQueAconteceu": "What happened?",
+      "oQueSugere": "What do you suggest?",
+      "placeholderReclamacao": "e.g., when I saved the goal, the screen went back to the beginning and I lost what I had written",
+      "placeholderSugestao": "e.g., the ability to export the weekly schedule as a PDF",
+      "trocarFoto": "Change photo",
+      "anexarFoto": "Attach a photo",
+      "previaAlt": "Preview of the attached photo",
+      "remover": "Remove",
+      "fotoOpcional": "Optional · JPG, PNG, or WebP up to {mb} MB",
+      "enviando": "Sending…",
+      "enviar": "Submit a report"
+    },
+    "meus": {
+      "titulo": "Their accounts",
+      "resposta": "Answer:"
+    },
+    "midia": {
+      "erroAbrir": "I couldn't open the media file just now.",
+      "abrirTitulo": "Open the full-size photo in a new tab",
+      "abrindo": "Opening…",
+      "rotulo": "Attached media",
+      "carregando": "Loading the photo…"
+    }
+  },
+  "manual": {
+    "kicker": "Flight Manual",
+    "titulo": "How PathR Works",
+    "precisaDe": "You need:",
+    "abrir": "Open {nome}",
+    "termos": "The Terms of Use, Privacy Policy, and Security Policy can be found at pathr.notter.com.br/termos, /privacy, and /security.",
+    "intro": {
+      "p1": "PathR creates a study plan based on what you already know and where you want to go, and builds around it by matching you with certificate courses, job opportunities that suit you, languages, and people to study with. Almost everything depends on two things that only you can answer: ",
+      "objetivo": "its goal",
+      "e": " and ",
+      "skills": "your skills at that level",
+      "p2": ". Start with those."
+    },
+    "grupos": {
+      "estudar": "Study",
+      "carreira": "Career",
+      "pessoas": "People",
+      "configuracoes": "Settings"
+    },
+    "areas": {
+      "inicio": {
+        "nome": "Home",
+        "oQueFaz": "Your daily dashboard: the \"Keep Going\" module, the weekly list, the daily sequence, and the consistency chart.",
+        "precisaDe": "A roadmap created to show what to do next."
+      },
+      "roadmap": {
+        "nome": "Roadmap",
+        "oQueFaz": "The entire plan, broken down into phases and modules, with the number of hours for each one. Every week, it adjusts based on what you've done (Route Adjustments).",
+        "precisaDe": "Objective and skills met before generating."
+      },
+      "trilha": {
+        "nome": "Current track",
+        "oQueFaz": "The module you're in: study materials, a quiz to test what you've learned, and a hands-on activity.",
+        "precisaDe": "A roadmap has been generated."
+      },
+      "laboratorio": {
+        "nome": "Code Lab",
+        "oQueFaz": "Code examples walked through line by line, with the values of the variables at each step. Suggest examples based on your roadmap and skill level.",
+        "precisaDe": "Languages tagged under \"Skills.\""
+      },
+      "idiomas": {
+        "nome": "Languages",
+        "oQueFaz": "English proficiency levels (A1 to C2), daily practice tailored to your level, and one-tap word translation."
+      },
+      "cursos": {
+        "nome": "Courses",
+        "oQueFaz": "Certificate courses for LinkedIn—free at first, depending on how popular the topic is. Select \"I already have this\" to display it on your profile.",
+        "precisaDe": "Goals set in Skills or a target."
+      },
+      "vagas": {
+        "nome": "Job Openings",
+        "oQueFaz": "Real job openings in your area or remote positions—from the ones that suit you best to the ones that suit you least—along with what’s needed for each and the courses to help you get there.",
+        "precisaDe": "Selected skills and the city under Settings › Objective."
+      },
+      "curriculo": {
+        "nome": "Resume",
+        "oQueFaz": "Submit your resume: The AI reads it and suggests relevant technologies, which you can then review and import."
+      },
+      "perfil": {
+        "nome": "Profile and tags",
+        "oQueFaz": "Your profile summary on the app: what you're proficient in, what you're learning, what you want to learn, and your certificates."
+      },
+      "amigos": {
+        "nome": "Friends",
+        "oQueFaz": "Invitations, suggestions from people who live nearby or are studying the same subject, and a series of study sessions in pairs—with a card to share at 7, 30, 60, and 90 days.",
+        "precisaDe": "An @ (selected during registration; can be edited under Settings › Account)."
+      },
+      "relatar": {
+        "nome": "Report",
+        "oQueFaz": "Submit a complaint or suggestion—with a photo if you'd like—and wait for a response from the moderators."
+      },
+      "conta": {
+        "nome": "Account",
+        "oQueFaz": "Name, @, photo, password, passkey, and two-factor authentication."
+      },
+      "objetivo": {
+        "nome": "Objective",
+        "oQueFaz": "Where you want to work, the number of hours per week, and the location of the job openings (city and radius in km)."
+      },
+      "skills": {
+        "nome": "Skills",
+        "oQueFaz": "The technologies included in your plan and the proficiency level for each, ranging from N0 (I want to learn) to N5 (expert)."
+      },
+      "avisos": {
+        "nome": "Notices and Privacy",
+        "oQueFaz": "Which emails to receive, whether to appear in friend suggestions, how to export all your data, or how to delete your account."
+      },
+      "integracoes": {
+        "nome": "Integrations",
+        "oQueFaz": "The status of the services the app uses (AI, job listings, translation, email) — useful when something seems to be down."
+      }
+    },
+    "passos": {
+      "titulo": "Getting Started",
+      "conferindo": "checking…",
+      "progresso": "{feitos} Essential {total}s made",
+      "manualDeBordo": "Flight Manual",
+      "pular": "Skip",
+      "proximoPasso": "Next step:",
+      "opcional": "optional",
+      "feito": "done",
+      "emSeguida": "Next:",
+      "irPara": "Go to: {titulo}",
+      "ir": "Go",
+      "regiao": {
+        "titulo": "Tell me where you live",
+        "onde": "Settings › Objective › Region and Scope of Open Positions",
+        "oQueFazer": "Select your city and the maximum number of kilometers you're willing to travel for an in-person job opening.",
+        "depois": "Vagas now shows only in-person classes within your radius (remote classes are always shown), and your class schedule follows your time zone."
+      },
+      "objetivo": {
+        "titulo": "Choose your goal",
+        "onde": "Settings › Objective",
+        "oQueFazer": "Choose a predefined destination or describe in free text where you want to go and how many hours per week.",
+        "depois": "The roadmap is designed with that goal in mind, and Job Openings and Courses prioritize what it calls for."
+      },
+      "curriculo": {
+        "titulo": "Submit your resume",
+        "onde": "Resume",
+        "oQueFazer": "Upload the PDF or DOCX file: The AI will read it and suggest its technologies with an estimated level for you to review.",
+        "depois": "The skills are already filled in during the next step—you just need to check the levels."
+      },
+      "skills": {
+        "titulo": "Mark your skills and their levels",
+        "onde": "Settings › Skills",
+        "oQueFazer": "Check the technologies included in your plan and the proficiency level for each one (N0 = I want to learn … N5 = expert).",
+        "depois": "\"Courses\" now suggests certificates, \"Jobs\" compares your tech stack, and \"Lab\" shows your programming languages."
+      },
+      "roadmap": {
+        "titulo": "Create your roadmap",
+        "onde": "Roadmap",
+        "oQueFazer": "Create your plan: break it down into phases and modules based on what you already know and your goal, at your own weekly pace.",
+        "depois": "The current track, the weekly list, and your progress appear on the Home page, and the plan updates every week."
+      },
+      "idioma": {
+        "titulo": "Take the English proficiency test",
+        "onde": "Languages",
+        "oQueFazer": "Take the placement test: it accurately measures your CEFR level (A1 to C2).",
+        "depois": "Vagas compares the English you need with your current level, and the daily exercises are tailored to your level."
+      },
+      "amigos": {
+        "titulo": "Add friends",
+        "onde": "Friends",
+        "oQueFazer": "Search for @ or check out suggestions from people who live nearby or are studying the same subject as you.",
+        "depois": "By studying on the same day, you create a sequence together—with a card to share at each milestone."
+      }
+    }
+  },
+  "roadmap": {
+    "page": {
+      "carregando": "Loading your plan…",
+      "meta": "{semanas} weeks · {horas}hours per week · {pct}% complete",
+      "formato": "Roadmap Format",
+      "novoPlano": "Create a new plan",
+      "historicoNota": "The current plan is saved in the history—creating a new one does not delete this one.",
+      "views": {
+        "timeline": "Timeline",
+        "fases": "Phases",
+        "matriz": "Matrix"
+      },
+      "notas": {
+        "a": "Vertical timeline: Order comes first; the deadline is on the left.",
+        "b": "Stages side by side, so you can see the entire scope at a glance.",
+        "c": "Competency Matrix: Where You Are and How Far the Plan Takes You."
+      }
+    },
+    "matriz": {
+      "vazio": "This plan does not yet identify skills that match your profile.",
+      "celula": "{nome} · N{nivel} · {estado}",
+      "estado": {
+        "atingido": "reached",
+        "proximo": "next level of the plan",
+        "alem": "in addition to this plan"
+      },
+      "legendaPreenchido": "filled = level recorded in your profile",
+      "legendaContorno": "contour = the next level this plane reaches"
+    },
+    "gerar": {
+      "titulo": "Create Your Plan",
+      "intro": "I structure the phases based on the {n} skills listed in your profile and the objective below.",
+      "objetivoLabel": "Where do you want to go?",
+      "objetivoPlaceholder": "e.g., full-stack Java developer, with a focus on international job openings",
+      "prazo": "Deadline",
+      "prazoLabel": "Plan Term",
+      "horas": "Hours per week",
+      "horasLabel": "Hours per week",
+      "horizontes": {
+        "s8": "8 weeks",
+        "s12": "12 weeks",
+        "s26": "26 weeks",
+        "ano": "1 year"
+      },
+      "montando": "Putting the plan together…",
+      "gerar": "Generate Plan",
+      "cancelar": "Cancel",
+      "dicaMontando": "The AI is writing the levels—it usually takes less than 20 seconds.",
+      "dica": "It takes a few seconds: the plan is tailor-made.",
+      "etapas": {
+        "lendo": "After reviewing your resume and your skills",
+        "fases": "Outlining the Phases",
+        "modulos": "Writing the modules",
+        "ordem": "Organizing the Study Plan"
+      },
+      "chips": {
+        "entrevistaIngles": "I want an interview in English",
+        "semIa": "Without relying on AI to code",
+        "pratico": "I prefer hands-on projects to reading",
+        "fimDeSemana": "I have the weekend off"
+      },
+      "contextoLabel": "What else should I know? (optional)",
+      "contextoPlaceholder": "e.g., I've been a front-end developer for 3 years, I want to become a full-stack Java developer, and the interview is in June",
+      "semSkills": {
+        "titulo": "First, I need to know what you already know",
+        "descricao": "The plan covers the gap between what you know and where you want to go. Send me your resume, and I'll read it and identify the relevant technologies, or you can list your skills yourself.",
+        "enviarCv": "Submit Resume",
+        "marcar": "Assign skills"
+      }
+    },
+    "fases": {
+      "fase": "{n} Stage",
+      "semanaCurta": "{inicio}–{fim}"
+    },
+    "timeline": {
+      "fase": "{n} Stage",
+      "semanas": "{inicio}Weeks –{fim}"
+    },
+    "ajustes": {
+      "titulo": "Route Adjustments",
+      "conferindo": "Checking…",
+      "reajustar": "Adjust Now",
+      "explicacao": "The plan is adjusted every week based on the results of the assessments: topics mastered in quizzes are turned into brief review sessions, recurring gaps are given more time, and the schedule adapts to the actual pace of learning.",
+      "semAjuste": "No adjustments are necessary—the plan is consistent with the measurements.",
+      "aplicadoUm": "{n} adjustment applied.",
+      "aplicadoVarios": "{n} adjustments applied.",
+      "erroFallback": "I wasn't able to adjust the route.",
+      "ultimo": "Last update · week {semana} · {data}",
+      "horas": "{antes}h → {depois}h",
+      "reagenda": "ends this week {antes} → {depois}",
+      "tipo": {
+        "compactar": "Compressed",
+        "reforcar": "Reinforced",
+        "reagendar": "Schedule"
+      }
+    }
   }
 }

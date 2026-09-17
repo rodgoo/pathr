@@ -15,6 +15,7 @@ import { social } from "@/api/endpoints";
 import type { PessoaCartao } from "@/api/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@/hooks/useApi";
+import { useT } from "@/lib/i18n";
 import { TEXT } from "@/lib/tokens";
 import { CartaoPessoa } from "@/components/social/CartaoPessoa";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
@@ -45,6 +46,7 @@ function Secao({ titulo, contagem, children }: { titulo: string; contagem?: numb
 }
 
 export function AmigosPage() {
+  const t = useT();
   const { user } = useAuth();
   const amizades = useQuery(() => social.amigos(), []);
   const sugestoes = useQuery(() => social.sugestoes(), []);
@@ -73,7 +75,7 @@ export function AmigosPage() {
           if (vivo) setAchados(lista);
         })
         .catch((caught) => {
-          if (vivo) setErroBusca(caught instanceof Error ? caught.message : "Não consegui buscar.");
+          if (vivo) setErroBusca(caught instanceof Error ? caught.message : t("amigos.erroBuscar"));
         })
         .finally(() => {
           if (vivo) setBuscando(false);
@@ -98,25 +100,25 @@ export function AmigosPage() {
     <div style={{ display: "flex", flexDirection: "column", gap: 22.4, ...SCREEN_IN }}>
       <header>
         <div style={{ fontSize: 12.5, color: TEXT.muted }}>
-          Você é <strong style={{ color: TEXT.strong, fontWeight: 500 }}>@{user?.username}</strong>
+          {t("amigos.voceEh")} <strong style={{ color: TEXT.strong, fontWeight: 500 }}>@{user?.username}</strong>
         </div>
-        <h1 style={{ fontSize: 28, margin: 0 }}>Amigos</h1>
+        <h1 style={{ fontSize: 28, margin: 0 }}>{t("amigos.titulo")}</h1>
       </header>
 
       {dados && dados.recebidos.length > 0 ? (
-        <Secao titulo="Convites para você" contagem={dados.recebidos.length}>
+        <Secao titulo={t("amigos.convitesRecebidos")} contagem={dados.recebidos.length}>
           <Grade pessoas={dados.recebidos} onMudou={recarregar} />
         </Secao>
       ) : null}
 
       <section>
         <div className="field" style={{ margin: 0, maxWidth: 520 }}>
-          <label htmlFor="amigos-busca">Procurar pessoas</label>
+          <label htmlFor="amigos-busca">{t("amigos.procurar")}</label>
           <input
             id="amigos-busca"
             className="input"
             type="search"
-            placeholder="@usuario ou nome"
+            placeholder={t("amigos.buscaPlaceholder")}
             autoCapitalize="none"
             spellCheck={false}
             value={termo}
@@ -125,11 +127,11 @@ export function AmigosPage() {
         </div>
         {limpo.length >= 2 ? (
           <div style={{ marginTop: 14 }}>
-            {buscando && !achados ? <Loading label="Procurando…" /> : null}
+            {buscando && !achados ? <Loading label={t("amigos.procurando")} /> : null}
             {erroBusca ? <ErrorState message={erroBusca} /> : null}
             {achados && achados.length === 0 && !buscando ? (
               <p style={{ fontSize: 13, color: TEXT.muted, margin: 0 }}>
-                Ninguém encontrado. Para achar quem não aparece nas sugestões, digite o @ completo.
+                {t("amigos.nadaEncontrado")}
               </p>
             ) : null}
             {achados && achados.length > 0 ? <Grade pessoas={achados} onMudou={recarregar} /> : null}
@@ -138,12 +140,12 @@ export function AmigosPage() {
       </section>
 
       {limpo.length < 2 ? (
-        <Secao titulo="Sugestões para você">
-          {sugestoes.loading && !sugestoes.data ? <Loading label="Procurando pessoas perto de você…" /> : null}
+        <Secao titulo={t("amigos.sugestoes")}>
+          {sugestoes.loading && !sugestoes.data ? <Loading label={t("amigos.procurandoPerto")} /> : null}
           {sugestoes.error ? <ErrorState message={sugestoes.error} onRetry={sugestoes.reload} /> : null}
           {sugestoes.data && sugestoes.data.length === 0 ? (
             <p style={{ fontSize: 13, color: TEXT.muted, margin: 0 }}>
-              Ainda não há sugestões. Elas vêm de quem mora perto e estuda coisas parecidas com você.
+              {t("amigos.semSugestoes")}
             </p>
           ) : null}
           {sugestoes.data && sugestoes.data.length > 0 ? (
@@ -152,15 +154,15 @@ export function AmigosPage() {
         </Secao>
       ) : null}
 
-      {amizades.loading && !dados ? <Loading label="Carregando seus amigos…" /> : null}
+      {amizades.loading && !dados ? <Loading label={t("amigos.carregandoAmigos")} /> : null}
       {amizades.error ? <ErrorState message={amizades.error} onRetry={amizades.reload} /> : null}
 
       {dados ? (
-        <Secao titulo="Seus amigos" contagem={dados.amigos.length}>
+        <Secao titulo={t("amigos.seusAmigos")} contagem={dados.amigos.length}>
           {dados.amigos.length === 0 ? (
             <EmptyState
-              title="Nenhum amigo ainda"
-              description="Adicione alguém das sugestões, ou procure pelo @ de quem você já conhece."
+              title={t("amigos.nenhumAmigo")}
+              description={t("amigos.nenhumAmigoDesc")}
             />
           ) : (
             <Grade pessoas={dados.amigos} onMudou={recarregar} />
@@ -169,7 +171,7 @@ export function AmigosPage() {
       ) : null}
 
       {dados && dados.enviados.length > 0 ? (
-        <Secao titulo="Convites enviados" contagem={dados.enviados.length}>
+        <Secao titulo={t("amigos.convitesEnviados")} contagem={dados.enviados.length}>
           <Grade pessoas={dados.enviados} onMudou={recarregar} />
         </Secao>
       ) : null}

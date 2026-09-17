@@ -21,6 +21,7 @@ import { useEffect, useState } from "react";
 import { languages as languagesApi } from "@/api/endpoints";
 import type { LanguageCatalogEntry, LanguageProfile } from "@/api/types";
 import { useQuery } from "@/hooks/useApi";
+import { useT } from "@/lib/i18n";
 import { ACC, ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel } from "@/components/ui/primitives";
@@ -28,6 +29,7 @@ import { Kicker, Panel } from "@/components/ui/primitives";
 const METAS_DIARIAS = [10, 15, 30];
 
 export function LanguageSettings() {
+  const t = useT();
   const catalogo = useQuery(() => languagesApi.catalog(), []);
   const meus = useQuery(() => languagesApi.profiles(), []);
   const [perfis, setPerfis] = useState<LanguageProfile[]>([]);
@@ -54,7 +56,7 @@ export function LanguageSettings() {
         atualizado,
       ]);
     } catch (caught) {
-      setErro(caught instanceof Error ? caught.message : "Não consegui salvar.");
+      setErro(caught instanceof Error ? caught.message : t("idiomas.config.erroSalvar"));
     } finally {
       setOcupado(null);
     }
@@ -66,20 +68,21 @@ export function LanguageSettings() {
     <div style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
       <Panel pad={16.8}>
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 11.2 }}>
-          <Kicker>Idiomas</Kicker>
+          <Kicker>{t("idiomas.config.titulo")}</Kicker>
           <span style={{ marginLeft: "auto", fontSize: 11.5, color: TEXT.faint }}>
             {ligados === 0
-              ? "nenhum no plano"
-              : `${ligados} ${ligados === 1 ? "idioma" : "idiomas"} no plano`}
+              ? t("idiomas.config.nenhumNoPlano")
+              : ligados === 1
+                ? t("idiomas.config.noPlanoUm", { n: ligados })
+                : t("idiomas.config.noPlanoVarios", { n: ligados })}
           </span>
         </div>
         <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "5.6px 0 0", maxWidth: "74ch" }}>
-          Ligue os idiomas que fazem parte do seu plano e escolha em que escala quer acompanhar o
-          nível. O nivelamento mede sempre no CEFR e converte para a prova que você escolher —{" "}
+          {t("idiomas.config.introA")}{" "}
           <strong style={{ color: TEXT.strong, fontWeight: 500 }}>
-            o app não aplica IELTS, TOEFL ou JLPT
+            {t("idiomas.config.naoAplica")}
           </strong>
-          , ele estima onde você está e mostra na régua que você usa.
+          {t("idiomas.config.introB")}
         </p>
       </Panel>
 
@@ -109,6 +112,7 @@ function CartaoDeIdioma({
   ocupado: boolean;
   onSalvar: (mudanca: Partial<LanguageProfile>) => void;
 }) {
+  const t = useT();
   const ligado = Boolean(perfil?.enabled);
   const exameAtual =
     idioma.exames.find((exame) => exame.id === (perfil?.exam ?? "cefr")) ?? idioma.exames[0];
@@ -154,14 +158,14 @@ function CartaoDeIdioma({
             {perfil.exam !== "cefr" && perfil.exam_level ? ` · ${perfil.cefr_level}` : ""}
           </span>
         ) : (
-          <span style={{ fontSize: 11.5, color: TEXT.faint }}>sem nivelamento</span>
+          <span style={{ fontSize: 11.5, color: TEXT.faint }}>{t("idiomas.config.semNivelamento")}</span>
         )}
       </label>
 
       {ligado ? (
         <div style={{ marginTop: 14, paddingTop: 14, borderTop: `1px solid ${HAIRLINE}` }}>
           <div style={{ fontSize: 11.5, color: TEXT.faint, marginBottom: 5.6 }}>
-            Acompanhar o nível na escala de
+            {t("idiomas.config.acompanharEscala")}
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", gap: 5.6 }}>
             {idioma.exames.map((exame) => {
@@ -208,7 +212,9 @@ function CartaoDeIdioma({
               </p>
 
               <div style={{ fontSize: 11.5, color: TEXT.faint, marginBottom: 5.6 }}>
-                Meta {exameAtual.id === "cefr" ? "" : `no ${exameAtual.nome}`}
+                {exameAtual.id === "cefr"
+                  ? t("idiomas.config.meta")
+                  : t("idiomas.config.metaNoExame", { exame: exameAtual.nome })}
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 5.6 }}>
                 {exameAtual.faixas.map((faixa) => {
@@ -221,8 +227,8 @@ function CartaoDeIdioma({
                       disabled={ocupado}
                       title={
                         faixa.nota
-                          ? `${faixa.nota} — equivale a ${faixa.cefr} no CEFR`
-                          : `Equivale a ${faixa.cefr} no CEFR`
+                          ? t("idiomas.config.equivaleComNota", { nota: faixa.nota, cefr: faixa.cefr })
+                          : t("idiomas.config.equivale", { cefr: faixa.cefr })
                       }
                       onClick={() => onSalvar({ exam_target: faixa.rotulo })}
                       style={{
@@ -249,15 +255,15 @@ function CartaoDeIdioma({
 
               {perfil?.exam_target ? (
                 <p style={{ fontSize: 11.5, color: C.verde, margin: "8.4px 0 0" }}>
-                  Meta {perfil.exam_target}
+                  {t("idiomas.config.metaEscolhida", { alvo: perfil.exam_target })}
                   {exameAtual.id !== "cefr" && perfil.target_cefr
-                    ? ` — o app vai medir isso como ${perfil.target_cefr} no CEFR.`
+                    ? t("idiomas.config.metaMedida", { cefr: perfil.target_cefr })
                     : "."}
                 </p>
               ) : null}
 
               <div style={{ fontSize: 11.5, color: TEXT.faint, margin: "14px 0 5.6px" }}>
-                Tempo por dia — sai do mesmo orçamento de horas do roadmap
+                {t("idiomas.config.tempoPorDia")}
               </div>
               <div style={{ display: "flex", flexWrap: "wrap", gap: 5.6 }}>
                 {METAS_DIARIAS.map((minutos) => {
@@ -280,7 +286,7 @@ function CartaoDeIdioma({
                         color: ativo ? ACC4 : TEXT.muted,
                       }}
                     >
-                      {minutos} min
+                      {t("idiomas.config.minUnidade", { n: minutos })}
                     </button>
                   );
                 })}

@@ -13,25 +13,27 @@ import type { OwnedCourse, UserTag } from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@/hooks/useApi";
+import { useT } from "@/lib/i18n";
 import { ACC, ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Meter, Panel, SCREEN_IN } from "@/components/ui/primitives";
 import { Avatar } from "@/components/profile/Avatar";
 import { TagButton } from "@/components/profile/TagButton";
-import { MASTERY_LABELS } from "@/components/profile/TechnologyRow";
+import { MASTERY_KEYS } from "@/components/profile/TechnologyRow";
 import { Icon } from "@/components/ui/icons";
 import { linkParaLinkedIn } from "@/pages/CoursesPage";
 
 import { CATEGORIAS_FORA_DAS_SKILLS } from "@/components/profile/SkillsTab";
 import { linkExterno } from "@/lib/linkExterno";
 export function ProfilePage() {
+  const t = useT();
   const { user } = useAuth();
   const { dispatch } = useAppState();
   const overview = useQuery((signal) => profileApi.overview(signal), []);
   const tags = useQuery(() => tagsApi.mine(), []);
   const certificados = useQuery(() => coursesApi.mine(), []);
 
-  if (overview.loading || tags.loading) return <Loading label="Carregando seu perfil…" />;
+  if (overview.loading || tags.loading) return <Loading label={t("perfil.carregando")} />;
   if (overview.error) return <ErrorState message={overview.error} onRetry={overview.reload} />;
   if (tags.error) return <ErrorState message={tags.error} onRetry={tags.reload} />;
   if (!overview.data || !tags.data) return null;
@@ -65,7 +67,7 @@ export function ProfilePage() {
 
   return (
     <div style={SCREEN_IN}>
-      <h1 style={{ fontSize: 28, margin: "0 0 5.6px" }}>Perfil e tags</h1>
+      <h1 style={{ fontSize: 28, margin: "0 0 5.6px" }}>{t("perfil.titulo")}</h1>
       <p
         style={{
           margin: "0 0 16.8px",
@@ -74,8 +76,7 @@ export function ProfilePage() {
           maxWidth: "62ch",
         }}
       >
-        O que está marcado aqui alimenta o roadmap. Desmarcar uma tag tira os módulos ligados a ela
-        da próxima geração; marcar uma nova recalcula o prazo.
+        {t("perfil.subtitulo")}
       </p>
 
       <IdentityCard
@@ -89,8 +90,8 @@ export function ProfilePage() {
 
       {tecnicas.length === 0 ? (
         <EmptyState
-          title="Nenhuma competência ainda"
-          description="Envie seu currículo para eu extrair as tecnologias, ou adicione uma a uma em Configurações, aba Skills."
+          title={t("perfil.vazio.titulo")}
+          description={t("perfil.vazio.descricao")}
           action={
             <button
               type="button"
@@ -98,28 +99,28 @@ export function ProfilePage() {
               onClick={() => dispatch({ type: "navigate", screen: "cv" })}
             >
               <Icon name="upload" size={15} />
-              Enviar currículo
+              {t("perfil.vazio.enviarCurriculo")}
             </button>
           }
         />
       ) : (
         <Panel pad={16.8}>
           <TagGroup
-            title={`Você domina · ${dominadas.length}`}
-            hint="N3 ou mais — entram como revisão curta: o caso difícil, a armadilha de produção e exercícios de nível avançado. Nunca do zero"
+            title={t("perfil.grupos.voceDomina", { n: dominadas.length })}
+            hint={t("perfil.grupos.voceDominaDica")}
             tags={dominadas}
             onToggle={toggle}
           />
           <TagGroup
-            title={`O plano começa por aqui · ${parciais.length}`}
-            hint="N1 e N2 — entram para aprofundar, e vêm primeiro: a distância é curta e o resultado aparece nas primeiras semanas"
+            title={t("perfil.grupos.comecaPorAqui", { n: parciais.length })}
+            hint={t("perfil.grupos.comecaPorAquiDica")}
             tags={parciais}
             onToggle={toggle}
             style={{ marginTop: 16.8 }}
           />
           <TagGroup
-            title={`Do zero · ${doZero.length}`}
-            hint="N0 — também entram. O que o objetivo exige vai cedo, por ser o mais longo; o resto fica para o fim e é o primeiro a sair se as horas não fecharem"
+            title={t("perfil.grupos.doZero", { n: doZero.length })}
+            hint={t("perfil.grupos.doZeroDica")}
             tags={doZero}
             dashed
             onToggle={toggle}
@@ -155,14 +156,15 @@ function Certificados({
   carregando: boolean;
   onVerCursos: () => void;
 }) {
+  const t = useT();
   return (
     <Panel pad={16.8} style={{ marginTop: 11.2 }}>
-      <section aria-label="Certificados">
+      <section aria-label={t("perfil.certificados.titulo")}>
         {/* "Ver cursos" na linha do título, e a explicação embaixo: com os três
             na mesma linha flexível, no celular o botão sobrava sozinho numa
             linha própria. */}
         <div style={{ display: "flex", alignItems: "center", gap: 8.4 }}>
-          <Kicker>{`Certificados · ${lista.length}`}</Kicker>
+          <Kicker>{t("perfil.certificados.tituloComContagem", { n: lista.length })}</Kicker>
           <button
             type="button"
             className="btn btn-ghost"
@@ -170,15 +172,15 @@ function Certificados({
             onClick={onVerCursos}
           >
             <Icon name="award" size={15} />
-            Ver cursos
+            {t("perfil.certificados.verCursos")}
           </button>
         </div>
         <p style={{ margin: "2px 0 8.4px", fontSize: 11.5, color: TEXT.faint }}>
-          Marcados como "já possuo" na aba Cursos
+          {t("perfil.certificados.marcados")}
         </p>
         {carregando ? null : lista.length === 0 ? (
           <p style={{ margin: 0, fontSize: 12.5, color: TEXT.muted }}>
-            Nenhum ainda. Em Cursos, marque "Já possuo" nos certificados que você tem.
+            {t("perfil.certificados.nenhum")}
           </p>
         ) : (
           <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
@@ -210,7 +212,7 @@ function Certificados({
                   rel="noreferrer noopener"
                   style={{ fontSize: 12.5, color: ACC }}
                 >
-                  Adicionar ao LinkedIn
+                  {t("perfil.certificados.adicionarLinkedIn")}
                 </a>
               </li>
             ))}
@@ -236,16 +238,22 @@ function IdentityCard({
   roadmap: import("@/api/types").RoadmapSummary | null;
   onEdit: () => void;
 }) {
+  const t = useT();
   const fields = [
-    { label: "Cargo", value: profile.current_role },
-    { label: "Senioridade", value: profile.seniority },
+    { label: t("perfil.identidade.cargo"), value: profile.current_role },
+    { label: t("perfil.identidade.senioridade"), value: profile.seniority },
     {
-      label: "Experiência",
-      value: profile.years_experience ? `${profile.years_experience} anos` : null,
+      label: t("perfil.identidade.experiencia"),
+      value: profile.years_experience
+        ? t("perfil.identidade.anos", { n: profile.years_experience })
+        : null,
     },
-    { label: "Disponibilidade", value: `${profile.weekly_hours}h por semana` },
-    { label: "Sequência", value: `${streak.current} dias` },
-    { label: "XP", value: String(streak.total_xp) },
+    {
+      label: t("perfil.identidade.disponibilidade"),
+      value: t("perfil.identidade.horasPorSemana", { h: profile.weekly_hours }),
+    },
+    { label: t("perfil.identidade.sequencia"), value: t("perfil.identidade.dias", { n: streak.current }) },
+    { label: t("perfil.identidade.xp"), value: String(streak.total_xp) },
   ].filter((field) => field.value);
 
   return (
@@ -266,7 +274,7 @@ function IdentityCard({
           {username ? <span style={{ fontSize: 13, color: ACC4, marginTop: -4 }}>@{username}</span> : null}
           <button type="button" className="btn btn-ghost" style={{ fontSize: 12.5, marginTop: 2 }} onClick={onEdit}>
             <Icon name="pencil" size={15} />
-            Editar perfil
+            {t("perfil.identidade.editarPerfil")}
           </button>
         </div>
       </div>
@@ -301,10 +309,14 @@ function IdentityCard({
             >
               <span style={{ fontSize: 12.5, color: "rgba(233,233,237,.7)" }}>{roadmap.title}</span>
               <span style={{ marginLeft: "auto", fontSize: 11.5, color: TEXT.muted }}>
-                {roadmap.done_nodes} de {roadmap.total_nodes} · {roadmap.progress_pct}%
+                {t("perfil.identidade.progressoResumo", {
+                  feitos: roadmap.done_nodes,
+                  total: roadmap.total_nodes,
+                  pct: roadmap.progress_pct,
+                })}
               </span>
             </div>
-            <Meter pct={roadmap.progress_pct} color={ACC4} height={4} label="Progresso do plano" />
+            <Meter pct={roadmap.progress_pct} color={ACC4} height={4} label={t("perfil.identidade.progressoPlano")} />
           </div>
         ) : null}
       </div>
@@ -356,10 +368,11 @@ function TagGroup({
 }
 
 function ScaleLegend() {
+  const t = useT();
   return (
     <div style={{ marginTop: 16.8, paddingTop: 14, borderTop: "1px solid rgba(233,233,237,.12)" }}>
       <Kicker tone="muted" style={{ display: "block", marginBottom: 8.4 }}>
-        Escala de domínio
+        {t("perfil.escalaDominio")}
       </Kicker>
       <div
         style={{
@@ -368,14 +381,14 @@ function ScaleLegend() {
           gap: 8.4,
         }}
       >
-        {MASTERY_LABELS.map((label, level) => (
-          <div key={label} style={{ display: "flex", alignItems: "baseline", gap: 6, minWidth: 0 }}>
+        {MASTERY_KEYS.map((chave, level) => (
+          <div key={chave} style={{ display: "flex", alignItems: "baseline", gap: 6, minWidth: 0 }}>
             <span
               style={{ fontSize: 11, fontFamily: "ui-monospace, Menlo, monospace", color: ACC4 }}
             >
               N{level}
             </span>
-            <span style={{ fontSize: 12.5 }}>{label}</span>
+            <span style={{ fontSize: 12.5 }}>{t(chave)}</span>
           </div>
         ))}
       </div>

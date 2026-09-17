@@ -13,6 +13,7 @@ import { useState } from "react";
 import { english as englishApi } from "@/api/endpoints";
 import type { EnglishAssessment, LanguageImprovements, PracticeSession } from "@/api/types";
 import { useMutation, useQuery } from "@/hooks/useApi";
+import { useT } from "@/lib/i18n";
 import { ACC, ACC4, C, HAIRLINE, RING, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { ErrorState, Loading } from "@/components/ui/States";
@@ -24,6 +25,7 @@ import { CartaoDoTreino, TreinoDoDia } from "@/components/english/treino/TreinoD
 const BANDS = ["A1", "A2", "B1", "B2", "C1", "C2"] as const;
 
 export function EnglishPage() {
+  const t = useT();
   // Qual idioma esta tela mostra. Com varios no plano, "o" idioma deixou de
   // existir: a pessoa escolhe entre os que ligou em Configuracoes, e o padrao
   // e o primeiro ligado.
@@ -53,7 +55,7 @@ export function EnglishPage() {
   const start = useMutation(() => englishApi.startAssessment(idioma));
   const toggle = useMutation((enabled: boolean) => englishApi.update(idioma, { enabled }));
 
-  if (profile.loading) return <Loading label="Carregando o módulo de idioma…" />;
+  if (profile.loading) return <Loading label={t("idiomas.carregandoModulo")} />;
   if (profile.error) return <ErrorState message={profile.error} onRetry={profile.reload} />;
   if (!profile.data) return null;
 
@@ -116,8 +118,8 @@ export function EnglishPage() {
         }}
       >
         <div style={{ flex: 1, minWidth: 250 }}>
-          <div style={{ fontSize: 12.5, color: TEXT.muted }}>Módulo opcional</div>
-          <h1 style={{ fontSize: 28, margin: 0 }}>Idioma para o trabalho</h1>
+          <div style={{ fontSize: 12.5, color: TEXT.muted }}>{t("idiomas.moduloOpcional")}</div>
+          <h1 style={{ fontSize: 28, margin: 0 }}>{t("idiomas.tituloTrabalho")}</h1>
           {/* O seletor só aparece com dois ou mais idiomas ligados: com um só,
               um grupo de um botão é ruído — a tela já é daquele idioma. */}
           {ligados.length > 1 ? (
@@ -157,8 +159,7 @@ export function EnglishPage() {
               maxWidth: "62ch",
             }}
           >
-            Roda em paralelo ao roadmap técnico. Nivela por CEFR e treina com o vocabulário de quem
-            trabalha com backend em time internacional.
+            {t("idiomas.descricao")}
           </p>
         </div>
         <label
@@ -178,7 +179,7 @@ export function EnglishPage() {
               await toggle.run(!data.enabled);
             }}
           />
-          {data.enabled ? "Ativado" : "Desativado"}
+          {data.enabled ? t("idiomas.ativado") : t("idiomas.desativado")}
         </label>
       </header>
 
@@ -193,8 +194,7 @@ export function EnglishPage() {
             fontSize: 14,
           }}
         >
-          Módulo desativado. Ative acima para incluir {data.daily_goal_min} min de inglês por dia no
-          plano.
+          {t("idiomas.desativadoAviso", { min: data.daily_goal_min })}
         </p>
       ) : (
         <div
@@ -220,12 +220,12 @@ export function EnglishPage() {
 
           <Panel tone="section">
             <Kicker tone="section" style={{ display: "block", marginBottom: 8.4 }}>
-              Seu nível
+              {t("idiomas.seuNivel")}
             </Kicker>
             <div style={{ display: "flex", alignItems: "baseline", gap: 8.4 }}>
               <span style={{ fontSize: 34, lineHeight: 1 }}>{nivelAtual ?? "—"}</span>
               <span style={{ fontSize: 13, color: "rgba(233,233,237,.75)" }}>
-                meta {data.target_level}
+                {t("idiomas.meta", { nivel: data.target_level })}
               </span>
             </div>
             <div aria-hidden style={{ display: "flex", gap: 4, marginTop: 14 }}>
@@ -244,9 +244,9 @@ export function EnglishPage() {
             <p style={{ fontSize: 11.5, color: "rgba(233,233,237,.65)", margin: "8.4px 0 14px" }}>
               {data.cefr_level
                 ? treinosDivergem
-                  ? `Medido no nivelamento. Nos treinos você está rendendo como ${nivelDosTreinos} — o quadro por habilidade mostra o que puxa para baixo. Refaça o nivelamento quando quiser atualizar este número.`
-                  : "Medido no nivelamento, e os treinos confirmam. Refaça o nivelamento quando quiser uma medida nova."
-                : "Sem nivelamento ainda. O número vem dos treinos; o teste leva cerca de 12 minutos e dá a medida de referência."}
+                  ? t("idiomas.nivelDivergente", { nivel: nivelDosTreinos ?? "" })
+                  : t("idiomas.nivelConfirma")
+                : t("idiomas.semNivel")}
             </p>
             {emAndamento ? (
               <Retomar
@@ -269,10 +269,10 @@ export function EnglishPage() {
                 }}
               >
                 {start.pending
-                  ? "Preparando o teste…"
+                  ? t("idiomas.preparandoTeste")
                   : data.cefr_level
-                    ? "Refazer nivelamento"
-                    : "Fazer o nivelamento"}
+                    ? t("idiomas.refazerNivelamento")
+                    : t("idiomas.fazerNivelamento")}
               </button>
             )}
             {start.error ? (
@@ -310,6 +310,7 @@ function Retomar({
   onRecomecar: () => void;
   recomecando: boolean;
 }) {
+  const t = useT();
   const feito = Math.round((assessment.answered_count / assessment.item_count) * 100);
   return (
     <div>
@@ -322,9 +323,9 @@ function Retomar({
           background: "rgba(145,132,217,.10)",
         }}
       >
-        <div style={{ fontSize: 12.5, color: TEXT.full }}>Nivelamento em andamento</div>
+        <div style={{ fontSize: 12.5, color: TEXT.full }}>{t("idiomas.nivelamentoEmAndamento")}</div>
         <div style={{ fontSize: 11.5, color: "rgba(233,233,237,.65)", margin: "4px 0 8.4px" }}>
-          {assessment.answered_count} de {assessment.item_count} respondidas · {feito}%
+          {t("idiomas.respondidasProgresso", { feito: assessment.answered_count, total: assessment.item_count, pct: feito })}
         </div>
         <div
           aria-hidden
@@ -340,7 +341,7 @@ function Retomar({
       </div>
       <button type="button" className="btn btn-primary btn-block" onClick={onContinuar}>
         <Icon name="playSolid" size={15} />
-        Continuar de onde parei
+        {t("idiomas.continuarDeOndeParei")}
       </button>
       <button
         type="button"
@@ -350,7 +351,7 @@ function Retomar({
         onClick={onRecomecar}
       >
         <Icon name="undo" size={15} />
-        {recomecando ? "Preparando o teste…" : "Recomeçar do zero"}
+        {recomecando ? t("idiomas.preparandoTeste") : t("idiomas.recomecarDoZero")}
       </button>
     </div>
   );
@@ -365,20 +366,20 @@ function Retomar({
  * entra na mesma fila de repetição espaçada que o quiz técnico usa.
  */
 function Melhoras({ dados }: { dados: LanguageImprovements | null }) {
+  const t = useT();
   const itens = dados?.items ?? [];
 
   return (
     <Panel>
       <div style={{ display: "flex", alignItems: "baseline", gap: 8.4, marginBottom: 11.2 }}>
-        <Kicker>Pontos de melhora</Kicker>
+        <Kicker>{t("idiomas.pontosDeMelhora")}</Kicker>
         {dados && dados.due_count > 0 ? (
-          <span style={{ fontSize: 11.5, color: C.ambar }}>{dados.due_count} para rever</span>
+          <span style={{ fontSize: 11.5, color: C.ambar }}>{t("idiomas.paraRever", { n: dados.due_count })}</span>
         ) : null}
       </div>
       {itens.length === 0 ? (
         <p style={{ fontSize: 12.5, color: TEXT.muted, margin: 0 }}>
-          Nada pendente. O que você errar no nivelamento ou no treino aparece aqui e volta no
-          treino diário, com outras palavras.
+          {t("idiomas.nadaPendente")}
         </p>
       ) : (
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>

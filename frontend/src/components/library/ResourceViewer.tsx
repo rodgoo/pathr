@@ -20,6 +20,7 @@
 import { useRef, useState } from "react";
 import { library as libraryApi } from "@/api/endpoints";
 import type { Resource, ResourceState } from "@/api/types";
+import { useT } from "@/lib/i18n";
 import { useQuery } from "@/hooks/useApi";
 import { TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
@@ -49,6 +50,7 @@ export function ResourceViewer({
     position_seconds: number | null;
   }) => void;
 }) {
+  const t = useT();
   const videoId = resource.kind === "video" ? idDoYoutube(resource.url) : null;
   const ultimoGravado = useRef(resource.user_progress_pct / 100);
   const [concluido, setConcluido] = useState(resource.user_status === "done");
@@ -98,7 +100,7 @@ export function ResourceViewer({
           onProgresso={(segundos, fracao) => void gravar(fracao, segundos)}
         />
       ) : leitura.loading ? (
-        <Loading label="Buscando o texto do artigo…" />
+        <Loading label={t("modulo.viewer.buscandoTexto")} />
       ) : leitura.error ? (
         <ErrorState message={leitura.error} onRetry={leitura.reload} />
       ) : leitura.data ? (
@@ -114,7 +116,7 @@ export function ResourceViewer({
            que há seria pior que dizer a verdade e oferecer o link. */
         <div style={{ textAlign: "center", padding: 22.4 }}>
           <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 14px" }}>
-            Este vídeo não é do YouTube, então não consigo tocá-lo aqui dentro.
+            {t("modulo.viewer.videoNaoYoutube")}
           </p>
           <a
             className="btn btn-secondary"
@@ -124,19 +126,19 @@ export function ResourceViewer({
             style={{ textDecoration: "none" }}
           >
             <Icon name="externalLink" size={15} />
-            Abrir no site original
+            {t("modulo.viewer.abrirNoSite")}
           </a>
         </div>
       ) : null}
 
       {resource.user_position_seconds && videoId && !concluido ? (
         <p style={{ fontSize: 11, color: TEXT.faint, margin: "8.4px 0 0" }}>
-          Última posição salva: {formatarTempo(resource.user_position_seconds)}
+          {t("modulo.viewer.ultimaPosicao", { tempo: formatarTempo(resource.user_position_seconds) })}
         </p>
       ) : null}
 
       <div style={{ marginTop: 11.2 }}>
-        <Perguntar contextoTipo="material" contextoRef={resource.id} rotulo="Perguntar sobre este material" />
+        <Perguntar contextoTipo="material" contextoRef={resource.id} rotulo={t("modulo.viewer.perguntarMaterial")} />
       </div>
     </div>
   );

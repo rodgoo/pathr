@@ -13,6 +13,7 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { geo as geoApi } from "@/api/endpoints";
 import type { City, Profile } from "@/api/types";
+import { useT } from "@/lib/i18n";
 import { ACC, ACC4, C, SIZE, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { Kicker, Panel } from "@/components/ui/primitives";
@@ -20,13 +21,14 @@ import { Kicker, Panel } from "@/components/ui/primitives";
 /** O mesmo padrão do servidor (services/vagas.py) quando nada foi escolhido. */
 export const RAIO_PADRAO_KM = 50;
 
-const RAIOS: readonly { km: number; rotulo: string }[] = [
-  { km: 0, rotulo: "Só remotas" },
-  { km: 10, rotulo: "10 km" },
-  { km: 25, rotulo: "25 km" },
-  { km: 50, rotulo: "50 km" },
-  { km: 100, rotulo: "100 km" },
-  { km: 200, rotulo: "200 km" },
+/** Km 0 é "só remotas"; o rótulo dos demais é montado no render (número + km). */
+const RAIOS: readonly { km: number }[] = [
+  { km: 0 },
+  { km: 10 },
+  { km: 25 },
+  { km: 50 },
+  { km: 100 },
+  { km: 200 },
 ];
 
 export function RegiaoDasVagas({
@@ -39,18 +41,18 @@ export function RegiaoDasVagas({
   /** A confirmação de salvamento deste painel. */
   estado?: ReactNode;
 }) {
+  const t = useT();
   const raio = perfil.job_radius_km ?? RAIO_PADRAO_KM;
   const [outro, setOutro] = useState(RAIOS.some((r) => r.km === raio) ? "" : String(raio));
 
   return (
     <Panel pad={16.8}>
       <div style={{ display: "flex", alignItems: "baseline", gap: 11.2, marginBottom: 5.6 }}>
-        <Kicker>Região e abrangência das vagas</Kicker>
+        <Kicker>{t("perfil.regiao.titulo")}</Kicker>
         {estado}
       </div>
       <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 11.2px", maxWidth: "70ch" }}>
-        Vagas presenciais e híbridas aparecem só até esta distância da sua cidade. Vagas remotas aparecem sempre,
-        de qualquer lugar.
+        {t("perfil.regiao.descricao")}
       </p>
 
       <CampoDeCidade
@@ -59,10 +61,10 @@ export function RegiaoDasVagas({
         onEscolher={(cidade) => salvar({ city: cidade.nome, state: cidade.uf })}
       />
 
-      <div style={{ fontSize: SIZE.apoio, color: TEXT.faint, margin: "14px 0 5.6px" }}>Até que distância</div>
+      <div style={{ fontSize: SIZE.apoio, color: TEXT.faint, margin: "14px 0 5.6px" }}>{t("perfil.regiao.ateQueDistancia")}</div>
       <div
         role="radiogroup"
-        aria-label="Raio das vagas presenciais"
+        aria-label={t("perfil.regiao.raioLabel")}
         style={{ display: "flex", flexWrap: "wrap", gap: 5.6, alignItems: "center" }}
       >
         {RAIOS.map((opcao) => {
@@ -88,20 +90,20 @@ export function RegiaoDasVagas({
                 color: ativo ? ACC4 : TEXT.muted,
               }}
             >
-              {opcao.rotulo}
+              {opcao.km === 0 ? t("perfil.regiao.soRemotas") : t("perfil.regiao.km", { km: opcao.km })}
             </button>
           );
         })}
         <label style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 12.5, color: TEXT.muted }}>
-          ou
+          {t("perfil.regiao.ou")}
           <input
             className="input"
             type="number"
             inputMode="numeric"
             min={1}
             max={1000}
-            aria-label="Outro raio em km"
-            placeholder="outro"
+            aria-label={t("perfil.regiao.outroRaio")}
+            placeholder={t("perfil.regiao.outro")}
             value={outro}
             onChange={(evento) => setOutro(evento.target.value)}
             onBlur={() => {
@@ -111,16 +113,19 @@ export function RegiaoDasVagas({
             }}
             style={{ width: 84 }}
           />
-          km
+          {t("perfil.regiao.kmSufixo")}
         </label>
       </div>
       <p style={{ fontSize: 11.5, color: TEXT.faint, margin: "8.4px 0 0" }}>
         {raio === 0
-          ? "Só vagas remotas vão aparecer."
+          ? t("perfil.regiao.resumoSoRemotas")
           : perfil.city
-            ? `Presenciais e híbridas até ${raio} km de ${perfil.city}${perfil.state ? ` - ${perfil.state}` : ""}.`
-            : "Escolha a sua cidade para as presenciais aparecerem pela distância."}
-        {perfil.job_radius_km == null && raio !== 0 ? " (padrão)" : ""}
+            ? t("perfil.regiao.resumoComCidade", {
+                raio,
+                cidade: `${perfil.city}${perfil.state ? ` - ${perfil.state}` : ""}`,
+              })
+            : t("perfil.regiao.resumoSemCidade")}
+        {perfil.job_radius_km == null && raio !== 0 ? t("perfil.regiao.padrao") : ""}
       </p>
     </Panel>
   );
@@ -137,6 +142,7 @@ function CampoDeCidade({
   uf: string;
   onEscolher: (cidade: City) => void;
 }) {
+  const t = useT();
   const atual = cidade ? `${cidade}${uf ? ` - ${uf}` : ""}` : "";
   const [texto, setTexto] = useState(atual);
   const [sugestoes, setSugestoes] = useState<City[]>([]);
@@ -167,7 +173,7 @@ function CampoDeCidade({
           setErro(null);
         })
         .catch(() => {
-          if (numero === pedido.current) setErro("Não consegui buscar cidades agora.");
+          if (numero === pedido.current) setErro(t("perfil.regiao.erroBusca"));
         });
     }, 180);
     return () => window.clearTimeout(temporizador);
@@ -201,7 +207,7 @@ function CampoDeCidade({
 
   return (
     <div className="field" style={{ maxWidth: 420 }}>
-      <label htmlFor={`${id}-cidade`}>Cidade onde você mora</label>
+      <label htmlFor={`${id}-cidade`}>{t("perfil.regiao.cidadeLabel")}</label>
       <div className="sel">
         <Icon
           name="mapPin"
@@ -224,7 +230,7 @@ function CampoDeCidade({
           aria-controls={`${id}-lista`}
           aria-activedescendant={mostrarLista ? `${id}-op-${destaque}` : undefined}
           autoComplete="off"
-          placeholder="Comece a digitar: Vit…"
+          placeholder={t("perfil.regiao.cidadePlaceholder")}
           value={texto}
           onChange={(evento) => {
             setTexto(evento.target.value);
@@ -235,7 +241,7 @@ function CampoDeCidade({
           onKeyDown={teclas}
           style={{ width: "100%", paddingLeft: 32 }}
         />
-        <ul id={`${id}-lista`} role="listbox" aria-label="Cidades sugeridas" className="sel-lista" hidden={!mostrarLista}>
+        <ul id={`${id}-lista`} role="listbox" aria-label={t("perfil.regiao.cidadesSugeridas")} className="sel-lista" hidden={!mostrarLista}>
           {sugestoes.map((sugestao, posicao) => (
             <li
               key={sugestao.ibge}
@@ -256,7 +262,7 @@ function CampoDeCidade({
                 {sugestao.nome} <span style={{ color: TEXT.faint }}>- {sugestao.uf}</span>
               </span>
               {sugestao.capital ? (
-                <span style={{ marginLeft: "auto", fontSize: 11, color: TEXT.faint }}>capital</span>
+                <span style={{ marginLeft: "auto", fontSize: 11, color: TEXT.faint }}>{t("perfil.regiao.capital")}</span>
               ) : null}
             </li>
           ))}

@@ -29,6 +29,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { explanations as explanationsApi, roadmap as roadmapApi } from "@/api/endpoints";
 import type { AtividadePratica, ExplanationResult, FilaDeAtividades } from "@/api/types";
 import type { RoadmapNode } from "@/api/types";
+import { useT } from "@/lib/i18n";
 import { ACC3, ACC4, C, TEXT, tint } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { Kicker, Panel } from "@/components/ui/primitives";
@@ -43,21 +44,30 @@ const PAUSA_MS = 900;
 type Estado = "carregando" | "ocioso" | "gravando" | "salvo" | "erro";
 
 const TIPO: Record<string, string> = {
-  codigo: "Código",
-  comandos: "Comandos",
-  explicacao: "Explicação",
-  configuracao: "Configuração",
-  pratica: "Prática",
+  codigo: "modulo.atividade.tipoCodigo",
+  comandos: "modulo.atividade.tipoComandos",
+  explicacao: "modulo.atividade.tipoExplicacao",
+  configuracao: "modulo.atividade.tipoConfiguracao",
+  pratica: "modulo.atividade.tipoPratica",
 };
 
-const ETAPAS_GERAR = ["Relendo o que você já fez", "Escolhendo o próximo desafio", "Escrevendo o enunciado"] as const;
-const ETAPAS_CORRIGIR = ["Lendo sua resposta", "Comparando com o que foi pedido", "Escrevendo a correção"] as const;
+const ETAPAS_GERAR = [
+  "modulo.atividade.etapaGerar1",
+  "modulo.atividade.etapaGerar2",
+  "modulo.atividade.etapaGerar3",
+] as const;
+const ETAPAS_CORRIGIR = [
+  "modulo.atividade.etapaCorrigir1",
+  "modulo.atividade.etapaCorrigir2",
+  "modulo.atividade.etapaCorrigir3",
+] as const;
 
 function mensagem(erro: unknown, padrao: string): string {
   return erro instanceof Error ? erro.message : padrao;
 }
 
 export function ActivityPanel({ node }: { node: RoadmapNode }) {
+  const t = useT();
   const [answer, setAnswer] = useState("");
   const [estado, setEstado] = useState<Estado>("carregando");
   const [enviando, setEnviando] = useState(false);
@@ -119,11 +129,11 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
     try {
       setAtual(await roadmapApi.proximaAtividade(node.id));
     } catch (caught) {
-      setErroFila(mensagem(caught, "Não consegui gerar a próxima atividade."));
+      setErroFila(mensagem(caught, t("modulo.atividade.erroGerar")));
     } finally {
       setGerando(false);
     }
-  }, [node.id]);
+  }, [node.id, t]);
 
   // Ao abrir o módulo: a atividade aberta, ou uma nova. Sempre há algo.
   useEffect(() => {
@@ -173,7 +183,7 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
         setFila({ ...fila, atual: null, feitas: [feita, ...fila.feitas].slice(0, 10), total_feitas: fila.total_feitas + 1 });
       }
     } catch (caught) {
-      setErroCorrecao(mensagem(caught, "Não consegui corrigir agora."));
+      setErroCorrecao(mensagem(caught, t("modulo.atividade.erroCorrigir")));
     } finally {
       setEnviando(false);
     }
@@ -203,11 +213,14 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
           marginBottom: 14,
         }}
       >
-        <Kicker>Atividade prática</Kicker>
-        <span className="tag tag-outline">sem IA</span>
+        <Kicker>{t("modulo.atividade.atividadePratica")}</Kicker>
+        <span className="tag tag-outline">{t("modulo.atividade.semIA")}</span>
         {fila && fila.total_feitas > 0 ? (
           <span style={{ fontSize: 11.5, color: TEXT.faint, marginLeft: "auto" }}>
-            {fila.total_feitas} {fila.total_feitas === 1 ? "feita" : "feitas"} neste módulo
+            {fila.total_feitas}{" "}
+            {fila.total_feitas === 1
+              ? t("modulo.atividade.feitaNeste")
+              : t("modulo.atividade.feitasNeste")}
           </span>
         ) : null}
       </div>
@@ -218,12 +231,12 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
         <p style={{ fontSize: 13.5, color: "rgba(233,233,237,.7)", maxWidth: "62ch" }}>
           {objective ? (
             <>
-              Entregue o que o módulo pede:{" "}
-              <span style={{ color: ACC3 }}>{objective.toLowerCase()}</span>. Escreva a solução
-              inteira — a correção compara com a referência e aponta o que difere.
+              {t("modulo.atividade.entregueOque")}{" "}
+              <span style={{ color: ACC3 }}>{objective.toLowerCase()}</span>
+              {t("modulo.atividade.escrevaSolucaoInteira")}
             </>
           ) : (
-            "Escreva sua solução para este módulo. A correção compara com a referência e aponta o que difere."
+            t("modulo.atividade.escrevaSolucaoModulo")
           )}
         </p>
       ) : null}
@@ -232,7 +245,7 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
         <ProgressoDaTarefa
           ativo={gerando}
           chave="atividade-gerar"
-          etapas={ETAPAS_GERAR}
+          etapas={ETAPAS_GERAR.map((chave) => t(chave))}
           duracaoMs={12_000}
           style={{ margin: "11.2px 0" }}
         />
@@ -243,14 +256,14 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
           {erroFila}
           <button type="button" className="btn btn-secondary" style={{ fontSize: 12.5 }} onClick={() => void gerarProxima()}>
             <Icon name="refresh" size={14} />
-            Tentar de novo
+            {t("modulo.atividade.tentarDeNovo")}
           </button>
         </div>
       ) : null}
 
       {!semFila && atual ? (
         <section
-          aria-label="Atividade atual"
+          aria-label={t("modulo.atividade.atividadeAtual")}
           style={{
             margin: "11.2px 0",
             padding: "12.6px 14px",
@@ -260,14 +273,15 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
           }}
         >
           <div style={{ fontSize: 11.5, color: ACC4, marginBottom: 5 }}>
-            {TIPO[atual.tipo] ?? "Prática"} · atividade {(fila?.total_feitas ?? 0) + (respondida ? 0 : 1)}
+            {(TIPO[atual.tipo] ? t(TIPO[atual.tipo]) : t("modulo.atividade.tipoPratica"))}{" "}
+            {t("modulo.atividade.atividadeNumero", { n: (fila?.total_feitas ?? 0) + (respondida ? 0 : 1) })}
           </div>
           <p style={{ margin: 0, fontSize: 14, lineHeight: 1.55, color: TEXT.full, whiteSpace: "pre-wrap" }}>
             {atual.enunciado}
           </p>
           {atual.dicas.length > 0 ? (
             <details style={{ marginTop: 8.4, fontSize: 12.5, color: TEXT.muted }}>
-              <summary style={{ cursor: "pointer" }}>{atual.dicas.length === 1 ? "Ver dica" : "Ver dicas"}</summary>
+              <summary style={{ cursor: "pointer" }}>{atual.dicas.length === 1 ? t("modulo.atividade.verDica") : t("modulo.atividade.verDicas")}</summary>
               <ul style={{ margin: "5.6px 0 0", paddingLeft: 18 }}>
                 {atual.dicas.map((dica) => (
                   <li key={dica}>{dica}</li>
@@ -279,41 +293,40 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
       ) : null}
 
       {!semFila && atual ? (
-        <Perguntar contextoTipo="atividade" contextoRef={atual.id} rotulo="Perguntar sobre esta atividade" />
+        <Perguntar contextoTipo="atividade" contextoRef={atual.id} rotulo={t("modulo.atividade.perguntarAtividade")} />
       ) : null}
 
       <div className="field" style={{ marginTop: 14 }}>
-        <label htmlFor="activity-answer">Sua resposta</label>
+        <label htmlFor="activity-answer">{t("modulo.atividade.suaResposta")}</label>
         {/* A fonte vem da classe e não daqui: inline ela venceria a regra de
             toque do app.css, e o Safari do iPhone daria zoom ao focar. */}
         <EditorDeCodigo
           id="activity-answer"
           value={answer}
           onChange={setAnswer}
-          placeholder={"Escreva aqui, do zero.\n\ngit push  // comentários explicam o que o comando faz"}
+          placeholder={t("modulo.atividade.respostaPlaceholder")}
           describedBy="activity-answer-dica"
         />
         <div id="activity-answer-dica" style={{ fontSize: 11.5, color: TEXT.faint, marginTop: 5 }}>
-          Comentários (<code>//</code>, <code>#</code>, <code>--</code>, <code>/* */</code>) contam como a sua
-          explicação. Só vale resposta para esta atividade.
+          {t("modulo.atividade.comentariosContam1")} (<code>//</code>, <code>#</code>, <code>--</code>, <code>/* */</code>){t("modulo.atividade.comentariosContam2")}
         </div>
       </div>
 
       <div style={{ marginTop: 14, display: "flex", gap: 8.4, alignItems: "center", flexWrap: "wrap" }}>
         {respondida && !semFila ? (
           <button type="button" className="btn btn-primary" disabled={gerando} onClick={() => void seguir()}>
-            Próxima atividade
+            {t("modulo.atividade.proximaAtividade")}
             <Icon name="arrowRight" size={15} />
           </button>
         ) : (
           <button type="button" className="btn btn-primary" disabled={!podeEnviar} onClick={() => void corrigir()}>
             <Icon name="send" size={15} />
-            {enviando ? "Corrigindo…" : "Enviar para correção"}
+            {enviando ? t("modulo.atividade.corrigindo") : t("modulo.atividade.enviarCorrecao")}
           </button>
         )}
         {!respondida && answer.trim().length < 40 ? (
           <span style={{ fontSize: 11.5, color: TEXT.faint }}>
-            Escreva ao menos algumas frases — uma linha não é explicação.
+            {t("modulo.atividade.escrevaAlgumasFrases")}
           </span>
         ) : null}
       </div>
@@ -321,7 +334,7 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
       <ProgressoDaTarefa
         ativo={enviando}
         chave="atividade-corrigir"
-        etapas={ETAPAS_CORRIGIR}
+        etapas={ETAPAS_CORRIGIR.map((chave) => t(chave))}
         duracaoMs={14_000}
         style={{ marginTop: 11.2 }}
       />
@@ -353,18 +366,18 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
           color: TEXT.faint,
         }}
       >
-        <span>{answer.trim().length} caracteres escritos</span>
+        <span>{t("modulo.atividade.caracteresEscritos", { n: answer.trim().length })}</span>
         <span role="status" style={{ color: estado === "erro" ? C.ambar : TEXT.faint }}>
-          {estado === "carregando" ? "carregando o rascunho…" : null}
-          {estado === "gravando" ? "gravando…" : null}
-          {estado === "salvo" ? "gravado na sua conta" : null}
-          {estado === "erro" ? "não consegui gravar — o texto continua aqui" : null}
+          {estado === "carregando" ? t("modulo.atividade.carregandoRascunho") : null}
+          {estado === "gravando" ? t("modulo.atividade.gravando") : null}
+          {estado === "salvo" ? t("modulo.atividade.gravadoNaConta") : null}
+          {estado === "erro" ? t("modulo.atividade.naoGravou") : null}
         </span>
       </div>
 
       {fila && fila.feitas.length > 0 ? (
         <details style={{ marginTop: 16.8, fontSize: 12.5, color: TEXT.muted }}>
-          <summary style={{ cursor: "pointer" }}>Atividades feitas neste módulo ({fila.total_feitas})</summary>
+          <summary style={{ cursor: "pointer" }}>{t("modulo.atividade.atividadesFeitas", { n: fila.total_feitas })}</summary>
           <ol style={{ listStyle: "none", margin: "8.4px 0 0", padding: 0, display: "flex", flexDirection: "column", gap: 6 }}>
             {fila.feitas.map((feita) => (
               <li key={feita.id} style={{ display: "flex", gap: 10, alignItems: "baseline" }}>
@@ -402,6 +415,7 @@ export function ActivityPanel({ node }: { node: RoadmapNode }) {
  * só uma nota, e nota não ensina nada.
  */
 function Correcao({ resultado }: { resultado: ExplanationResult }) {
+  const t = useT();
   if (resultado.fora_do_tema) {
     return (
       <div
@@ -416,9 +430,8 @@ function Correcao({ resultado }: { resultado: ExplanationResult }) {
           lineHeight: 1.55,
         }}
       >
-        <strong style={{ fontWeight: 500, color: C.ambar }}>Não parece uma resposta para esta atividade.</strong>{" "}
-        {resultado.feedback ?? "Escreva a solução do que o módulo pede."} Nada entrou na revisão nem contou como
-        estudo.
+        <strong style={{ fontWeight: 500, color: C.ambar }}>{t("modulo.atividade.naoPareceResposta")}</strong>{" "}
+        {resultado.feedback ?? t("modulo.atividade.escrevaSolucaoPedida")} {t("modulo.atividade.nadaEntrouRevisao")}
       </div>
     );
   }
@@ -438,7 +451,7 @@ function Correcao({ resultado }: { resultado: ExplanationResult }) {
           {resultado.score}
         </span>
         <span style={{ fontSize: 11.5, color: TEXT.faint }}>
-          de 100 — quanto a explicação se sustenta sozinha
+          {t("modulo.atividade.de100")}
         </span>
       </div>
 
@@ -459,7 +472,7 @@ function Correcao({ resultado }: { resultado: ExplanationResult }) {
       {resultado.gaps.length > 0 ? (
         <>
           <div style={{ fontSize: 11.5, color: TEXT.faint, marginBottom: 5.6 }}>
-            O que ficou pela metade
+            {t("modulo.atividade.oQueFicouPelaMetade")}
           </div>
           <ul style={{ margin: 0, paddingLeft: 18, fontSize: 12.5, lineHeight: 1.5 }}>
             {resultado.gaps.map((lacuna) => (
@@ -474,16 +487,16 @@ function Correcao({ resultado }: { resultado: ExplanationResult }) {
         </>
       ) : (
         <p style={{ margin: 0, fontSize: 12.5, color: C.verde }}>
-          Nenhuma lacuna encontrada. Você conseguiu explicar sem apoio.
+          {t("modulo.atividade.nenhumaLacuna")}
         </p>
       )}
 
       {resultado.viraram_revisao ? (
         <p style={{ margin: "11.2px 0 0", fontSize: 11.5, color: TEXT.muted }}>
           {resultado.viraram_revisao === 1
-            ? "1 lacuna entrou na sua revisão"
-            : `${resultado.viraram_revisao} lacunas entraram na sua revisão`}{" "}
-          e volta como questão, com outras palavras, no próximo quiz desta trilha.
+            ? t("modulo.atividade.umaLacunaRevisao")
+            : t("modulo.atividade.lacunasRevisao", { n: resultado.viraram_revisao })}{" "}
+          {t("modulo.atividade.voltaComoQuestao")}
         </p>
       ) : null}
     </div>

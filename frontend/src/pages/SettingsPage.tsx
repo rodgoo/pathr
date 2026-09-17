@@ -8,6 +8,7 @@
  */
 
 import { useAppState } from "@/hooks/useAppState";
+import { useT } from "@/lib/i18n";
 import type { SettingsTab } from "@/types";
 import { Chip } from "@/components/ui/Chip";
 import type { IconName } from "@/components/ui/icons";
@@ -23,13 +24,14 @@ import { ModeracaoUsuarios } from "@/components/moderacao/ModeracaoUsuarios";
 import { RecursosFlags } from "@/components/admin/RecursosFlags";
 import { useAuth } from "@/hooks/useAuth";
 
+// `label` guarda a chave de tradução; o texto sai no render com `t()`.
 const ABAS: readonly { value: SettingsTab; label: string; icon: IconName }[] = [
-  { value: "conta", label: "Conta", icon: "user" },
-  { value: "objetivo", label: "Objetivo", icon: "flag" },
-  { value: "skills", label: "Skills", icon: "code" },
-  { value: "idiomas", label: "Idiomas", icon: "globe" },
-  { value: "avisos", label: "Avisos e privacidade", icon: "cog" },
-  { value: "integracoes", label: "Status das APIs", icon: "server" },
+  { value: "conta", label: "config.abas.conta", icon: "user" },
+  { value: "objetivo", label: "config.abas.objetivo", icon: "flag" },
+  { value: "skills", label: "config.abas.skills", icon: "code" },
+  { value: "idiomas", label: "config.abas.idiomas", icon: "globe" },
+  { value: "avisos", label: "config.abas.avisos", icon: "cog" },
+  { value: "integracoes", label: "config.abas.integracoes", icon: "server" },
 ];
 
 /**
@@ -37,13 +39,14 @@ const ABAS: readonly { value: SettingsTab; label: string; icon: IconName }[] = [
  * nada — o servidor responde 404 em /relatos/moderacao para qualquer outra
  * conta —, mas mostrar uma aba vazia a todo mundo anunciaria que ela existe.
  */
-const ABA_MODERACAO = { value: "moderacao" as const, label: "Moderação", icon: "flag" as IconName };
+const ABA_MODERACAO = { value: "moderacao" as const, label: "config.abas.moderacao", icon: "flag" as IconName };
 // Recursos (feature flags) — só o super admin liga/desliga funcionalidades.
-const ABA_RECURSOS = { value: "recursos" as const, label: "Recursos", icon: "cog" as IconName };
+const ABA_RECURSOS = { value: "recursos" as const, label: "config.abas.recursos", icon: "cog" as IconName };
 
 export function SettingsPage() {
   const { state, dispatch } = useAppState();
   const { user } = useAuth();
+  const t = useT();
   const TABS = [
     ...ABAS,
     ...(user?.is_moderator || user?.is_super_admin ? [ABA_MODERACAO] : []),
@@ -58,7 +61,7 @@ export function SettingsPage() {
 
   return (
     <div style={{ maxWidth: 900, ...SCREEN_IN }}>
-      <h1 style={{ fontSize: 28, margin: "0 0 5.6px" }}>Configurações</h1>
+      <h1 style={{ fontSize: 28, margin: "0 0 5.6px" }}>{t("config.titulo")}</h1>
       <p
         style={{
           margin: "0 0 16.8px",
@@ -67,12 +70,12 @@ export function SettingsPage() {
           maxWidth: "62ch",
         }}
       >
-        Conta, objetivo de estudo, competências, idiomas, avisos e o status das integrações. Tudo o que muda aqui recalcula o plano na próxima geração.
+        {t("config.subtitulo")}
       </p>
 
       <div
         role="tablist"
-        aria-label="Seções das configurações"
+        aria-label={t("config.abasAria")}
         style={{ display: "flex", flexWrap: "wrap", gap: 5.6, marginBottom: 16.8 }}
       >
         {TABS.map((entry) => (
@@ -83,7 +86,7 @@ export function SettingsPage() {
             onClick={() => dispatch({ type: "setSettingsTab", tab: entry.value })}
             style={{ borderRadius: 8, fontSize: 13 }}
           >
-            {entry.label}
+            {t(entry.label)}
           </Chip>
         ))}
       </div>
@@ -102,16 +105,16 @@ export function SettingsPage() {
       {/* Em aba nova: o documento é longo, e voltar dele não deve custar a
           posição em que a pessoa estava nas configurações. */}
       <nav
-        aria-label="Documentos legais"
+        aria-label={t("config.legaisAria")}
         style={{ margin: "28px 0 0", display: "flex", flexWrap: "wrap", gap: "6px 16px", fontSize: 12.5 }}
       >
         {[
-          ["/termos", "Termos de uso"],
-          ["/privacidade", "Política de privacidade"],
-          ["/seguranca", "Segurança"],
-        ].map(([href, rotulo]) => (
+          ["/termos", "config.legais.termos"],
+          ["/privacidade", "config.legais.privacidade"],
+          ["/seguranca", "config.legais.seguranca"],
+        ].map(([href, chave]) => (
           <a key={href} href={href} target="_blank" rel="noopener" style={{ color: "rgba(233,233,237,.6)" }}>
-            {rotulo}
+            {t(chave)}
           </a>
         ))}
       </nav>
@@ -119,7 +122,7 @@ export function SettingsPage() {
       {/* A licença dos ícones (CC BY 4.0) pede crédito visível — um
           comentário no código não conta, porque quem usa o app nunca o lê. */}
       <p style={{ margin: "12px 0 0", fontSize: 11.5, color: "rgba(233,233,237,.4)" }}>
-        Ícones:{" "}
+        {t("config.creditos.rotulo")}{" "}
         <a
           href="https://github.com/krystonschwarze/coolicons"
           target="_blank"
@@ -128,7 +131,7 @@ export function SettingsPage() {
         >
           coolicons
         </a>
-        , de Kryston Schwarze, sob{" "}
+        {t("config.creditos.deSob")}{" "}
         <a
           href="https://creativecommons.org/licenses/by/4.0/deed.pt-br"
           target="_blank"
@@ -137,11 +140,11 @@ export function SettingsPage() {
         >
           CC BY 4.0
         </a>
-        ; chama e medalha do{" "}
+        {t("config.creditos.chamaMedalha")}{" "}
         <a href="https://lucide.dev" target="_blank" rel="noreferrer noopener" style={{ color: "inherit" }}>
           Lucide
         </a>
-        , sob licença ISC.
+        {t("config.creditos.licencaIsc")}
       </p>
     </div>
   );

@@ -15,10 +15,12 @@
 
 import { useState } from "react";
 import { relatos } from "@/api/endpoints";
+import { useT } from "@/lib/i18n";
 import { Icon } from "@/components/ui/icons";
 import { C, TEXT, tint } from "@/lib/tokens";
 
 export function MidiaAnexada({ relatoId }: { relatoId: string }) {
+  const t = useT();
   const [abrindo, setAbrindo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -46,7 +48,7 @@ export function MidiaAnexada({ relatoId }: { relatoId: string }) {
       window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
     } catch {
       aba?.close();
-      setErro("Não consegui abrir a mídia agora.");
+      setErro(t("relatar.midia.erroAbrir"));
     } finally {
       setAbrindo(false);
     }
@@ -58,7 +60,7 @@ export function MidiaAnexada({ relatoId }: { relatoId: string }) {
         type="button"
         onClick={() => void abrir()}
         disabled={abrindo}
-        title="Abrir a foto em tamanho real numa nova aba"
+        title={t("relatar.midia.abrirTitulo")}
         style={{
           display: "inline-flex",
           alignItems: "center",
@@ -74,11 +76,11 @@ export function MidiaAnexada({ relatoId }: { relatoId: string }) {
         }}
       >
         <Icon name="camera" size={14} />
-        {abrindo ? "Abrindo…" : "Mídia anexada"}
+        {abrindo ? t("relatar.midia.abrindo") : t("relatar.midia.rotulo")}
         <Icon name="externalLink" size={12} style={{ opacity: 0.7 }} />
       </button>
       {erro ? <span role="alert" style={{ fontSize: 12, color: C.ambar }}>{erro}</span> : null}
-      {!erro && abrindo ? <span style={{ fontSize: 11.5, color: TEXT.faint }}>carregando a foto…</span> : null}
+      {!erro && abrindo ? <span style={{ fontSize: 11.5, color: TEXT.faint }}>{t("relatar.midia.carregando")}</span> : null}
     </span>
   );
 }

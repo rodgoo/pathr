@@ -21,6 +21,7 @@
 import { useEffect, useRef, useState } from "react";
 import { duvidas as duvidasApi } from "@/api/endpoints";
 import type { DuvidaConversa, TipoDeContextoDaDuvida } from "@/api/types";
+import { useT } from "@/lib/i18n";
 import { ACC, ACC4, C, TEXT, tint } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { TextoFormatado } from "./TextoFormatado";
@@ -36,11 +37,13 @@ interface Props {
   rotulo?: string;
 }
 
-function mensagemDeErro(erro: unknown): string {
-  return erro instanceof Error ? erro.message : "Não consegui falar com o tutor agora.";
+function mensagemDeErro(erro: unknown, padrao: string): string {
+  return erro instanceof Error ? erro.message : padrao;
 }
 
-export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Perguntar" }: Props) {
+export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo }: Props) {
+  const t = useT();
+  const rotuloBotao = rotulo ?? t("modulo.duvidas.perguntar");
   const [aberto, setAberto] = useState(false);
   const [conversa, setConversa] = useState<DuvidaConversa | null>(null);
   const [texto, setTexto] = useState("");
@@ -84,7 +87,7 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
     try {
       setConversa(await duvidasApi.exemplo(conversa.id, pedido));
     } catch (caught) {
-      setErro(mensagemDeErro(caught));
+      setErro(mensagemDeErro(caught, t("modulo.duvidas.erroTutor")));
     } finally {
       setGerandoExemplo(false);
     }
@@ -100,7 +103,7 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
     try {
       setConversa(await acao());
     } catch (caught) {
-      setErro(mensagemDeErro(caught));
+      setErro(mensagemDeErro(caught, t("modulo.duvidas.erroTutor")));
       // Falhou: o texto volta para o campo, para não ter que escrever de novo.
       if (opcoes.restaurar) setTexto(opcoes.restaurar);
     } finally {
@@ -128,7 +131,7 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
     return (
       <button type="button" className="btn btn-secondary" style={{ fontSize: 12.5 }} onClick={() => setAberto(true)}>
         <Icon name="chat" size={15} />
-        {rotulo}
+        {rotuloBotao}
       </button>
     );
   }
@@ -140,7 +143,7 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
 
   return (
     <section
-      aria-label="Perguntar ao tutor"
+      aria-label={t("modulo.duvidas.perguntarAoTutor")}
       style={{
         marginTop: 11.2,
         padding: 12.6,
@@ -154,15 +157,15 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
     >
       <div style={{ display: "flex", alignItems: "center", gap: 8.4, flexWrap: "wrap" }}>
         <Icon name="chat" size={15} style={{ color: ACC4 }} />
-        <strong style={{ fontSize: 13, fontWeight: 500, color: TEXT.full }}>Tirar uma dúvida</strong>
-        <span style={{ fontSize: 11.5, color: TEXT.faint }}>fica guardada para revisar depois</span>
+        <strong style={{ fontSize: 13, fontWeight: 500, color: TEXT.full }}>{t("modulo.duvidas.tirarUmaDuvida")}</strong>
+        <span style={{ fontSize: 11.5, color: TEXT.faint }}>{t("modulo.duvidas.ficaGuardada")}</span>
         <span style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
           {conversa ? (
             <button type="button" className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => setConversa(null)}>
-              Nova dúvida
+              {t("modulo.duvidas.novaDuvida")}
             </button>
           ) : null}
-          <button type="button" className="btn btn-ghost" style={{ fontSize: 12 }} aria-label="Fechar" onClick={() => setAberto(false)}>
+          <button type="button" className="btn btn-ghost" style={{ fontSize: 12 }} aria-label={t("modulo.duvidas.fechar")} onClick={() => setAberto(false)}>
             <Icon name="x" size={14} />
           </button>
         </span>
@@ -170,18 +173,18 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
 
       {mensagens.length === 0 && !enviando ? (
         <p style={{ margin: 0, fontSize: 12.5, color: TEXT.muted }}>
-          Não entendeu alguma parte? Pergunte do seu jeito — o tutor explica com base no que está nesta tela.
+          {t("modulo.duvidas.promptVazio")}
         </p>
       ) : null}
 
-      <ol aria-label="Conversa" style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8.4 }}>
+      <ol aria-label={t("modulo.duvidas.conversa")} style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8.4 }}>
         {mensagens.map((mensagem) => {
           const daPessoa = mensagem.papel === "pessoa";
           return (
             <li
               key={mensagem.id}
               className="bolha"
-              aria-label={daPessoa ? "Você" : "Tutor"}
+              aria-label={daPessoa ? t("modulo.duvidas.voce") : t("modulo.duvidas.tutor")}
               style={{ display: "flex", justifyContent: daPessoa ? "flex-start" : "flex-end" }}
             >
               <div
@@ -205,16 +208,16 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
                     onClick={() => abrirNoDepurador(mensagem.exemplo_id as string)}
                   >
                     <Icon name="code" size={14} />
-                    Abrir no depurador
+                    {t("modulo.duvidas.abrirNoDepurador")}
                   </button>
                 ) : null}
                 {!daPessoa && (mensagem.sugestoes ?? []).length > 0 ? (
                   <div
                     role="group"
-                    aria-label="Exemplos para depurar"
+                    aria-label={t("modulo.duvidas.exemplosParaDepurar")}
                     style={{ display: "flex", flexWrap: "wrap", gap: 6, marginTop: 8, paddingTop: 8, borderTop: "1px solid rgba(233,233,237,.1)" }}
                   >
-                    <span style={{ fontSize: 11.5, color: TEXT.muted, width: "100%" }}>Quer ver rodando, passo a passo?</span>
+                    <span style={{ fontSize: 11.5, color: TEXT.muted, width: "100%" }}>{t("modulo.duvidas.querVerRodando")}</span>
                     {(mensagem.sugestoes ?? []).map((sugestao) => (
                       <button
                         key={`${sugestao.linguagem}-${sugestao.topico}`}
@@ -225,7 +228,7 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
                         onClick={() => void gerarExemplo(sugestao)}
                       >
                         <Icon name="code" size={13} />
-                        Gerar exemplo para depurar: {sugestao.topico}
+                        {t("modulo.duvidas.gerarExemplo")} {sugestao.topico}
                       </button>
                     ))}
                   </div>
@@ -235,7 +238,7 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
           );
         })}
         {pendente ? (
-          <li key="pendente" className="bolha" aria-label="Você" style={{ display: "flex", justifyContent: "flex-start" }}>
+          <li key="pendente" className="bolha" aria-label={t("modulo.duvidas.voce")} style={{ display: "flex", justifyContent: "flex-start" }}>
             <div
               style={{
                 maxWidth: "85%",
@@ -257,7 +260,7 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
           <li
             key="digitando"
             className="bolha"
-            aria-label={gerandoExemplo ? "Tutor está escrevendo o exemplo" : "Tutor está escrevendo"}
+            aria-label={gerandoExemplo ? t("modulo.duvidas.tutorEscrevendoExemplo") : t("modulo.duvidas.tutorEscrevendo")}
             style={{ display: "flex", justifyContent: "flex-end" }}
           >
             <div
@@ -267,7 +270,7 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
               <span aria-hidden />
               <span aria-hidden />
               <span aria-hidden />
-              {gerandoExemplo ? <em>escrevendo o exemplo</em> : null}
+              {gerandoExemplo ? <em>{t("modulo.duvidas.escrevendoExemplo")}</em> : null}
             </div>
           </li>
         ) : null}
@@ -275,7 +278,7 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
 
 
       {esperandoRetorno && conversa ? (
-        <div role="group" aria-label="A explicação ficou clara?" className="bolha" style={{ display: "flex", gap: 8.4, justifyContent: "flex-end", flexWrap: "wrap" }}>
+        <div role="group" aria-label={t("modulo.duvidas.explicacaoClara")} className="bolha" style={{ display: "flex", gap: 8.4, justifyContent: "flex-end", flexWrap: "wrap" }}>
           <button
             type="button"
             className="btn btn-secondary"
@@ -283,15 +286,15 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
             onClick={() => void executar(() => duvidasApi.entendeu(conversa.id, true))}
           >
             <Icon name="check" size={14} />
-            Sim, entendi
+            {t("modulo.duvidas.simEntendi")}
           </button>
           <button
             type="button"
             className="btn btn-ghost"
             style={{ fontSize: 12.5 }}
-            onClick={() => void executar(() => duvidasApi.entendeu(conversa.id, false), { pendente: "Ainda não entendi." })}
+            onClick={() => void executar(() => duvidasApi.entendeu(conversa.id, false), { pendente: t("modulo.duvidas.aindaNaoEntendi") })}
           >
-            Ainda não
+            {t("modulo.duvidas.aindaNao")}
           </button>
         </div>
       ) : null}
@@ -314,10 +317,10 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
       >
         <textarea
           className="input"
-          aria-label="Sua dúvida"
+          aria-label={t("modulo.duvidas.suaDuvida")}
           rows={2}
           maxLength={2000}
-          placeholder={conversa?.status === "aberta" ? "Pergunte mais sobre isso…" : "Escreva sua dúvida…"}
+          placeholder={conversa?.status === "aberta" ? t("modulo.duvidas.placeholderContinuar") : t("modulo.duvidas.placeholderNova")}
           value={texto}
           onChange={(evento) => setTexto(evento.target.value)}
           onKeyDown={(evento) => {
@@ -330,8 +333,8 @@ export function Perguntar({ contextoTipo, contextoRef, trecho, rotulo = "Pergunt
         <button
           type="submit"
           className="compositor__enviar"
-          aria-label="Enviar"
-          title="Enviar (Enter)"
+          aria-label={t("modulo.duvidas.enviar")}
+          title={t("modulo.duvidas.enviarEnter")}
           disabled={enviando || texto.trim().length < 3}
         >
           <Icon name="send" size={16} />

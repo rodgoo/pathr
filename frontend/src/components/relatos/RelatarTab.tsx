@@ -15,20 +15,18 @@ import { useState, type FormEvent } from "react";
 import { relatos } from "@/api/endpoints";
 import type { Relato, TipoRelato } from "@/api/types";
 import { useQuery } from "@/hooks/useApi";
+import { useIdioma, useT } from "@/lib/i18n";
 import { C, TEXT } from "@/lib/tokens";
 import { Segmented } from "@/components/ui/Segmented";
 import { Kicker, Panel } from "@/components/ui/primitives";
 import { MidiaAnexada } from "./MidiaAnexada";
 
-const TIPOS: readonly { value: TipoRelato; label: string }[] = [
-  { value: "reclamacao", label: "Reclamação" },
-  { value: "sugestao", label: "Sugestão" },
-];
-
-export const ROTULO_STATUS: Record<Relato["status"], { texto: string; cor: string }> = {
-  aberto: { texto: "Recebido", cor: TEXT.muted },
-  em_analise: { texto: "Em análise", cor: C.ambar },
-  resolvido: { texto: "Resolvido", cor: C.verde },
+/** O rótulo de cada status guarda a CHAVE de tradução (traduzida no render) e a
+ * cor, que não muda com o idioma. */
+export const ROTULO_STATUS: Record<Relato["status"], { chave: string; cor: string }> = {
+  aberto: { chave: "relatar.status.recebido", cor: TEXT.muted },
+  em_analise: { chave: "relatar.status.emAnalise", cor: C.ambar },
+  resolvido: { chave: "relatar.status.resolvido", cor: C.verde },
 };
 
 /** O mesmo teto do servidor; conferido aqui para a pessoa não esperar o envio falhar. */
@@ -36,6 +34,12 @@ const FOTO_MAX_MB = 5;
 const ACEITOS = ["image/jpeg", "image/png", "image/webp"];
 
 export function RelatarTab() {
+  const t = useT();
+  const { idioma } = useIdioma();
+  const TIPOS: readonly { value: TipoRelato; label: string }[] = [
+    { value: "reclamacao", label: t("relatar.tipo.reclamacao") },
+    { value: "sugestao", label: t("relatar.tipo.sugestao") },
+  ];
   const meus = useQuery(() => relatos.meus(), []);
   const [tipo, setTipo] = useState<TipoRelato>("reclamacao");
   const [mensagem, setMensagem] = useState("");
@@ -54,11 +58,11 @@ export function RelatarTab() {
       return;
     }
     if (!ACEITOS.includes(arquivo.type)) {
-      setErro("A foto precisa ser JPG, PNG ou WebP.");
+      setErro(t("relatar.erro.formatoFoto"));
       return;
     }
     if (arquivo.size > FOTO_MAX_MB * 1024 * 1024) {
-      setErro(`A foto passa de ${FOTO_MAX_MB} MB.`);
+      setErro(t("relatar.erro.fotoGrande", { mb: FOTO_MAX_MB }));
       return;
     }
     setFoto(arquivo);
@@ -68,7 +72,7 @@ export function RelatarTab() {
   async function enviar(evento: FormEvent) {
     evento.preventDefault();
     if (mensagem.trim().length < 10) {
-      setErro("Conte um pouco mais: ao menos 10 caracteres.");
+      setErro(t("relatar.erro.curto"));
       return;
     }
     setEnviando(true);
@@ -78,10 +82,10 @@ export function RelatarTab() {
       const criado = await relatos.enviar({ tipo, mensagem: mensagem.trim(), pagina: "config", foto });
       setMensagem("");
       escolherFoto(null);
-      setAviso(criado.aviso ?? "Relato enviado. Obrigado — ele já está com a moderação.");
+      setAviso(criado.aviso ?? t("relatar.aviso.enviado"));
       meus.reload();
     } catch (caught) {
-      setErro(caught instanceof Error ? caught.message : "Não consegui enviar.");
+      setErro(caught instanceof Error ? caught.message : t("relatar.erro.envioFalhou"));
     } finally {
       setEnviando(false);
     }
@@ -90,18 +94,17 @@ export function RelatarTab() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
       <Panel pad={16.8}>
-        <Kicker style={{ display: "block", marginBottom: 4 }}>Relatar</Kicker>
+        <Kicker style={{ display: "block", marginBottom: 4 }}>{t("relatar.titulo")}</Kicker>
         <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 14px", maxWidth: "62ch" }}>
-          Algo não funcionou ou poderia ser melhor? Conte aqui. Uma captura de tela ajuda a entender
-          o que você viu.
+          {t("relatar.form.intro")}
         </p>
 
         <form onSubmit={enviar} style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <Segmented name="relato-tipo" label="Tipo de relato" value={tipo} options={TIPOS} onChange={setTipo} />
+          <Segmented name="relato-tipo" label={t("relatar.form.tipoLabel")} value={tipo} options={TIPOS} onChange={setTipo} />
 
           <div className="field" style={{ margin: 0 }}>
             <label htmlFor="relato-mensagem">
-              {tipo === "reclamacao" ? "O que aconteceu?" : "O que você sugere?"}
+              {tipo === "reclamacao" ? t("relatar.form.oQueAconteceu") : t("relatar.form.oQueSugere")}
             </label>
             <textarea
               id="relato-mensagem"
@@ -111,8 +114,8 @@ export function RelatarTab() {
               value={mensagem}
               placeholder={
                 tipo === "reclamacao"
-                  ? "ex: ao salvar o objetivo, a tela voltou para o início e perdi o que tinha escrito"
-                  : "ex: poder exportar o plano da semana em PDF"
+                  ? t("relatar.form.placeholderReclamacao")
+                  : t("relatar.form.placeholderSugestao")
               }
               onChange={(evento) => setMensagem(evento.target.value)}
             />
@@ -123,25 +126,25 @@ export function RelatarTab() {
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 11.2, alignItems: "center" }}>
             <label className="btn btn-secondary" style={{ cursor: "pointer", position: "relative" }}>
-              {foto ? "Trocar foto" : "Anexar foto"}
+              {foto ? t("relatar.form.trocarFoto") : t("relatar.form.anexarFoto")}
               <input
                 type="file"
                 accept={ACEITOS.join(",")}
-                aria-label="Anexar foto"
+                aria-label={t("relatar.form.anexarFoto")}
                 style={{ position: "absolute", inset: 0, opacity: 0, cursor: "pointer" }}
                 onChange={(evento) => escolherFoto(evento.target.files?.[0] ?? null)}
               />
             </label>
             {previa ? (
               <span style={{ display: "flex", alignItems: "center", gap: 8.4 }}>
-                <img src={previa} alt="Prévia da foto anexada" style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8 }} />
+                <img src={previa} alt={t("relatar.form.previaAlt")} style={{ width: 56, height: 56, objectFit: "cover", borderRadius: 8 }} />
                 <button type="button" className="btn btn-ghost" style={{ fontSize: 12.5 }} onClick={() => escolherFoto(null)}>
-                  Remover
+                  {t("relatar.form.remover")}
                 </button>
               </span>
             ) : (
               <span style={{ fontSize: 11.5, color: TEXT.faint }}>
-                Opcional · JPG, PNG ou WebP até {FOTO_MAX_MB} MB
+                {t("relatar.form.fotoOpcional", { mb: FOTO_MAX_MB })}
               </span>
             )}
           </div>
@@ -151,7 +154,7 @@ export function RelatarTab() {
 
           <div>
             <button type="submit" className="btn btn-primary" disabled={enviando}>
-              {enviando ? "Enviando…" : "Enviar relato"}
+              {enviando ? t("relatar.form.enviando") : t("relatar.form.enviar")}
             </button>
           </div>
         </form>
@@ -159,17 +162,17 @@ export function RelatarTab() {
 
       {meus.data && meus.data.length > 0 ? (
         <Panel pad={16.8}>
-          <Kicker style={{ display: "block", marginBottom: 11.2 }}>Seus relatos</Kicker>
+          <Kicker style={{ display: "block", marginBottom: 11.2 }}>{t("relatar.meus.titulo")}</Kicker>
           <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8.4 }}>
             {meus.data.map((relato) => (
               <li key={relato.id} style={{ padding: "10px 12px", borderRadius: 8, background: "#0c0c10" }}>
                 <div style={{ display: "flex", gap: 8.4, alignItems: "baseline", flexWrap: "wrap" }}>
                   <span style={{ fontSize: 12, color: TEXT.faint }}>
-                    {relato.kind === "reclamacao" ? "Reclamação" : "Sugestão"} ·{" "}
-                    {new Date(relato.created_at).toLocaleDateString("pt-BR")}
+                    {relato.kind === "reclamacao" ? t("relatar.tipo.reclamacao") : t("relatar.tipo.sugestao")} ·{" "}
+                    {new Date(relato.created_at).toLocaleDateString(idioma)}
                   </span>
                   <span style={{ marginLeft: "auto", fontSize: 12, color: ROTULO_STATUS[relato.status].cor }}>
-                    {ROTULO_STATUS[relato.status].texto}
+                    {t(ROTULO_STATUS[relato.status].chave)}
                   </span>
                 </div>
                 {/* Texto puro, nunca HTML: o React escapa, e nada aqui vira link. */}
@@ -181,7 +184,7 @@ export function RelatarTab() {
                 ) : null}
                 {relato.moderator_note ? (
                   <p style={{ margin: "6px 0 0", fontSize: 12.5, color: TEXT.muted }}>
-                    <strong style={{ fontWeight: 500 }}>Resposta:</strong> {relato.moderator_note}
+                    <strong style={{ fontWeight: 500 }}>{t("relatar.meus.resposta")}</strong> {relato.moderator_note}
                   </p>
                 ) : null}
               </li>

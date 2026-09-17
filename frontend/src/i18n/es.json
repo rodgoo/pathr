@@ -1057,5 +1057,1529 @@
     "dialogoAria": "Récord: {dias} días seguidos con {nome}",
     "imagemAlt": "Ficha: {dias} días de estudio consecutivo con {nome}",
     "textoCompartilhar": "{dias} ¡Días consecutivos de estudio con @{username} en PathR! {url}"
+  },
+  "candidaturas": {
+    "titulo": "Tu currículum llega a las ofertas de empleo adecuadas",
+    "kicker": "Solicitudes",
+    "enviarAgora": "Enviar ahora",
+    "prepararSemEnviar": "Preparar sin enviar",
+    "abrirVaga": "Publicar una oferta de empleo y responder",
+    "enviadasHoje": "Enviadas hoy",
+    "ontem": "Ayer",
+    "ultimos7": "Últimos 7 días",
+    "enviando": "Enviando…",
+    "passos": {
+      "titulo": "Pasos a seguir para presentar esta solicitud",
+      "fazendo": "haciéndolo ahora",
+      "anuncio": "Leyendo el anuncio",
+      "curriculo": "Revisando su currículum",
+      "carta": "Cómo escribir la carta",
+      "respostas": "Rellenar las respuestas",
+      "envio": "Enviando"
+    },
+    "faltam": {
+      "titulo": "¿Qué te queda por responder?",
+      "explicacao": "La aplicación no inventa respuestas por ti. Lo que escribas aquí se guarda y se utilizará para rellenar los próximos espacios en blanco, incluso en otra página web que denomine la pregunta de otra forma.",
+      "sensivel": "opcional, y solo tú respondes",
+      "salvar": "Guardar respuestas",
+      "salvando": "Guardando…"
+    }
+  },
+  "amigos": {
+    "voceEh": "Tú eres",
+    "titulo": "Amigos",
+    "convitesRecebidos": "Invitaciones para ti",
+    "procurar": "Buscar personas",
+    "buscaPlaceholder": "@usuario o nombre",
+    "procurando": "Buscando…",
+    "nadaEncontrado": "No se ha encontrado a nadie. Para buscar a alguien que no aparezca en las sugerencias, escribe la @ completa.",
+    "sugestoes": "Sugerencias para ti",
+    "procurandoPerto": "Buscando gente cerca de ti…",
+    "semSugestoes": "Aún no hay sugerencias. Las aportan personas que viven cerca y estudian materias similares a las tuyas.",
+    "carregandoAmigos": "Cargando a tus amigos…",
+    "seusAmigos": "Sus amigos",
+    "nenhumAmigo": "Todavía no tengo ningún amigo",
+    "nenhumAmigoDesc": "Añade a alguien de las sugerencias o busca con el símbolo @ a alguien que ya conozcas.",
+    "convitesEnviados": "Invitaciones enviadas",
+    "erroBuscar": "No he podido ir a recogerlo.",
+    "avisos": {
+      "erroResponder": "No pude responder.",
+      "ariaConvite": "{nome} Te ha enviado una solicitud de amistad",
+      "ariaAceite": "{nome} aceptó su invitación",
+      "mandouConvite": "Te ha enviado una solicitud de amistad",
+      "aceitouConvite": "aceptó su invitación",
+      "fecharAviso": "Cerrar aviso",
+      "aceitar": "Aceptar",
+      "recusar": "Rechazar",
+      "verAmigos": "Ver amigos"
+    },
+    "campoUsername": {
+      "label": "Nombre de usuario",
+      "placeholder": "sunombre",
+      "conferindo": "Comprobando…",
+      "seuAtual": "Este es tu @ actual.",
+      "estaLivre": "está libre.",
+      "seVazio": "Si lo dejas en blanco, serás",
+      "usar": "Utilizar @{usuario}"
+    },
+    "privacidade": {
+      "erroSalvar": "No he podido guardarlo.",
+      "titulo": "Personas",
+      "aparecer": "Aparecer en las sugerencias de amigos",
+      "explicacao": "Si lo desactivas, no aparecerás en las sugerencias ni en la búsqueda por nombre. Quienes ya tengan tu @ podrán seguir encontrándote e invitándote."
+    }
+  },
+  "idiomas": {
+    "semVozDoIdioma": "Tu navegador no dispone de voz en este idioma, por lo que el audio se reproduce con una pronunciación incorrecta. En Edge o Chrome, la voz ya viene integrada; en Windows, puedes instalarla en Configuración › Hora e idioma › Voz.",
+    "carregandoModulo": "Cargando el módulo de idioma…",
+    "moduloOpcional": "Módulo opcional",
+    "tituloTrabalho": "Idioma para el trabajo",
+    "descricao": "Se desarrolla en paralelo a la hoja de ruta técnica. Se adapta a los niveles del MCER y te forma con el vocabulario que utilizan quienes trabajan en el backend en equipos internacionales.",
+    "ativado": "Activado",
+    "desativado": "Desactivado",
+    "desativadoAviso": "Módulo desactivado. Actívalo más arriba para incluir «{min} min de inglés al día» en el plan.",
+    "seuNivel": "Tu nivel",
+    "meta": "meta {nivel}",
+    "nivelDivergente": "Se mide en la evaluación de nivel. En los entrenamientos, tu rendimiento es de un {nivel}: el cuadro de habilidades muestra qué aspectos te lastran. Vuelve a realizar la evaluación de nivel cuando quieras actualizar esta cifra.",
+    "nivelConfirma": "Se mide en la nivelación, y los entrenamientos lo confirman. Vuelve a realizar la nivelación cuando quieras obtener una nueva medición.",
+    "semNivel": "Aún no se ha realizado la nivelación. La cifra procede de los entrenamientos; la prueba dura unos 12 minutos y ofrece un valor de referencia.",
+    "preparandoTeste": "Preparando la prueba…",
+    "refazerNivelamento": "Volver a nivelar",
+    "fazerNivelamento": "Realizar la nivelación",
+    "nivelamentoEmAndamento": "Nivelación en curso",
+    "respondidasProgresso": "{feito} {total}s respondidas · {pct}%",
+    "continuarDeOndeParei": "Seguir donde lo dejé",
+    "recomecarDoZero": "Empezar de cero",
+    "pontosDeMelhora": "Aspectos a mejorar",
+    "paraRever": "{n} para revisar",
+    "nadaPendente": "No hay nada pendiente. Lo que te salga mal en la evaluación de nivel o en el entrenamiento aparece aquí y vuelve a aparecer en el entrenamiento diario, en otras palabras.",
+    "habilidades": {
+      "grammar": "Gramática",
+      "vocabulary": "Vocabulario",
+      "reading": "Lectura",
+      "listening": "Escucha",
+      "writing": "Escrita",
+      "speaking": "Oye",
+      "business": "Empresarial"
+    },
+    "confianca": {
+      "alta": "estimación firme",
+      "media": "estimación razonable",
+      "inicial": "estimación inicial: entrena más para consolidarte",
+      "semDados": "Aún no hay respuestas"
+    },
+    "situacao": {
+      "reforcar": "a reforzar",
+      "progredindo": "avanzando",
+      "dominado": "dominado",
+      "poucosDados": "pocos datos"
+    },
+    "quadro": {
+      "porHabilidade": "Por habilidad",
+      "nosTreinos": "En los entrenamientos: {nivel}",
+      "semDados": "Realiza la prueba de nivel o el entrenamiento de hoy para conocer tu nivel en cada habilidad.",
+      "topicoReforcar": "{n} tema que hay que reforzar",
+      "topicosReforcar": "{n} temas que hay que reforzar",
+      "respostaUm": "{n} respuesta",
+      "respostaVarias": "{n} respuestas",
+      "correctDe": "{correct} de {total}"
+    },
+    "config": {
+      "erroSalvar": "No he podido guardarlo.",
+      "titulo": "Idiomas",
+      "nenhumNoPlano": "ninguno en el plan",
+      "noPlanoUm": "{n} idioma en el plano",
+      "noPlanoVarios": "{n} idiomas en el plan",
+      "introA": "Activa los idiomas que forman parte de tu plan y elige en qué escala quieres seguir tu nivel. La evaluación del nivel siempre se realiza según el MCER y se convierte al examen que elijas —",
+      "naoAplica": "La aplicación no ofrece exámenes de IELTS, TOEFL ni JLPT.",
+      "introB": ", calcula dónde te encuentras y lo muestra en la regla que utilizas.",
+      "semNivelamento": "sin nivelación",
+      "acompanharEscala": "Comprobar el nivel en la escala de",
+      "meta": "Meta",
+      "metaNoExame": "Gol en el «{exame}»",
+      "equivaleComNota": "{nota} — equivale a «{cefr}» en el MCER",
+      "equivale": "Equivale a «{cefr}» en el MCER",
+      "metaEscolhida": "Meta{alvo}",
+      "metaMedida": " — La aplicación lo clasificará como «{cefr}» según el MCER.",
+      "tempoPorDia": "Tiempo diario: se ajusta al mismo presupuesto de horas de la hoja de ruta",
+      "minUnidade": "{n} min"
+    },
+    "listening": {
+      "preparandoAudio": "Preparando el audio…",
+      "parar": "Detener",
+      "ouvirDialogo": "Escuchar el diálogo",
+      "ouvirDeNovo": "Volver a escuchar",
+      "esconderTranscricao": "Ocultar transcripción",
+      "verTranscricao": "Ver transcripción",
+      "falasUm": "{n} habla",
+      "falasVarias": "{n} diálogos",
+      "semVozNavegador": "Este navegador no dispone de voz para reproducir los diálogos."
+    },
+    "placement": {
+      "preparandoProximas": "Preparando las próximas preguntas…",
+      "continuar": "Continuar",
+      "titulo": "Prueba de nivel",
+      "perguntaDe": "Pregunta {n} de {total} · La dificultad se adapta a tus respuestas",
+      "respostasPossiveis": "Posibles respuestas",
+      "corrigindo": "Corregiendo…",
+      "carregando": "Cargando…",
+      "proxima": "Siguiente",
+      "nivelMedido": "Este es tu nivel medido. Se aplica tanto al plan diario como al plazo del objetivo.",
+      "verMeuNivel": "Ver mi nivel"
+    },
+    "texto": {
+      "consultar": "Consulta «{palavra}»",
+      "oQueQuerDizer": "¿Qué significa «{palavra}»?",
+      "fechar": "Cerrar",
+      "consultando": "Consultando…",
+      "sinonimos": "sinónimos: {lista}",
+      "entrouRevisao": "Lo ha incluido en su repaso de vocabulario de hoy."
+    },
+    "formato": {
+      "mcq": "Elige",
+      "gap": "Completar",
+      "reorder": "Forma la frase",
+      "match": "Regístrate",
+      "listening": "Escucha",
+      "dictation": "Refrán",
+      "image": "Imagen",
+      "speaking": "Oye"
+    },
+    "treino": {
+      "origem": {
+        "revisao": "Repaso de los errores que has cometido",
+        "reforco": "Refuerzo de un tema débil",
+        "novo": "Nuevo"
+      },
+      "ponto": {
+        "novoPonto": "Ese error se ha convertido en un aspecto que hay que mejorar: volverá a aparecer en los próximos entrenamientos, dicho de otra forma.",
+        "subiu": "Se ha recuperado el punto de mejora. Volverá más adelante, en un formato más exigente, hasta que se consolide.",
+        "voltaHoje": "Aún no lo ha confirmado: volveremos sobre este tema en breve, empezando por reconocerlo."
+      },
+      "erroCorrigir": "No he podido corregirlo. Inténtalo de nuevo.",
+      "erroPreparar": "No he podido preparar los siguientes.",
+      "sairDoTreino": "Salir del entrenamiento",
+      "progressoAria": "Progreso del entrenamiento de hoy",
+      "deTotal": "{feito} de {total}",
+      "tentarDeNovo": "Intentarlo de nuevo",
+      "preparandoProximos": "Preparando los próximos ejercicios…",
+      "nenhumPronto": "De momento no hay ningún ejercicio disponible.",
+      "carregarProximos": "Cargar los siguientes",
+      "pulado": "Omitido: no cuenta como error.",
+      "certo": "¡Claro!",
+      "aindaNao": "Todavía no.",
+      "continuar": "Continuar",
+      "concluido": "Entrenamiento de hoy finalizado",
+      "recuperou": "Has recuperado {recuperados} de {total} puntos de mejora que antes habías calculado mal.",
+      "nadaVencia": "Hoy no había ningún punto de mejora.",
+      "seuNivelHoje": "Tu nivel hoy",
+      "avancouDentro": "{nome}: avanzó dentro del «{nivel}»",
+      "porTopico": "Por tema",
+      "voltarAoIdioma": "Volver al idioma",
+      "treinoDeHoje": "Entrenamiento de hoy",
+      "feitoHoje": "Publicado hoy · {correct} de {total}",
+      "proximoAmanha": "El próximo estará listo mañana, con lo que hay que repasar y los temas que aún hay que reforzar.",
+      "verResumo": "Ver el resumen",
+      "emAndamentoDesc": "{feito} de {total} ya realizados. Sigue donde lo dejaste.",
+      "novoDesc": "Repaso de lo que te ha salido mal, refuerzo de los temas en los que tienes más dificultades y algo un poco por encima de tu nivel: en ocho formatos, con corrección inmediata.",
+      "preparandoExercicios": "Preparando los ejercicios…",
+      "continuarTreino": "Seguir con el entrenamiento",
+      "comecarTreino": "Empezar el entrenamiento",
+      "primeirosSegundos": "Los primeros tardan unos segundos; el resto estará listo mientras respondes."
+    },
+    "exercicio": {
+      "imagemAria": "Imagen del ejercicio",
+      "voz": "Voz",
+      "alternativas": "Alternativas",
+      "lacunaAria": "laguna",
+      "fraseMontada": "Frase inventada",
+      "conferir": "Comprobar",
+      "recomecar": "Volver a empezar",
+      "toqueTermo": "Toca un término a la izquierda y, a continuación, la traducción.",
+      "preparando": "Preparando…",
+      "tocando": "Sonando…",
+      "ouvir": "Escuchar",
+      "maisDevagar": "Más despacio",
+      "semVozDitado": "Este navegador no dispone de la función de dictado por voz. Prueba con Chrome, Edge o Safari.",
+      "oQueOuviu": "¿Qué has oído?",
+      "escrevaOuviu": "Escribe exactamente lo que has oído",
+      "semMicrofone": "El navegador no ha permitido el acceso al micrófono.",
+      "naoOuvi": "No te he oído. Inténtalo de nuevo, más cerca del micrófono.",
+      "ouvirComoSeDiz": "Escuchar cómo se dice",
+      "ouvindoFale": "Escuchando… habla ahora",
+      "falar": "Hablar",
+      "semReconhecimento": "Este navegador no reconoce el habla.",
+      "naoPossoFalar": "Ahora no puedo hablar",
+      "respostaCerta": "Respuesta correcta:",
+      "aFraseEra": "La frase era",
+      "oTextoEra": "El texto decía:",
+      "naoReconheci": "No lo reconocí",
+      "faltouDiferente": "Faltaba o era diferente",
+      "atencaoAcentos": "Lo has escrito bien, pero ten cuidado con los acentos."
+    }
+  },
+  "biblioteca": {
+    "filtro": {
+      "todos": "Todo",
+      "video": "Vídeos",
+      "article": "Artículos",
+      "doc": "Documentación",
+      "exercise": "Ejercicios"
+    },
+    "kind": {
+      "video": "vídeo",
+      "article": "artículo",
+      "course": "curso",
+      "doc": "documentación",
+      "book": "libro",
+      "podcast": "podcast",
+      "repo": "repositorio",
+      "exercise": "ejercicio"
+    }
+  },
+  "comum": {
+    "carregando": "Cargando…",
+    "tentarDeNovo": "Intentarlo de nuevo",
+    "status": {
+      "concluido": "finalizado",
+      "emCurso": "en curso",
+      "bloqueado": "bloqueado",
+      "pulado": "saltado",
+      "aFazer": "por hacer"
+    }
+  },
+  "config": {
+    "titulo": "Configuración",
+    "subtitulo": "Cuenta, objetivo del estudio, competencias, idiomas, avisos y estado de las integraciones. Todo lo que cambie aquí hará que se recalcule el plan en la próxima generación.",
+    "abasAria": "Secciones de la configuración",
+    "abas": {
+      "conta": "Cuenta",
+      "objetivo": "Objetivo",
+      "skills": "Habilidades",
+      "idiomas": "Idiomas",
+      "avisos": "Avisos y política de privacidad",
+      "integracoes": "Estado de las API",
+      "moderacao": "Moderación",
+      "recursos": "Recursos"
+    },
+    "legaisAria": "Documentos legales",
+    "legais": {
+      "termos": "Condiciones de uso",
+      "privacidade": "Política de privacidad",
+      "seguranca": "Seguridad"
+    },
+    "creditos": {
+      "rotulo": "Iconos:",
+      "deSob": ", de Kryston Schwarze, bajo",
+      "chamaMedalha": "; la antorcha y la medalla del",
+      "licencaIsc": ", bajo licencia ISC."
+    }
+  },
+  "codelab": {
+    "kicker": "Laboratorio de código",
+    "titulo": "Código listo, revisado línea por línea",
+    "intro": "Elige el tema y deja que el lenguaje se seleccione automáticamente, o elígelo tú mismo. Recibirás el código o la configuración que se utiliza realmente —un archivo o varios, como el flujo de trabajo de GitHub y la prueba que ejecuta, o el Controller, el Service y la Entity— y las instrucciones paso a paso de la ejecución: qué línea de qué archivo se ejecuta, qué valor tiene cada variable en ese momento y qué se ha mostrado en la terminal.",
+    "carregandoExemplos": "Cargando tus ejemplos…",
+    "escrevendoExemplo": "Escribiendo el ejemplo…",
+    "semPassoAPasso": "sin instrucciones paso a paso",
+    "passoN": "Paso {n}",
+    "linhaN": "línea «{linha}»",
+    "niveis": {
+      "iniciante": "Principiante",
+      "intermediario": "Intermedio",
+      "avancado": "Avanzado"
+    },
+    "sugestoes": {
+      "montando": "Recopilando sugerencias para ti…",
+      "semPerfilTitulo": "Marca los idiomas que estudias",
+      "semPerfilDescricao": "El laboratorio solo muestra los lenguajes de tu perfil y te sugiere ejemplos según tu nivel y tu plan de desarrollo. Por ahora, todos aparecen en el generador que aparece a continuación.",
+      "escolherLinguagens": "Elegir lenguajes",
+      "titulo": "Sugerencias para ti",
+      "descricao": "Por tu hoja de ruta, por tu nivel en cada lenguaje y por lo que aún no has abierto. Con un clic se genera el ejemplo con las instrucciones paso a paso.",
+      "gerarAria": "Generar ejemplo: {assunto} en {linguagem}"
+    },
+    "etapas": {
+      "arquivos": "Selección de archivos",
+      "codigo": "Escribir el código",
+      "conferindo": "Comprobando si es lo que se usa realmente",
+      "passoAPasso": "Guía paso a paso del montaje"
+    },
+    "gerador": {
+      "linguagemOuArquivo": "Idioma o archivo",
+      "linguagem": "Idioma",
+      "assunto": "Asunto",
+      "assuntoPlaceholder": "GitHub Actions ejecutando las pruebas, API con Controller y Entity, closures…",
+      "nivel": "Nivel",
+      "gerar": "Generar un ejemplo",
+      "aviso": "Tarda unos segundos: los archivos y el registro de ejecución se muestran a la vez. Antes de aparecer aquí, se comprueba el contenido (sintaxis, versiones actuales, estructura real del proyecto) y el registro, en relación con cada archivo."
+    },
+    "depurador": {
+      "fecharAria": "Cerrar ejemplo",
+      "fechar": "Cerrar",
+      "arquivosAria": "Archivos del ejemplo",
+      "arquivoLabel": "Archivo{caminho}",
+      "passoDeTotal": "paso {n} de {total}",
+      "semTraco": "El paso a paso de este ejemplo no coincide con el código, por lo que no se muestra: mostrar un trazo que no concuerda con el programa podría llevar a conclusiones erróneas. El código anterior sigue siendo válido; vuelve a generarlo para probar con otro trazo.",
+      "execucaoComentada": "Aquí se comenta la ejecución, no se mide: las instrucciones paso a paso se han escrito junto con el código y se han comprobado comparándolas con él, pero el programa no se ejecuta en un intérprete real. Para que el ejemplo sea fiable, ejecútalo tú mismo."
+    },
+    "controles": {
+      "inicio": "Volver al inicio",
+      "anterior": "Paso anterior",
+      "proximo": "Siguiente paso",
+      "pausarAria": "Pausar la ejecución automática",
+      "executarAria": "Realizarlo paso a paso por tu cuenta",
+      "pausar": "Pausar",
+      "executar": "Ejecutar",
+      "passoAria": "Paso de la ejecución"
+    },
+    "estado": {
+      "titulo": "Variables ahora",
+      "vazio": "Aún no se ha definido ninguna variable."
+    },
+    "saida": {
+      "titulo": "Salida hasta aquí",
+      "vazio": "Todavía no ha salido nada en la terminal."
+    },
+    "biblioteca": {
+      "vazioTitulo": "Todavía no hay ningún ejemplo",
+      "vazioDescricao": "Elige el idioma y el tema más arriba. El ejemplo se guarda aquí para que puedas volver a consultarlo tantas veces como quieras.",
+      "titulo": "Sus ejemplos",
+      "arquivosN": "{n} archivos",
+      "passosN": "{n} pasos",
+      "removendo": "Eliminando…",
+      "remover": "Eliminar"
+    }
+  },
+  "moderacao": {
+    "relatos": {
+      "titulo": "Moderación",
+      "situacaoLabel": "Estado de los informes",
+      "situacoes": {
+        "abertos": "Abiertos",
+        "resolvidos": "Resueltos",
+        "todos": "Todos"
+      },
+      "statusLabel": "Estado",
+      "status": {
+        "aberto": "Recibido",
+        "em_analise": "En análisis",
+        "resolvido": "Resuelto"
+      },
+      "erroSalvar": "No he podido guardarlo.",
+      "reclamacao": "Reclamación",
+      "sugestao": "Sugerencia",
+      "contaRemovida": "Cuenta eliminada",
+      "resposta": "Respuesta para quien ha informado del problema",
+      "respostaPlaceholder": "Opcional — aparece en sus relatos",
+      "salvando": "Guardando…",
+      "salvar": "Guardar",
+      "relato": "relato",
+      "relatos": "relatos",
+      "carregando": "Cargando…",
+      "vazioAbertos": "No hay informes pendientes.",
+      "vazioGeral": "Aquí no hay ningún relato."
+    },
+    "usuarios": {
+      "confirmacaoCancelada": "Confirmación cancelada. No se ha modificado nada.",
+      "erroConcluir": "No he podido terminarlo.",
+      "semNome": "Sin título",
+      "selos": {
+        "voce": "tú",
+        "admin": "admin",
+        "banido": "expulsado",
+        "emailNaoConfirmado": "Correo electrónico no confirmado"
+      },
+      "entrouEm": "Entró en {data}",
+      "banidoEm": " · Expulsado de {data}",
+      "motivoLabel": "Motivo: {motivo}",
+      "desbanir": "Desbanir",
+      "banir": "Expulsar",
+      "desbanirAria": "Eliminar {nome}",
+      "banirAria": "¿Se va a expulsar a {nome}?",
+      "avisoDesbanir": "La cuenta vuelve a funcionar con normalidad y vuelve a aparecer para los amigos.",
+      "avisoBanir": "La persona queda desconectada de todos los dispositivos al instante, no puede volver a iniciar sesión y desaparece de la búsqueda y de la lista de amigos. No se borra nada: se puede reactivar más tarde.",
+      "motivoCampo": "Motivo (queda constancia)",
+      "aguardandoChave": "A la espera del resultado del sorteo…",
+      "confirmarChave": "Confirmar con la clave de acceso",
+      "cancelar": "Cancelar",
+      "secaoAria": "Usuarios registrados",
+      "titulo": "Usuarios",
+      "conta": "cuenta",
+      "contas": "cuentas",
+      "maisRecentes": " (las más recientes — refinar la búsqueda)",
+      "situacaoLabel": "Situación de las cuentas",
+      "situacoes": {
+        "todos": "Todos",
+        "ativos": "Activos",
+        "banidos": "Expulsados"
+      },
+      "buscar": "Buscar",
+      "buscarPlaceholder": "Nombre, @ o correo electrónico",
+      "carregando": "Cargando…",
+      "vazio": "No se ha encontrado ninguna cuenta."
+    }
+  },
+  "cursos": {
+    "filtro": {
+      "todos": "Todos",
+      "gratuitos": "Gratuitos",
+      "pagos": "Pagados"
+    },
+    "escopo": {
+      "voce": "Para ti",
+      "catalogo": "Catálogo completo"
+    },
+    "ordem": {
+      "relevancia": "Lo más relevante para ti",
+      "maisProcurados": "Los más buscados primero",
+      "menosProcurados": "Los menos buscados primero"
+    },
+    "nivel": {
+      "iniciante": "Principiante",
+      "intermediario": "Intermedio",
+      "avancado": "Avanzado"
+    },
+    "motivo": {
+      "meta": "Su objetivo",
+      "queroAprender": "Quiero aprender",
+      "roadmap": "En su hoja de ruta",
+      "objetivo": "Su objetivo"
+    },
+    "carregando": "Busco cursos con certificado…",
+    "contador": "{n} {cursos} · {gratuitos} con certificado gratuito",
+    "curso": "curso",
+    "cursos": "cursos",
+    "titulo": "Cursos con certificado",
+    "subtitulo": "Seleccionados en función de lo que quieras aprender, para incluirlo en LinkedIn. Todos ofrecen un certificado, y los gratuitos siempre aparecen en primer lugar.",
+    "quaisCursos": "¿Qué cursos?",
+    "buscar": "Buscar",
+    "buscarPlaceholder": "Curso, emisor o tecnología",
+    "categoria": "Categoría",
+    "todasCategorias": "Todas las categorías",
+    "stack": "Pila",
+    "todasTecnologias": "Todas las tecnologías",
+    "ordenar": "Ordenar",
+    "tipoCertificado": "Tipo de certificado",
+    "limparFiltros": "Borrar filtros",
+    "esconderPossuidos": "Ocultar los que ya tengo",
+    "mostrarPossuidos": "Mostrar los que ya tengo ({n})",
+    "saiuDaLista": "Se ha eliminado de la lista y se ha trasladado a «Perfil y etiquetas».",
+    "desfazer": "Deshacer",
+    "vazioPossuiTodos": {
+      "titulo": "¿Ya tienes todos los cursos de esta lista?",
+      "descVoce": "Se encuentran en «Perfil» y «Etiquetas». Busca en todo el catálogo para ver otros certificados.",
+      "descCatalogo": "Se encuentran en «Perfil» y «Etiquetas»."
+    },
+    "buscarCatalogo": "Buscar en todo el catálogo",
+    "vazioFiltros": {
+      "titulo": "No hay ningún curso que cumpla estos criterios",
+      "descVoce": "Prueba a realizar otra búsqueda o echa un vistazo al catálogo completo, que también incluye lo que aún no has pedido.",
+      "descCatalogo": "Prueba con otra búsqueda, categoría o tecnología."
+    },
+    "vazioSemCurso": {
+      "titulo": "Todavía no existe ninguna certificación fiable para lo que has solicitado.",
+      "desc": "Solo se admiten cursos con un certificado de una entidad emisora reconocida. Si se incluyen otras tecnologías como objetivo, la lista se amplía."
+    },
+    "escolherTecnologias": "Elegir tecnologías",
+    "vazioSemPedido": {
+      "titulo": "Di lo que quieres aprender",
+      "desc": "Los cursos se alejan de su objetivo y de las tecnologías fijadas como meta. Sin eso, no hay forma de elegir."
+    },
+    "definirObjetivo": "Establecer un objetivo",
+    "blocoGratuito": "Certificado gratuito",
+    "blocoPago": "Certificado pagado",
+    "vazioGratuito": "No hay ningún curso gratuito sobre lo que has solicitado.",
+    "vazioPago": "No hay ningún curso de pago que se ajuste a lo que has solicitado.",
+    "rodapePrecos": "Los precios y las ofertas gratuitas se pueden consultar en {mes}. La decisión la toma la entidad emisora y las condiciones pueden variar: compruébalo en la página web antes de empezar.",
+    "erroSalvar": "No he podido guardarlo.",
+    "portugues": "Portugués",
+    "ingles": "Inglés",
+    "horas": "~{h}h",
+    "irParaCurso": "Ir al curso",
+    "possuoTitleSim": "Aparece en «Perfil» y «Etiquetas». Haz clic para desmarcarlo.",
+    "possuoTitleNao": "Marca esta casilla si ya tienes este certificado.",
+    "jaPossuo": "Ya lo tengo",
+    "jaPossuoPergunta": "¿Ya lo tengo?",
+    "linkedinTitle": "Tras recibir el certificado",
+    "adicionarLinkedin": "Añadir a LinkedIn",
+    "procuraNoMercado": "Demanda en el mercado"
+  },
+  "vagas": {
+    "filtro": {
+      "todas": "Todas",
+      "remotas": "Remotas"
+    },
+    "alcance": {
+      "todas": "Brasil y el extranjero",
+      "nacionais": "Nacionales",
+      "internacionais": "Internacionales"
+    },
+    "fonte": {
+      "busca": "Páginas web de ofertas de empleo (LinkedIn, Vagas.com, Indeed…)"
+    },
+    "estadoFonte": {
+      "ok": "activa",
+      "erro": "ahora mismo fuera del aire",
+      "semChave": "sin clave configurada"
+    },
+    "nivel": {
+      "junior": "Júnior",
+      "pleno": "Pleno",
+      "senior": "Sénior"
+    },
+    "situacao": {
+      "semNivel": "nivela el terreno",
+      "tem": "¿Tienes...?",
+      "parcial": "empezando",
+      "falta": "falta",
+      "desconhecido": "fuera de catálogo"
+    },
+    "tempo": {
+      "hoje": "hoy",
+      "umDia": "hace 1 día",
+      "dias": "hace {n} días",
+      "agora": "ahora",
+      "min": "hace {n} min",
+      "umaHora": "hace 1 hora",
+      "horas": "hace {n} horas"
+    },
+    "titulo": "Ofertas de empleo para ti",
+    "subtitulo": "Ofertas de empleo reales de fuentes fiables, tanto en tu región como a distancia, desde las que más se ajustan a tu perfil técnico y a tus objetivos hasta las que menos. En cada una de ellas, qué falta y cómo llegar hasta allí.",
+    "buscarAria": "Buscar otro puesto o tecnología",
+    "buscarPlaceholder": "Otro puesto o tecnología (p. ej.: desarrollador Java)",
+    "buscar": "Buscar",
+    "voltarPerfil": "Volver a mi perfil",
+    "onde": "¿Dónde?",
+    "tipoVaga": "Tipo de puesto",
+    "procurandoNovas": "buscando nuevas ofertas de empleo…",
+    "atualizadoEm": "Actualizado el{tempo}",
+    "atualizando": "Actualizando…",
+    "atualizar": "Actualizar",
+    "erroAtualizar": "No he podido actualizarlo ahora ({erro}). La lista que aparece a continuación es la anterior.",
+    "carregando": "Buscando vacantes en las fuentes…",
+    "semPerfil": {
+      "titulo": "Di lo que haces o lo que quieres hacer",
+      "desc": "Las vacantes no se ajustan a tus competencias ni a tu objetivo. Registra tus competencias tecnológicas, o busca un puesto de mayor nivel."
+    },
+    "cadastrarTecnologias": "Registrar tecnologías",
+    "buscandoPor": "Buscando",
+    "vaga": "vacante",
+    "vagas": "puestos vacantes",
+    "seuIngles": "su inglés:",
+    "semNivelamentoFazer": "sin nivelación — hacerlo ahora",
+    "fontes": "Fuentes:",
+    "vazio": {
+      "titulo": "No se han encontrado ofertas de empleo por el momento",
+      "desc": "Las fuentes no han mostrado resultados para estos términos y filtros. Prueba con otro puesto o tecnología, amplía el radio de tu zona o pulsa «Actualizar»."
+    },
+    "regiao": {
+      "semCidade": "Si no se indica ninguna ciudad en el perfil, aparecen ofertas de trabajo presenciales de todo Brasil.",
+      "soRemotas": "Solo puestos de trabajo a distancia.",
+      "cidade": "Presenciales e híbridas hasta {km} km de {cidade} - {uf} · a distancia desde cualquier lugar.",
+      "uf": "Presenciales e híbridas en {uf} · a distancia desde cualquier lugar."
+    },
+    "mudarRegiao": "Cambiar de región",
+    "definirRegiao": "Seleccionar región",
+    "ondeDistancia": "{local} · a{km} km",
+    "presencial": "Presencial",
+    "internacional": "Internacional",
+    "via": "fuente: {fonte}",
+    "naSuaRegiao": "en su región",
+    "paraQuem": "Dirigido a:",
+    "paraQuemNivel": "nivel «{nivel}», ",
+    "paraQuemCom": "con {lista}",
+    "paraQuemMais": " y más en {n}",
+    "conectorE": "y",
+    "esconderDescricao": "Ocultar descripción",
+    "verDescricao": "Ver la descripción del puesto",
+    "soTrecho": "La fuente solo ha enviado un fragmento del anuncio: el titular da una idea general del contenido. Lee el anuncio completo para ver lo que falta.",
+    "soBuscador": "Encontrado mediante un buscador: el anuncio no se ha leído aquí, y la valoración se basa en el título.",
+    "verVaga": "Ver oferta de empleo",
+    "esconderAnalise": "Ocultar análisis",
+    "lerAnuncio": "Leer el anuncio completo",
+    "lendoRequisitos": "Leyendo los requisitos del puesto…",
+    "descricao": {
+      "faz": "¿Qué vas a hacer?",
+      "pede": "¿Qué pides?",
+      "diferenciais": "Características distintivas"
+    },
+    "temTudo": "Tienes todo lo que aparece en el anuncio del catálogo.",
+    "oQueFaltaAria": "¿Qué falta para conseguir la plaza?",
+    "oQueFalta": "Lo que falta",
+    "item": "elemento",
+    "itens": "artículos",
+    "obrigatorioUm": "obligatorio",
+    "obrigatoriosVarios": "obligatorios",
+    "mostrarMenos": "Mostrar menos",
+    "verTodasLacunas": "Ver todas las «{n}»",
+    "fazerNivelamento": "Realizar la nivelación",
+    "treinarIngles": "Practicar inglés",
+    "jaNoRoadmap": "Ya está incluido en su hoja de ruta",
+    "metaMarcada": "objetivo marcado",
+    "marcando": "Marcando…",
+    "marcarMeta": "Establecer como objetivo",
+    "obrigatorio": "obligatorio",
+    "diferencial": "diferencial",
+    "desejavel": "deseable",
+    "degrauAbaixo": " · un escalón más abajo",
+    "comecando": " · Estás empezando",
+    "semNivelamentoSufixo": " · sin nivelación",
+    "semNivelamentoComparar": " · sin nivelación para comparar",
+    "certificadoGratuito": "certificado gratuito",
+    "certificadoPago": "certificado pagado",
+    "gratuito": "gratis",
+    "pago": "pagado",
+    "ingles": {
+      "tem": "Inglés{exigido}, por favor · ¿Tienes {seu}?",
+      "parcial": "Inglés{exigido}n pedido · tú{seu}, un peldaño más abajo",
+      "falta": "Inglés{exigido} pedido · tú{seu}",
+      "semNivel": "Inglés{exigido}a solicitud · realiza la evaluación para comparar"
+    },
+    "tecnologiasDaStack": "{n} {tecnologias} de su pila",
+    "tecnologia": "tecnología",
+    "tecnologias": "tecnologías",
+    "combinaObjetivo": "encaja con tu objetivo",
+    "anuncioNaoLido": "mensaje no leído",
+    "compatibilidadeAria": "Compatibilidad con tu perfil",
+    "porcentagem": "{n}",
+    "estimadoTitulo": "estimado por el título",
+    "combinaComVoce": "te queda bien",
+    "analisarTitulo": "Analizar una oferta de empleo concreta",
+    "analisarDesc": "¿Has encontrado una oferta de empleo que no aparece en esta lista? Pega el enlace o el texto del anuncio. Las ofertas de LinkedIn suelen requerir iniciar sesión para poder verlas; en ese caso, pega el texto.",
+    "analisarAria": "Enlace o descripción de la oferta de empleo",
+    "analisarPlaceholder": "https://… o el texto completo de la oferta de empleo",
+    "analisando": "Analizando…",
+    "verOQueFalta": "Ver qué falta",
+    "etapa": {
+      "lendo": "Cómo interpretar la oferta de empleo",
+      "separando": "Desglose de los requisitos",
+      "comparando": "En comparación con tu perfil"
+    },
+    "analiseCompletaAria": "Descripción detallada del puesto",
+    "analiseSimplificada": "Análisis simplificado: las tecnologías mencionadas en el anuncio se consideran todas obligatorias.",
+    "obrigatorios": "Obligatorios",
+    "desejaveis": "Deseables",
+    "oQueFaltaComoChegar": "Lo que falta y cómo llegar hasta allí",
+    "nadaFalta": "No falta nada de lo que figura en el catálogo",
+    "verTodosCursos": "Ver todos los cursos con certificado",
+    "semCursoCatalogo": "No hay ningún curso certificado sobre este tema en el catálogo. Si lo marcas como objetivo, el tema se incluirá en tu hoja de ruta."
+  },
+  "home": {
+    "boasVindas": "Bienvenido de nuevo",
+    "boasVindasNome": "Bienvenido de nuevo, {nome}",
+    "retomarEstudo": "Retomar los estudios",
+    "carregandoPainel": "Cargando tu panel…",
+    "semPlanoTitulo": "Tu plan aún no existe",
+    "semPlanoDescricao": "Envía tu currículum y yo elaboraré el plan de estudios basándome en lo que ya sabes; tú lo revisarás todo antes de que lo genere.",
+    "enviarCurriculo": "Enviar currículum",
+    "continue": {
+      "kicker": "Continúa",
+      "modulos": "{feitos} {total} módulos",
+      "planoConcluido": "Plan finalizado",
+      "retomeDescricao": "Sigue donde lo dejaste: material, cuestionario y actividad de este módulo.",
+      "todosConcluidos": "Ya se han completado todos los módulos de este plan. Crea un nuevo objetivo para continuar.",
+      "progressoDoPlano": "Avances del plan",
+      "retomar": "Reanudar",
+      "verRoadmap": "Ver hoja de ruta",
+      "semana": "Semana{intervalo}"
+    },
+    "semana": {
+      "atual": "Semana actual",
+      "dia": "día",
+      "dias": "días",
+      "aria": "Días analizados esta semana",
+      "estudado": "{dia}o: estudiado",
+      "semEstudo": "{dia}: sin estudios",
+      "sequenciaRotulo": "Secuencia",
+      "recordeRotulo": "Récord"
+    },
+    "fases": {
+      "titulo": "Avances por fases",
+      "modulos": "{feitos} {total} módulos"
+    },
+    "checklist": {
+      "montando": "Organizando tu semana…",
+      "semanaDoPlano": "Semana «{n}» del plan",
+      "resumo": "{feitos} de {total} · {feitosMin} de {totalMin}",
+      "explicacao": "La lista se adapta a tu nivel en cada módulo —quien está empezando estudia antes de hacer el examen; quien ya domina el tema pasa directamente a explicarlo y aplicarlo— y cabe en las «{horas}» que tienes para la semana.",
+      "rotaAjustadaUm": "Su ruta se ha modificado este fin de semana (1 cambio).",
+      "rotaAjustada": "Su ruta se ha modificado este fin de semana ({n} cambios).",
+      "verMudou": "Ver qué ha cambiado",
+      "nadaPendente": "No hay nada pendiente esta semana. Los próximos módulos se publicarán aquí en cuanto haya algo que añadir.",
+      "nivel": "nivel{nivel}",
+      "nivIniciante": "principiante",
+      "nivIntermediario": "intermedio",
+      "nivAvancado": "avanzado",
+      "confirmado": "confirmado por lo que hiciste",
+      "abrir": "Abrir",
+      "naoSalvou": "No he podido guardarlo."
+    }
+  },
+  "modulo": {
+    "abas": {
+      "material": "Material",
+      "quiz": "Cuestionario",
+      "atividade": "Actividad"
+    },
+    "pagina": {
+      "carregandoTrilha": "Cargando la ruta…",
+      "semPlanoTitulo": "¿Aún no tienes un plan?",
+      "semPlanoDescricao": "Elabora la hoja de ruta para tener un plan en marcha.",
+      "gerarPlano": "Generar un plan",
+      "planoConcluidoTitulo": "Plan finalizado",
+      "planoConcluidoDescricao": "Se han entregado todos los módulos. Crea un nuevo objetivo para continuar.",
+      "trilha": "Sendero",
+      "concluir": "Finalizar",
+      "concluirDescricao": "Al marcarlo como completado, se registra el estudio y aumenta el nivel de competencia en las tecnologías de este módulo.",
+      "concluido": "Finalizado",
+      "registrando": "Registrando…",
+      "marcarConcluido": "Marcar como completado",
+      "aoFinalVoceConsegue": "Al final lo consigues",
+      "modulosDaFase": "Módulos de la fase"
+    },
+    "recurso": {
+      "trilha": "Sendero",
+      "nenhumMaterialTitulo": "No hay material disponible",
+      "nenhumMaterialDescricao": "Elige un elemento del material de un módulo para abrirlo aquí.",
+      "voltar": "Volver",
+      "abrindoMaterial": "Al abrir el material…",
+      "naoEncontradoTitulo": "No se ha encontrado el material",
+      "naoEncontradoDescricao": "Es posible que haya salido de tu plan desde que se abrió esta pantalla.",
+      "voltarPara": "Volver a {destino}",
+      "telaAnterior": "la pantalla anterior",
+      "portugues": "portugués",
+      "ingles": "inglés",
+      "abrirNaFonte": "Abrir en la fuente original",
+      "concluido": "Finalizado",
+      "pctConsumido": "{pct}% consumido",
+      "aindaNaoComecou": "Aún no ha empezado",
+      "parouEm": " · se detuvo en {tempo}",
+      "concluidoMinusculo": "finalizado",
+      "progressoNesteMaterial": "Avances en este tema"
+    },
+    "artigo": {
+      "minLeitura": "{min} min de lectura",
+      "pctLido": "{pct}% leído",
+      "lerNoSite": "Leer en la página web original",
+      "retomadoDe": "Se reanuda desde donde lo dejaste ({pct}%).",
+      "voltarAoInicio": "Volver al inicio",
+      "textoNaoBuscado": "Aún no he buscado el texto de este material.",
+      "podeLerNaFonte": "Se puede leer en la página web original, y aquí seguimos informando sobre los avances.",
+      "abrirNoSite": "Abrir en la página web original"
+    },
+    "curar": {
+      "procurarMaterial": "Buscar material",
+      "procurando": "Buscando…",
+      "materialNovo": "material nuevo",
+      "materiaisNovos": "nuevos materiales",
+      "nadaNovo": "Nada nuevo esta vez.",
+      "buscaFalhou": "La búsqueda ha fallado."
+    },
+    "linha": {
+      "salvo": "salvo",
+      "emCurso": "en curso",
+      "concluido": "finalizado",
+      "dispensado": "exento",
+      "marcarComo": "Marcar como «{estado}»",
+      "marcarComoEmCurso": "Marcar como en curso",
+      "marcar": "marcar",
+      "portugues": "portugués",
+      "ingles": "inglés",
+      "pareiEm": "Me detuve en {nota}",
+      "marcarOndeParei": "marcar dónde lo dejé",
+      "ondeParou": "¿Hasta dónde has llegado con este material?",
+      "pareiPlaceholder": "23:10, capítulo 4…"
+    },
+    "viewer": {
+      "buscandoTexto": "Buscando el texto del artículo…",
+      "videoNaoYoutube": "Este vídeo no es de YouTube, así que no puedo reproducirlo aquí.",
+      "abrirNoSite": "Abrir en la página web original",
+      "ultimaPosicao": "Última posición de salvación: {tempo}",
+      "perguntarMaterial": "Preguntar sobre este material"
+    },
+    "video": {
+      "carregando": "Cargando el vídeo…",
+      "retomandoDe": "Tomado de {tempo}."
+    },
+    "atividade": {
+      "tipoCodigo": "Código",
+      "tipoComandos": "Comandos",
+      "tipoExplicacao": "Explicación",
+      "tipoConfiguracao": "Configuración",
+      "tipoPratica": "Práctica",
+      "etapaGerar1": "Repasar lo que ya has hecho",
+      "etapaGerar2": "Elegir el próximo reto",
+      "etapaGerar3": "Redactar el enunciado",
+      "etapaCorrigir1": "Leyendo tu respuesta",
+      "etapaCorrigir2": "En comparación con lo que se solicitó",
+      "etapaCorrigir3": "Redactar la corrección",
+      "erroGerar": "No he podido generar la siguiente actividad.",
+      "erroCorrigir": "No he podido corregirlo ahora.",
+      "atividadePratica": "Actividad práctica",
+      "semIA": "sin IA",
+      "feitaNeste": "realizada en este módulo",
+      "feitasNeste": "realizadas en este módulo",
+      "entregueOque": "Entrega lo que pide el módulo:",
+      "escrevaSolucaoInteira": ". Escribe la solución completa: la corrección la compara con la respuesta de referencia y señala las diferencias.",
+      "escrevaSolucaoModulo": "Escribe tu solución para este módulo. La corrección la compara con la respuesta de referencia y señala las diferencias.",
+      "tentarDeNovo": "Intentarlo de nuevo",
+      "atividadeAtual": "Actividad actual",
+      "atividadeNumero": "· actividad {n}",
+      "verDica": "Ver consejo",
+      "verDicas": "Ver consejos",
+      "perguntarAtividade": "Preguntar sobre esta actividad",
+      "suaResposta": "Tu respuesta",
+      "respostaPlaceholder": "Escribe aquí, desde cero.\n\ngit push  // los comentarios explican qué hace el comando",
+      "comentariosContam1": "Comentarios",
+      "comentariosContam2": " Cuenta como tu explicación. Solo vale la respuesta a esta actividad.",
+      "proximaAtividade": "Próxima actividad",
+      "corrigindo": "Corregiendo…",
+      "enviarCorrecao": "Enviar para corrección",
+      "escrevaAlgumasFrases": "Escribe al menos unas cuantas frases; una sola línea no es una explicación.",
+      "caracteresEscritos": "{n} caracteres escritos",
+      "carregandoRascunho": "cargando el borrador…",
+      "gravando": "grabando…",
+      "gravadoNaConta": "registrado en tu cuenta",
+      "naoGravou": "No he podido grabarlo — el texto continúa aquí",
+      "atividadesFeitas": "Actividades realizadas en este módulo ({n})",
+      "naoPareceResposta": "No parece que sea una respuesta para esta actividad.",
+      "escrevaSolucaoPedida": "Escribe la solución que pide el módulo.",
+      "nadaEntrouRevisao": "Nada se incluyó en la revisión ni se tuvo en cuenta como estudio.",
+      "de100": "de 100 — en cuanto a que la explicación se sostiene por sí sola",
+      "oQueFicouPelaMetade": "Lo que quedó a medias",
+      "nenhumaLacuna": "No se ha encontrado ninguna laguna. Has sabido explicarlo sin necesidad de ayuda.",
+      "umaLacunaRevisao": "Se ha colado un error en tu revisión",
+      "lacunasRevisao": "{n} Se han colado algunas lagunas en su revisión",
+      "voltaComoQuestao": "y volverá a aparecer como pregunta, con otras palabras, en el próximo cuestionario de este recorrido."
+    },
+    "material": {
+      "langPt": "Portugués",
+      "langEn": "Inglés",
+      "langAmbos": "Ambos",
+      "buscarMaterial": "Buscar material",
+      "buscarPlaceholder": "Buscar en todo tu material",
+      "idioma": "idioma",
+      "idiomaDoMaterial": "Idioma del material",
+      "filtrarPorTipo": "Filtrar por tipo",
+      "buscandoMaterial": "Buscando material…",
+      "curarEtapa1": "Buscando artículos, vídeos y documentación",
+      "curarEtapa2": "Comprobar si se abre cada enlace",
+      "curarEtapa3": "Elegir a los mejores",
+      "nadaEmPortuguesTitulo": "Nada en portugués",
+      "nadaEmPortuguesDescricao": "No hay material en portugués sobre este tema; hay {n} en inglés.",
+      "mostrarIngles": "Mostrar también en inglés",
+      "nadaEncontradoTitulo": "No se ha encontrado nada",
+      "nadaEncontradoDescricao": "Ningún material de tu plan coincide con este término. Borra la búsqueda para volver al material de este módulo.",
+      "semMaterialTitulo": "Aún no hay material para este módulo",
+      "semMaterialDescricao": "Ya he buscado entre las tecnologías de este módulo y no he encontrado nada que supere la verificación. Intentarlo de nuevo más tarde suele dar resultado.",
+      "materialSingular": "material",
+      "materiaisPlural": "materiales",
+      "emTodoPlano": "en todo su conjunto.",
+      "paraTecnologias": "para las tecnologías de este módulo.",
+      "concluidoSingular": "finalizado",
+      "concluidosPlural": "finalizados",
+      "tudoConcluido": "Todo lo que aparece en este recorte ya se ha completado.",
+      "concluidosSecao": "Finalizados",
+      "concluidoRotulo": "Finalizado"
+    },
+    "quiz": {
+      "nenhumModuloTitulo": "No hay ningún módulo abierto",
+      "nenhumModuloDescricao": "Abre un módulo de la hoja de ruta para crear un cuestionario sobre él.",
+      "quizDe": "Cuestionario sobre «{titulo}»",
+      "descricao": "Seis preguntas escritas sobre la marcha, relacionadas con las tecnologías de este módulo y adaptadas a tu nivel actual. El resultado actualiza el nivel de competencia de tu perfil; es la única prueba de dominio que recopila la aplicación.",
+      "escrevendoQuestoes": "Redactando las preguntas…",
+      "comecarQuiz": "Empezar el cuestionario",
+      "iaLevaSegundos": "La IA tarda unos segundos.",
+      "levaCerca": "Tarda unos 10 minutos.",
+      "gerarEtapa1": "Lectura del módulo y su nivel",
+      "gerarEtapa2": "Redacción de las preguntas",
+      "gerarEtapa3": "Comprobando la clave de respuestas"
+    },
+    "quizRunner": {
+      "perguntaXdeY": "Pregunta {atual} de {total}",
+      "respondidas": "{n} respondidas",
+      "trechoDaQuestao": "Fragmento de la pregunta",
+      "opcoesDeResposta": "Opciones de respuesta",
+      "voltar": "Volver",
+      "corrigindo": "Corregiendo…",
+      "enviarRespostas": "Enviar respuestas",
+      "proxima": "Siguiente",
+      "escolhaAlternativa": "Elige una opción.",
+      "bomResultado": "Buen resultado: tu nivel de dominio de las etiquetas de este cuestionario ha aumentado en tu perfil.",
+      "abaixoDe70": "Por debajo del 70 %. Revisa el material antes de continuar; el perfil no ha subido.",
+      "perguntaN": "Pregunta{n}",
+      "acertou": "acertó",
+      "errou": "se equivocó",
+      "correta": "Correcto:",
+      "vocEscolheu": "Has elegido:",
+      "perguntarQuestao": "Preguntar sobre este tema",
+      "gerarOutroQuiz": "Crear otro cuestionario",
+      "umConceitoAcertou": "Un concepto que tenías mal entendido ha vuelto a salir y esta vez lo has entendido bien.",
+      "conceitosAcertou": "{n} Los conceptos que antes tenías equivocados han vuelto y ahora los has entendido bien.",
+      "raearAteSumir": "Se irán haciendo cada vez más escasos hasta desaparecer.",
+      "umConceitoVolta": "1 concepto vuelve",
+      "conceitosVoltam": "{n} los conceptos vuelven",
+      "noProximoQuiz": "En el próximo cuestionario de esta ruta, dicho de otro modo:"
+    },
+    "duvidas": {
+      "perguntar": "Preguntar",
+      "erroTutor": "No he podido hablar con el tutor ahora.",
+      "perguntarAoTutor": "Preguntarle al tutor",
+      "tirarUmaDuvida": "Aclarar una duda",
+      "ficaGuardada": "Lo guardo para revisarlo más tarde",
+      "novaDuvida": "Nueva duda",
+      "fechar": "Cerrar",
+      "promptVazio": "¿Hay alguna parte que no hayas entendido? Pregunta como quieras: el tutor te lo explicará basándose en lo que aparece en esta pantalla.",
+      "conversa": "Conversación",
+      "voce": "Tú",
+      "tutor": "Tutor",
+      "abrirNoDepurador": "Abrir en el depurador",
+      "querVerRodando": "¿Quieres verlo en acción, paso a paso?",
+      "exemplosParaDepurar": "Ejemplos para depurar",
+      "gerarExemplo": "Generar un ejemplo para depurar:",
+      "tutorEscrevendoExemplo": "El tutor está escribiendo el ejemplo",
+      "tutorEscrevendo": "El tutor está escribiendo",
+      "escrevendoExemplo": "escribiendo el ejemplo",
+      "explicacaoClara": "¿Te ha quedado clara la explicación?",
+      "simEntendi": "Sí, lo he entendido",
+      "aindaNao": "Todavía no",
+      "aindaNaoEntendi": "Todavía no lo entiendo.",
+      "suaDuvida": "Tu pregunta",
+      "placeholderContinuar": "Pregúntame más sobre esto…",
+      "placeholderNova": "Escribe tu pregunta…",
+      "enviar": "Enviar",
+      "enviarEnter": "Enviar (Intro)",
+      "codigoEm": "Código en {linguagem}",
+      "codigo": "Código"
+    }
+  },
+  "perfil": {
+    "carregando": "Cargando tu perfil…",
+    "titulo": "Perfil y etiquetas",
+    "subtitulo": "Lo que está marcado aquí se incluye en la hoja de ruta. Al desmarcar una etiqueta, se eliminan los módulos vinculados a ella de la próxima generación; al marcar una nueva, se recalcula el plazo.",
+    "escalaDominio": "Escala de dominio",
+    "vazio": {
+      "titulo": "Aún no hay competencias",
+      "descricao": "Envía tu currículum para que pueda extraer las tecnologías, o añádelas una a una en «Configuración», en la pestaña «Habilidades».",
+      "enviarCurriculo": "Enviar currículum"
+    },
+    "grupos": {
+      "voceDomina": "¿Lo dominas? · {n}",
+      "voceDominaDica": "N3 o superior: se incluyen como repaso breve: el caso difícil, la trampa de producción y los ejercicios de nivel avanzado. Nunca desde cero",
+      "comecaPorAqui": "El plan empieza aquí · {n}",
+      "comecaPorAquiDica": "N1 y N2: se incorporan para profundizar y son los primeros en llegar; la distancia es corta y los resultados se ven ya en las primeras semanas",
+      "doZero": "Desde cero · {n}",
+      "doZeroDica": "N0 — también entran. Lo que exige el objetivo se hace al principio, al ser lo más largo; el resto se deja para el final y es lo primero que se elimina si no se cumplen las horas."
+    },
+    "certificados": {
+      "titulo": "Certificados",
+      "tituloComContagem": "Certificados · {n}",
+      "verCursos": "Ver cursos",
+      "marcados": "Marcados como «ya lo tengo» en la pestaña «Cursos»",
+      "nenhum": "Todavía ninguno. En «Cursos», marca «Ya lo tengo» en los certificados que tengas.",
+      "adicionarLinkedIn": "Añadir a LinkedIn"
+    },
+    "identidade": {
+      "cargo": "Cargo",
+      "senioridade": "Antigüedad",
+      "experiencia": "Experiencia",
+      "anos": "{n} años",
+      "disponibilidade": "Disponibilidad",
+      "horasPorSemana": "{h}h a la semana",
+      "sequencia": "Secuencia",
+      "dias": "{n} días",
+      "xp": "XP",
+      "editarPerfil": "Editar perfil",
+      "progressoResumo": "{feitos} de {total} · {pct}%",
+      "progressoPlano": "Avances del plan"
+    },
+    "niveis": {
+      "querAprender": "¿Quieres aprender?",
+      "contatoInicial": "contacto inicial",
+      "comApoio": "con el apoyo de",
+      "autonomo": "autónomo",
+      "referencia": "referencia",
+      "especialista": "especialista"
+    },
+    "skills": {
+      "erroAdicionar": "No he podido añadirlo.",
+      "erroRemover": "No he podido eliminarlo.",
+      "erroNivel": "No he podido guardar la partida.",
+      "tituloPlano": "Habilidades del plan",
+      "noPerfil": "{n} en el perfil",
+      "explicacao": "Marca lo que forma parte de tu plan e indica el nivel que ya tienes. La hoja de ruta abarca el camino desde donde te encuentras hasta el N3; lo que ya esté en el N3 o por encima, no se vuelve a enseñar.",
+      "filtrar": "Filtrar por nombre",
+      "filtrarPlaceholder": "p. ej.: Kafka, Terraform",
+      "noPlano": "{n} de «{total}» en el plano",
+      "semResultado": "No hay ninguna tecnología con «{termo}». Prueba con otro término o añádelo por tu cuenta: todo lo que mencione y no aparezca aquí se incluirá en el catálogo.",
+      "nivelEm": "Nivel en {nome}",
+      "foraDoPlano": "fuera del plan",
+      "jaDominado": "ya dominado",
+      "aEvoluir": "en evolución",
+      "categorias": {
+        "linguagem": "Lenguajes",
+        "frontend": "Frontend",
+        "backend": "Backend",
+        "banco": "Bases de datos",
+        "dados": "Datos",
+        "ia": "IA",
+        "devops": "DevOps",
+        "cloud": "Nube",
+        "arquitetura": "Arquitectura",
+        "testes": "Pruebas",
+        "seguranca": "Seguridad",
+        "mobile": "Móvil",
+        "ferramenta": "Herramientas",
+        "metodologia": "Metodología",
+        "soft-skill": "Conductual"
+      }
+    },
+    "sugestoes": {
+      "demanda": {
+        "consolidada": "consolidada",
+        "emAlta": "en alza",
+        "aposta": "apuesta"
+      },
+      "erroAdicionar": "No he podido añadirlo.",
+      "titulo": "Recomendaciones para tu objetivo",
+      "rever": "revisar",
+      "aPartirDe": "A partir de «{objetivo}». Al añadirla, la tecnología pasa a formar parte de tu plan en N0, y la hoja de ruta pasa a incluirla.",
+      "adicionando": "Añadiendo…",
+      "adicionar": "Añadir al plan"
+    },
+    "tag": {
+      "origem": {
+        "cv": "del currículo",
+        "manual": "que tú mismo has definido",
+        "quiz": "demostrado en un cuestionario",
+        "roadmap": "estudiado en el plan"
+      },
+      "titulo": "N{n} · {origem} · confianza {conf}%"
+    },
+    "tutorial": {
+      "comoFunciona": "¿Cómo funcionan los niveles?",
+      "titulo": "¿Cómo funcionan los niveles?",
+      "resumo": "resumen",
+      "contador": "{atual} de {total}",
+      "fechar": "Cerrar tutorial",
+      "introducao": "Para cada tecnología, marca si forma parte de tu plan y elige el nivel en el que te encuentras actualmente. Sé sincero: el nivel determina qué se incluye en la hoja de ruta y qué se omite.",
+      "niveisLabel": "Niveles",
+      "resumoN0N2Rotulo": "N0 a N2",
+      "resumoN0N2Texto": ": la hoja de ruta sirve de guía y se convierte en un objetivo de estudio.",
+      "resumoN3Rotulo": "N3 o más",
+      "resumoN3Texto": ": dominado — la hoja de ruta no lo vuelve a enseñar, y la tecnología cuenta como parte de tu pila tecnológica en las ofertas de empleo.",
+      "resumoMudou": "¿Has cambiado de nivel? Cámbialo aquí cuando quieras: el plan se ajustará la semana que viene.",
+      "anterior": "Anterior",
+      "entendi": "Entendido, voy a marcar mis habilidades",
+      "proximo": "Siguiente",
+      "pular": "Saltar el tutorial",
+      "n0": {
+        "exemplo": "Todavía no lo he usado, pero quiero aprender.",
+        "plano": "Conviértelo en tu objetivo: la hoja de ruta te enseña desde cero, y «Cursos» te propone certificados."
+      },
+      "n1": {
+        "exemplo": "Lo he visto en un tutorial o en un proyecto de estudio.",
+        "plano": "La hoja de ruta empieza por los fundamentos, sin insistir demasiado en lo básico."
+      },
+      "n2": {
+        "exemplo": "Puedo utilizarlo consultando la documentación y los ejemplos.",
+        "plano": "La guía te acompaña hasta que puedas hacerlo por ti mismo."
+      },
+      "n3": {
+        "exemplo": "Lo utilizo en el trabajo sin ayuda, de principio a fin.",
+        "plano": "Dominado: la hoja de ruta no enseña nada nuevo, solo repasa. Indícalo como tu pila de tecnologías en las ofertas de empleo."
+      },
+      "n4": {
+        "exemplo": "Resuelvo problemas difíciles y oriento a otras personas.",
+        "plano": "Se tiene en cuenta como punto fuerte en las ofertas de empleo y en las recomendaciones de amigos."
+      },
+      "n5": {
+        "exemplo": "Referencia en la materia: arquitectura, rendimiento, detalles interiores.",
+        "plano": "Es uno de sus puntos fuertes, y el plan lo utiliza como base para lo que viene a continuación."
+      }
+    },
+    "regiao": {
+      "titulo": "Región y ámbito de las plazas",
+      "descricao": "Las plazas presenciales e híbridas solo aparecen hasta esta distancia de tu ciudad. Las plazas a distancia siempre aparecen, desde cualquier lugar.",
+      "ateQueDistancia": "¿Hasta qué distancia?",
+      "raioLabel": "Radio de las plazas presenciales",
+      "soRemotas": "Solo remotas",
+      "km": "{km} km",
+      "ou": "o",
+      "outroRaio": "Otro rayo en km",
+      "outro": "otro",
+      "kmSufixo": "km",
+      "resumoSoRemotas": "Solo aparecerán ofertas de trabajo a distancia.",
+      "resumoComCidade": "Presenciales e híbridas hasta {raio} km de {cidade}.",
+      "resumoSemCidade": "Elige tu ciudad para que aparezcan las clases presenciales según la distancia.",
+      "padrao": " (predeterminado)",
+      "erroBusca": "No he podido buscar ciudades ahora.",
+      "cidadeLabel": "Ciudad en la que vives",
+      "cidadePlaceholder": "Empieza a escribir: Vit…",
+      "cidadesSugeridas": "Ciudades recomendadas",
+      "capital": "capital"
+    },
+    "avatar": {
+      "erroEnviar": "No he podido enviar la imagen.",
+      "erroRemover": "No he podido eliminar la imagen.",
+      "alt": "Foto de perfil de {nome}",
+      "enviando": "Enviando…",
+      "alterar": "Modificar",
+      "enviarFoto": "Enviar foto",
+      "remover": "Eliminar"
+    },
+    "objetivo": {
+      "erroSalvar": "No he podido guardarlo.",
+      "ondeChegar": "¿A dónde quieres llegar?",
+      "escolhaOuDescreva": "Elige un destino o descríbelo a continuación",
+      "areaLabel": "Área",
+      "destinoPlanoLabel": "Objetivo del plan",
+      "destinoLivre": "Tu destino actual lo has escrito tú mismo: «{destino}». Si eliges uno de la lista, se sustituirá.",
+      "textoLivre": "Descríbelo en texto libre",
+      "geraPlanoInteiro": "genera todo el plan",
+      "textoLivreDescricao": "Explica dónde te encuentras, adónde quieres llegar y qué te lo impide. A partir de ahí, la hoja de ruta se divide en fases, la biblioteca busca vídeos y artículos sobre las tecnologías adecuadas, y los cuestionarios se adaptan a tu nivel.",
+      "contextoLabel": "Contexto para la elaboración del plan",
+      "contextoPlaceholder": "Ejemplo: llevo 3 años trabajando como desarrollador front-end, quiero pasar a ser desarrollador full-stack de Java sin depender de la IA para programar, dispongo de 8 horas a la semana y quiero superar una entrevista técnica en inglés antes de junio.",
+      "salvaSozinho": "Se guarda automáticamente al salir del campo; no hay que pulsar ningún botón.",
+      "horasPorSemana": "Horas a la semana",
+      "horasDescricao": "El plan se adapta a esto, y no al ideal de la materia. Un plan que exige 20 horas a quien solo dispone de 6 no es ambicioso: es un plan que se abandona en la tercera semana.",
+      "salvando": "guardando…",
+      "salvo": "salvo",
+      "naoSalvou": "no se ha guardado — {mensagem}"
+    }
+  },
+  "curriculo": {
+    "carregando": "Cargando sus currículos…",
+    "kicker": "Base de su plan",
+    "envio": {
+      "titulo": "Envía tu currículum",
+      "descricao": "Leo el archivo, extraigo tus competencias, evalúo el nivel de cada una y elaboro la hoja de ruta en función de lo que falta. Tú lo revisas todo antes de que yo lo genere.",
+      "enviando": "Enviando…",
+      "arraste": "Arrastra el archivo hasta aquí o haz clic para seleccionarlo",
+      "limites": "PDF, DOCX, ODT, RTF, TXT o MD · hasta 10 MB · se guarda en tu cuenta, no se comparte"
+    },
+    "leitura": {
+      "titulo": "Leer el currículum",
+      "passo1": "Dividiendo las secciones: experiencia, formación, proyectos",
+      "passo2": "Reconocimiento de las tecnologías mencionadas y del contexto de uso",
+      "passo3": "Evaluación del nivel en función del tiempo de uso y la responsabilidad",
+      "passo4": "Cruzar con la meta para detectar las lagunas",
+      "erroVisual": "{erro}. Voy a enviar el archivo completo para que el modelo lo lea visualmente.",
+      "lerCurriculo": "Leer el currículum",
+      "enviarOutro": "Enviar otro archivo"
+    },
+    "revisao": {
+      "titulo": "Revisa lo que he leído",
+      "descricao": "He evaluado el nivel de cada tecnología en función del tiempo de uso y de la responsabilidad descrita. Corrige lo que esté mal; el plan se elabora a partir de esto.",
+      "extraido": "Extraído del currículum",
+      "nome": "Nombre",
+      "cargoAtual": "Cargo actual",
+      "senioridade": "Antigüedad",
+      "experiencia": "Experiencia",
+      "anos": "{n} años",
+      "cidade": "Ciudad",
+      "tecnologias": "Tecnologías · {n}",
+      "ajusteOuRemova": "Ajusta el nivel o elimina lo que no forme parte del plan",
+      "importando": "Importando…",
+      "importar": "Importar «{n}» en «competencias»",
+      "entramComoMeta": "{n} se incluyen como objeto de estudio",
+      "escala": "Escala:",
+      "semFrase": "sin frase de presentación en el currículum",
+      "nivelDe": "Nivel de {nome}",
+      "foraDoPlano": "fuera del plan"
+    }
+  },
+  "relatar": {
+    "titulo": "Informar",
+    "subtitulo": "¿Has encontrado algún problema o tienes alguna idea? El informe se envía directamente a los responsables de PathR.",
+    "tipo": {
+      "reclamacao": "Reclamación",
+      "sugestao": "Sugerencia"
+    },
+    "status": {
+      "recebido": "Recibido",
+      "emAnalise": "En análisis",
+      "resolvido": "Resuelto"
+    },
+    "erro": {
+      "formatoFoto": "La foto debe estar en formato JPG, PNG o WebP.",
+      "fotoGrande": "La foto ocupa má{mb}o MB.",
+      "curto": "Cuéntanos un poco más: al menos 10 caracteres.",
+      "envioFalhou": "No he podido enviarlo."
+    },
+    "aviso": {
+      "enviado": "Informe enviado. Gracias — ya está pendiente de moderación."
+    },
+    "form": {
+      "intro": "¿Ha habido algún problema o hay algo que se podría mejorar? Cuéntanoslo aquí. Una captura de pantalla nos ayudará a entender lo que has visto.",
+      "tipoLabel": "Tipo de informe",
+      "oQueAconteceu": "¿Qué ha pasado?",
+      "oQueSugere": "¿Qué sugieres?",
+      "placeholderReclamacao": "Por ejemplo: al guardar el objetivo, la pantalla volvió al inicio y perdí lo que había escrito.",
+      "placeholderSugestao": "p. ej.: poder exportar el plan semanal en formato PDF",
+      "trocarFoto": "Cambiar foto",
+      "anexarFoto": "Adjuntar foto",
+      "previaAlt": "Vista previa de la foto adjunta",
+      "remover": "Eliminar",
+      "fotoOpcional": "Opcional · JPG, PNG o WebP de hasta{mb} MB",
+      "enviando": "Enviando…",
+      "enviar": "Enviar informe"
+    },
+    "meus": {
+      "titulo": "Sus relatos",
+      "resposta": "Respuesta:"
+    },
+    "midia": {
+      "erroAbrir": "No he podido abrir el archivo ahora.",
+      "abrirTitulo": "Abrir la foto a tamaño real en una nueva pestaña",
+      "abrindo": "Empezando…",
+      "rotulo": "Archivos adjuntos",
+      "carregando": "cargando la foto…"
+    }
+  },
+  "manual": {
+    "kicker": "Manual de a bordo",
+    "titulo": "Cómo funciona PathR",
+    "precisaDe": "Necesitas:",
+    "abrir": "Abrir {nome}",
+    "termos": "Las condiciones de uso, la política de privacidad y la política de seguridad se encuentran en pathr.notter.com.br/termos, /privacidad y /seguridad.",
+    "intro": {
+      "p1": "PathR elabora un plan de estudios que abarca desde lo que ya sabes hasta lo que quieres conseguir, y en torno a él te ofrece cursos con certificado, plazas que se adaptan a ti, idiomas y gente con la que estudiar. Casi todo depende de dos cosas que solo tú puedes decir: ",
+      "objetivo": "su objetivo",
+      "e": " y ",
+      "skills": "sus habilidades con el nivel",
+      "p2": ". Empieza por ellas."
+    },
+    "grupos": {
+      "estudar": "Estudiar",
+      "carreira": "Trayectoria profesional",
+      "pessoas": "Personas",
+      "configuracoes": "Configuración"
+    },
+    "areas": {
+      "inicio": {
+        "nome": "Inicio",
+        "oQueFaz": "Tu panel del día: el módulo para seguir adelante, la lista de la semana, la secuencia de días y el mapa de constancia.",
+        "precisaDe": "Una hoja de ruta elaborada para indicar los próximos pasos a seguir."
+      },
+      "roadmap": {
+        "nome": "Hoja de ruta",
+        "oQueFaz": "El plan completo, dividido en fases y módulos, con las horas correspondientes a cada uno. Cada semana se reajusta en función de lo que hayas hecho (ajustes de ruta).",
+        "precisaDe": "Objetivo y habilidades cumplidas antes de generar."
+      },
+      "trilha": {
+        "nome": "Ruta actual",
+        "oQueFaz": "El módulo en el que te encuentras: material de estudio, cuestionario para comprobar lo que has aprendido y actividad práctica.",
+        "precisaDe": "Se ha elaborado una hoja de ruta."
+      },
+      "laboratorio": {
+        "nome": "Laboratorio de programación",
+        "oQueFaz": "Ejemplos de código que se recorren línea por línea, con el valor de las variables en cada paso. Te sugiere ejemplos según tu plan de aprendizaje y tu nivel.",
+        "precisaDe": "Lenguajes marcados en «Skills»."
+      },
+      "idiomas": {
+        "nome": "Idiomas",
+        "oQueFaz": "Niveles de inglés (de A1 a C2), ejercicios diarios adaptados a tu nivel y traducción de palabras con un solo toque."
+      },
+      "cursos": {
+        "nome": "Cursos",
+        "oQueFaz": "Cursos con certificado para LinkedIn, gratuitos al principio, según la demanda del tema. Marca «Ya lo tengo» para que aparezca en tu perfil.",
+        "precisaDe": "Metas establecidas en Skills o un objetivo."
+      },
+      "vagas": {
+        "nome": "Ofertas de empleo",
+        "oQueFaz": "Ofertas de empleo reales en tu zona o a distancia, desde la que más te convenga hasta la que menos, con lo que falta para cada una y los cursos necesarios para conseguirlo.",
+        "precisaDe": "Habilidades seleccionadas y la ciudad en Configuración › Objetivo."
+      },
+      "curriculo": {
+        "nome": "Currículum",
+        "oQueFaz": "Envía tu currículum: la IA lo lee y te sugiere tecnologías adecuadas a tu nivel, para que las revises y las importes."
+      },
+      "perfil": {
+        "nome": "Perfil y etiquetas",
+        "oQueFaz": "El resumen de quién eres en la aplicación: lo que dominas, lo que estás aprendiendo, lo que quieres aprender y tus certificados."
+      },
+      "amigos": {
+        "nome": "Amigos",
+        "oQueFaz": "Invitaciones, sugerencias de quienes viven cerca o estudian lo mismo, y la secuencia de estudios en pareja, con una tarjeta para compartir a los 7, 30, 60 y 90 días.",
+        "precisaDe": "Un @ (elegido al registrarse, que se puede editar en Ajustes › Cuenta)."
+      },
+      "relatar": {
+        "nome": "Informar",
+        "oQueFaz": "Envía una queja o sugerencia, con una foto si lo deseas, y espera la respuesta del equipo de moderación."
+      },
+      "conta": {
+        "nome": "Cuenta",
+        "oQueFaz": "Nombre, @, foto, contraseña, clave de acceso (passkey) y autenticación de dos factores."
+      },
+      "objetivo": {
+        "nome": "Objetivo",
+        "oQueFaz": "A qué lugar quieres llegar, las horas semanales y la zona en la que se ofrecen las vacantes (ciudad y radio en km)."
+      },
+      "skills": {
+        "nome": "Habilidades",
+        "oQueFaz": "Las tecnologías de tu plan y el nivel de cada una, desde N0 («quiero aprender») hasta N5 («experto»)."
+      },
+      "avisos": {
+        "nome": "Avisos y política de privacidad",
+        "oQueFaz": "Qué correos electrónicos recibir, si aparece en las sugerencias de amigos, exportar todos tus datos o eliminar la cuenta."
+      },
+      "integracoes": {
+        "nome": "Integraciones",
+        "oQueFaz": "El estado de los servicios que utiliza la aplicación (IA, ofertas de empleo, traducción, correo electrónico): resulta útil cuando parece que algo no funciona."
+      }
+    },
+    "passos": {
+      "titulo": "Primeros pasos",
+      "conferindo": "comprobando…",
+      "progresso": "{feitos} {total}es esenciales que hay que hacer",
+      "manualDeBordo": "Manual de a bordo",
+      "pular": "Saltar",
+      "proximoPasso": "Siguiente paso:",
+      "opcional": "opcional",
+      "feito": "hecho",
+      "emSeguida": "A continuación:",
+      "irPara": "Ir a: {titulo}",
+      "ir": "Ir",
+      "regiao": {
+        "titulo": "Dime dónde vives",
+        "onde": "Configuración › Objetivo › Región y ámbito de las plazas",
+        "oQueFazer": "Elige tu ciudad y hasta cuántos km estás dispuesto a recorrer para acudir a una entrevista presencial.",
+        "depois": "Vagas ahora solo muestra las clases presenciales en tu zona (las a distancia siempre aparecen), y tu horario de clases se ajusta a tu huso horario."
+      },
+      "objetivo": {
+        "titulo": "Elige tu objetivo",
+        "onde": "Configuración › Objetivo",
+        "oQueFazer": "Elige un destino predefinido o describe con tus propias palabras adónde quieres llegar y las horas semanales.",
+        "depois": "La hoja de ruta se elabora con ese objetivo en mente, y «Ofertas de empleo» y «Cursos» dan prioridad a lo que él solicita."
+      },
+      "curriculo": {
+        "titulo": "Envía tu currículum",
+        "onde": "Currículum",
+        "oQueFazer": "Sube el PDF o el DOCX: la IA lo lee y te sugiere tecnologías con un nivel estimado para que las revises.",
+        "depois": "Las habilidades ya están rellenadas en el siguiente paso; solo tienes que comprobar los niveles."
+      },
+      "skills": {
+        "titulo": "Selecciona tus habilidades y los niveles",
+        "onde": "Configuración › Habilidades",
+        "oQueFazer": "Marca las tecnologías de tu plan y el nivel de cada una (N0 = quiero aprender… N5 = experto).",
+        "depois": "«Cursos» empieza a recomendar certificados, «Vagas» compara tu conjunto de tecnologías y «Laboratorio» muestra sus lenguajes de programación."
+      },
+      "roadmap": {
+        "titulo": "Crea tu hoja de ruta",
+        "onde": "Hoja de ruta",
+        "oQueFazer": "Elabora el plan: etapas y módulos desde lo que ya sabes hasta el objetivo, a tu propio ritmo semanal.",
+        "depois": "En la página de inicio aparecen el historial actual, la lista de la semana y el progreso, y el plan se actualiza cada semana."
+      },
+      "idioma": {
+        "titulo": "Evalúa tu nivel de inglés",
+        "onde": "Idiomas",
+        "oQueFazer": "Realiza la prueba de nivel: mide tu nivel según el MCER (de A1 a C2) de verdad.",
+        "depois": "Vagas compara el nivel de inglés que se requiere con el tuyo, y las clases diarias se adaptan a tu nivel."
+      },
+      "amigos": {
+        "titulo": "Añadir amigos",
+        "onde": "Amigos",
+        "oQueFazer": "Busca el símbolo @ o echa un vistazo a las sugerencias de quienes viven cerca o estudian lo mismo que tú.",
+        "depois": "Al estudiar el mismo día, formáis una secuencia juntos, con una tarjeta para compartir en cada hito."
+      }
+    }
+  },
+  "roadmap": {
+    "page": {
+      "carregando": "Cargando tu plan…",
+      "meta": "{semanas} semanas · {horas}h a la semana · {pct}% completado",
+      "formato": "Formato de la hoja de ruta",
+      "novoPlano": "Crear un nuevo plan",
+      "historicoNota": "El plan actual pasa a formar parte del historial; crear otro no borra este.",
+      "views": {
+        "timeline": "Cronología",
+        "fases": "Fases",
+        "matriz": "Matriz"
+      },
+      "notas": {
+        "a": "Línea de tiempo vertical: el orden es lo que manda, el plazo aparece a la izquierda.",
+        "b": "Fases una al lado de la otra, para ver el alcance completo de un solo vistazo.",
+        "c": "Matriz de competencias: dónde te encuentras y hasta dónde te lleva el plan."
+      }
+    },
+    "matriz": {
+      "vazio": "Este plan aún no indica las competencias de tu perfil.",
+      "celula": "{nome} · N{nivel} · {estado}",
+      "estado": {
+        "atingido": "alcanzado",
+        "proximo": "siguiente nivel del plan",
+        "alem": "además de este plan"
+      },
+      "legendaPreenchido": "completado = nivel registrado en tu perfil",
+      "legendaContorno": "contorno = siguiente nivel que alcanza este plano"
+    },
+    "gerar": {
+      "titulo": "Crear tu plan",
+      "intro": "Organizo las fases en función de las {n} competencias de su perfil y del objetivo que se indica a continuación.",
+      "objetivoLabel": "¿Adónde quieres llegar?",
+      "objetivoPlaceholder": "Ejemplo: desarrollador Java full-stack con experiencia completa, especializado en ofertas de empleo internacionales",
+      "prazo": "Plazo",
+      "prazoLabel": "Plazo del plan",
+      "horas": "Horas a la semana",
+      "horasLabel": "Horas a la semana",
+      "horizontes": {
+        "s8": "8 semanas",
+        "s12": "12 semanas",
+        "s26": "26 semanas",
+        "ano": "1 año"
+      },
+      "montando": "Elaborando el plan…",
+      "gerar": "Generar un plan",
+      "cancelar": "Cancelar",
+      "dicaMontando": "La IA está escribiendo las fases; suele tardar menos de 20 segundos.",
+      "dica": "Solo tardará unos segundos: el plan se elabora a medida.",
+      "etapas": {
+        "lendo": "Al leer tu currículum y tus habilidades",
+        "fases": "Diseño de las fases",
+        "modulos": "Escribir los módulos",
+        "ordem": "Organizar el orden de estudio"
+      },
+      "chips": {
+        "entrevistaIngles": "Quiero una entrevista en inglés",
+        "semIa": "Sin depender de la IA para programar",
+        "pratico": "Prefiero los proyectos prácticos a la lectura",
+        "fimDeSemana": "Tengo el fin de semana libre"
+      },
+      "contextoLabel": "¿Qué más debería saber? (opcional)",
+      "contextoPlaceholder": "Por ejemplo: llevo 3 años trabajando como desarrollador front-end, quiero pasar a ser desarrollador full-stack de Java y la entrevista es en junio.",
+      "semSkills": {
+        "titulo": "Antes, necesito saber qué es lo que ya sabes",
+        "descricao": "El plan abarca el camino que hay entre lo que ya sabes y lo que quieres conseguir. Envía tu currículum, lo leeré y extraeré las tecnologías, o marca tus competencias a mano.",
+        "enviarCv": "Enviar currículum",
+        "marcar": "Seleccionar competencias"
+      }
+    },
+    "fases": {
+      "fase": "Fase{n}",
+      "semanaCurta": "sem. {inicio}–{fim}"
+    },
+    "timeline": {
+      "fase": "Fase{n}",
+      "semanas": "{inicio}–{fim}"
+    },
+    "ajustes": {
+      "titulo": "Ajustes de ruta",
+      "conferindo": "Comprobando…",
+      "reajustar": "Reajustar ahora",
+      "explicacao": "El plan se ajusta cada semana en función de los resultados obtenidos: los temas en los que se ha demostrado dominio en los cuestionarios se tratan brevemente, a las lagunas recurrentes se les dedica más tiempo y el calendario se adapta al ritmo real.",
+      "semAjuste": "No es necesario realizar ningún ajuste: el plan se ajusta a lo medido.",
+      "aplicadoUm": "{n} ajuste aplicado.",
+      "aplicadoVarios": "{n} ajustes aplicados.",
+      "erroFallback": "No he podido ajustar la ruta.",
+      "ultimo": "Última actualización · semana {semana} · {data}",
+      "horas": "{antes}h → {depois}h",
+      "reagenda": "Finaliza esta semana {antes} → {depois}",
+      "tipo": {
+        "compactar": "Compactado",
+        "reforcar": "Reforzado",
+        "reagendar": "Calendario"
+      }
+    }
   }
 }

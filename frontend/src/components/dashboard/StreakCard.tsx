@@ -7,6 +7,7 @@
  */
 
 import { streakDays } from "@/lib/dashboard";
+import { useT } from "@/lib/i18n";
 import { ACC, ACC4, TEXT } from "@/lib/tokens";
 import type { ActivitySummary, Streak } from "@/api/types";
 import { Panel } from "@/components/ui/primitives";
@@ -18,18 +19,20 @@ export function StreakCard({
   streak: Streak;
   activity: ActivitySummary;
 }) {
+  const t = useT();
   const days = streakDays(activity);
   const done = days.filter((day) => day.done).length;
+  const unidade = (n: number) => (n === 1 ? t("home.semana.dia") : t("home.semana.dias"));
 
   return (
     <Panel style={{ display: "flex", flexDirection: "column" }}>
-      <div style={{ fontSize: 14, marginBottom: 5.6 }}>Semana atual</div>
+      <div style={{ fontSize: 14, marginBottom: 5.6 }}>{t("home.semana.atual")}</div>
       <div style={{ fontSize: 28, lineHeight: 1.1, marginBottom: 14 }}>
-        {done} {done === 1 ? "dia" : "dias"}
+        {done} {unidade(done)}
       </div>
 
       <ul
-        aria-label="Dias estudados nesta semana"
+        aria-label={t("home.semana.aria")}
         style={{ display: "flex", gap: 5, margin: 0, padding: 0, listStyle: "none" }}
       >
         {days.map((day) => (
@@ -46,7 +49,7 @@ export function StreakCard({
           >
             <span style={{ fontSize: 10.5, color: TEXT.faint }}>{day.label}</span>
             <span
-              title={day.done ? `${day.label}: estudado` : `${day.label}: sem estudo`}
+              title={day.done ? t("home.semana.estudado", { dia: day.label }) : t("home.semana.semEstudo", { dia: day.label })}
               style={{
                 width: "100%",
                 maxWidth: 26,
@@ -78,8 +81,8 @@ export function StreakCard({
           color: TEXT.muted,
         }}
       >
-        <span>Sequência {streak.current} {streak.current === 1 ? "dia" : "dias"}</span>
-        <span>Recorde {streak.longest} {streak.longest === 1 ? "dia" : "dias"}</span>
+        <span>{t("home.semana.sequenciaRotulo")} {streak.current} {unidade(streak.current)}</span>
+        <span>{t("home.semana.recordeRotulo")} {streak.longest} {unidade(streak.longest)}</span>
       </div>
     </Panel>
   );

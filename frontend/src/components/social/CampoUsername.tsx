@@ -14,6 +14,7 @@
 import { useEffect, useRef, useState } from "react";
 import { social } from "@/api/endpoints";
 import type { DisponibilidadeUsername } from "@/api/types";
+import { useT } from "@/lib/i18n";
 import { C, TEXT } from "@/lib/tokens";
 import { Chip } from "@/components/ui/Chip";
 
@@ -26,7 +27,7 @@ export function CampoUsername({
   onChange,
   nome = "",
   atual,
-  label = "Nome de usuário",
+  label,
   onEstado,
 }: {
   id: string;
@@ -40,6 +41,7 @@ export function CampoUsername({
   /** Avisa o formulário se o que está digitado pode ser enviado. */
   onEstado?: (pronto: boolean) => void;
 }) {
+  const t = useT();
   const [resposta, setResposta] = useState<DisponibilidadeUsername | null>(null);
   const [consultando, setConsultando] = useState(false);
   const pedido = useRef(0);
@@ -90,7 +92,7 @@ export function CampoUsername({
 
   return (
     <div className="field" style={{ marginBottom: 11.2 }}>
-      <label htmlFor={id}>{label}</label>
+      <label htmlFor={id}>{label ?? t("amigos.campoUsername.label")}</label>
       <div style={{ position: "relative" }}>
         <span
           aria-hidden
@@ -113,7 +115,7 @@ export function CampoUsername({
           autoCapitalize="none"
           spellCheck={false}
           maxLength={25}
-          placeholder={!limpo && resposta?.sugestoes[0] ? resposta.sugestoes[0] : "seunome"}
+          placeholder={!limpo && resposta?.sugestoes[0] ? resposta.sugestoes[0] : t("amigos.campoUsername.placeholder")}
           value={value}
           aria-invalid={ocupado ? true : undefined}
           aria-describedby={`${id}-status`}
@@ -123,12 +125,12 @@ export function CampoUsername({
       </div>
 
       <div id={`${id}-status`} role="status" style={{ fontSize: 11.5, marginTop: 5, minHeight: 16 }}>
-        {consultando ? <span style={{ color: TEXT.faint }}>Conferindo…</span> : null}
-        {!consultando && ehOAtual ? <span style={{ color: TEXT.faint }}>Este é o seu @ atual.</span> : null}
-        {!consultando && livre ? <span style={{ color: C.verde }}>@{limpo} está livre.</span> : null}
+        {consultando ? <span style={{ color: TEXT.faint }}>{t("amigos.campoUsername.conferindo")}</span> : null}
+        {!consultando && ehOAtual ? <span style={{ color: TEXT.faint }}>{t("amigos.campoUsername.seuAtual")}</span> : null}
+        {!consultando && livre ? <span style={{ color: C.verde }}>@{limpo} {t("amigos.campoUsername.estaLivre")}</span> : null}
         {!consultando && !limpo && resposta?.sugestoes[0] ? (
           <span style={{ color: TEXT.faint }}>
-            Se deixar em branco, você será <strong style={{ color: TEXT.muted }}>@{resposta.sugestoes[0]}</strong>.
+            {t("amigos.campoUsername.seVazio")} <strong style={{ color: TEXT.muted }}>@{resposta.sugestoes[0]}</strong>.
           </span>
         ) : null}
         {!consultando && ocupado ? (
@@ -139,7 +141,7 @@ export function CampoUsername({
       {!consultando && ocupado && resposta && resposta.sugestoes.length > 0 ? (
         <div style={{ display: "flex", flexWrap: "wrap", gap: 5.6, marginTop: 6 }}>
           {resposta.sugestoes.map((sugestao) => (
-            <Chip key={sugestao} active={false} title={`Usar @${sugestao}`} onClick={() => onChange(sugestao)}>
+            <Chip key={sugestao} active={false} title={t("amigos.campoUsername.usar", { usuario: sugestao })} onClick={() => onChange(sugestao)}>
               @{sugestao}
             </Chip>
           ))}

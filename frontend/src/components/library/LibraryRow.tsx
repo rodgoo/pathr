@@ -8,6 +8,7 @@
 
 import { useEffect, useState } from "react";
 import type { Resource, ResourceState } from "@/api/types";
+import { useT } from "@/lib/i18n";
 import { ACC, ACC4, C, SIZE, TEXT, tint } from "@/lib/tokens";
 import { formatarTempo } from "@/components/library/VideoPlayer";
 import { Icon, type IconName } from "@/components/ui/icons";
@@ -32,10 +33,10 @@ function stateColor(state: ResourceState | null): string {
 }
 
 const STATE_LABEL: Record<string, string> = {
-  saved: "salvo",
-  in_progress: "em curso",
-  done: "concluído",
-  dismissed: "dispensado",
+  saved: "modulo.linha.salvo",
+  in_progress: "modulo.linha.emCurso",
+  done: "modulo.linha.concluido",
+  dismissed: "modulo.linha.dispensado",
 };
 
 /** O próximo estado no ciclo do botão: novo → em curso → concluído → novo. */
@@ -64,6 +65,7 @@ export function LibraryRow({
    * para fora — que é o que o produto deixou de querer. */
   onAbrir?: () => void;
 }) {
+  const t = useT();
   const chipColor = resource.kind === "video" ? ACC : resource.kind === "exercise" ? C.verde : C.azul;
   const emCurso = resource.user_status === "in_progress";
 
@@ -140,7 +142,7 @@ export function LibraryRow({
           {[
             resource.provider ?? resource.author,
             resource.duration_min ? `${resource.duration_min} min` : null,
-            resource.language === "pt" ? "português" : resource.language === "en" ? "inglês" : resource.language,
+            resource.language === "pt" ? t("modulo.linha.portugues") : resource.language === "en" ? t("modulo.linha.ingles") : resource.language,
             kindLabel,
           ]
             .filter(Boolean)
@@ -186,12 +188,13 @@ function BotaoDeEstado({
   estado: ResourceState | null;
   onProgress: (next: ResourceState) => void;
 }) {
+  const t = useT();
   const cor = stateColor(estado);
   return (
     <button
       type="button"
       onClick={() => onProgress(nextState(estado))}
-      title={estado ? `Marcar como ${STATE_LABEL[nextState(estado)]}` : "Marcar como em curso"}
+      title={estado ? t("modulo.linha.marcarComo", { estado: t(STATE_LABEL[nextState(estado)]) }) : t("modulo.linha.marcarComoEmCurso")}
       style={{
         flex: "none",
         display: "inline-flex",
@@ -219,7 +222,7 @@ function BotaoDeEstado({
         }}
       >
         <Icon name={estado === "done" ? "check" : estado === "in_progress" ? "play" : "plus"} size={12} />
-        {estado ? STATE_LABEL[estado] : "marcar"}
+        {estado ? t(STATE_LABEL[estado]) : t("modulo.linha.marcar")}
       </span>
     </button>
   );
@@ -246,6 +249,7 @@ function ParouEm({
   nota: string | null;
   onSalvar: (valor: string) => void;
 }) {
+  const t = useT();
   const [editando, setEditando] = useState(false);
   const [texto, setTexto] = useState(nota ?? "");
 
@@ -280,7 +284,7 @@ function ParouEm({
         }}
       >
         <Icon name="pencil" size={12} />
-        {nota ? `parei em ${nota}` : "marcar onde parei"}
+        {nota ? t("modulo.linha.pareiEm", { nota }) : t("modulo.linha.marcarOndeParei")}
       </button>
     );
   }
@@ -289,10 +293,10 @@ function ParouEm({
     <input
       id={`parei-${id}`}
       className="input"
-      aria-label="Onde você parou neste material"
+      aria-label={t("modulo.linha.ondeParou")}
       autoFocus
       value={texto}
-      placeholder="23:10, capítulo 4…"
+      placeholder={t("modulo.linha.pareiPlaceholder")}
       onChange={(event) => setTexto(event.target.value)}
       onBlur={salvar}
       onKeyDown={(event) => {

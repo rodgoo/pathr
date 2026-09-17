@@ -9,10 +9,12 @@
 
 import { useEffect, useState } from "react";
 import { social } from "@/api/endpoints";
+import { useT } from "@/lib/i18n";
 import { C, TEXT } from "@/lib/tokens";
 import { Kicker, Panel } from "@/components/ui/primitives";
 
 export function PrivacidadeSocial() {
+  const t = useT();
   const [ligado, setLigado] = useState<boolean | null>(null);
   const [erro, setErro] = useState<string | null>(null);
 
@@ -36,13 +38,13 @@ export function PrivacidadeSocial() {
       await social.gravarPrivacidade(proximo);
     } catch (caught) {
       setLigado(!proximo);
-      setErro(caught instanceof Error ? caught.message : "Não consegui salvar.");
+      setErro(caught instanceof Error ? caught.message : t("amigos.privacidade.erroSalvar"));
     }
   }
 
   return (
     <Panel pad={16.8}>
-      <Kicker style={{ display: "block", marginBottom: 11.2 }}>Pessoas</Kicker>
+      <Kicker style={{ display: "block", marginBottom: 11.2 }}>{t("amigos.privacidade.titulo")}</Kicker>
       <label
         style={{
           display: "flex",
@@ -62,10 +64,9 @@ export function PrivacidadeSocial() {
           style={{ marginTop: 2 }}
         />
         <span style={{ minWidth: 0 }}>
-          <span style={{ display: "block", fontSize: 13.5 }}>Aparecer nas sugestões de amigos</span>
+          <span style={{ display: "block", fontSize: 13.5 }}>{t("amigos.privacidade.aparecer")}</span>
           <span style={{ display: "block", fontSize: 11.5, color: TEXT.faint, marginTop: 3 }}>
-            Desligado, você não aparece nas sugestões nem na busca por nome. Quem já tem o seu @
-            ainda consegue te encontrar e te convidar.
+            {t("amigos.privacidade.explicacao")}
           </span>
         </span>
       </label>

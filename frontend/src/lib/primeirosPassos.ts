@@ -12,6 +12,7 @@
 
 import { languages, profile, resumes, roadmap, social, tags } from "@/api/endpoints";
 import { useQuery } from "@/hooks/useApi";
+import { useT } from "@/lib/i18n";
 import type { Screen, SettingsTab } from "@/types";
 
 export interface Passo {
@@ -34,6 +35,7 @@ function estado<T>(consulta: { loading: boolean; data: T | null }, teste: (dado:
 }
 
 export function usePrimeirosPassos(): { passos: Passo[]; feitos: number; obrigatorios: number; carregando: boolean } {
+  const t = useT();
   const perfil = useQuery(() => profile.get(), []);
   const minhas = useQuery(() => tags.mine(), []);
   const curriculos = useQuery(() => resumes.list(), []);
@@ -44,66 +46,66 @@ export function usePrimeirosPassos(): { passos: Passo[]; feitos: number; obrigat
   const passos: Passo[] = [
     {
       id: "regiao",
-      titulo: "Diga onde você mora",
-      onde: "Configurações › Objetivo › Região e abrangência das vagas",
-      oQueFazer: "Escolha sua cidade e até quantos km você aceita ir para uma vaga presencial.",
-      depois: "Vagas passa a mostrar só presenciais no seu raio (remotas sempre), e o seu dia de estudo segue o seu fuso.",
+      titulo: t("manual.passos.regiao.titulo"),
+      onde: t("manual.passos.regiao.onde"),
+      oQueFazer: t("manual.passos.regiao.oQueFazer"),
+      depois: t("manual.passos.regiao.depois"),
       feito: estado(perfil, (p) => Boolean(p.city)),
       destino: { screen: "config", settingsTab: "objetivo" },
     },
     {
       id: "objetivo",
-      titulo: "Escolha o seu objetivo",
-      onde: "Configurações › Objetivo",
-      oQueFazer: "Escolha um destino pronto ou descreva em texto livre onde quer chegar, e as horas por semana.",
-      depois: "O roadmap é montado para esse destino, e Vagas e Cursos priorizam o que ele pede.",
+      titulo: t("manual.passos.objetivo.titulo"),
+      onde: t("manual.passos.objetivo.onde"),
+      oQueFazer: t("manual.passos.objetivo.oQueFazer"),
+      depois: t("manual.passos.objetivo.depois"),
       feito: estado(perfil, (p) => Boolean(p.target_role) || (p.goals ?? []).length > 0),
       destino: { screen: "config", settingsTab: "objetivo" },
     },
     {
       id: "curriculo",
-      titulo: "Envie seu currículo",
-      onde: "Currículo",
-      oQueFazer: "Suba o PDF ou DOCX: a IA lê e sugere suas tecnologias com um nível estimado, para você revisar.",
-      depois: "As skills chegam preenchidas no passo seguinte — você só confere os níveis.",
+      titulo: t("manual.passos.curriculo.titulo"),
+      onde: t("manual.passos.curriculo.onde"),
+      oQueFazer: t("manual.passos.curriculo.oQueFazer"),
+      depois: t("manual.passos.curriculo.depois"),
       opcional: true,
       feito: estado(curriculos, (lista) => lista.length > 0),
       destino: { screen: "cv" },
     },
     {
       id: "skills",
-      titulo: "Marque suas skills e os níveis",
-      onde: "Configurações › Skills",
-      oQueFazer: "Marque as tecnologias do seu plano e o nível de cada uma (N0 = quero aprender … N5 = especialista).",
-      depois: "Cursos passa a sugerir certificados, Vagas compara sua stack, e o Laboratório mostra as suas linguagens.",
-      feito: estado(minhas, (lista) => lista.some((t) => !CATEGORIAS_FORA.has(t.category))),
+      titulo: t("manual.passos.skills.titulo"),
+      onde: t("manual.passos.skills.onde"),
+      oQueFazer: t("manual.passos.skills.oQueFazer"),
+      depois: t("manual.passos.skills.depois"),
+      feito: estado(minhas, (lista) => lista.some((tag) => !CATEGORIAS_FORA.has(tag.category))),
       destino: { screen: "config", settingsTab: "skills" },
     },
     {
       id: "roadmap",
-      titulo: "Gere o seu roadmap",
-      onde: "Roadmap",
-      oQueFazer: "Gere o plano: fases e módulos do que você sabe até o objetivo, no seu ritmo semanal.",
-      depois: "Aparecem a Trilha atual, a lista da semana e o progresso no Início, e o plano se reajusta toda semana.",
+      titulo: t("manual.passos.roadmap.titulo"),
+      onde: t("manual.passos.roadmap.onde"),
+      oQueFazer: t("manual.passos.roadmap.oQueFazer"),
+      depois: t("manual.passos.roadmap.depois"),
       feito: plano.loading ? null : Boolean(plano.data),
       destino: { screen: "roadmap" },
     },
     {
       id: "idioma",
-      titulo: "Faça o nivelamento de inglês",
-      onde: "Idiomas",
-      oQueFazer: "Responda o teste de nível: ele mede o seu CEFR (A1 a C2) de verdade.",
-      depois: "Vagas compara o inglês pedido com o seu, e os treinos diários ficam no seu nível.",
+      titulo: t("manual.passos.idioma.titulo"),
+      onde: t("manual.passos.idioma.onde"),
+      oQueFazer: t("manual.passos.idioma.oQueFazer"),
+      depois: t("manual.passos.idioma.depois"),
       opcional: true,
       feito: estado(idioma, (p) => Boolean(p.cefr_level)),
       destino: { screen: "ingles" },
     },
     {
       id: "amigos",
-      titulo: "Adicione amigos",
-      onde: "Amigos",
-      oQueFazer: "Procure pelo @ ou veja as sugestões de quem mora perto ou estuda o mesmo que você.",
-      depois: "Estudando no mesmo dia, vocês formam uma sequência juntos — com card para compartilhar a cada marco.",
+      titulo: t("manual.passos.amigos.titulo"),
+      onde: t("manual.passos.amigos.onde"),
+      oQueFazer: t("manual.passos.amigos.oQueFazer"),
+      depois: t("manual.passos.amigos.depois"),
       opcional: true,
       feito: estado(amizades, (a) => a.amigos.length > 0),
       destino: { screen: "amigos" },

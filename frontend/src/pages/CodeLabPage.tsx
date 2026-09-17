@@ -26,6 +26,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "@/api/client";
 import { walkthroughs as walkthroughsApi } from "@/api/endpoints";
 import { useAppState } from "@/hooks/useAppState";
+import { useT, type Traduzir } from "@/lib/i18n";
 import type { Walkthrough } from "@/api/types";
 import { useMutation, useQuery } from "@/hooks/useApi";
 import { ACC, ACC4, C, HAIRLINE, PANEL, TEXT } from "@/lib/tokens";
@@ -53,17 +54,13 @@ const MONO = "ui-monospace, Menlo, monospace";
  */
 const CHAVE = CHAVE_DO_LABORATORIO;
 
-const NIVEIS = [
-  { value: "iniciante", label: "Iniciante" },
-  { value: "intermediario", label: "Intermediário" },
-  { value: "avancado", label: "Avançado" },
-];
+const NIVEIS = ["iniciante", "intermediario", "avancado"] as const;
 
-const NOME_DO_NIVEL: Record<string, string> = {
-  iniciante: "Iniciante",
-  intermediario: "Intermediário",
-  avancado: "Avançado",
-};
+/** O nome do nível no idioma ativo; nível desconhecido cai no próprio código. */
+function nomeDoNivel(nivel: string, t: Traduzir): string {
+  const conhecido = (NIVEIS as readonly string[]).includes(nivel);
+  return conhecido ? t(`codelab.niveis.${nivel}`) : nivel;
+}
 
 /** Um exemplo que vale abrir agora, escolhido pelo servidor sem IA. */
 interface Sugestao {
@@ -109,6 +106,7 @@ function gravar(valor: Guardado | null) {
 }
 
 export function CodeLabPage() {
+  const t = useT();
   const paraMim = useQuery(() => api.get<ParaMim>("/walkthroughs/para-mim"), []);
   const lista = useQuery(() => walkthroughsApi.list(), []);
 
@@ -148,16 +146,12 @@ export function CodeLabPage() {
   return (
     <div style={{ ...SCREEN_IN, display: "flex", flexDirection: "column", gap: 16.8 }}>
       <header>
-        <Kicker style={{ display: "block", marginBottom: 5.6 }}>Laboratório de código</Kicker>
+        <Kicker style={{ display: "block", marginBottom: 5.6 }}>{t("codelab.kicker")}</Kicker>
         <h1 style={{ fontSize: 23, fontWeight: 500, margin: 0 }}>
-          Código pronto, percorrido linha a linha
+          {t("codelab.titulo")}
         </h1>
         <p style={{ fontSize: 13, color: TEXT.muted, margin: "8.4px 0 0", maxWidth: "70ch" }}>
-          Escolha o assunto e deixe a linguagem no automático, ou escolha você. Você recebe o código ou
-          a configuração que se usa de verdade — um arquivo ou vários, como o workflow do GitHub e o
-          teste que ele roda, ou Controller, Service e Entity — e o passo a passo da execução: qual
-          linha de qual arquivo roda, o que cada variável vale naquele instante e o que saiu no
-          terminal.
+          {t("codelab.intro")}
         </p>
       </header>
 
@@ -185,7 +179,7 @@ export function CodeLabPage() {
       />
 
       {lista.error ? <ErrorState message={lista.error} onRetry={lista.reload} /> : null}
-      {lista.loading && !lista.data ? <Loading label="Carregando seus exemplos…" /> : null}
+      {lista.loading && !lista.data ? <Loading label={t("codelab.carregandoExemplos")} /> : null}
 
       {aberto ? (
         <Depurador
@@ -234,21 +228,22 @@ function Sugestoes({
   carregando: boolean;
   onCriado: (novo: Walkthrough) => void;
 }) {
+  const t = useT();
   const { dispatch } = useAppState();
   const [gerando, setGerando] = useState<string | null>(null);
   const criar = useMutation((sugestao: Sugestao) =>
     walkthroughsApi.create(sugestao.language, sugestao.topic, sugestao.level),
   );
 
-  if (carregando && !dados) return <Loading label="Montando sugestões para você…" />;
+  if (carregando && !dados) return <Loading label={t("codelab.sugestoes.montando")} />;
   if (!dados) return null;
 
   if (!dados.do_perfil) {
     return (
       <Panel pad={16.8}>
         <EmptyState
-          title="Marque as linguagens que você estuda"
-          description="O laboratório mostra só as linguagens do seu perfil e sugere exemplos pelo seu nível e pelo seu roadmap. Por enquanto, todas aparecem no gerador abaixo."
+          title={t("codelab.sugestoes.semPerfilTitulo")}
+          description={t("codelab.sugestoes.semPerfilDescricao")}
           action={
             <button
               type="button"
@@ -256,7 +251,7 @@ function Sugestoes({
               onClick={() => dispatch({ type: "navigate", screen: "config", settingsTab: "skills" })}
             >
               <Icon name="code" size={15} />
-              Escolher linguagens
+              {t("codelab.sugestoes.escolherLinguagens")}
             </button>
           }
         />
@@ -274,10 +269,9 @@ function Sugestoes({
 
   return (
     <Panel pad={16.8}>
-      <Kicker style={{ display: "block", marginBottom: 5.6 }}>Sugestões para você</Kicker>
+      <Kicker style={{ display: "block", marginBottom: 5.6 }}>{t("codelab.sugestoes.titulo")}</Kicker>
       <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 11.2px", maxWidth: "72ch" }}>
-        Pelo seu roadmap, pelo seu nível em cada linguagem e pelo que você ainda não abriu. Um clique gera o
-        exemplo com o passo a passo.
+        {t("codelab.sugestoes.descricao")}
       </p>
       <div
         style={{
@@ -294,7 +288,7 @@ function Sugestoes({
               type="button"
               disabled={Boolean(gerando)}
               onClick={() => void gerar(sugestao)}
-              aria-label={`Gerar exemplo: ${sugestao.topic} em ${sugestao.language_label}`}
+              aria-label={t("codelab.sugestoes.gerarAria", { assunto: sugestao.topic, linguagem: sugestao.language_label })}
               style={{
                 display: "flex",
                 flexDirection: "column",
@@ -314,7 +308,7 @@ function Sugestoes({
                 <span style={{ width: 16, height: 16, display: "inline-grid", placeItems: "center" }}>
                   {iconeDaLinguagem(sugestao.language)}
                 </span>
-                {sugestao.language_label} · {NOME_DO_NIVEL[sugestao.level] ?? sugestao.level}
+                {sugestao.language_label} · {nomeDoNivel(sugestao.level, t)}
               </span>
               <span style={{ fontSize: 13.5, lineHeight: 1.35 }}>{sugestao.topic}</span>
               {/* O motivo sempre no pé do cartão (`marginTop: auto`): com
@@ -336,7 +330,7 @@ function Sugestoes({
                   size={13}
                   style={{ flex: "none", marginTop: 2 }}
                 />
-                {esta ? "Escrevendo o exemplo…" : sugestao.motivo}
+                {esta ? t("codelab.escrevendoExemplo") : sugestao.motivo}
               </span>
             </button>
           );
@@ -345,7 +339,12 @@ function Sugestoes({
       <ProgressoDaTarefa
         ativo={Boolean(gerando)}
         chave="laboratorio-gerar"
-        etapas={["Escolhendo os arquivos", "Escrevendo o código", "Conferindo se é o que se usa de verdade", "Montando o passo a passo"]}
+        etapas={[
+          t("codelab.etapas.arquivos"),
+          t("codelab.etapas.codigo"),
+          t("codelab.etapas.conferindo"),
+          t("codelab.etapas.passoAPasso"),
+        ]}
         duracaoMs={25_000}
         style={{ marginTop: 11.2 }}
       />
@@ -366,9 +365,11 @@ function Gerador({
   carregando: boolean;
   onCriado: (novo: Walkthrough) => void;
 }) {
+  const t = useT();
   const [language, setLanguage] = useState("auto");
   const [topic, setTopic] = useState("");
   const [level, setLevel] = useState("iniciante");
+  const niveis = NIVEIS.map((nivel) => ({ value: nivel, label: t(`codelab.niveis.${nivel}`) }));
 
   // A linguagem escolhida precisa estar na lista que o servidor mandou. Ela
   // começa pelo automático: quem pede "GitHub e testes" não precisa saber que
@@ -398,7 +399,7 @@ function Gerador({
         <div style={{ display: "flex", gap: 11.2, flexWrap: "wrap", alignItems: "flex-end" }}>
           <div style={{ display: "flex", flexDirection: "column", gap: 4, minWidth: 190 }}>
             <label htmlFor="codelab-linguagem" style={{ fontSize: 11.5, color: TEXT.faint }}>
-              {doPerfil ? "Linguagem ou arquivo" : "Linguagem"}
+              {doPerfil ? t("codelab.gerador.linguagemOuArquivo") : t("codelab.gerador.linguagem")}
             </label>
             <Select
               id="codelab-linguagem"
@@ -416,12 +417,12 @@ function Gerador({
           <label
             style={{ display: "flex", flexDirection: "column", gap: 4, flex: 1, minWidth: 220 }}
           >
-            <span style={{ fontSize: 11.5, color: TEXT.faint }}>Assunto</span>
+            <span style={{ fontSize: 11.5, color: TEXT.faint }}>{t("codelab.gerador.assunto")}</span>
             <input
               className="input"
               value={topic}
               maxLength={120}
-              placeholder="GitHub Actions rodando os testes, API com Controller e Entity, closures…"
+              placeholder={t("codelab.gerador.assuntoPlaceholder")}
               onChange={(evento) => setTopic(evento.target.value)}
             />
           </label>
@@ -430,8 +431,8 @@ function Gerador({
         <div style={{ display: "flex", gap: 11.2, flexWrap: "wrap", alignItems: "center" }}>
           <Segmented
             name="codelab-nivel"
-            label="Nível"
-            options={NIVEIS}
+            label={t("codelab.gerador.nivel")}
+            options={niveis}
             value={level}
             onChange={(valor) => setLevel(valor)}
           />
@@ -442,15 +443,13 @@ function Gerador({
             disabled={criar.pending || topic.trim().length < 2}
           >
             <Icon name="plus" size={15} />
-            {criar.pending ? "Escrevendo o exemplo…" : "Gerar exemplo"}
+            {criar.pending ? t("codelab.escrevendoExemplo") : t("codelab.gerador.gerar")}
           </button>
         </div>
 
         {criar.pending ? (
           <p style={{ fontSize: 11.5, color: TEXT.faint, margin: 0 }}>
-            Leva alguns segundos: os arquivos e o traço de execução saem juntos. Antes de aparecer
-            aqui, o conteúdo é conferido (sintaxe, versões atuais, estrutura de projeto real) e o
-            traço, contra cada arquivo.
+            {t("codelab.gerador.aviso")}
           </p>
         ) : null}
         {criar.error ? <ErrorState message={criar.error} /> : null}
@@ -477,6 +476,7 @@ function Depurador({
   onPasso: (passo: number) => void;
   onFechar: () => void;
 }) {
+  const t = useT();
   const passos = exemplo.steps;
   const total = passos.length;
   // O passo guardado pode não existir mais se o exemplo mudou de tamanho.
@@ -595,8 +595,8 @@ function Depurador({
         <button
           type="button"
           className="btn btn-ghost btn-icon"
-          aria-label="Fechar exemplo"
-          title="Fechar"
+          aria-label={t("codelab.depurador.fecharAria")}
+          title={t("codelab.depurador.fechar")}
           style={{ marginLeft: "auto", alignSelf: "center" }}
           onClick={onFechar}
         >
@@ -613,7 +613,7 @@ function Depurador({
       {variosArquivos ? (
         <div
           role="tablist"
-          aria-label="Arquivos do exemplo"
+          aria-label={t("codelab.depurador.arquivosAria")}
           style={{ display: "flex", gap: 4, overflowX: "auto", marginBottom: 8.4, paddingBottom: 2 }}
         >
           {arquivos.map((arquivo) => {
@@ -655,10 +655,10 @@ function Depurador({
       ) : null}
 
       <CodeBlock
-        label={`Arquivo ${atual.caminho}`}
+        label={t("codelab.depurador.arquivoLabel", { caminho: atual.caminho })}
         lines={atual.linhas}
         filename={variosArquivos ? atual.caminho : atual.rotulo}
-        meta={total > 0 ? `passo ${indice + 1} de ${total}` : "sem passo a passo"}
+        meta={total > 0 ? t("codelab.depurador.passoDeTotal", { n: indice + 1, total }) : t("codelab.semPassoAPasso")}
         generico={atual.realce !== "java"}
         // A linha marcada só no arquivo onde o passo acontece: marcar a mesma
         // linha em outro arquivo apontaria para o lugar errado.
@@ -670,9 +670,7 @@ function Depurador({
           role="status"
           style={{ fontSize: 12.5, color: C.ambar, margin: "11.2px 0 0", maxWidth: "74ch" }}
         >
-          O passo a passo deste exemplo não saiu coerente com o código, então não é exibido —
-          mostrar um traço que não bate com o programa ensinaria errado. O código acima continua
-          valendo; gere de novo para tentar outro traço.
+          {t("codelab.depurador.semTraco")}
         </p>
       ) : (
         <>
@@ -721,16 +719,14 @@ function Depurador({
           contextoRef={exemplo.id}
           trecho={
             passo
-              ? `Passo ${indice + 1}, ${variosArquivos ? `${arquivoDoPasso} ` : ""}linha ${passo.linha} (${linhaDoPasso}): ${passo.acao}`
+              ? `${t("codelab.passoN", { n: indice + 1 })}, ${variosArquivos ? `${arquivoDoPasso} ` : ""}${t("codelab.linhaN", { linha: passo.linha })} (${linhaDoPasso}): ${passo.acao}`
               : undefined
           }
         />
       </div>
 
       <p style={{ fontSize: 11, color: TEXT.faint, margin: "14px 0 0", maxWidth: "74ch" }}>
-        A execução aqui é comentada, não medida: o passo a passo foi escrito junto com o código e
-        conferido contra ele, mas o programa não roda num interpretador de verdade. Para o exemplo
-        valer como certeza, rode-o você mesmo.
+        {t("codelab.depurador.execucaoComentada")}
       </p>
     </Panel>
   );
@@ -749,6 +745,7 @@ function Controles({
   onIr: (destino: number) => void;
   onAlternar: () => void;
 }) {
+  const t = useT();
   return (
     <div
       style={{
@@ -759,17 +756,17 @@ function Controles({
         marginTop: 11.2,
       }}
     >
-      <IconButton icon="undo" label="Voltar ao início" tone="secondary" onClick={() => onIr(0)} disabled={indice === 0} />
+      <IconButton icon="undo" label={t("codelab.controles.inicio")} tone="secondary" onClick={() => onIr(0)} disabled={indice === 0} />
       <IconButton
         icon="arrowLeft"
-        label="Passo anterior"
+        label={t("codelab.controles.anterior")}
         tone="secondary"
         onClick={() => onIr(indice - 1)}
         disabled={indice === 0}
       />
       <IconButton
         icon="arrowRight"
-        label="Próximo passo"
+        label={t("codelab.controles.proximo")}
         tone="primary"
         onClick={() => onIr(indice + 1)}
         disabled={indice >= total - 1}
@@ -778,10 +775,10 @@ function Controles({
         type="button"
         className="btn btn-ghost"
         onClick={onAlternar}
-        aria-label={rodando ? "Pausar a execução automática" : "Executar passo a passo sozinho"}
+        aria-label={rodando ? t("codelab.controles.pausarAria") : t("codelab.controles.executarAria")}
       >
         <Icon name={rodando ? "dots" : "play"} size={14} />
-        <span style={{ marginLeft: 5.6 }}>{rodando ? "Pausar" : "Executar"}</span>
+        <span style={{ marginLeft: 5.6 }}>{rodando ? t("codelab.controles.pausar") : t("codelab.controles.executar")}</span>
       </button>
 
       <div
@@ -789,7 +786,7 @@ function Controles({
         aria-valuemin={1}
         aria-valuemax={total}
         aria-valuenow={indice + 1}
-        aria-label="Passo da execução"
+        aria-label={t("codelab.controles.passoAria")}
         style={{
           flex: 1,
           minWidth: 120,
@@ -826,12 +823,13 @@ function AcaoDoPasso({
   /** Com vários arquivos, em qual deles o passo acontece. */
   arquivo: string | null;
 }) {
+  const t = useT();
   return (
-    <Caixa titulo={`Passo ${numero}`}>
+    <Caixa titulo={t("codelab.passoN", { n: numero })}>
       {passo ? (
         <>
           <div style={{ fontSize: 11.5, color: ACC, fontFamily: MONO, marginBottom: 5.6, overflowWrap: "anywhere" }}>
-            {arquivo ? `${nomeDoArquivo(arquivo)} · ` : ""}linha {passo.linha}
+            {arquivo ? `${nomeDoArquivo(arquivo)} · ` : ""}{t("codelab.linhaN", { linha: passo.linha })}
           </div>
           <p style={{ fontSize: 13, lineHeight: 1.55, margin: 0, color: "rgba(233,233,237,.88)" }}>
             {passo.acao}
@@ -846,11 +844,12 @@ function AcaoDoPasso({
 
 /** As variáveis vivas, com o valor no fim do passo atual. */
 function Estado({ variaveis }: { variaveis: { nome: string; valor: string }[] }) {
+  const t = useT();
   return (
-    <Caixa titulo="Variáveis agora">
+    <Caixa titulo={t("codelab.estado.titulo")}>
       {variaveis.length === 0 ? (
         <p style={{ fontSize: 12.5, color: TEXT.faint, margin: 0 }}>
-          Nenhuma variável definida ainda.
+          {t("codelab.estado.vazio")}
         </p>
       ) : (
         <table style={{ width: "100%", borderCollapse: "collapse", fontFamily: MONO }}>
@@ -889,8 +888,9 @@ function Estado({ variaveis }: { variaveis: { nome: string; valor: string }[] })
 
 /** Tudo que o programa imprimiu até aqui. */
 function Saida({ texto }: { texto: string }) {
+  const t = useT();
   return (
-    <Caixa titulo="Saída até aqui">
+    <Caixa titulo={t("codelab.saida.titulo")}>
       {texto ? (
         <pre
           style={{
@@ -907,7 +907,7 @@ function Saida({ texto }: { texto: string }) {
         </pre>
       ) : (
         <p style={{ fontSize: 12.5, color: TEXT.faint, margin: 0 }}>
-          Nada saiu no terminal ainda.
+          {t("codelab.saida.vazio")}
         </p>
       )}
     </Caixa>
@@ -942,6 +942,7 @@ function Biblioteca({
   onAbrir: (item: Walkthrough) => void;
   onRemovido: (id: string) => void;
 }) {
+  const t = useT();
   const [removendo, setRemovendo] = useState<string | null>(null);
 
   async function remover(item: Walkthrough) {
@@ -958,15 +959,15 @@ function Biblioteca({
   if (exemplos.length === 0) {
     return (
       <EmptyState
-        title="Nenhum exemplo ainda"
-        description="Escolha a linguagem e o assunto acima. O exemplo fica guardado aqui para você voltar quantas vezes quiser."
+        title={t("codelab.biblioteca.vazioTitulo")}
+        description={t("codelab.biblioteca.vazioDescricao")}
       />
     );
   }
 
   return (
     <section>
-      <Kicker style={{ display: "block", marginBottom: 8.4 }}>Seus exemplos</Kicker>
+      <Kicker style={{ display: "block", marginBottom: 8.4 }}>{t("codelab.biblioteca.titulo")}</Kicker>
       <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
         {exemplos.map((item) => {
           const ativo = item.id === abertoId;
@@ -998,16 +999,16 @@ function Biblioteca({
                   <span style={{ display: "block", fontSize: 13.5 }}>{item.title}</span>
                   <span style={{ display: "block", fontSize: 11.5, color: TEXT.faint }}>
                     {item.language_label} · {item.topic}
-                    {(item.files?.length ?? 0) > 1 ? ` · ${item.files.length} arquivos` : ""}
+                    {(item.files?.length ?? 0) > 1 ? ` · ${t("codelab.biblioteca.arquivosN", { n: item.files.length })}` : ""}
                     {item.steps.length > 0
-                      ? ` · ${item.steps.length} passos`
-                      : " · sem passo a passo"}
+                      ? ` · ${t("codelab.biblioteca.passosN", { n: item.steps.length })}`
+                      : ` · ${t("codelab.semPassoAPasso")}`}
                   </span>
                 </span>
               </button>
               <IconButton
                 icon="trash"
-                label={removendo === item.id ? "Removendo…" : "Remover"}
+                label={removendo === item.id ? t("codelab.biblioteca.removendo") : t("codelab.biblioteca.remover")}
                 color={C.ambar}
                 disabled={removendo === item.id}
                 onClick={() => void remover(item)}

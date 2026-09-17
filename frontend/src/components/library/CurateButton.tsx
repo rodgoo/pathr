@@ -15,6 +15,7 @@
 
 import { useState } from "react";
 import { library as libraryApi } from "@/api/endpoints";
+import { useT } from "@/lib/i18n";
 import { C, SIZE, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 
@@ -26,10 +27,12 @@ interface CurateButtonProps {
   label?: string;
 }
 
-export function CurateButton({ nodeId, onFound, label = "Procurar material" }: CurateButtonProps) {
+export function CurateButton({ nodeId, onFound, label }: CurateButtonProps) {
+  const t = useT();
   const [pending, setPending] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  const rotulo = label ?? t("modulo.curar.procurarMaterial");
 
   async function run() {
     setPending(true);
@@ -38,14 +41,16 @@ export function CurateButton({ nodeId, onFound, label = "Procurar material" }: C
     try {
       const result = await libraryApi.curate(nodeId);
       if (result.novos > 0) {
-        setMessage(`${result.novos} ${result.novos === 1 ? "material novo" : "materiais novos"}.`);
+        setMessage(
+          `${result.novos} ${result.novos === 1 ? t("modulo.curar.materialNovo") : t("modulo.curar.materiaisNovos")}.`,
+        );
         onFound();
       } else {
-        setMessage(result.motivo ?? "Nada novo desta vez.");
+        setMessage(result.motivo ?? t("modulo.curar.nadaNovo"));
       }
     } catch (caught) {
       setFailed(true);
-      setMessage(caught instanceof Error ? caught.message : "A busca falhou.");
+      setMessage(caught instanceof Error ? caught.message : t("modulo.curar.buscaFalhou"));
     } finally {
       setPending(false);
     }
@@ -63,7 +68,7 @@ export function CurateButton({ nodeId, onFound, label = "Procurar material" }: C
             então o rótulo precisa dizer que algo está acontecendo — um botão
             só desabilitado parece travado. */}
         <Icon name="search" size={15} />
-        {pending ? "Procurando…" : label}
+        {pending ? t("modulo.curar.procurando") : rotulo}
       </button>
       {message ? (
         <span

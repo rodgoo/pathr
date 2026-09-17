@@ -18,51 +18,60 @@
 
 import { useState } from "react";
 import type { SkillBoard, SkillLevel, SkillTopic } from "@/api/types";
+import { useT, type Traduzir } from "@/lib/i18n";
 import { ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
 import { Kicker, Panel } from "@/components/ui/primitives";
 
+/** skill -> chave i18n do rótulo da habilidade. */
 export const NOME_DA_HABILIDADE: Record<string, string> = {
-  grammar: "Gramática",
-  vocabulary: "Vocabulário",
-  reading: "Leitura",
-  listening: "Escuta",
-  writing: "Escrita",
-  speaking: "Fala",
-  business: "Corporativo",
+  grammar: "idiomas.habilidades.grammar",
+  vocabulary: "idiomas.habilidades.vocabulary",
+  reading: "idiomas.habilidades.reading",
+  listening: "idiomas.habilidades.listening",
+  writing: "idiomas.habilidades.writing",
+  speaking: "idiomas.habilidades.speaking",
+  business: "idiomas.habilidades.business",
 };
 
+/** O rótulo traduzido da habilidade, ou o próprio código quando desconhecido. */
+export function nomeDaHabilidade(skill: string, t: Traduzir): string {
+  const chave = NOME_DA_HABILIDADE[skill];
+  return chave ? t(chave) : skill;
+}
+
 const CONFIANCA: Record<SkillLevel["confidence"], string> = {
-  alta: "estimativa firme",
-  media: "estimativa razoável",
-  inicial: "estimativa inicial — treine mais para firmar",
-  sem_dados: "sem respostas ainda",
+  alta: "idiomas.confianca.alta",
+  media: "idiomas.confianca.media",
+  inicial: "idiomas.confianca.inicial",
+  sem_dados: "idiomas.confianca.semDados",
 };
 
 const SITUACAO: Record<SkillTopic["status"], { rotulo: string; cor: string }> = {
-  reforcar: { rotulo: "a reforçar", cor: C.ambar },
-  progredindo: { rotulo: "progredindo", cor: ACC4 },
-  dominado: { rotulo: "dominado", cor: C.verde },
-  poucos_dados: { rotulo: "poucos dados", cor: TEXT.faint },
+  reforcar: { rotulo: "idiomas.situacao.reforcar", cor: C.ambar },
+  progredindo: { rotulo: "idiomas.situacao.progredindo", cor: ACC4 },
+  dominado: { rotulo: "idiomas.situacao.dominado", cor: C.verde },
+  poucos_dados: { rotulo: "idiomas.situacao.poucosDados", cor: TEXT.faint },
 };
 
 export function QuadroDeHabilidades({ quadro }: { quadro: SkillBoard | null }) {
+  const t = useT();
   const habilidades = quadro?.skills ?? [];
   const algumaComDados = habilidades.some((h) => h.answered > 0);
 
   return (
     <Panel>
       <div style={{ display: "flex", alignItems: "baseline", gap: 8.4, marginBottom: 11.2 }}>
-        <Kicker>Por habilidade</Kicker>
+        <Kicker>{t("idiomas.quadro.porHabilidade")}</Kicker>
         {quadro?.overall.level ? (
           <span style={{ fontSize: 11.5, color: TEXT.faint, marginLeft: "auto" }}>
-            nos treinos: {quadro.overall.level}
+            {t("idiomas.quadro.nosTreinos", { nivel: quadro.overall.level })}
           </span>
         ) : null}
       </div>
 
       {!algumaComDados ? (
         <p style={{ fontSize: 12.5, color: TEXT.muted, margin: 0 }}>
-          Faça o nivelamento ou o treino de hoje para ver seu nível em cada habilidade.
+          {t("idiomas.quadro.semDados")}
         </p>
       ) : (
         <div style={{ display: "flex", flexDirection: "column" }}>
@@ -76,8 +85,9 @@ export function QuadroDeHabilidades({ quadro }: { quadro: SkillBoard | null }) {
 }
 
 function LinhaDaHabilidade({ habilidade }: { habilidade: SkillLevel }) {
+  const t = useT();
   const [aberta, setAberta] = useState(false);
-  const nome = NOME_DA_HABILIDADE[habilidade.skill] ?? habilidade.skill;
+  const nome = nomeDaHabilidade(habilidade.skill, t);
   const aReforcar = habilidade.topics.filter((t) => t.status === "reforcar").length;
   const semDados = habilidade.answered === 0;
 
@@ -103,7 +113,9 @@ function LinhaDaHabilidade({ habilidade }: { habilidade: SkillLevel }) {
           <span style={{ fontSize: 13 }}>{nome}</span>
           {aReforcar > 0 ? (
             <span style={{ fontSize: 11, color: C.ambar }}>
-              {aReforcar} {aReforcar === 1 ? "tópico" : "tópicos"} a reforçar
+              {aReforcar === 1
+                ? t("idiomas.quadro.topicoReforcar", { n: aReforcar })
+                : t("idiomas.quadro.topicosReforcar", { n: aReforcar })}
             </span>
           ) : null}
           <span
@@ -142,12 +154,14 @@ function LinhaDaHabilidade({ habilidade }: { habilidade: SkillLevel }) {
               />
             </div>
             <div style={{ fontSize: 11, color: TEXT.faint }}>
-              {CONFIANCA[habilidade.confidence]} · {habilidade.answered}{" "}
-              {habilidade.answered === 1 ? "resposta" : "respostas"}
+              {t(CONFIANCA[habilidade.confidence])} ·{" "}
+              {habilidade.answered === 1
+                ? t("idiomas.quadro.respostaUm", { n: habilidade.answered })
+                : t("idiomas.quadro.respostaVarias", { n: habilidade.answered })}
             </div>
           </>
         ) : (
-          <div style={{ fontSize: 11, color: TEXT.faint, marginTop: 4 }}>{CONFIANCA.sem_dados}</div>
+          <div style={{ fontSize: 11, color: TEXT.faint, marginTop: 4 }}>{t(CONFIANCA.sem_dados)}</div>
         )}
       </button>
 
@@ -160,10 +174,10 @@ function LinhaDaHabilidade({ habilidade }: { habilidade: SkillLevel }) {
             >
               <span style={{ color: "rgba(233,233,237,.82)" }}>{topico.topic}</span>
               <span style={{ fontSize: 11, color: SITUACAO[topico.status].cor }}>
-                {SITUACAO[topico.status].rotulo}
+                {t(SITUACAO[topico.status].rotulo)}
               </span>
               <span style={{ marginLeft: "auto", color: TEXT.faint, whiteSpace: "nowrap" }}>
-                {topico.correct} de {topico.answered}
+                {t("idiomas.quadro.correctDe", { correct: topico.correct, total: topico.answered })}
               </span>
             </li>
           ))}

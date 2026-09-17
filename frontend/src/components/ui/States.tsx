@@ -7,6 +7,7 @@
  */
 
 import type { ReactNode } from "react";
+import { useT } from "@/lib/i18n";
 import { SIZE, TEXT } from "@/lib/tokens";
 import { Icon } from "./icons";
 import { MarcaCarregando } from "./MarcaCarregando";
@@ -26,8 +27,9 @@ const BOX: React.CSSProperties = {
  * distingue "está vindo" de "travou", e é essa dúvida que faz alguém
  * recarregar a página no meio de uma requisição que ia dar certo.
  */
-export function Loading({ label = "Carregando…" }: { label?: string }) {
-  return <MarcaCarregando label={label} />;
+export function Loading({ label }: { label?: string }) {
+  const t = useT();
+  return <MarcaCarregando label={label ?? t("comum.carregando")} />;
 }
 
 /**
@@ -38,6 +40,7 @@ export function Loading({ label = "Carregando…" }: { label?: string }) {
  * desproporcional.
  */
 export function ErrorState({ message, onRetry }: { message: string; onRetry?: () => void }) {
+  const t = useT();
   return (
     <div
       role="alert"
@@ -52,7 +55,7 @@ export function ErrorState({ message, onRetry }: { message: string; onRetry?: ()
       {onRetry ? (
         <button type="button" className="btn btn-secondary" onClick={onRetry}>
           <Icon name="refresh" size={15} />
-          Tentar de novo
+          {t("comum.tentarDeNovo")}
         </button>
       ) : null}
     </div>

@@ -8,6 +8,7 @@
  */
 
 import type { ParsedTechnology } from "@/api/types";
+import { useT } from "@/lib/i18n";
 import { ACC, C, TEXT } from "@/lib/tokens";
 
 /** A escala N0..N5, na ordem do índice. Espelha o prompt do backend. */
@@ -18,6 +19,18 @@ export const MASTERY_LABELS = [
   "autônomo",
   "referência",
   "especialista",
+] as const;
+
+/** As mesmas etiquetas como chaves de tradução, na ordem N0..N5. Quem mostra o
+ * rótulo na tela usa `t(MASTERY_KEYS[nivel])`; `MASTERY_LABELS` fica para quem
+ * ainda lê o texto cru. */
+export const MASTERY_KEYS = [
+  "perfil.niveis.querAprender",
+  "perfil.niveis.contatoInicial",
+  "perfil.niveis.comApoio",
+  "perfil.niveis.autonomo",
+  "perfil.niveis.referencia",
+  "perfil.niveis.especialista",
 ] as const;
 
 export function TechnologyRow({
@@ -31,6 +44,7 @@ export function TechnologyRow({
   onLevel: (level: number) => void;
   onToggle: () => void;
 }) {
+  const t = useT();
   return (
     <div
       style={{
@@ -78,7 +92,7 @@ export function TechnologyRow({
             </span>
           ) : (
             <span style={{ display: "block", fontSize: 11, color: TEXT.faint, marginTop: 2 }}>
-              sem frase de apoio no currículo
+              {t("curriculo.revisao.semFrase")}
             </span>
           )}
         </span>
@@ -86,17 +100,17 @@ export function TechnologyRow({
 
       <span
         role="group"
-        aria-label={`Nível de ${technology.nome}`}
+        aria-label={t("curriculo.revisao.nivelDe", { nome: technology.nome })}
         style={{ display: "flex", gap: 3 }}
       >
-        {MASTERY_LABELS.map((label, level) => {
+        {MASTERY_KEYS.map((chave, level) => {
           const picked = !dropped && technology.proficiencia === level;
           return (
             <button
-              key={label}
+              key={chave}
               type="button"
               aria-pressed={picked}
-              title={`N${level} · ${label}`}
+              title={`N${level} · ${t(chave)}`}
               onClick={() => onLevel(level)}
               style={{
                 width: 28,
@@ -125,7 +139,7 @@ export function TechnologyRow({
           textAlign: "right",
         }}
       >
-        {dropped ? "fora do plano" : MASTERY_LABELS[technology.proficiencia]}
+        {dropped ? t("curriculo.revisao.foraDoPlano") : t(MASTERY_KEYS[technology.proficiencia])}
       </span>
     </div>
   );

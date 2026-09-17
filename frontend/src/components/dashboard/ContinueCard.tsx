@@ -6,12 +6,14 @@
  */
 
 import { useAppState } from "@/hooks/useAppState";
+import { useT } from "@/lib/i18n";
 import { ACC4, TEXT } from "@/lib/tokens";
 import type { RoadmapSummary } from "@/api/types";
 import { Icon } from "@/components/ui/icons";
 import { Kicker, Meter, Panel } from "@/components/ui/primitives";
 
 export function ContinueCard({ roadmap }: { roadmap: RoadmapSummary }) {
+  const t = useT();
   const { dispatch } = useAppState();
   const node = roadmap.current_node;
 
@@ -21,15 +23,15 @@ export function ContinueCard({ roadmap }: { roadmap: RoadmapSummary }) {
   return (
     <Panel tone="section" style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 8.4 }}>
-        <Kicker tone="section">Continue</Kicker>
+        <Kicker tone="section">{t("home.continue.kicker")}</Kicker>
         <span style={{ marginLeft: "auto", fontSize: 11, color: "rgba(233,233,237,.6)" }}>
-          {roadmap.done_nodes} de {roadmap.total_nodes} módulos
+          {t("home.continue.modulos", { feitos: roadmap.done_nodes, total: roadmap.total_nodes })}
         </span>
       </div>
 
       <div>
         <div style={{ fontSize: 20, marginBottom: 5.6 }}>
-          {node ? node.title : "Plano concluído"}
+          {node ? node.title : t("home.continue.planoConcluido")}
         </div>
         <div style={{ fontSize: 13, color: "rgba(233,233,237,.75)", maxWidth: "48ch" }}>
           {/* A frase de "plano concluído" só quando NÃO há módulo. Ela era o
@@ -37,8 +39,8 @@ export function ContinueCard({ roadmap }: { roadmap: RoadmapSummary }) {
               maioria dos gerados — dizia "todos os módulos foram concluídos"
               logo acima de "0 de 19 módulos". */}
           {node
-            ? node.description ?? "Retome de onde parou: material, quiz e atividade deste módulo."
-            : "Todos os módulos deste plano foram concluídos. Gere um novo objetivo para continuar."}
+            ? node.description ?? t("home.continue.retomeDescricao")
+            : t("home.continue.todosConcluidos")}
         </div>
       </div>
 
@@ -62,21 +64,25 @@ export function ContinueCard({ roadmap }: { roadmap: RoadmapSummary }) {
             marginBottom: 5.6,
           }}
         >
-          <span>Progresso do plano</span>
+          <span>{t("home.continue.progressoDoPlano")}</span>
           <span>{roadmap.progress_pct}%</span>
         </div>
-        <Meter pct={roadmap.progress_pct} color={ACC4} label="Progresso do plano" />
+        <Meter pct={roadmap.progress_pct} color={ACC4} label={t("home.continue.progressoDoPlano")} />
       </div>
 
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8.4 }}>
         <button type="button" className="btn btn-primary" onClick={open}>
           <Icon name={node ? "play" : "road"} size={15} />
-          {node ? "Retomar" : "Ver roadmap"}
+          {node ? t("home.continue.retomar") : t("home.continue.verRoadmap")}
         </button>
         {node?.week_start ? (
           <span style={{ fontSize: 11.5, color: TEXT.muted }}>
-            Semana {node.week_start}
-            {node.week_end && node.week_end !== node.week_start ? `–${node.week_end}` : ""}
+            {t("home.continue.semana", {
+              intervalo:
+                node.week_end && node.week_end !== node.week_start
+                  ? `${node.week_start}–${node.week_end}`
+                  : String(node.week_start),
+            })}
           </span>
         ) : null}
       </div>

@@ -21,6 +21,7 @@ import { useState } from "react";
 import { tags as tagsApi } from "@/api/endpoints";
 import type { TagSuggestion, UserTag } from "@/api/types";
 import { useQuery } from "@/hooks/useApi";
+import { useT } from "@/lib/i18n";
 import { ACC, C, HAIRLINE, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { ErrorState } from "@/components/ui/States";
@@ -33,16 +34,17 @@ import { Kicker, Panel } from "@/components/ui/primitives";
  * pintá-la igual às outras esconderia justamente o que a pessoa precisa saber
  * antes de gastar um mês nela.
  */
-const DEMANDA: Record<string, { rotulo: string; cor: string }> = {
-  consolidada: { rotulo: "consolidada", cor: C.verde },
-  "em alta": { rotulo: "em alta", cor: ACC },
-  aposta: { rotulo: "aposta", cor: C.ambar },
+const DEMANDA: Record<string, { chave: string; cor: string }> = {
+  consolidada: { chave: "perfil.sugestoes.demanda.consolidada", cor: C.verde },
+  "em alta": { chave: "perfil.sugestoes.demanda.emAlta", cor: ACC },
+  aposta: { chave: "perfil.sugestoes.demanda.aposta", cor: C.ambar },
 };
 
 /** Nível com que uma sugestão entra: zero, porque é justamente o que falta. */
 const NIVEL_INICIAL = 0;
 
 export function SuggestedTags({ onAdicionada }: { onAdicionada: (nova: UserTag) => void }) {
+  const t = useT();
   const sugestoes = useQuery(() => tagsApi.suggestions(), []);
   const [ocupada, setOcupada] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -76,7 +78,7 @@ export function SuggestedTags({ onAdicionada }: { onAdicionada: (nova: UserTag) 
       setAdicionadas((atual) => [...atual, sugestao.name]);
       onAdicionada(criada);
     } catch (caught) {
-      setErro(caught instanceof Error ? caught.message : "Não consegui adicionar.");
+      setErro(caught instanceof Error ? caught.message : t("perfil.sugestoes.erroAdicionar"));
     } finally {
       setOcupada(null);
     }
@@ -85,19 +87,18 @@ export function SuggestedTags({ onAdicionada }: { onAdicionada: (nova: UserTag) 
   return (
     <Panel pad={16.8}>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 11.2 }}>
-        <Kicker>Sugeridas para o seu objetivo</Kicker>
+        <Kicker>{t("perfil.sugestoes.titulo")}</Kicker>
         <button
           type="button"
           className="btn btn-ghost"
           style={{ marginLeft: "auto", fontSize: 11.5, color: TEXT.faint, paddingInline: 0 }}
           onClick={sugestoes.reload}
         >
-          rever
+          {t("perfil.sugestoes.rever")}
         </button>
       </div>
       <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "5.6px 0 14px", maxWidth: "72ch" }}>
-        A partir de “{dados.objetivo}”. Adicionar põe a tecnologia no seu plano em N0, e o roadmap
-        passa a cobri-la.
+        {t("perfil.sugestoes.aPartirDe", { objetivo: dados.objetivo })}
       </p>
 
       {erro ? <ErrorState message={erro} /> : null}
@@ -121,7 +122,7 @@ export function SuggestedTags({ onAdicionada }: { onAdicionada: (nova: UserTag) 
               <div style={{ flex: 1, minWidth: 200 }}>
                 <div style={{ display: "flex", alignItems: "baseline", gap: 8.4, flexWrap: "wrap" }}>
                   <span style={{ fontSize: 14, color: TEXT.strong }}>{sugestao.name}</span>
-                  <span style={{ fontSize: 11, color: demanda.cor }}>{demanda.rotulo}</span>
+                  <span style={{ fontSize: 11, color: demanda.cor }}>{t(demanda.chave)}</span>
                   <span style={{ fontSize: 11, color: TEXT.faint }}>{sugestao.category}</span>
                 </div>
                 {sugestao.reason ? (
@@ -138,7 +139,7 @@ export function SuggestedTags({ onAdicionada }: { onAdicionada: (nova: UserTag) 
                 onClick={() => void adicionar(sugestao)}
               >
                 <Icon name="plus" size={15} />
-                {ocupada === sugestao.name ? "Adicionando…" : "Adicionar ao plano"}
+                {ocupada === sugestao.name ? t("perfil.sugestoes.adicionando") : t("perfil.sugestoes.adicionar")}
               </button>
             </div>
           );

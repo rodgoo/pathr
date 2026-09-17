@@ -18,12 +18,13 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { PracticeAnswer, PracticeAnswerResult, PracticeItem } from "@/api/types";
+import { useT, type Traduzir } from "@/lib/i18n";
 import { ACC, ACC3, C, HAIRLINE, PANEL, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { IconButton } from "@/components/ui/IconButton";
 import { ChoiceList } from "@/components/ui/ChoiceList";
 import { ListeningPlayer, useVozes } from "@/components/english/ListeningPlayer";
-import { locucao, SEM_VOZ_DO_IDIOMA } from "@/lib/fala";
+import { locucao } from "@/lib/fala";
 import { audiosDasFalas } from "@/lib/vozNeural";
 
 /** Código de voz do navegador para cada idioma do catálogo. */
@@ -39,16 +40,22 @@ const VOZ: Record<string, string> = {
   pt: "pt-BR",
 };
 
+/** tipo de exercício -> chave i18n do rótulo do formato. */
 export const NOME_DO_FORMATO: Record<PracticeItem["type"], string> = {
-  mcq: "Escolha",
-  gap: "Complete",
-  reorder: "Monte a frase",
-  match: "Associe",
-  listening: "Escuta",
-  dictation: "Ditado",
-  image: "Imagem",
-  speaking: "Fala",
+  mcq: "idiomas.formato.mcq",
+  gap: "idiomas.formato.gap",
+  reorder: "idiomas.formato.reorder",
+  match: "idiomas.formato.match",
+  listening: "idiomas.formato.listening",
+  dictation: "idiomas.formato.dictation",
+  image: "idiomas.formato.image",
+  speaking: "idiomas.formato.speaking",
 };
+
+/** O rótulo traduzido do formato do exercício. */
+export function nomeDoFormato(tipo: PracticeItem["type"], t: Traduzir): string {
+  return t(NOME_DO_FORMATO[tipo]);
+}
 
 export interface ExercicioProps {
   item: PracticeItem;
@@ -85,6 +92,7 @@ export function Exercicio(props: ExercicioProps) {
 // ---------------------------------------------------------------------------
 
 function Escolha({ item, idioma, travado, resultado, onResponder }: ExercicioProps) {
+  const t = useT();
   const { payload } = item;
   const [escolha, setEscolha] = useState<number | null>(null);
   const alternativas = payload.alternativas ?? [];
@@ -99,7 +107,7 @@ function Escolha({ item, idioma, travado, resultado, onResponder }: ExercicioPro
         // A imagem grande, sozinha: é ela que carrega a pergunta.
         <div
           role="img"
-          aria-label="Imagem do exercício"
+          aria-label={t("idiomas.exercicio.imagemAria")}
           style={{ fontSize: 88, lineHeight: 1, textAlign: "center", margin: "8px 0 18px" }}
         >
           {payload.emoji}
@@ -108,7 +116,7 @@ function Escolha({ item, idioma, travado, resultado, onResponder }: ExercicioPro
 
       {item.type === "listening" && payload.audio ? (
         <ListeningPlayer
-          contexto={payload.dialogo ? payload.audio : `Voz: ${payload.audio}`}
+          contexto={payload.dialogo ? payload.audio : `${t("idiomas.exercicio.voz")}: ${payload.audio}`}
           idioma={idioma}
         />
       ) : null}
@@ -116,7 +124,7 @@ function Escolha({ item, idioma, travado, resultado, onResponder }: ExercicioPro
       {item.type === "gap" && payload.frase ? <FraseComLacuna frase={payload.frase} /> : null}
 
       <ChoiceList
-        label="Alternativas"
+        label={t("idiomas.exercicio.alternativas")}
         options={alternativas}
         pick={escolha}
         answer={certa >= 0 ? certa : undefined}
@@ -133,12 +141,13 @@ function Escolha({ item, idioma, travado, resultado, onResponder }: ExercicioPro
 }
 
 function FraseComLacuna({ frase }: { frase: string }) {
+  const t = useT();
   const [antes, depois] = frase.split("___");
   return (
     <p style={{ fontSize: 18, lineHeight: 1.5, margin: "0 0 16px", color: TEXT.full }}>
       {antes}
       <span
-        aria-label="lacuna"
+        aria-label={t("idiomas.exercicio.lacunaAria")}
         style={{
           display: "inline-block",
           minWidth: 64,
@@ -158,6 +167,7 @@ function FraseComLacuna({ frase }: { frase: string }) {
 // ---------------------------------------------------------------------------
 
 function MontarFrase({ item, travado, resultado, onResponder }: ExercicioProps) {
+  const t = useT();
   const pecas = item.payload.pecas ?? [];
   // Índices das peças usadas, na ordem em que foram tocadas. Índice e não
   // texto: a mesma palavra pode aparecer duas vezes ("the … the").
@@ -173,7 +183,7 @@ function MontarFrase({ item, travado, resultado, onResponder }: ExercicioProps) 
       ) : null}
 
       <div
-        aria-label="Frase montada"
+        aria-label={t("idiomas.exercicio.fraseMontada")}
         style={{
           minHeight: 52,
           display: "flex",
@@ -231,7 +241,7 @@ function MontarFrase({ item, travado, resultado, onResponder }: ExercicioProps) 
           onClick={() => onResponder({ tokens: usadas.map((i) => pecas[i]) })}
         >
           <Icon name="check" size={15} />
-          Conferir
+          {t("idiomas.exercicio.conferir")}
         </button>
       ) : null}
 
@@ -289,6 +299,7 @@ const estiloDoPar = {
 };
 
 function AssociarPares({ item, travado, resultado, onResponder }: ExercicioProps) {
+  const t = useT();
   const esquerda = item.payload.esquerda ?? [];
   const direita = item.payload.direita ?? [];
   const [pares, setPares] = useState<Record<string, number>>({});
@@ -363,13 +374,13 @@ function AssociarPares({ item, travado, resultado, onResponder }: ExercicioProps
             onClick={() => onResponder({ pares })}
           >
             <Icon name="check" size={15} />
-            Conferir
+            {t("idiomas.exercicio.conferir")}
           </button>
           {Object.keys(pares).length > 0 ? (
-            <IconButton icon="undo" label="Recomeçar" onClick={() => setPares({})} />
+            <IconButton icon="undo" label={t("idiomas.exercicio.recomecar")} onClick={() => setPares({})} />
           ) : (
             <span style={{ fontSize: 12, color: TEXT.faint }}>
-              Toque num termo à esquerda e depois na tradução.
+              {t("idiomas.exercicio.toqueTermo")}
             </span>
           )}
         </div>
@@ -400,6 +411,7 @@ function AssociarPares({ item, travado, resultado, onResponder }: ExercicioProps
  * resposta. "Mais devagar" é o recurso clássico de todo exercício de ditado.
  */
 function OuvirFrase({ texto, idioma }: { texto: string; idioma: string }) {
+  const t = useT();
   const temSintese = typeof window !== "undefined" && !!window.speechSynthesis;
   const [tocando, setTocando] = useState(false);
   const [preparando, setPreparando] = useState(false);
@@ -462,16 +474,16 @@ function OuvirFrase({ texto, idioma }: { texto: string; idioma: string }) {
     <div style={{ display: "flex", gap: 8, margin: "4px 0 14px", flexWrap: "wrap" }}>
       <button type="button" className="btn btn-secondary" onClick={() => void tocar(0.92)}>
         <Icon name="playSolid" size={14} />
-        {preparando ? "Preparando…" : tocando ? "Tocando…" : "Ouvir"}
+        {preparando ? t("idiomas.exercicio.preparando") : tocando ? t("idiomas.exercicio.tocando") : t("idiomas.exercicio.ouvir")}
       </button>
       <button type="button" className="btn btn-ghost" onClick={() => void tocar(0.6)}>
-        Mais devagar
+        {t("idiomas.exercicio.maisDevagar")}
       </button>
       {naVozDoNavegador && (semVozDoIdioma || !temSintese) ? (
         <p role="note" style={{ flexBasis: "100%", margin: 0, fontSize: 11.5, color: C.ambar }}>
           {temSintese
-            ? SEM_VOZ_DO_IDIOMA
-            : "Este navegador não tem voz para o ditado. Tente no Chrome, Edge ou Safari."}
+            ? t("idiomas.semVozDoIdioma")
+            : t("idiomas.exercicio.semVozDitado")}
         </p>
       ) : null}
     </div>
@@ -479,6 +491,7 @@ function OuvirFrase({ texto, idioma }: { texto: string; idioma: string }) {
 }
 
 function Ditado({ item, idioma, travado, resultado, onResponder }: ExercicioProps) {
+  const t = useT();
   const [texto, setTexto] = useState("");
   return (
     <div>
@@ -488,8 +501,8 @@ function Ditado({ item, idioma, travado, resultado, onResponder }: ExercicioProp
         rows={3}
         value={texto}
         disabled={travado}
-        aria-label="O que você ouviu"
-        placeholder="Escreva exatamente o que ouviu"
+        aria-label={t("idiomas.exercicio.oQueOuviu")}
+        placeholder={t("idiomas.exercicio.escrevaOuviu")}
         lang={idioma}
         spellCheck={false}
         autoCapitalize="off"
@@ -504,7 +517,7 @@ function Ditado({ item, idioma, travado, resultado, onResponder }: ExercicioProp
           disabled={texto.trim().length === 0}
           onClick={() => onResponder({ texto })}
         >
-          Conferir
+          {t("idiomas.exercicio.conferir")}
         </button>
       ) : null}
       {resultado ? <DetalheDeTexto resultado={resultado} /> : null}
@@ -546,6 +559,7 @@ function criarReconhecimento(): Reconhecimento | null {
  * derrubaria o nível de fala de quem só estava num lugar onde não podia falar.
  */
 function Fala({ item, idioma, travado, resultado, onResponder }: ExercicioProps) {
+  const t = useT();
   const reconhecimento = useMemo(criarReconhecimento, []);
   const [ouvindo, setOuvindo] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -586,8 +600,8 @@ function Fala({ item, idioma, travado, resultado, onResponder }: ExercicioProps)
     reconhecimento.onerror = (evento) => {
       setErro(
         evento.error === "not-allowed"
-          ? "O navegador não deu acesso ao microfone."
-          : "Não consegui ouvir. Tente de novo, mais perto do microfone.",
+          ? t("idiomas.exercicio.semMicrofone")
+          : t("idiomas.exercicio.naoOuvi"),
       );
     };
     reconhecimento.onend = () => setOuvindo(false);
@@ -610,20 +624,20 @@ function Fala({ item, idioma, travado, resultado, onResponder }: ExercicioProps)
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap", alignItems: "center" }}>
           <button type="button" className="btn btn-ghost" onClick={ouvirModelo}>
             <Icon name="playSolid" size={14} />
-            Ouvir como se diz
+            {t("idiomas.exercicio.ouvirComoSeDiz")}
           </button>
           {reconhecimento ? (
             <button type="button" className="btn btn-primary" disabled={ouvindo} onClick={gravar}>
               <Icon name="mic" size={15} />
-              {ouvindo ? "Ouvindo… fale agora" : "Falar"}
+              {ouvindo ? t("idiomas.exercicio.ouvindoFale") : t("idiomas.exercicio.falar")}
             </button>
           ) : (
             <span style={{ fontSize: 12.5, color: TEXT.muted }}>
-              Este navegador não reconhece fala.
+              {t("idiomas.exercicio.semReconhecimento")}
             </span>
           )}
           <button type="button" className="btn btn-ghost" onClick={() => onResponder({ texto: "" })}>
-            Não posso falar agora
+            {t("idiomas.exercicio.naoPossoFalar")}
           </button>
         </div>
       ) : null}
@@ -638,9 +652,10 @@ function Fala({ item, idioma, travado, resultado, onResponder }: ExercicioProps)
 // ---------------------------------------------------------------------------
 
 function RespostaCerta({ texto }: { texto: string }) {
+  const t = useT();
   return (
     <p style={{ fontSize: 14, margin: "10px 0 0", color: TEXT.muted }}>
-      Resposta certa: <span style={{ color: C.verde }}>{texto}</span>
+      {t("idiomas.exercicio.respostaCerta")} <span style={{ color: C.verde }}>{texto}</span>
     </p>
   );
 }
@@ -652,18 +667,19 @@ function DetalheDeTexto({
   resultado: PracticeAnswerResult;
   fala?: boolean;
 }) {
+  const t = useT();
   const detalhe = resultado.detail ?? {};
   const certa = typeof resultado.correct_answer === "string" ? resultado.correct_answer : "";
   return (
     <div style={{ marginTop: 10, fontSize: 13.5, lineHeight: 1.55 }}>
       {!resultado.is_correct || detalhe.acentos ? (
         <div style={{ color: TEXT.muted }}>
-          {fala ? "A frase era" : "O texto era"}: <span style={{ color: C.verde }}>{certa}</span>
+          {fala ? t("idiomas.exercicio.aFraseEra") : t("idiomas.exercicio.oTextoEra")}: <span style={{ color: C.verde }}>{certa}</span>
         </div>
       ) : null}
       {detalhe.faltaram && detalhe.faltaram.length > 0 ? (
         <div style={{ color: TEXT.faint, marginTop: 4 }}>
-          {fala ? "Não reconheci" : "Faltou ou saiu diferente"}:{" "}
+          {fala ? t("idiomas.exercicio.naoReconheci") : t("idiomas.exercicio.faltouDiferente")}:{" "}
           {detalhe.faltaram.map((palavra, i) => (
             <span key={`${palavra}-${i}`} style={{ color: C.ambar }}>
               {i > 0 ? ", " : ""}
@@ -673,7 +689,7 @@ function DetalheDeTexto({
         </div>
       ) : null}
       {detalhe.acentos ? (
-        <div style={{ color: ACC3, marginTop: 4 }}>Contou como certo, mas atenção aos acentos.</div>
+        <div style={{ color: ACC3, marginTop: 4 }}>{t("idiomas.exercicio.atencaoAcentos")}</div>
       ) : null}
     </div>
   );

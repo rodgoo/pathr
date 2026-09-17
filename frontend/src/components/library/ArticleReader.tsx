@@ -21,6 +21,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import type { ReaderContent } from "@/api/types";
+import { useT } from "@/lib/i18n";
 import { ACC, ACC3, HAIRLINE, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { linkExterno } from "@/lib/linkExterno";
@@ -48,6 +49,7 @@ export function ArticleReader({
   /** Onde a leitura parou da última vez (0 a 1), vindo do servidor. */
   comecarEm?: number;
 }) {
+  const t = useT();
   const caixa = useRef<HTMLDivElement | null>(null);
   // Começa do que já foi lido, e não de zero: sem isto a barra reabria em 0%
   // com o progresso salvo.
@@ -201,8 +203,8 @@ export function ArticleReader({
           color: TEXT.faint,
         }}
       >
-        {minutos ? <span>{minutos} min de leitura</span> : null}
-        <span>{Math.round(lido * 100)}% lido</span>
+        {minutos ? <span>{t("modulo.artigo.minLeitura", { min: minutos })}</span> : null}
+        <span>{t("modulo.artigo.pctLido", { pct: Math.round(lido * 100) })}</span>
         {/* A fonte, sempre. O modo leitura não substitui o original: quem
             escreveu merece o crédito e a visita. */}
         <a
@@ -211,13 +213,13 @@ export function ArticleReader({
           rel="noreferrer noopener"
           style={{ marginLeft: "auto", color: ACC3 }}
         >
-          ler no site original{conteudo.provider ? ` · ${conteudo.provider}` : ""}
+          {t("modulo.artigo.lerNoSite")}{conteudo.provider ? ` · ${conteudo.provider}` : ""}
         </a>
       </div>
 
       {retomado ? (
         <div role="status" style={{ fontSize: 12, color: TEXT.muted, marginBottom: 8.4 }}>
-          Retomado de onde você parou ({Math.round(inicio.current * 100)}%).{" "}
+          {t("modulo.artigo.retomadoDe", { pct: Math.round(inicio.current * 100) })}{" "}
           <button
             type="button"
             onClick={() => {
@@ -244,7 +246,7 @@ export function ArticleReader({
               cursor: "pointer",
             }}
           >
-            Voltar ao início
+            {t("modulo.artigo.voltarAoInicio")}
           </button>
         </div>
       ) : null}
@@ -309,6 +311,7 @@ export function ArticleReader({
  * ter texto extraível.
  */
 function LeituraIndisponivel({ conteudo }: { conteudo: ReaderContent }) {
+  const t = useT();
   return (
     <div
       style={{
@@ -319,10 +322,10 @@ function LeituraIndisponivel({ conteudo }: { conteudo: ReaderContent }) {
       }}
     >
       <p style={{ fontSize: 13.5, color: "rgba(233,233,237,.75)", margin: "0 0 5.6px" }}>
-        {conteudo.error ?? "Ainda não busquei o texto deste material."}
+        {conteudo.error ?? t("modulo.artigo.textoNaoBuscado")}
       </p>
       <p style={{ fontSize: 12, color: TEXT.faint, margin: "0 0 16.8px" }}>
-        Dá para ler no site de origem — e o progresso continua sendo marcado aqui.
+        {t("modulo.artigo.podeLerNaFonte")}
       </p>
       <a
         className="btn btn-secondary"
@@ -332,7 +335,7 @@ function LeituraIndisponivel({ conteudo }: { conteudo: ReaderContent }) {
         style={{ textDecoration: "none" }}
       >
         <Icon name="externalLink" size={15} />
-        Abrir no site original
+        {t("modulo.artigo.abrirNoSite")}
       </a>
     </div>
   );

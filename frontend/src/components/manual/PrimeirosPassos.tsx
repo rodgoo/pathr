@@ -8,6 +8,7 @@
 
 import { useState } from "react";
 import { useAppState } from "@/hooks/useAppState";
+import { useT } from "@/lib/i18n";
 import { usePrimeirosPassos, type Passo } from "@/lib/primeirosPassos";
 import { ACC, ACC4, C, TEXT, tint } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
@@ -24,6 +25,7 @@ function lerDispensado(): boolean {
 }
 
 export function PrimeirosPassos({ compacto = false }: { compacto?: boolean }) {
+  const t = useT();
   const { dispatch } = useAppState();
   const { passos, feitos, obrigatorios, carregando } = usePrimeirosPassos();
   const [dispensado, setDispensado] = useState(lerDispensado);
@@ -39,12 +41,14 @@ export function PrimeirosPassos({ compacto = false }: { compacto?: boolean }) {
 
   return (
     <Panel pad={16.8} style={compacto ? { boxShadow: `inset 0 0 0 1px ${tint(ACC, 38)}` } : undefined}>
-      <section aria-label="Primeiros passos">
+      <section aria-label={t("manual.passos.titulo")}>
         <div style={{ display: "flex", alignItems: "center", gap: 8.4, flexWrap: "wrap", marginBottom: 8.4 }}>
           <Icon name="road" size={16} style={{ color: ACC4 }} />
-          <Kicker>Primeiros passos</Kicker>
+          <Kicker>{t("manual.passos.titulo")}</Kicker>
           <span style={{ fontSize: 11.5, color: TEXT.faint }}>
-            {carregando ? "conferindo…" : `${feitos} de ${obrigatorios} essenciais feitos`}
+            {carregando
+              ? t("manual.passos.conferindo")
+              : t("manual.passos.progresso", { feitos, total: obrigatorios })}
           </span>
           {compacto ? (
             <span style={{ marginLeft: "auto", display: "inline-flex", gap: 4 }}>
@@ -55,7 +59,7 @@ export function PrimeirosPassos({ compacto = false }: { compacto?: boolean }) {
                 onClick={() => dispatch({ type: "navigate", screen: "manual" })}
               >
                 <Icon name="book" size={14} />
-                Manual de bordo
+                {t("manual.passos.manualDeBordo")}
               </button>
               <button
                 type="button"
@@ -70,7 +74,7 @@ export function PrimeirosPassos({ compacto = false }: { compacto?: boolean }) {
                   }
                 }}
               >
-                Pular
+                {t("manual.passos.pular")}
                 <Icon name="x" size={14} />
               </button>
             </span>
@@ -79,7 +83,7 @@ export function PrimeirosPassos({ compacto = false }: { compacto?: boolean }) {
 
         {proximo && !carregando ? (
           <p style={{ margin: "0 0 11.2px", fontSize: 12.5, color: TEXT.muted }}>
-            Próximo passo: <strong style={{ color: TEXT.strong }}>{proximo.titulo}</strong>.
+            {t("manual.passos.proximoPasso")} <strong style={{ color: TEXT.strong }}>{proximo.titulo}</strong>.
           </p>
         ) : null}
 
@@ -119,8 +123,8 @@ export function PrimeirosPassos({ compacto = false }: { compacto?: boolean }) {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 13.5, color: TEXT.full, display: "flex", gap: 6, flexWrap: "wrap", alignItems: "baseline" }}>
                     {passo.titulo}
-                    {passo.opcional ? <span style={{ fontSize: 11, color: TEXT.faint }}>opcional</span> : null}
-                    {passo.feito ? <span style={{ fontSize: 11, color: C.verde }}>feito</span> : null}
+                    {passo.opcional ? <span style={{ fontSize: 11, color: TEXT.faint }}>{t("manual.passos.opcional")}</span> : null}
+                    {passo.feito ? <span style={{ fontSize: 11, color: C.verde }}>{t("manual.passos.feito")}</span> : null}
                   </div>
                   <div style={{ fontSize: 11.5, color: TEXT.faint }}>{passo.onde}</div>
                   {!compacto || eProximo ? (
@@ -129,7 +133,7 @@ export function PrimeirosPassos({ compacto = false }: { compacto?: boolean }) {
                       <div style={{ fontSize: 12, color: TEXT.muted, marginTop: 2, display: "flex", gap: 5 }}>
                         <Icon name="arrowRight" size={13} style={{ color: ACC4, flex: "none", marginTop: 2 }} />
                         <span>
-                          <span style={{ color: TEXT.faint }}>Em seguida: </span>
+                          <span style={{ color: TEXT.faint }}>{t("manual.passos.emSeguida")} </span>
                           {passo.depois}
                         </span>
                       </div>
@@ -142,9 +146,9 @@ export function PrimeirosPassos({ compacto = false }: { compacto?: boolean }) {
                     className={eProximo ? "btn btn-primary" : "btn btn-ghost"}
                     style={{ fontSize: 12, flex: "none" }}
                     onClick={() => ir(passo)}
-                    aria-label={`Ir para: ${passo.titulo}`}
+                    aria-label={t("manual.passos.irPara", { titulo: passo.titulo })}
                   >
-                    Ir
+                    {t("manual.passos.ir")}
                     <Icon name="arrowRight" size={14} />
                   </button>
                 ) : null}

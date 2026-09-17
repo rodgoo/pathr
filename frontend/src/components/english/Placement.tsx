@@ -14,6 +14,7 @@ import { useState } from "react";
 import { english as englishApi } from "@/api/endpoints";
 import type { EnglishAnswerResult, EnglishAssessment } from "@/api/types";
 import { useMutation } from "@/hooks/useApi";
+import { useT } from "@/lib/i18n";
 import { ACC, ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { ListeningPlayer } from "@/components/english/ListeningPlayer";
@@ -29,6 +30,7 @@ export function Placement({
   assessment: EnglishAssessment;
   onFinished: () => void;
 }) {
+  const t = useT();
   const [current, setCurrent] = useState(assessment);
   const [pick, setPick] = useState<number | null>(null);
   const [feedback, setFeedback] = useState<EnglishAnswerResult | null>(null);
@@ -49,7 +51,7 @@ export function Placement({
     // o que traz os itens novos.
     return (
       <Panel pad={22.4}>
-        <Loading label="Preparando as próximas perguntas…" />
+        <Loading label={t("idiomas.placement.preparandoProximas")} />
         <button
           type="button"
           className="btn btn-secondary btn-block"
@@ -62,7 +64,7 @@ export function Placement({
             }
           }}
         >
-          Continuar
+          {t("idiomas.placement.continuar")}
         </button>
       </Panel>
     );
@@ -89,10 +91,12 @@ export function Placement({
 
   return (
     <div style={SCREEN_IN}>
-      <h1 style={{ fontSize: 24, margin: "0 0 5.6px" }}>Teste de nivelamento</h1>
+      <h1 style={{ fontSize: 24, margin: "0 0 5.6px" }}>{t("idiomas.placement.titulo")}</h1>
       <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 16.8px" }}>
-        Pergunta {answered + (feedback ? 0 : 1)} de {current.item_count} · a dificuldade se ajusta
-        às suas respostas
+        {t("idiomas.placement.perguntaDe", {
+          n: answered + (feedback ? 0 : 1),
+          total: current.item_count,
+        })}
       </p>
 
       <Panel pad={22.4}>
@@ -136,7 +140,7 @@ export function Placement({
         </h2>
 
         <ChoiceList
-          label="Respostas possíveis"
+          label={t("idiomas.placement.respostasPossiveis")}
           options={item.options}
           pick={pick}
           answer={feedback ? feedback.correct_index : undefined}
@@ -147,7 +151,7 @@ export function Placement({
 
         {answer.pending ? (
           <p style={{ fontSize: 12, color: TEXT.faint, margin: "11.2px 0 0" }} role="status">
-            Corrigindo…
+            {t("idiomas.placement.corrigindo")}
           </p>
         ) : null}
 
@@ -185,7 +189,7 @@ export function Placement({
               disabled={reload.pending}
             >
               <Icon name="arrowRight" size={15} />
-              {reload.pending ? "Carregando…" : "Próxima"}
+              {reload.pending ? t("idiomas.placement.carregando") : t("idiomas.placement.proxima")}
             </button>
           </div>
         ) : null}
@@ -195,6 +199,7 @@ export function Placement({
 }
 
 function Result({ result, onDone }: { result: EnglishAnswerResult; onDone: () => void }) {
+  const t = useT();
   return (
     <div style={SCREEN_IN}>
       <Panel pad={22.4}>
@@ -209,11 +214,11 @@ function Result({ result, onDone }: { result: EnglishAnswerResult; onDone: () =>
             maxWidth: "50ch",
           }}
         >
-          Este é o seu nível medido. Ele passa a valer para o plano diário e para o prazo da meta.
+          {t("idiomas.placement.nivelMedido")}
         </p>
         <button type="button" className="btn btn-primary" onClick={onDone}>
           <Icon name="arrowRight" size={15} />
-          Ver meu nível
+          {t("idiomas.placement.verMeuNivel")}
         </button>
       </Panel>
     </div>

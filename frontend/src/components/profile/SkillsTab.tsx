@@ -21,10 +21,11 @@ import { tags as tagsApi } from "@/api/endpoints";
 import type { Tag, UserTag } from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
 import { useQuery } from "@/hooks/useApi";
+import { useT, type Traduzir } from "@/lib/i18n";
 import { ACC, ACC4, C, TEXT } from "@/lib/tokens";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel } from "@/components/ui/primitives";
-import { MASTERY_LABELS } from "./TechnologyRow";
+import { MASTERY_KEYS } from "./TechnologyRow";
 import { SuggestedTags } from "./SuggestedTags";
 import { TutorialDeNiveis } from "./TutorialDeNiveis";
 
@@ -68,7 +69,17 @@ export const CATEGORIAS_FORA_DAS_SKILLS = new Set(["idioma", "dominio"]);
  * roadmap, que cobre o caminho até N3 — acima disso, ensinar seria repetir. */
 const DOMINADO = 3;
 
+/** O nome traduzido de uma categoria. As conhecidas têm chave sob
+ * `perfil.skills.categorias`; uma categoria extra (só o slug da API) fica com o
+ * próprio slug. `CATEGORIAS.label` segue em PT porque CoursesPage também o lê. */
+export function rotuloCategoria(t: Traduzir, slug: string, labelCru: string): string {
+  const chave = `perfil.skills.categorias.${slug}`;
+  const traduzido = t(chave);
+  return traduzido === chave ? labelCru : traduzido;
+}
+
 export function SkillsTab() {
+  const t = useT();
   const { state, dispatch } = useAppState();
   const termo = state.skillSearch.trim().toLowerCase();
 
@@ -114,7 +125,7 @@ export function SkillsTab() {
       });
       minhas.set((atual) => [...(atual ?? []), criada]);
     } catch (caught) {
-      setErro(caught instanceof Error ? caught.message : "Não consegui adicionar.");
+      setErro(caught instanceof Error ? caught.message : t("perfil.skills.erroAdicionar"));
     } finally {
       setOcupada(null);
     }
@@ -127,7 +138,7 @@ export function SkillsTab() {
       await tagsApi.remove(minha.id);
     } catch (caught) {
       minhas.set((atual) => [...atual, minha]);
-      setErro(caught instanceof Error ? caught.message : "Não consegui remover.");
+      setErro(caught instanceof Error ? caught.message : t("perfil.skills.erroRemover"));
     }
   }
 
@@ -145,7 +156,7 @@ export function SkillsTab() {
       minhas.set((atual) =>
         atual.map((item) => (item.id === minha.id ? { ...item, proficiency: anterior } : item)),
       );
-      setErro(caught instanceof Error ? caught.message : "Não consegui salvar o nível.");
+      setErro(caught instanceof Error ? caught.message : t("perfil.skills.erroNivel"));
     }
   }
 
@@ -156,22 +167,21 @@ export function SkillsTab() {
       <TutorialDeNiveis />
       <Panel pad={16.8}>
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 11.2 }}>
-          <Kicker>Skills do plano</Kicker>
+          <Kicker>{t("perfil.skills.tituloPlano")}</Kicker>
           <span style={{ marginLeft: "auto", fontSize: 11.5, color: TEXT.faint }}>
-            {total} no perfil
+            {t("perfil.skills.noPerfil", { n: total })}
           </span>
         </div>
         <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "5.6px 0 11.2px", maxWidth: "72ch" }}>
-          Marque o que faz parte do seu plano e diga o nível que você já tem. O roadmap cobre o
-          caminho de onde você está até N3 — o que estiver em N3 ou acima ele não ensina de novo.
+          {t("perfil.skills.explicacao")}
         </p>
         <div className="field" style={{ margin: 0 }}>
-          <label htmlFor="skill-search">Filtrar por nome</label>
+          <label htmlFor="skill-search">{t("perfil.skills.filtrar")}</label>
           <input
             id="skill-search"
             className="input"
             type="search"
-            placeholder="ex: Kafka, Terraform"
+            placeholder={t("perfil.skills.filtrarPlaceholder")}
             value={state.skillSearch}
             onChange={(event) => dispatch({ type: "setSkillSearch", value: event.target.value })}
           />
@@ -198,9 +208,9 @@ export function SkillsTab() {
                 marginBottom: 11.2,
               }}
             >
-              <Kicker>{grupo.label}</Kicker>
+              <Kicker>{rotuloCategoria(t, grupo.slug, grupo.label)}</Kicker>
               <span style={{ marginLeft: "auto", fontSize: 11.5, color: TEXT.faint }}>
-                {noPlano} de {grupo.itens.length} no plano
+                {t("perfil.skills.noPlano", { n: noPlano, total: grupo.itens.length })}
               </span>
             </div>
 
@@ -224,8 +234,7 @@ export function SkillsTab() {
       {grupos.length === 0 ? (
         <Panel pad={16.8}>
           <p style={{ fontSize: 13, color: TEXT.muted, margin: 0 }}>
-            Nenhuma tecnologia com “{state.skillSearch}”. Tente outro termo, ou adicione pelo
-            currículo — o que ele citar e faltar aqui entra no catálogo.
+            {t("perfil.skills.semResultado", { termo: state.skillSearch })}
           </p>
         </Panel>
       ) : null}
@@ -256,6 +265,7 @@ function LinhaDeSkill({
   onSair: (minha: UserTag) => void;
   onNivel: (minha: UserTag, nivel: number) => void;
 }) {
+  const t = useT();
   const dentro = Boolean(minha);
   const nivel = minha?.proficiency ?? 0;
   const dominado = dentro && nivel >= DOMINADO;
@@ -296,10 +306,10 @@ function LinhaDeSkill({
 
       <div
         role="radiogroup"
-        aria-label={`Nível em ${tag.name}`}
+        aria-label={t("perfil.skills.nivelEm", { nome: tag.name })}
         style={{ display: "flex", gap: 2.8, flex: "none" }}
       >
-        {MASTERY_LABELS.map((rotulo, valor) => {
+        {MASTERY_KEYS.map((chave, valor) => {
           const ativo = dentro && nivel === valor;
           return (
             <button
@@ -307,7 +317,7 @@ function LinhaDeSkill({
               type="button"
               role="radio"
               aria-checked={ativo}
-              title={`N${valor} — ${rotulo}`}
+              title={`N${valor} — ${t(chave)}`}
               disabled={ocupada}
               onClick={() => (minha ? onNivel(minha, valor) : onEntrar(valor))}
               style={{
@@ -337,7 +347,11 @@ function LinhaDeSkill({
           color: !dentro ? TEXT.faint : dominado ? C.verde : ACC4,
         }}
       >
-        {!dentro ? "fora do plano" : dominado ? "já dominado" : "a evoluir"}
+        {!dentro
+          ? t("perfil.skills.foraDoPlano")
+          : dominado
+            ? t("perfil.skills.jaDominado")
+            : t("perfil.skills.aEvoluir")}
       </span>
     </div>
   );

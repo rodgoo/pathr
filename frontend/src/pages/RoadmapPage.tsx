@@ -8,6 +8,7 @@
 import { RouteAdjustments } from "@/components/roadmap/RouteAdjustments";
 import { useState } from "react";
 import { roadmap as roadmapApi, tags as tagsApi } from "@/api/endpoints";
+import { useT } from "@/lib/i18n";
 import { useAppState } from "@/hooks/useAppState";
 import { useQuery } from "@/hooks/useApi";
 import { SIZE, TEXT } from "@/lib/tokens";
@@ -21,25 +22,26 @@ import { PhaseColumns } from "@/components/roadmap/PhaseColumns";
 import { Timeline } from "@/components/roadmap/Timeline";
 import { GenerateRoadmap } from "@/components/roadmap/GenerateRoadmap";
 
-const VIEWS: readonly { value: RoadmapView; label: string }[] = [
-  { value: "a", label: "Linha do tempo" },
-  { value: "b", label: "Fases" },
-  { value: "c", label: "Matriz" },
-];
-
-const NOTES: Record<RoadmapView, string> = {
-  a: "Timeline vertical: a ordem manda, o prazo fica à esquerda.",
-  b: "Fases lado a lado, para ver o escopo inteiro de uma vez.",
-  c: "Matriz de competência: onde você está e até onde o plano leva.",
-};
-
 export function RoadmapPage() {
+  const t = useT();
   const { state, dispatch } = useAppState();
   const [regenerating, setRegenerating] = useState(false);
   const plan = useQuery(() => roadmapApi.current(), []);
   const tags = useQuery(() => tagsApi.mine(), []);
 
-  if (plan.loading) return <Loading label="Carregando seu plano…" />;
+  const VIEWS: readonly { value: RoadmapView; label: string }[] = [
+    { value: "a", label: t("roadmap.page.views.timeline") },
+    { value: "b", label: t("roadmap.page.views.fases") },
+    { value: "c", label: t("roadmap.page.views.matriz") },
+  ];
+
+  const NOTES: Record<RoadmapView, string> = {
+    a: t("roadmap.page.notas.a"),
+    b: t("roadmap.page.notas.b"),
+    c: t("roadmap.page.notas.c"),
+  };
+
+  if (plan.loading) return <Loading label={t("roadmap.page.carregando")} />;
 
   // 404 aqui não é erro: é o estado de quem ainda não gerou nada.
   if (plan.status === 404 || regenerating) {
@@ -72,14 +74,17 @@ export function RoadmapPage() {
       >
         <div style={{ flex: 1, minWidth: 250 }}>
           <div style={{ fontSize: 12.5, color: TEXT.muted }}>
-            {plan.data.horizon_weeks} semanas · {plan.data.weekly_hours}h por semana ·{" "}
-            {plan.data.progress_pct}% concluído
+            {t("roadmap.page.meta", {
+              semanas: plan.data.horizon_weeks,
+              horas: plan.data.weekly_hours,
+              pct: plan.data.progress_pct,
+            })}
           </div>
           <h1 style={{ fontSize: 28, margin: 0 }}>{plan.data.title}</h1>
         </div>
         <Segmented
           name="roadmap-view"
-          label="Formato do roadmap"
+          label={t("roadmap.page.formato")}
           value={view}
           options={VIEWS}
           onChange={(next) => dispatch({ type: "setRoadmapView", view: next })}
@@ -124,10 +129,10 @@ export function RoadmapPage() {
           onClick={() => setRegenerating(true)}
         >
           <Icon name="plus" size={15} />
-          Gerar um novo plano
+          {t("roadmap.page.novoPlano")}
         </button>
         <span style={{ flex: "1 1 240px", fontSize: SIZE.apoio, color: TEXT.faint }}>
-          O plano atual fica no histórico — gerar outro não apaga este.
+          {t("roadmap.page.historicoNota")}
         </span>
       </div>
     </div>

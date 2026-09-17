@@ -8,9 +8,10 @@
  */
 
 import { TEXT } from "@/lib/tokens";
+import { useT } from "@/lib/i18n";
 import type { Roadmap, UserTag } from "@/api/types";
 import { Panel } from "@/components/ui/primitives";
-import { MASTERY_LABELS } from "@/components/profile/TechnologyRow";
+import { MASTERY_KEYS } from "@/components/profile/TechnologyRow";
 
 /** As colunas: N1 a N4. N0 é o piso implícito e não ganha coluna. */
 const LEVELS = [1, 2, 3, 4] as const;
@@ -22,6 +23,7 @@ export function CompetenceMatrix({
   roadmap: Roadmap;
   tags: UserTag[];
 }) {
+  const t = useT();
   // Só as tags que o plano realmente toca — a matriz responde sobre ESTE
   // plano, e listar competências que ele não cobre diluiria a resposta.
   const covered = new Set(
@@ -35,7 +37,7 @@ export function CompetenceMatrix({
     return (
       <Panel>
         <p style={{ margin: 0, fontSize: 13.5, color: TEXT.muted }}>
-          Este plano ainda não aponta para competências do seu perfil.
+          {t("roadmap.matriz.vazio")}
         </p>
       </Panel>
     );
@@ -64,7 +66,7 @@ export function CompetenceMatrix({
               textAlign: "center",
             }}
           >
-            N{level} {MASTERY_LABELS[level]}
+            N{level} {t(MASTERY_KEYS[level])}
           </div>
         ))}
 
@@ -77,9 +79,15 @@ export function CompetenceMatrix({
               return (
                 <div
                   key={level}
-                  title={`${tag.name} · N${level} · ${
-                    attained ? "atingido" : next ? "próximo nível do plano" : "além deste plano"
-                  }`}
+                  title={t("roadmap.matriz.celula", {
+                    nome: tag.name,
+                    nivel: level,
+                    estado: attained
+                      ? t("roadmap.matriz.estado.atingido")
+                      : next
+                        ? t("roadmap.matriz.estado.proximo")
+                        : t("roadmap.matriz.estado.alem"),
+                  })}
                   style={{
                     height: 24,
                     borderRadius: 5,
@@ -107,8 +115,8 @@ export function CompetenceMatrix({
           color: TEXT.faint,
         }}
       >
-        <span>preenchido = nível registrado no seu perfil</span>
-        <span>contorno = próximo nível que este plano alcança</span>
+        <span>{t("roadmap.matriz.legendaPreenchido")}</span>
+        <span>{t("roadmap.matriz.legendaContorno")}</span>
       </div>
     </Panel>
   );

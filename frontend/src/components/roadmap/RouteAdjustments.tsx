@@ -14,25 +14,32 @@ import { useState } from "react";
 import { plan as planApi } from "@/api/endpoints";
 import type { RouteChange } from "@/api/types";
 import { useQuery } from "@/hooks/useApi";
+import { useIdioma, useT, type Traduzir } from "@/lib/i18n";
 import { ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { ErrorState } from "@/components/ui/States";
 import { Kicker, Panel } from "@/components/ui/primitives";
 
-const ROTULO: Record<RouteChange["tipo"], { texto: string; cor: string }> = {
-  compactar: { texto: "Compactado", cor: C.verde },
-  reforcar: { texto: "Reforçado", cor: C.ambar },
-  reagendar: { texto: "Cronograma", cor: C.azul },
+const COR_TIPO: Record<RouteChange["tipo"], string> = {
+  compactar: C.verde,
+  reforcar: C.ambar,
+  reagendar: C.azul,
 };
 
-function antesDepois(mudanca: RouteChange): string {
-  if ("horas" in mudanca.antes) return `${mudanca.antes.horas}h → ${mudanca.depois.horas}h`;
+function antesDepois(mudanca: RouteChange, t: Traduzir): string {
+  if ("horas" in mudanca.antes)
+    return t("roadmap.ajustes.horas", { antes: mudanca.antes.horas, depois: mudanca.depois.horas });
   if ("fim_semana" in mudanca.antes)
-    return `termina na semana ${mudanca.antes.fim_semana} → ${mudanca.depois.fim_semana}`;
+    return t("roadmap.ajustes.reagenda", {
+      antes: mudanca.antes.fim_semana,
+      depois: mudanca.depois.fim_semana,
+    });
   return "";
 }
 
 export function RouteAdjustments({ onAjustado }: { onAjustado?: () => void }) {
+  const t = useT();
+  const { idioma } = useIdioma();
   const historico = useQuery(() => planApi.adjustments(), []);
   const [ajustando, setAjustando] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -46,13 +53,15 @@ export function RouteAdjustments({ onAjustado }: { onAjustado?: () => void }) {
       const resultado = await planApi.adjust();
       setAviso(
         resultado.mudancas.length === 0
-          ? "Nenhum ajuste necessário — o plano está coerente com o que foi medido."
-          : `${resultado.mudancas.length} ${resultado.mudancas.length === 1 ? "ajuste aplicado" : "ajustes aplicados"}.`,
+          ? t("roadmap.ajustes.semAjuste")
+          : resultado.mudancas.length === 1
+            ? t("roadmap.ajustes.aplicadoUm", { n: resultado.mudancas.length })
+            : t("roadmap.ajustes.aplicadoVarios", { n: resultado.mudancas.length }),
       );
       historico.reload();
       onAjustado?.();
     } catch (caught) {
-      setErro(caught instanceof Error ? caught.message : "Não consegui ajustar a rota.");
+      setErro(caught instanceof Error ? caught.message : t("roadmap.ajustes.erroFallback"));
     } finally {
       setAjustando(false);
     }
@@ -63,7 +72,7 @@ export function RouteAdjustments({ onAjustado }: { onAjustado?: () => void }) {
   return (
     <Panel pad={16.8} style={{ marginBottom: 33.6 }}>
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: 11.2 }}>
-        <Kicker>Ajustes de rota</Kicker>
+        <Kicker>{t("roadmap.ajustes.titulo")}</Kicker>
         <button
           type="button"
           className="btn btn-ghost"
@@ -72,12 +81,11 @@ export function RouteAdjustments({ onAjustado }: { onAjustado?: () => void }) {
           disabled={ajustando}
         >
           <Icon name="refresh" size={15} />
-          {ajustando ? "Conferindo…" : "Reajustar agora"}
+          {ajustando ? t("roadmap.ajustes.conferindo") : t("roadmap.ajustes.reajustar")}
         </button>
       </div>
       <p style={{ fontSize: 12, color: TEXT.faint, margin: "5.6px 0 0", maxWidth: "76ch" }}>
-        O plano se corrige toda semana com o que foi medido: domínio comprovado em quiz vira
-        revisão curta, lacuna recorrente ganha mais tempo, e o cronograma segue o seu ritmo real.
+        {t("roadmap.ajustes.explicacao")}
       </p>
 
       {aviso ? (
@@ -90,8 +98,10 @@ export function RouteAdjustments({ onAjustado }: { onAjustado?: () => void }) {
       {ultimo && ultimo.mudancas.length > 0 ? (
         <div style={{ marginTop: 11.2 }}>
           <div style={{ fontSize: 11.5, color: TEXT.faint, marginBottom: 5.6 }}>
-            Último ajuste · semana {ultimo.semana} ·{" "}
-            {new Date(ultimo.em).toLocaleDateString("pt-BR")}
+            {t("roadmap.ajustes.ultimo", {
+              semana: ultimo.semana,
+              data: new Intl.DateTimeFormat(idioma).format(new Date(ultimo.em)),
+            })}
           </div>
           <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
             {ultimo.mudancas.map((mudanca, posicao) => (
@@ -100,11 +110,11 @@ export function RouteAdjustments({ onAjustado }: { onAjustado?: () => void }) {
                 style={{ padding: "8.4px 0", borderTop: `1px solid ${HAIRLINE}` }}
               >
                 <div style={{ fontSize: 13 }}>
-                  <span style={{ color: ROTULO[mudanca.tipo].cor }}>
-                    {ROTULO[mudanca.tipo].texto}
+                  <span style={{ color: COR_TIPO[mudanca.tipo] }}>
+                    {t(`roadmap.ajustes.tipo.${mudanca.tipo}`)}
                   </span>{" "}
                   · {mudanca.titulo}
-                  <span style={{ color: TEXT.faint, fontSize: 11.5 }}> · {antesDepois(mudanca)}</span>
+                  <span style={{ color: TEXT.faint, fontSize: 11.5 }}> · {antesDepois(mudanca, t)}</span>
                 </div>
                 <div style={{ fontSize: 12, color: TEXT.muted, marginTop: 3, lineHeight: 1.5 }}>
                   {mudanca.motivo}

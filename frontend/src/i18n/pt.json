@@ -1041,5 +1041,1529 @@
     "dialogoAria": "Conquista: {dias} dias de sequência com {nome}",
     "imagemAlt": "Card: {dias} dias de sequência de estudos com {nome}",
     "textoCompartilhar": "{dias} dias de sequência de estudos com @{username} no PathR! {url}"
+  },
+  "candidaturas": {
+    "titulo": "Seu currículo indo para as vagas certas",
+    "kicker": "Candidaturas",
+    "enviarAgora": "Enviar agora",
+    "prepararSemEnviar": "Preparar sem enviar",
+    "abrirVaga": "Abrir vaga e responder",
+    "enviadasHoje": "Enviadas hoje",
+    "ontem": "Ontem",
+    "ultimos7": "Últimos 7 dias",
+    "enviando": "Enviando…",
+    "passos": {
+      "titulo": "Passo a passo desta candidatura",
+      "fazendo": "fazendo agora",
+      "anuncio": "Lendo o anúncio",
+      "curriculo": "Conferindo seu currículo",
+      "carta": "Escrevendo a carta",
+      "respostas": "Preenchendo as respostas",
+      "envio": "Enviando"
+    },
+    "faltam": {
+      "titulo": "O que falta você responder",
+      "explicacao": "O app não inventa resposta no seu nome. O que você escrever aqui fica guardado e preenche as próximas vagas — inclusive em outro site que chame a pergunta por outro nome.",
+      "sensivel": "opcional, e só você responde",
+      "salvar": "Salvar respostas",
+      "salvando": "Salvando…"
+    }
+  },
+  "amigos": {
+    "voceEh": "Você é",
+    "titulo": "Amigos",
+    "convitesRecebidos": "Convites para você",
+    "procurar": "Procurar pessoas",
+    "buscaPlaceholder": "@usuario ou nome",
+    "procurando": "Procurando…",
+    "nadaEncontrado": "Ninguém encontrado. Para achar quem não aparece nas sugestões, digite o @ completo.",
+    "sugestoes": "Sugestões para você",
+    "procurandoPerto": "Procurando pessoas perto de você…",
+    "semSugestoes": "Ainda não há sugestões. Elas vêm de quem mora perto e estuda coisas parecidas com você.",
+    "carregandoAmigos": "Carregando seus amigos…",
+    "seusAmigos": "Seus amigos",
+    "nenhumAmigo": "Nenhum amigo ainda",
+    "nenhumAmigoDesc": "Adicione alguém das sugestões, ou procure pelo @ de quem você já conhece.",
+    "convitesEnviados": "Convites enviados",
+    "erroBuscar": "Não consegui buscar.",
+    "avisos": {
+      "erroResponder": "Não consegui responder.",
+      "ariaConvite": "{nome} te mandou um convite de amizade",
+      "ariaAceite": "{nome} aceitou seu convite",
+      "mandouConvite": "te mandou um convite de amizade",
+      "aceitouConvite": "aceitou seu convite",
+      "fecharAviso": "Fechar aviso",
+      "aceitar": "Aceitar",
+      "recusar": "Recusar",
+      "verAmigos": "Ver amigos"
+    },
+    "campoUsername": {
+      "label": "Nome de usuário",
+      "placeholder": "seunome",
+      "conferindo": "Conferindo…",
+      "seuAtual": "Este é o seu @ atual.",
+      "estaLivre": "está livre.",
+      "seVazio": "Se deixar em branco, você será",
+      "usar": "Usar @{usuario}"
+    },
+    "privacidade": {
+      "erroSalvar": "Não consegui salvar.",
+      "titulo": "Pessoas",
+      "aparecer": "Aparecer nas sugestões de amigos",
+      "explicacao": "Desligado, você não aparece nas sugestões nem na busca por nome. Quem já tem o seu @ ainda consegue te encontrar e te convidar."
+    }
+  },
+  "idiomas": {
+    "semVozDoIdioma": "Seu navegador não tem voz neste idioma, então o áudio sai com pronúncia errada. No Edge ou no Chrome a voz vem pronta; no Windows, dá para instalar em Configurações › Hora e idioma › Fala.",
+    "carregandoModulo": "Carregando o módulo de idioma…",
+    "moduloOpcional": "Módulo opcional",
+    "tituloTrabalho": "Idioma para o trabalho",
+    "descricao": "Roda em paralelo ao roadmap técnico. Nivela por CEFR e treina com o vocabulário de quem trabalha com backend em time internacional.",
+    "ativado": "Ativado",
+    "desativado": "Desativado",
+    "desativadoAviso": "Módulo desativado. Ative acima para incluir {min} min de inglês por dia no plano.",
+    "seuNivel": "Seu nível",
+    "meta": "meta {nivel}",
+    "nivelDivergente": "Medido no nivelamento. Nos treinos você está rendendo como {nivel} — o quadro por habilidade mostra o que puxa para baixo. Refaça o nivelamento quando quiser atualizar este número.",
+    "nivelConfirma": "Medido no nivelamento, e os treinos confirmam. Refaça o nivelamento quando quiser uma medida nova.",
+    "semNivel": "Sem nivelamento ainda. O número vem dos treinos; o teste leva cerca de 12 minutos e dá a medida de referência.",
+    "preparandoTeste": "Preparando o teste…",
+    "refazerNivelamento": "Refazer nivelamento",
+    "fazerNivelamento": "Fazer o nivelamento",
+    "nivelamentoEmAndamento": "Nivelamento em andamento",
+    "respondidasProgresso": "{feito} de {total} respondidas · {pct}%",
+    "continuarDeOndeParei": "Continuar de onde parei",
+    "recomecarDoZero": "Recomeçar do zero",
+    "pontosDeMelhora": "Pontos de melhora",
+    "paraRever": "{n} para rever",
+    "nadaPendente": "Nada pendente. O que você errar no nivelamento ou no treino aparece aqui e volta no treino diário, com outras palavras.",
+    "habilidades": {
+      "grammar": "Gramática",
+      "vocabulary": "Vocabulário",
+      "reading": "Leitura",
+      "listening": "Escuta",
+      "writing": "Escrita",
+      "speaking": "Fala",
+      "business": "Corporativo"
+    },
+    "confianca": {
+      "alta": "estimativa firme",
+      "media": "estimativa razoável",
+      "inicial": "estimativa inicial — treine mais para firmar",
+      "semDados": "sem respostas ainda"
+    },
+    "situacao": {
+      "reforcar": "a reforçar",
+      "progredindo": "progredindo",
+      "dominado": "dominado",
+      "poucosDados": "poucos dados"
+    },
+    "quadro": {
+      "porHabilidade": "Por habilidade",
+      "nosTreinos": "nos treinos: {nivel}",
+      "semDados": "Faça o nivelamento ou o treino de hoje para ver seu nível em cada habilidade.",
+      "topicoReforcar": "{n} tópico a reforçar",
+      "topicosReforcar": "{n} tópicos a reforçar",
+      "respostaUm": "{n} resposta",
+      "respostaVarias": "{n} respostas",
+      "correctDe": "{correct} de {total}"
+    },
+    "config": {
+      "erroSalvar": "Não consegui salvar.",
+      "titulo": "Idiomas",
+      "nenhumNoPlano": "nenhum no plano",
+      "noPlanoUm": "{n} idioma no plano",
+      "noPlanoVarios": "{n} idiomas no plano",
+      "introA": "Ligue os idiomas que fazem parte do seu plano e escolha em que escala quer acompanhar o nível. O nivelamento mede sempre no CEFR e converte para a prova que você escolher —",
+      "naoAplica": "o app não aplica IELTS, TOEFL ou JLPT",
+      "introB": ", ele estima onde você está e mostra na régua que você usa.",
+      "semNivelamento": "sem nivelamento",
+      "acompanharEscala": "Acompanhar o nível na escala de",
+      "meta": "Meta",
+      "metaNoExame": "Meta no {exame}",
+      "equivaleComNota": "{nota} — equivale a {cefr} no CEFR",
+      "equivale": "Equivale a {cefr} no CEFR",
+      "metaEscolhida": "Meta {alvo}",
+      "metaMedida": " — o app vai medir isso como {cefr} no CEFR.",
+      "tempoPorDia": "Tempo por dia — sai do mesmo orçamento de horas do roadmap",
+      "minUnidade": "{n} min"
+    },
+    "listening": {
+      "preparandoAudio": "Preparando o áudio…",
+      "parar": "Parar",
+      "ouvirDialogo": "Ouvir o diálogo",
+      "ouvirDeNovo": "Ouvir de novo",
+      "esconderTranscricao": "Esconder transcrição",
+      "verTranscricao": "Ver transcrição",
+      "falasUm": "{n} fala",
+      "falasVarias": "{n} falas",
+      "semVozNavegador": "Este navegador não tem voz para reproduzir o diálogo."
+    },
+    "placement": {
+      "preparandoProximas": "Preparando as próximas perguntas…",
+      "continuar": "Continuar",
+      "titulo": "Teste de nivelamento",
+      "perguntaDe": "Pergunta {n} de {total} · a dificuldade se ajusta às suas respostas",
+      "respostasPossiveis": "Respostas possíveis",
+      "corrigindo": "Corrigindo…",
+      "carregando": "Carregando…",
+      "proxima": "Próxima",
+      "nivelMedido": "Este é o seu nível medido. Ele passa a valer para o plano diário e para o prazo da meta.",
+      "verMeuNivel": "Ver meu nível"
+    },
+    "texto": {
+      "consultar": "Consultar \"{palavra}\"",
+      "oQueQuerDizer": "O que \"{palavra}\" quer dizer",
+      "fechar": "Fechar",
+      "consultando": "Consultando…",
+      "sinonimos": "sinônimos: {lista}",
+      "entrouRevisao": "Entrou na sua revisão de vocabulário para hoje."
+    },
+    "formato": {
+      "mcq": "Escolha",
+      "gap": "Complete",
+      "reorder": "Monte a frase",
+      "match": "Associe",
+      "listening": "Escuta",
+      "dictation": "Ditado",
+      "image": "Imagem",
+      "speaking": "Fala"
+    },
+    "treino": {
+      "origem": {
+        "revisao": "Revisão do que você errou",
+        "reforco": "Reforço de tópico fraco",
+        "novo": "Novo"
+      },
+      "ponto": {
+        "novoPonto": "Esse erro virou um ponto de melhora: ele volta nos próximos treinos, com outras palavras.",
+        "subiu": "Ponto de melhora recuperado. Ele volta mais tarde, num formato mais exigente, até ficar firme.",
+        "voltaHoje": "Ainda não firmou: esse ponto volta de novo em breve, começando pelo reconhecer."
+      },
+      "erroCorrigir": "Não consegui corrigir. Tente de novo.",
+      "erroPreparar": "Não consegui preparar os próximos.",
+      "sairDoTreino": "Sair do treino",
+      "progressoAria": "Progresso do treino de hoje",
+      "deTotal": "{feito} de {total}",
+      "tentarDeNovo": "Tentar de novo",
+      "preparandoProximos": "Preparando os próximos exercícios…",
+      "nenhumPronto": "Nenhum exercício pronto agora.",
+      "carregarProximos": "Carregar os próximos",
+      "pulado": "Pulado — não conta como erro.",
+      "certo": "Certo!",
+      "aindaNao": "Ainda não.",
+      "continuar": "Continuar",
+      "concluido": "Treino de hoje concluído",
+      "recuperou": "Você recuperou {recuperados} de {total} pontos de melhora que tinha errado antes.",
+      "nadaVencia": "Nenhum ponto de melhora vencia hoje.",
+      "seuNivelHoje": "Seu nível hoje",
+      "avancouDentro": "{nome}: avançou dentro do {nivel}",
+      "porTopico": "Por tópico",
+      "voltarAoIdioma": "Voltar ao idioma",
+      "treinoDeHoje": "Treino de hoje",
+      "feitoHoje": "Feito hoje · {correct} de {total}",
+      "proximoAmanha": "O próximo fica pronto amanhã, com o que vencer na revisão e os tópicos que ainda pedem reforço.",
+      "verResumo": "Ver o resumo",
+      "emAndamentoDesc": "{feito} de {total} feitos. Continue de onde parou.",
+      "novoDesc": "Revisão do que você errou, reforço dos tópicos fracos e algo um pouco acima do seu nível — em oito formatos, com correção na hora.",
+      "preparandoExercicios": "Preparando os exercícios…",
+      "continuarTreino": "Continuar o treino",
+      "comecarTreino": "Começar o treino",
+      "primeirosSegundos": "Os primeiros levam alguns segundos; o resto fica pronto enquanto você responde."
+    },
+    "exercicio": {
+      "imagemAria": "Imagem do exercício",
+      "voz": "Voz",
+      "alternativas": "Alternativas",
+      "lacunaAria": "lacuna",
+      "fraseMontada": "Frase montada",
+      "conferir": "Conferir",
+      "recomecar": "Recomeçar",
+      "toqueTermo": "Toque num termo à esquerda e depois na tradução.",
+      "preparando": "Preparando…",
+      "tocando": "Tocando…",
+      "ouvir": "Ouvir",
+      "maisDevagar": "Mais devagar",
+      "semVozDitado": "Este navegador não tem voz para o ditado. Tente no Chrome, Edge ou Safari.",
+      "oQueOuviu": "O que você ouviu",
+      "escrevaOuviu": "Escreva exatamente o que ouviu",
+      "semMicrofone": "O navegador não deu acesso ao microfone.",
+      "naoOuvi": "Não consegui ouvir. Tente de novo, mais perto do microfone.",
+      "ouvirComoSeDiz": "Ouvir como se diz",
+      "ouvindoFale": "Ouvindo… fale agora",
+      "falar": "Falar",
+      "semReconhecimento": "Este navegador não reconhece fala.",
+      "naoPossoFalar": "Não posso falar agora",
+      "respostaCerta": "Resposta certa:",
+      "aFraseEra": "A frase era",
+      "oTextoEra": "O texto era",
+      "naoReconheci": "Não reconheci",
+      "faltouDiferente": "Faltou ou saiu diferente",
+      "atencaoAcentos": "Contou como certo, mas atenção aos acentos."
+    }
+  },
+  "biblioteca": {
+    "filtro": {
+      "todos": "Tudo",
+      "video": "Vídeos",
+      "article": "Artigos",
+      "doc": "Documentação",
+      "exercise": "Exercícios"
+    },
+    "kind": {
+      "video": "vídeo",
+      "article": "artigo",
+      "course": "curso",
+      "doc": "documentação",
+      "book": "livro",
+      "podcast": "podcast",
+      "repo": "repositório",
+      "exercise": "exercício"
+    }
+  },
+  "comum": {
+    "carregando": "Carregando…",
+    "tentarDeNovo": "Tentar de novo",
+    "status": {
+      "concluido": "concluído",
+      "emCurso": "em curso",
+      "bloqueado": "bloqueado",
+      "pulado": "pulado",
+      "aFazer": "a fazer"
+    }
+  },
+  "config": {
+    "titulo": "Configurações",
+    "subtitulo": "Conta, objetivo de estudo, competências, idiomas, avisos e o status das integrações. Tudo o que muda aqui recalcula o plano na próxima geração.",
+    "abasAria": "Seções das configurações",
+    "abas": {
+      "conta": "Conta",
+      "objetivo": "Objetivo",
+      "skills": "Skills",
+      "idiomas": "Idiomas",
+      "avisos": "Avisos e privacidade",
+      "integracoes": "Status das APIs",
+      "moderacao": "Moderação",
+      "recursos": "Recursos"
+    },
+    "legaisAria": "Documentos legais",
+    "legais": {
+      "termos": "Termos de uso",
+      "privacidade": "Política de privacidade",
+      "seguranca": "Segurança"
+    },
+    "creditos": {
+      "rotulo": "Ícones:",
+      "deSob": ", de Kryston Schwarze, sob",
+      "chamaMedalha": "; chama e medalha do",
+      "licencaIsc": ", sob licença ISC."
+    }
+  },
+  "codelab": {
+    "kicker": "Laboratório de código",
+    "titulo": "Código pronto, percorrido linha a linha",
+    "intro": "Escolha o assunto e deixe a linguagem no automático, ou escolha você. Você recebe o código ou a configuração que se usa de verdade — um arquivo ou vários, como o workflow do GitHub e o teste que ele roda, ou Controller, Service e Entity — e o passo a passo da execução: qual linha de qual arquivo roda, o que cada variável vale naquele instante e o que saiu no terminal.",
+    "carregandoExemplos": "Carregando seus exemplos…",
+    "escrevendoExemplo": "Escrevendo o exemplo…",
+    "semPassoAPasso": "sem passo a passo",
+    "passoN": "Passo {n}",
+    "linhaN": "linha {linha}",
+    "niveis": {
+      "iniciante": "Iniciante",
+      "intermediario": "Intermediário",
+      "avancado": "Avançado"
+    },
+    "sugestoes": {
+      "montando": "Montando sugestões para você…",
+      "semPerfilTitulo": "Marque as linguagens que você estuda",
+      "semPerfilDescricao": "O laboratório mostra só as linguagens do seu perfil e sugere exemplos pelo seu nível e pelo seu roadmap. Por enquanto, todas aparecem no gerador abaixo.",
+      "escolherLinguagens": "Escolher linguagens",
+      "titulo": "Sugestões para você",
+      "descricao": "Pelo seu roadmap, pelo seu nível em cada linguagem e pelo que você ainda não abriu. Um clique gera o exemplo com o passo a passo.",
+      "gerarAria": "Gerar exemplo: {assunto} em {linguagem}"
+    },
+    "etapas": {
+      "arquivos": "Escolhendo os arquivos",
+      "codigo": "Escrevendo o código",
+      "conferindo": "Conferindo se é o que se usa de verdade",
+      "passoAPasso": "Montando o passo a passo"
+    },
+    "gerador": {
+      "linguagemOuArquivo": "Linguagem ou arquivo",
+      "linguagem": "Linguagem",
+      "assunto": "Assunto",
+      "assuntoPlaceholder": "GitHub Actions rodando os testes, API com Controller e Entity, closures…",
+      "nivel": "Nível",
+      "gerar": "Gerar exemplo",
+      "aviso": "Leva alguns segundos: os arquivos e o traço de execução saem juntos. Antes de aparecer aqui, o conteúdo é conferido (sintaxe, versões atuais, estrutura de projeto real) e o traço, contra cada arquivo."
+    },
+    "depurador": {
+      "fecharAria": "Fechar exemplo",
+      "fechar": "Fechar",
+      "arquivosAria": "Arquivos do exemplo",
+      "arquivoLabel": "Arquivo {caminho}",
+      "passoDeTotal": "passo {n} de {total}",
+      "semTraco": "O passo a passo deste exemplo não saiu coerente com o código, então não é exibido — mostrar um traço que não bate com o programa ensinaria errado. O código acima continua valendo; gere de novo para tentar outro traço.",
+      "execucaoComentada": "A execução aqui é comentada, não medida: o passo a passo foi escrito junto com o código e conferido contra ele, mas o programa não roda num interpretador de verdade. Para o exemplo valer como certeza, rode-o você mesmo."
+    },
+    "controles": {
+      "inicio": "Voltar ao início",
+      "anterior": "Passo anterior",
+      "proximo": "Próximo passo",
+      "pausarAria": "Pausar a execução automática",
+      "executarAria": "Executar passo a passo sozinho",
+      "pausar": "Pausar",
+      "executar": "Executar",
+      "passoAria": "Passo da execução"
+    },
+    "estado": {
+      "titulo": "Variáveis agora",
+      "vazio": "Nenhuma variável definida ainda."
+    },
+    "saida": {
+      "titulo": "Saída até aqui",
+      "vazio": "Nada saiu no terminal ainda."
+    },
+    "biblioteca": {
+      "vazioTitulo": "Nenhum exemplo ainda",
+      "vazioDescricao": "Escolha a linguagem e o assunto acima. O exemplo fica guardado aqui para você voltar quantas vezes quiser.",
+      "titulo": "Seus exemplos",
+      "arquivosN": "{n} arquivos",
+      "passosN": "{n} passos",
+      "removendo": "Removendo…",
+      "remover": "Remover"
+    }
+  },
+  "moderacao": {
+    "relatos": {
+      "titulo": "Moderação",
+      "situacaoLabel": "Situação dos relatos",
+      "situacoes": {
+        "abertos": "Abertos",
+        "resolvidos": "Resolvidos",
+        "todos": "Todos"
+      },
+      "statusLabel": "Status",
+      "status": {
+        "aberto": "Recebido",
+        "em_analise": "Em análise",
+        "resolvido": "Resolvido"
+      },
+      "erroSalvar": "Não consegui salvar.",
+      "reclamacao": "Reclamação",
+      "sugestao": "Sugestão",
+      "contaRemovida": "Conta removida",
+      "resposta": "Resposta para quem relatou",
+      "respostaPlaceholder": "Opcional — aparece em Seus relatos",
+      "salvando": "Salvando…",
+      "salvar": "Salvar",
+      "relato": "relato",
+      "relatos": "relatos",
+      "carregando": "Carregando…",
+      "vazioAbertos": "Nenhum relato em aberto.",
+      "vazioGeral": "Nenhum relato aqui."
+    },
+    "usuarios": {
+      "confirmacaoCancelada": "Confirmação cancelada. Nada foi alterado.",
+      "erroConcluir": "Não consegui concluir.",
+      "semNome": "Sem nome",
+      "selos": {
+        "voce": "você",
+        "admin": "admin",
+        "banido": "banido",
+        "emailNaoConfirmado": "e-mail não confirmado"
+      },
+      "entrouEm": "Entrou em {data}",
+      "banidoEm": " · banido em {data}",
+      "motivoLabel": "Motivo: {motivo}",
+      "desbanir": "Desbanir",
+      "banir": "Banir",
+      "desbanirAria": "Desbanir {nome}",
+      "banirAria": "Banir {nome}",
+      "avisoDesbanir": "A conta volta a entrar normalmente e a aparecer para os amigos.",
+      "avisoBanir": "A pessoa é desconectada de todos os aparelhos na hora, não consegue entrar de novo e some da busca e dos amigos. Nada é apagado: dá para desbanir depois.",
+      "motivoCampo": "Motivo (fica registrado)",
+      "aguardandoChave": "Aguardando a chave…",
+      "confirmarChave": "Confirmar com chave de acesso",
+      "cancelar": "Cancelar",
+      "secaoAria": "Usuários cadastrados",
+      "titulo": "Usuários",
+      "conta": "conta",
+      "contas": "contas",
+      "maisRecentes": " (as mais recentes — refine a busca)",
+      "situacaoLabel": "Situação das contas",
+      "situacoes": {
+        "todos": "Todos",
+        "ativos": "Ativos",
+        "banidos": "Banidos"
+      },
+      "buscar": "Buscar",
+      "buscarPlaceholder": "Nome, @ ou e-mail",
+      "carregando": "Carregando…",
+      "vazio": "Nenhuma conta encontrada."
+    }
+  },
+  "cursos": {
+    "filtro": {
+      "todos": "Todos",
+      "gratuitos": "Gratuitos",
+      "pagos": "Pagos"
+    },
+    "escopo": {
+      "voce": "Para você",
+      "catalogo": "Catálogo inteiro"
+    },
+    "ordem": {
+      "relevancia": "Mais relevantes para você",
+      "maisProcurados": "Mais procurados primeiro",
+      "menosProcurados": "Menos procurados primeiro"
+    },
+    "nivel": {
+      "iniciante": "Iniciante",
+      "intermediario": "Intermediário",
+      "avancado": "Avançado"
+    },
+    "motivo": {
+      "meta": "Sua meta",
+      "queroAprender": "Quero aprender",
+      "roadmap": "No seu roadmap",
+      "objetivo": "Seu objetivo"
+    },
+    "carregando": "Procurando cursos com certificado…",
+    "contador": "{n} {cursos} · {gratuitos} com certificado gratuito",
+    "curso": "curso",
+    "cursos": "cursos",
+    "titulo": "Cursos com certificado",
+    "subtitulo": "Escolhidos pelo que você quer aprender, para colocar no LinkedIn. Todos emitem certificado, e os gratuitos vêm sempre primeiro.",
+    "quaisCursos": "Quais cursos",
+    "buscar": "Buscar",
+    "buscarPlaceholder": "Curso, emissor ou tecnologia",
+    "categoria": "Categoria",
+    "todasCategorias": "Todas as categorias",
+    "stack": "Stack",
+    "todasTecnologias": "Todas as tecnologias",
+    "ordenar": "Ordenar",
+    "tipoCertificado": "Tipo de certificado",
+    "limparFiltros": "Limpar filtros",
+    "esconderPossuidos": "Esconder os que já possuo",
+    "mostrarPossuidos": "Mostrar os que já possuo ({n})",
+    "saiuDaLista": "saiu da lista e foi para Perfil e tags.",
+    "desfazer": "Desfazer",
+    "vazioPossuiTodos": {
+      "titulo": "Você já possui todos os cursos desta lista",
+      "descVoce": "Eles estão em Perfil e tags. Procure no catálogo inteiro para ver outros certificados.",
+      "descCatalogo": "Eles estão em Perfil e tags."
+    },
+    "buscarCatalogo": "Buscar no catálogo inteiro",
+    "vazioFiltros": {
+      "titulo": "Nenhum curso com estes filtros",
+      "descVoce": "Tente outra busca ou procure no catálogo inteiro, que traz também o que você ainda não pediu.",
+      "descCatalogo": "Tente outra busca, categoria ou tecnologia."
+    },
+    "vazioSemCurso": {
+      "titulo": "Ainda não há certificação séria para o que você pediu",
+      "desc": "Só entram cursos com certificado de emissor reconhecido. Marque outras tecnologias como meta e a lista cresce."
+    },
+    "escolherTecnologias": "Escolher tecnologias",
+    "vazioSemPedido": {
+      "titulo": "Diga o que você quer aprender",
+      "desc": "Os cursos saem do seu objetivo e das tecnologias marcadas como meta. Sem isso, não há como escolher."
+    },
+    "definirObjetivo": "Definir objetivo",
+    "blocoGratuito": "Certificado gratuito",
+    "blocoPago": "Certificado pago",
+    "vazioGratuito": "Nenhum curso gratuito para o que você pediu.",
+    "vazioPago": "Nenhum curso pago para o que você pediu.",
+    "rodapePrecos": "Preços e gratuidade conferidos em {mes}. Quem define é o emissor, e as condições mudam: confira no site antes de começar.",
+    "erroSalvar": "Não consegui salvar.",
+    "portugues": "Português",
+    "ingles": "Inglês",
+    "horas": "~{h}h",
+    "irParaCurso": "Ir para o curso",
+    "possuoTitleSim": "Aparece em Perfil e tags. Clique para desmarcar.",
+    "possuoTitleNao": "Marque se você já tem este certificado.",
+    "jaPossuo": "Já possuo",
+    "jaPossuoPergunta": "Já possuo?",
+    "linkedinTitle": "Depois de receber o certificado",
+    "adicionarLinkedin": "Adicionar ao LinkedIn",
+    "procuraNoMercado": "Procura no mercado"
+  },
+  "vagas": {
+    "filtro": {
+      "todas": "Todas",
+      "remotas": "Remotas"
+    },
+    "alcance": {
+      "todas": "Brasil e exterior",
+      "nacionais": "Nacionais",
+      "internacionais": "Internacionais"
+    },
+    "fonte": {
+      "busca": "Sites de vaga (LinkedIn, Vagas.com, Indeed…)"
+    },
+    "estadoFonte": {
+      "ok": "ativa",
+      "erro": "fora do ar agora",
+      "semChave": "sem chave configurada"
+    },
+    "nivel": {
+      "junior": "Júnior",
+      "pleno": "Pleno",
+      "senior": "Sênior"
+    },
+    "situacao": {
+      "semNivel": "faça o nivelamento",
+      "tem": "você tem",
+      "parcial": "começando",
+      "falta": "falta",
+      "desconhecido": "fora do catálogo"
+    },
+    "tempo": {
+      "hoje": "hoje",
+      "umDia": "há 1 dia",
+      "dias": "há {n} dias",
+      "agora": "agora",
+      "min": "há {n} min",
+      "umaHora": "há 1 hora",
+      "horas": "há {n} horas"
+    },
+    "titulo": "Vagas para você",
+    "subtitulo": "Vagas reais de fontes confiáveis, na sua região ou remotas, da que mais tem a cara da sua stack e do seu objetivo para a que menos. Em cada uma, o que falta e como chegar lá.",
+    "buscarAria": "Buscar outro cargo ou tecnologia",
+    "buscarPlaceholder": "Outro cargo ou tecnologia (ex.: Desenvolvedor Java)",
+    "buscar": "Buscar",
+    "voltarPerfil": "Voltar ao meu perfil",
+    "onde": "Onde",
+    "tipoVaga": "Tipo de vaga",
+    "procurandoNovas": "procurando vagas novas…",
+    "atualizadoEm": "atualizado {tempo}",
+    "atualizando": "Atualizando…",
+    "atualizar": "Atualizar",
+    "erroAtualizar": "Não consegui atualizar agora ({erro}). A lista abaixo é a anterior.",
+    "carregando": "Procurando vagas nas fontes…",
+    "semPerfil": {
+      "titulo": "Diga o que você faz ou quer fazer",
+      "desc": "As vagas saem das suas competências e do seu objetivo. Cadastre suas tecnologias — ou busque um cargo acima."
+    },
+    "cadastrarTecnologias": "Cadastrar tecnologias",
+    "buscandoPor": "Buscando por",
+    "vaga": "vaga",
+    "vagas": "vagas",
+    "seuIngles": "seu inglês:",
+    "semNivelamentoFazer": "sem nivelamento — fazer agora",
+    "fontes": "Fontes:",
+    "vazio": {
+      "titulo": "Nenhuma vaga encontrada agora",
+      "desc": "As fontes não trouxeram vagas para estes termos e filtros. Tente outro cargo ou tecnologia, aumente o raio da sua região ou aperte Atualizar."
+    },
+    "regiao": {
+      "semCidade": "Sem cidade no perfil: vagas presenciais de todo o Brasil aparecem.",
+      "soRemotas": "Só vagas remotas.",
+      "cidade": "Presenciais e híbridas até {km} km de {cidade} - {uf} · remotas de qualquer lugar.",
+      "uf": "Presenciais e híbridas em {uf} · remotas de qualquer lugar."
+    },
+    "mudarRegiao": "Mudar região",
+    "definirRegiao": "Definir região",
+    "ondeDistancia": "{local} · a {km} km",
+    "presencial": "Presencial",
+    "internacional": "Internacional",
+    "via": "via {fonte}",
+    "naSuaRegiao": "na sua região",
+    "paraQuem": "Para quem:",
+    "paraQuemNivel": "nível {nivel}, ",
+    "paraQuemCom": "com {lista}",
+    "paraQuemMais": " e mais {n}",
+    "conectorE": "e",
+    "esconderDescricao": "Esconder descrição",
+    "verDescricao": "Ver descrição da vaga",
+    "soTrecho": "A fonte mandou só um trecho do anúncio: a nota é estimada pelo título. Leia o anúncio completo para ver o que falta.",
+    "soBuscador": "Encontrada por buscador: o anúncio não foi lido aqui, e a nota é estimada pelo título.",
+    "verVaga": "Ver vaga",
+    "esconderAnalise": "Esconder análise",
+    "lerAnuncio": "Ler o anúncio completo",
+    "lendoRequisitos": "Lendo os requisitos da vaga…",
+    "descricao": {
+      "faz": "O que você vai fazer",
+      "pede": "O que pede",
+      "diferenciais": "Diferenciais"
+    },
+    "temTudo": "Você tem tudo o que o anúncio cita do catálogo.",
+    "oQueFaltaAria": "O que falta para a vaga",
+    "oQueFalta": "O que falta",
+    "item": "item",
+    "itens": "itens",
+    "obrigatorioUm": "obrigatório",
+    "obrigatoriosVarios": "obrigatórios",
+    "mostrarMenos": "Mostrar menos",
+    "verTodasLacunas": "Ver todas as {n}",
+    "fazerNivelamento": "Fazer o nivelamento",
+    "treinarIngles": "Treinar inglês",
+    "jaNoRoadmap": "já está no seu roadmap",
+    "metaMarcada": "meta marcada",
+    "marcando": "Marcando…",
+    "marcarMeta": "Marcar como meta",
+    "obrigatorio": "obrigatório",
+    "diferencial": "diferencial",
+    "desejavel": "desejável",
+    "degrauAbaixo": " · um degrau abaixo",
+    "comecando": " · você está começando",
+    "semNivelamentoSufixo": " · sem nivelamento",
+    "semNivelamentoComparar": " · sem nivelamento para comparar",
+    "certificadoGratuito": "certificado gratuito",
+    "certificadoPago": "certificado pago",
+    "gratuito": "gratuito",
+    "pago": "pago",
+    "ingles": {
+      "tem": "Inglês {exigido} pedido · você tem {seu}",
+      "parcial": "Inglês {exigido} pedido · você {seu}, um degrau abaixo",
+      "falta": "Inglês {exigido} pedido · você {seu}",
+      "semNivel": "Inglês {exigido} pedido · faça o nivelamento para comparar"
+    },
+    "tecnologiasDaStack": "{n} {tecnologias} da sua stack",
+    "tecnologia": "tecnologia",
+    "tecnologias": "tecnologias",
+    "combinaObjetivo": "combina com seu objetivo",
+    "anuncioNaoLido": "anúncio não lido",
+    "compatibilidadeAria": "Compatibilidade com o seu perfil",
+    "porcentagem": "{n}%",
+    "estimadoTitulo": "estimado pelo título",
+    "combinaComVoce": "combina com você",
+    "analisarTitulo": "Analisar uma vaga específica",
+    "analisarDesc": "Achou uma vaga fora desta lista? Cole o link ou o texto do anúncio. Vaga do LinkedIn costuma pedir login para abrir — nesse caso, cole o texto.",
+    "analisarAria": "Link ou texto da vaga",
+    "analisarPlaceholder": "https://… ou o texto completo da vaga",
+    "analisando": "Analisando…",
+    "verOQueFalta": "Ver o que falta",
+    "etapa": {
+      "lendo": "Lendo a vaga",
+      "separando": "Separando os requisitos",
+      "comparando": "Comparando com o seu perfil"
+    },
+    "analiseCompletaAria": "Análise completa da vaga",
+    "analiseSimplificada": "Análise simplificada: as tecnologias citadas no anúncio, todas tratadas como obrigatórias.",
+    "obrigatorios": "Obrigatórios",
+    "desejaveis": "Desejáveis",
+    "oQueFaltaComoChegar": "O que falta, e como chegar lá",
+    "nadaFalta": "Nada falta no que o catálogo reconhece",
+    "verTodosCursos": "Ver todos os cursos com certificado",
+    "semCursoCatalogo": "Sem curso com certificado para isto no catálogo. Marcar como meta leva o tema para o seu roadmap."
+  },
+  "home": {
+    "boasVindas": "Bem-vindo de volta",
+    "boasVindasNome": "Bem-vindo de volta, {nome}",
+    "retomarEstudo": "Retomar estudo",
+    "carregandoPainel": "Carregando seu painel…",
+    "semPlanoTitulo": "Seu plano ainda não existe",
+    "semPlanoDescricao": "Envie seu currículo e eu monto o roadmap a partir do que você já sabe — você revisa tudo antes de eu gerar.",
+    "enviarCurriculo": "Enviar currículo",
+    "continue": {
+      "kicker": "Continue",
+      "modulos": "{feitos} de {total} módulos",
+      "planoConcluido": "Plano concluído",
+      "retomeDescricao": "Retome de onde parou: material, quiz e atividade deste módulo.",
+      "todosConcluidos": "Todos os módulos deste plano foram concluídos. Gere um novo objetivo para continuar.",
+      "progressoDoPlano": "Progresso do plano",
+      "retomar": "Retomar",
+      "verRoadmap": "Ver roadmap",
+      "semana": "Semana {intervalo}"
+    },
+    "semana": {
+      "atual": "Semana atual",
+      "dia": "dia",
+      "dias": "dias",
+      "aria": "Dias estudados nesta semana",
+      "estudado": "{dia}: estudado",
+      "semEstudo": "{dia}: sem estudo",
+      "sequenciaRotulo": "Sequência",
+      "recordeRotulo": "Recorde"
+    },
+    "fases": {
+      "titulo": "Progresso por fase",
+      "modulos": "{feitos} de {total} módulos"
+    },
+    "checklist": {
+      "montando": "Montando a sua semana…",
+      "semanaDoPlano": "Semana {n} do plano",
+      "resumo": "{feitos} de {total} feitos · {feitosMin} de {totalMin}",
+      "explicacao": "A lista segue o seu nível em cada módulo — quem está começando estuda antes de ser testado; quem já domina vai direto para explicar e aplicar — e cabe nas {horas} que você tem para a semana.",
+      "rotaAjustadaUm": "Sua rota foi ajustada nesta virada de semana (1 mudança).",
+      "rotaAjustada": "Sua rota foi ajustada nesta virada de semana ({n} mudanças).",
+      "verMudou": "Ver o que mudou",
+      "nadaPendente": "Nada pendente nesta semana. Os próximos módulos entram aqui assim que houver o que puxar.",
+      "nivel": "nível {nivel}",
+      "nivIniciante": "iniciante",
+      "nivIntermediario": "intermediário",
+      "nivAvancado": "avançado",
+      "confirmado": "confirmado pelo que você fez",
+      "abrir": "Abrir",
+      "naoSalvou": "Não consegui salvar."
+    }
+  },
+  "modulo": {
+    "abas": {
+      "material": "Material",
+      "quiz": "Quiz",
+      "atividade": "Atividade"
+    },
+    "pagina": {
+      "carregandoTrilha": "Carregando a trilha…",
+      "semPlanoTitulo": "Você ainda não tem um plano",
+      "semPlanoDescricao": "Gere o roadmap para ter uma trilha em andamento.",
+      "gerarPlano": "Gerar plano",
+      "planoConcluidoTitulo": "Plano concluído",
+      "planoConcluidoDescricao": "Todos os módulos foram entregues. Gere um novo objetivo para continuar.",
+      "trilha": "Trilha",
+      "concluir": "Concluir",
+      "concluirDescricao": "Marcar como concluído registra o estudo e sobe a proficiência das tecnologias deste módulo.",
+      "concluido": "Concluído",
+      "registrando": "Registrando…",
+      "marcarConcluido": "Marcar como concluído",
+      "aoFinalVoceConsegue": "Ao final você consegue",
+      "modulosDaFase": "Módulos da fase"
+    },
+    "recurso": {
+      "trilha": "Trilha",
+      "nenhumMaterialTitulo": "Nenhum material aberto",
+      "nenhumMaterialDescricao": "Escolha um item no material de um módulo para abrir aqui.",
+      "voltar": "Voltar",
+      "abrindoMaterial": "Abrindo o material…",
+      "naoEncontradoTitulo": "Material não encontrado",
+      "naoEncontradoDescricao": "Ele pode ter saído do seu plano desde que esta tela foi aberta.",
+      "voltarPara": "Voltar para {destino}",
+      "telaAnterior": "a tela anterior",
+      "portugues": "português",
+      "ingles": "inglês",
+      "abrirNaFonte": "Abrir na fonte original",
+      "concluido": "Concluído",
+      "pctConsumido": "{pct}% consumido",
+      "aindaNaoComecou": "Ainda não começou",
+      "parouEm": " · parou em {tempo}",
+      "concluidoMinusculo": "concluído",
+      "progressoNesteMaterial": "Progresso neste material"
+    },
+    "artigo": {
+      "minLeitura": "{min} min de leitura",
+      "pctLido": "{pct}% lido",
+      "lerNoSite": "ler no site original",
+      "retomadoDe": "Retomado de onde você parou ({pct}%).",
+      "voltarAoInicio": "Voltar ao início",
+      "textoNaoBuscado": "Ainda não busquei o texto deste material.",
+      "podeLerNaFonte": "Dá para ler no site de origem — e o progresso continua sendo marcado aqui.",
+      "abrirNoSite": "Abrir no site original"
+    },
+    "curar": {
+      "procurarMaterial": "Procurar material",
+      "procurando": "Procurando…",
+      "materialNovo": "material novo",
+      "materiaisNovos": "materiais novos",
+      "nadaNovo": "Nada novo desta vez.",
+      "buscaFalhou": "A busca falhou."
+    },
+    "linha": {
+      "salvo": "salvo",
+      "emCurso": "em curso",
+      "concluido": "concluído",
+      "dispensado": "dispensado",
+      "marcarComo": "Marcar como {estado}",
+      "marcarComoEmCurso": "Marcar como em curso",
+      "marcar": "marcar",
+      "portugues": "português",
+      "ingles": "inglês",
+      "pareiEm": "parei em {nota}",
+      "marcarOndeParei": "marcar onde parei",
+      "ondeParou": "Onde você parou neste material",
+      "pareiPlaceholder": "23:10, capítulo 4…"
+    },
+    "viewer": {
+      "buscandoTexto": "Buscando o texto do artigo…",
+      "videoNaoYoutube": "Este vídeo não é do YouTube, então não consigo tocá-lo aqui dentro.",
+      "abrirNoSite": "Abrir no site original",
+      "ultimaPosicao": "Última posição salva: {tempo}",
+      "perguntarMaterial": "Perguntar sobre este material"
+    },
+    "video": {
+      "carregando": "Carregando o vídeo…",
+      "retomandoDe": "Retomando de {tempo}."
+    },
+    "atividade": {
+      "tipoCodigo": "Código",
+      "tipoComandos": "Comandos",
+      "tipoExplicacao": "Explicação",
+      "tipoConfiguracao": "Configuração",
+      "tipoPratica": "Prática",
+      "etapaGerar1": "Relendo o que você já fez",
+      "etapaGerar2": "Escolhendo o próximo desafio",
+      "etapaGerar3": "Escrevendo o enunciado",
+      "etapaCorrigir1": "Lendo sua resposta",
+      "etapaCorrigir2": "Comparando com o que foi pedido",
+      "etapaCorrigir3": "Escrevendo a correção",
+      "erroGerar": "Não consegui gerar a próxima atividade.",
+      "erroCorrigir": "Não consegui corrigir agora.",
+      "atividadePratica": "Atividade prática",
+      "semIA": "sem IA",
+      "feitaNeste": "feita neste módulo",
+      "feitasNeste": "feitas neste módulo",
+      "entregueOque": "Entregue o que o módulo pede:",
+      "escrevaSolucaoInteira": ". Escreva a solução inteira — a correção compara com a referência e aponta o que difere.",
+      "escrevaSolucaoModulo": "Escreva sua solução para este módulo. A correção compara com a referência e aponta o que difere.",
+      "tentarDeNovo": "Tentar de novo",
+      "atividadeAtual": "Atividade atual",
+      "atividadeNumero": "· atividade {n}",
+      "verDica": "Ver dica",
+      "verDicas": "Ver dicas",
+      "perguntarAtividade": "Perguntar sobre esta atividade",
+      "suaResposta": "Sua resposta",
+      "respostaPlaceholder": "Escreva aqui, do zero.\n\ngit push  // comentários explicam o que o comando faz",
+      "comentariosContam1": "Comentários",
+      "comentariosContam2": " contam como a sua explicação. Só vale resposta para esta atividade.",
+      "proximaAtividade": "Próxima atividade",
+      "corrigindo": "Corrigindo…",
+      "enviarCorrecao": "Enviar para correção",
+      "escrevaAlgumasFrases": "Escreva ao menos algumas frases — uma linha não é explicação.",
+      "caracteresEscritos": "{n} caracteres escritos",
+      "carregandoRascunho": "carregando o rascunho…",
+      "gravando": "gravando…",
+      "gravadoNaConta": "gravado na sua conta",
+      "naoGravou": "não consegui gravar — o texto continua aqui",
+      "atividadesFeitas": "Atividades feitas neste módulo ({n})",
+      "naoPareceResposta": "Não parece uma resposta para esta atividade.",
+      "escrevaSolucaoPedida": "Escreva a solução do que o módulo pede.",
+      "nadaEntrouRevisao": "Nada entrou na revisão nem contou como estudo.",
+      "de100": "de 100 — quanto a explicação se sustenta sozinha",
+      "oQueFicouPelaMetade": "O que ficou pela metade",
+      "nenhumaLacuna": "Nenhuma lacuna encontrada. Você conseguiu explicar sem apoio.",
+      "umaLacunaRevisao": "1 lacuna entrou na sua revisão",
+      "lacunasRevisao": "{n} lacunas entraram na sua revisão",
+      "voltaComoQuestao": "e volta como questão, com outras palavras, no próximo quiz desta trilha."
+    },
+    "material": {
+      "langPt": "Português",
+      "langEn": "Inglês",
+      "langAmbos": "Ambos",
+      "buscarMaterial": "Buscar material",
+      "buscarPlaceholder": "Buscar em todo o seu material",
+      "idioma": "idioma",
+      "idiomaDoMaterial": "Idioma do material",
+      "filtrarPorTipo": "Filtrar por tipo",
+      "buscandoMaterial": "Buscando material…",
+      "curarEtapa1": "Buscando artigos, vídeos e documentação",
+      "curarEtapa2": "Conferindo se cada link abre",
+      "curarEtapa3": "Escolhendo os melhores",
+      "nadaEmPortuguesTitulo": "Nada em português",
+      "nadaEmPortuguesDescricao": "Não há material em português para este recorte — há {n} em inglês.",
+      "mostrarIngles": "Mostrar também em inglês",
+      "nadaEncontradoTitulo": "Nada encontrado",
+      "nadaEncontradoDescricao": "Nenhum material do seu plano casa com esse termo. Limpe a busca para voltar ao material deste módulo.",
+      "semMaterialTitulo": "Sem material para este módulo ainda",
+      "semMaterialDescricao": "Já procurei nas tecnologias deste módulo e não achei nada que passasse na verificação. Tentar de novo mais tarde costuma trazer resultado.",
+      "materialSingular": "material",
+      "materiaisPlural": "materiais",
+      "emTodoPlano": "em todo o seu plano.",
+      "paraTecnologias": "para as tecnologias deste módulo.",
+      "concluidoSingular": "concluído",
+      "concluidosPlural": "concluídos",
+      "tudoConcluido": "Tudo deste recorte já foi concluído.",
+      "concluidosSecao": "Concluídos",
+      "concluidoRotulo": "Concluído"
+    },
+    "quiz": {
+      "nenhumModuloTitulo": "Nenhum módulo aberto",
+      "nenhumModuloDescricao": "Abra um módulo do roadmap para gerar um quiz sobre ele.",
+      "quizDe": "Quiz de {titulo}",
+      "descricao": "Seis questões escritas na hora, sobre as tecnologias deste módulo e calibradas pelo seu nível atual. O resultado atualiza a proficiência no seu perfil — é a única evidência de domínio que o app coleta.",
+      "escrevendoQuestoes": "Escrevendo as questões…",
+      "comecarQuiz": "Começar quiz",
+      "iaLevaSegundos": "A IA leva alguns segundos.",
+      "levaCerca": "Leva cerca de 10 minutos.",
+      "gerarEtapa1": "Lendo o módulo e o seu nível",
+      "gerarEtapa2": "Escrevendo as questões",
+      "gerarEtapa3": "Conferindo o gabarito"
+    },
+    "quizRunner": {
+      "perguntaXdeY": "Pergunta {atual} de {total}",
+      "respondidas": "{n} respondidas",
+      "trechoDaQuestao": "Trecho da questão",
+      "opcoesDeResposta": "Opções de resposta",
+      "voltar": "Voltar",
+      "corrigindo": "Corrigindo…",
+      "enviarRespostas": "Enviar respostas",
+      "proxima": "Próxima",
+      "escolhaAlternativa": "Escolha uma alternativa.",
+      "bomResultado": "Bom resultado — a proficiência das tags deste quiz subiu no seu perfil.",
+      "abaixoDe70": "Abaixo de 70%. Revise o material antes de seguir; o perfil não subiu.",
+      "perguntaN": "Pergunta {n}",
+      "acertou": "acertou",
+      "errou": "errou",
+      "correta": "Correta:",
+      "vocEscolheu": "Você escolheu:",
+      "perguntarQuestao": "Perguntar sobre esta questão",
+      "gerarOutroQuiz": "Gerar outro quiz",
+      "umConceitoAcertou": "1 conceito que você tinha errado voltou e você acertou.",
+      "conceitosAcertou": "{n} conceitos que você tinha errado voltaram e você acertou.",
+      "raearAteSumir": "Eles vão rarear até sumir.",
+      "umConceitoVolta": "1 conceito volta",
+      "conceitosVoltam": "{n} conceitos voltam",
+      "noProximoQuiz": "no próximo quiz desta trilha, com outras palavras:"
+    },
+    "duvidas": {
+      "perguntar": "Perguntar",
+      "erroTutor": "Não consegui falar com o tutor agora.",
+      "perguntarAoTutor": "Perguntar ao tutor",
+      "tirarUmaDuvida": "Tirar uma dúvida",
+      "ficaGuardada": "fica guardada para revisar depois",
+      "novaDuvida": "Nova dúvida",
+      "fechar": "Fechar",
+      "promptVazio": "Não entendeu alguma parte? Pergunte do seu jeito — o tutor explica com base no que está nesta tela.",
+      "conversa": "Conversa",
+      "voce": "Você",
+      "tutor": "Tutor",
+      "abrirNoDepurador": "Abrir no depurador",
+      "querVerRodando": "Quer ver rodando, passo a passo?",
+      "exemplosParaDepurar": "Exemplos para depurar",
+      "gerarExemplo": "Gerar exemplo para depurar:",
+      "tutorEscrevendoExemplo": "Tutor está escrevendo o exemplo",
+      "tutorEscrevendo": "Tutor está escrevendo",
+      "escrevendoExemplo": "escrevendo o exemplo",
+      "explicacaoClara": "A explicação ficou clara?",
+      "simEntendi": "Sim, entendi",
+      "aindaNao": "Ainda não",
+      "aindaNaoEntendi": "Ainda não entendi.",
+      "suaDuvida": "Sua dúvida",
+      "placeholderContinuar": "Pergunte mais sobre isso…",
+      "placeholderNova": "Escreva sua dúvida…",
+      "enviar": "Enviar",
+      "enviarEnter": "Enviar (Enter)",
+      "codigoEm": "Código em {linguagem}",
+      "codigo": "Código"
+    }
+  },
+  "perfil": {
+    "carregando": "Carregando seu perfil…",
+    "titulo": "Perfil e tags",
+    "subtitulo": "O que está marcado aqui alimenta o roadmap. Desmarcar uma tag tira os módulos ligados a ela da próxima geração; marcar uma nova recalcula o prazo.",
+    "escalaDominio": "Escala de domínio",
+    "vazio": {
+      "titulo": "Nenhuma competência ainda",
+      "descricao": "Envie seu currículo para eu extrair as tecnologias, ou adicione uma a uma em Configurações, aba Skills.",
+      "enviarCurriculo": "Enviar currículo"
+    },
+    "grupos": {
+      "voceDomina": "Você domina · {n}",
+      "voceDominaDica": "N3 ou mais — entram como revisão curta: o caso difícil, a armadilha de produção e exercícios de nível avançado. Nunca do zero",
+      "comecaPorAqui": "O plano começa por aqui · {n}",
+      "comecaPorAquiDica": "N1 e N2 — entram para aprofundar, e vêm primeiro: a distância é curta e o resultado aparece nas primeiras semanas",
+      "doZero": "Do zero · {n}",
+      "doZeroDica": "N0 — também entram. O que o objetivo exige vai cedo, por ser o mais longo; o resto fica para o fim e é o primeiro a sair se as horas não fecharem"
+    },
+    "certificados": {
+      "titulo": "Certificados",
+      "tituloComContagem": "Certificados · {n}",
+      "verCursos": "Ver cursos",
+      "marcados": "Marcados como \"já possuo\" na aba Cursos",
+      "nenhum": "Nenhum ainda. Em Cursos, marque \"Já possuo\" nos certificados que você tem.",
+      "adicionarLinkedIn": "Adicionar ao LinkedIn"
+    },
+    "identidade": {
+      "cargo": "Cargo",
+      "senioridade": "Senioridade",
+      "experiencia": "Experiência",
+      "anos": "{n} anos",
+      "disponibilidade": "Disponibilidade",
+      "horasPorSemana": "{h}h por semana",
+      "sequencia": "Sequência",
+      "dias": "{n} dias",
+      "xp": "XP",
+      "editarPerfil": "Editar perfil",
+      "progressoResumo": "{feitos} de {total} · {pct}%",
+      "progressoPlano": "Progresso do plano"
+    },
+    "niveis": {
+      "querAprender": "quer aprender",
+      "contatoInicial": "contato inicial",
+      "comApoio": "com apoio",
+      "autonomo": "autônomo",
+      "referencia": "referência",
+      "especialista": "especialista"
+    },
+    "skills": {
+      "erroAdicionar": "Não consegui adicionar.",
+      "erroRemover": "Não consegui remover.",
+      "erroNivel": "Não consegui salvar o nível.",
+      "tituloPlano": "Skills do plano",
+      "noPerfil": "{n} no perfil",
+      "explicacao": "Marque o que faz parte do seu plano e diga o nível que você já tem. O roadmap cobre o caminho de onde você está até N3 — o que estiver em N3 ou acima ele não ensina de novo.",
+      "filtrar": "Filtrar por nome",
+      "filtrarPlaceholder": "ex: Kafka, Terraform",
+      "noPlano": "{n} de {total} no plano",
+      "semResultado": "Nenhuma tecnologia com “{termo}”. Tente outro termo, ou adicione pelo currículo — o que ele citar e faltar aqui entra no catálogo.",
+      "nivelEm": "Nível em {nome}",
+      "foraDoPlano": "fora do plano",
+      "jaDominado": "já dominado",
+      "aEvoluir": "a evoluir",
+      "categorias": {
+        "linguagem": "Linguagens",
+        "frontend": "Frontend",
+        "backend": "Backend",
+        "banco": "Bancos de dados",
+        "dados": "Dados",
+        "ia": "IA",
+        "devops": "DevOps",
+        "cloud": "Cloud",
+        "arquitetura": "Arquitetura",
+        "testes": "Testes",
+        "seguranca": "Segurança",
+        "mobile": "Mobile",
+        "ferramenta": "Ferramentas",
+        "metodologia": "Metodologia",
+        "soft-skill": "Comportamental"
+      }
+    },
+    "sugestoes": {
+      "demanda": {
+        "consolidada": "consolidada",
+        "emAlta": "em alta",
+        "aposta": "aposta"
+      },
+      "erroAdicionar": "Não consegui adicionar.",
+      "titulo": "Sugeridas para o seu objetivo",
+      "rever": "rever",
+      "aPartirDe": "A partir de “{objetivo}”. Adicionar põe a tecnologia no seu plano em N0, e o roadmap passa a cobri-la.",
+      "adicionando": "Adicionando…",
+      "adicionar": "Adicionar ao plano"
+    },
+    "tag": {
+      "origem": {
+        "cv": "do currículo",
+        "manual": "definido por você",
+        "quiz": "comprovado em quiz",
+        "roadmap": "estudado no plano"
+      },
+      "titulo": "N{n} · {origem} · confiança {conf}%"
+    },
+    "tutorial": {
+      "comoFunciona": "Como funcionam os níveis?",
+      "titulo": "Como funcionam os níveis",
+      "resumo": "resumo",
+      "contador": "{atual} de {total}",
+      "fechar": "Fechar tutorial",
+      "introducao": "Para cada tecnologia, marque se ela entra no seu plano e escolha o nível que você tem hoje. Seja honesto: o nível decide o que o roadmap ensina e o que ele pula.",
+      "niveisLabel": "Níveis",
+      "resumoN0N2Rotulo": "N0 a N2",
+      "resumoN0N2Texto": ": o roadmap ensina e vira meta de estudo.",
+      "resumoN3Rotulo": "N3 ou mais",
+      "resumoN3Texto": ": dominado — o roadmap não ensina de novo, e a tecnologia conta como sua stack nas Vagas.",
+      "resumoMudou": "Mudou de nível? Troque aqui a qualquer momento: o plano se ajusta na próxima semana.",
+      "anterior": "Anterior",
+      "entendi": "Entendi, vou marcar minhas skills",
+      "proximo": "Próximo",
+      "pular": "Pular tutorial",
+      "n0": {
+        "exemplo": "Ainda não usei, mas quero aprender.",
+        "plano": "Vira meta: o roadmap ensina do zero, e Cursos sugere certificados."
+      },
+      "n1": {
+        "exemplo": "Já vi em tutorial ou num projeto de estudo.",
+        "plano": "O roadmap começa pelos fundamentos, sem repetir o básico demais."
+      },
+      "n2": {
+        "exemplo": "Consigo usar, consultando documentação e exemplos.",
+        "plano": "O roadmap aprofunda até você fazer sozinho."
+      },
+      "n3": {
+        "exemplo": "Uso no trabalho sem ajuda, do começo ao fim.",
+        "plano": "Dominado: o roadmap não ensina de novo, só revisa. Conta como sua stack nas Vagas."
+      },
+      "n4": {
+        "exemplo": "Resolvo problemas difíceis e oriento outras pessoas.",
+        "plano": "Conta como ponto forte nas Vagas e nas sugestões de amigos."
+      },
+      "n5": {
+        "exemplo": "Referência no assunto: arquitetura, performance, detalhes internos.",
+        "plano": "Conta como ponto forte, e o plano usa como base para o que vem depois."
+      }
+    },
+    "regiao": {
+      "titulo": "Região e abrangência das vagas",
+      "descricao": "Vagas presenciais e híbridas aparecem só até esta distância da sua cidade. Vagas remotas aparecem sempre, de qualquer lugar.",
+      "ateQueDistancia": "Até que distância",
+      "raioLabel": "Raio das vagas presenciais",
+      "soRemotas": "Só remotas",
+      "km": "{km} km",
+      "ou": "ou",
+      "outroRaio": "Outro raio em km",
+      "outro": "outro",
+      "kmSufixo": "km",
+      "resumoSoRemotas": "Só vagas remotas vão aparecer.",
+      "resumoComCidade": "Presenciais e híbridas até {raio} km de {cidade}.",
+      "resumoSemCidade": "Escolha a sua cidade para as presenciais aparecerem pela distância.",
+      "padrao": " (padrão)",
+      "erroBusca": "Não consegui buscar cidades agora.",
+      "cidadeLabel": "Cidade onde você mora",
+      "cidadePlaceholder": "Comece a digitar: Vit…",
+      "cidadesSugeridas": "Cidades sugeridas",
+      "capital": "capital"
+    },
+    "avatar": {
+      "erroEnviar": "Não consegui enviar a imagem.",
+      "erroRemover": "Não consegui remover a imagem.",
+      "alt": "Foto de perfil de {nome}",
+      "enviando": "Enviando…",
+      "alterar": "Alterar",
+      "enviarFoto": "Enviar foto",
+      "remover": "Remover"
+    },
+    "objetivo": {
+      "erroSalvar": "Não consegui salvar.",
+      "ondeChegar": "Onde você quer chegar",
+      "escolhaOuDescreva": "escolha um destino ou descreva o seu abaixo",
+      "areaLabel": "Área",
+      "destinoPlanoLabel": "Destino do plano",
+      "destinoLivre": "Seu destino atual foi escrito por você: “{destino}”. Escolher um da lista substitui.",
+      "textoLivre": "Descreva em texto livre",
+      "geraPlanoInteiro": "gera o plano inteiro",
+      "textoLivreDescricao": "Conte onde você está, para onde quer ir e o que atrapalha. A partir disso o roadmap sai por fases, a Biblioteca busca vídeo e artigo das tecnologias certas, e os quizzes saem no seu nível.",
+      "contextoLabel": "Contexto para a geração do plano",
+      "contextoPlaceholder": "ex: sou frontend há 3 anos, quero virar fullstack Java sem depender de IA para codar, tenho 8h por semana e quero passar em entrevista técnica em inglês até junho",
+      "salvaSozinho": "Salva sozinho quando você sai do campo — não há botão a apertar.",
+      "horasPorSemana": "Horas por semana",
+      "horasDescricao": "O plano é dimensionado por isto, e não pelo ideal do assunto. Um plano que exige 20h de quem tem 6h não é ambicioso — é um plano abandonado na terceira semana.",
+      "salvando": "salvando…",
+      "salvo": "salvo",
+      "naoSalvou": "não salvou — {mensagem}"
+    }
+  },
+  "curriculo": {
+    "carregando": "Carregando seus currículos…",
+    "kicker": "Base do seu plano",
+    "envio": {
+      "titulo": "Envie seu currículo",
+      "descricao": "Leio o arquivo, extraio suas competências, estimo o nível de cada uma e monto o roadmap a partir do que falta. Você revisa tudo antes de eu gerar.",
+      "enviando": "Enviando…",
+      "arraste": "Arraste o arquivo aqui ou clique para escolher",
+      "limites": "PDF, DOCX, ODT, RTF, TXT ou MD · até 10 MB · fica na sua conta, não é compartilhado"
+    },
+    "leitura": {
+      "titulo": "Ler o currículo",
+      "passo1": "Separando seções: experiência, formação, projetos",
+      "passo2": "Reconhecendo tecnologias citadas e o contexto de uso",
+      "passo3": "Estimando nível por tempo de uso e responsabilidade",
+      "passo4": "Cruzando com a meta para achar as lacunas",
+      "erroVisual": "{erro}. Vou mandar o arquivo inteiro para o modelo ler visualmente.",
+      "lerCurriculo": "Ler currículo",
+      "enviarOutro": "Enviar outro arquivo"
+    },
+    "revisao": {
+      "titulo": "Revise o que eu li",
+      "descricao": "Estimei o nível de cada tecnologia pelo tempo de uso e pela responsabilidade descrita. Ajuste o que estiver errado — o plano é montado a partir disto.",
+      "extraido": "Extraído do currículo",
+      "nome": "Nome",
+      "cargoAtual": "Cargo atual",
+      "senioridade": "Senioridade",
+      "experiencia": "Experiência",
+      "anos": "{n} anos",
+      "cidade": "Cidade",
+      "tecnologias": "Tecnologias · {n}",
+      "ajusteOuRemova": "ajuste o nível ou remova o que não faz parte do plano",
+      "importando": "Importando…",
+      "importar": "Importar {n} competências",
+      "entramComoMeta": "{n} entram como meta de estudo",
+      "escala": "Escala:",
+      "semFrase": "sem frase de apoio no currículo",
+      "nivelDe": "Nível de {nome}",
+      "foraDoPlano": "fora do plano"
+    }
+  },
+  "relatar": {
+    "titulo": "Relatar",
+    "subtitulo": "Encontrou um problema ou tem uma ideia? O relato vai direto para quem cuida do PathR.",
+    "tipo": {
+      "reclamacao": "Reclamação",
+      "sugestao": "Sugestão"
+    },
+    "status": {
+      "recebido": "Recebido",
+      "emAnalise": "Em análise",
+      "resolvido": "Resolvido"
+    },
+    "erro": {
+      "formatoFoto": "A foto precisa ser JPG, PNG ou WebP.",
+      "fotoGrande": "A foto passa de {mb} MB.",
+      "curto": "Conte um pouco mais: ao menos 10 caracteres.",
+      "envioFalhou": "Não consegui enviar."
+    },
+    "aviso": {
+      "enviado": "Relato enviado. Obrigado — ele já está com a moderação."
+    },
+    "form": {
+      "intro": "Algo não funcionou ou poderia ser melhor? Conte aqui. Uma captura de tela ajuda a entender o que você viu.",
+      "tipoLabel": "Tipo de relato",
+      "oQueAconteceu": "O que aconteceu?",
+      "oQueSugere": "O que você sugere?",
+      "placeholderReclamacao": "ex: ao salvar o objetivo, a tela voltou para o início e perdi o que tinha escrito",
+      "placeholderSugestao": "ex: poder exportar o plano da semana em PDF",
+      "trocarFoto": "Trocar foto",
+      "anexarFoto": "Anexar foto",
+      "previaAlt": "Prévia da foto anexada",
+      "remover": "Remover",
+      "fotoOpcional": "Opcional · JPG, PNG ou WebP até {mb} MB",
+      "enviando": "Enviando…",
+      "enviar": "Enviar relato"
+    },
+    "meus": {
+      "titulo": "Seus relatos",
+      "resposta": "Resposta:"
+    },
+    "midia": {
+      "erroAbrir": "Não consegui abrir a mídia agora.",
+      "abrirTitulo": "Abrir a foto em tamanho real numa nova aba",
+      "abrindo": "Abrindo…",
+      "rotulo": "Mídia anexada",
+      "carregando": "carregando a foto…"
+    }
+  },
+  "manual": {
+    "kicker": "Manual de bordo",
+    "titulo": "Como o PathR funciona",
+    "precisaDe": "Precisa de:",
+    "abrir": "Abrir {nome}",
+    "termos": "Termos de uso, privacidade e segurança ficam em pathr.notter.com.br/termos, /privacidade e /seguranca.",
+    "intro": {
+      "p1": "O PathR monta um plano de estudos do que você já sabe até onde quer chegar, e em volta dele junta cursos com certificado, vagas que combinam com você, idiomas e pessoas para estudar junto. Quase tudo depende de duas coisas que só você pode dizer: ",
+      "objetivo": "o seu objetivo",
+      "e": " e ",
+      "skills": "as suas skills com o nível",
+      "p2": ". Comece por elas."
+    },
+    "grupos": {
+      "estudar": "Estudar",
+      "carreira": "Carreira",
+      "pessoas": "Pessoas",
+      "configuracoes": "Configurações"
+    },
+    "areas": {
+      "inicio": {
+        "nome": "Início",
+        "oQueFaz": "Seu painel do dia: o módulo para continuar, a lista da semana, a sequência de dias e o mapa de constância.",
+        "precisaDe": "Um roadmap gerado para mostrar o que continuar."
+      },
+      "roadmap": {
+        "nome": "Roadmap",
+        "oQueFaz": "O plano inteiro em fases e módulos, com as horas de cada um. Toda semana ele se reajusta pelo que você fez (Ajustes de rota).",
+        "precisaDe": "Objetivo e skills preenchidos antes de gerar."
+      },
+      "trilha": {
+        "nome": "Trilha atual",
+        "oQueFaz": "O módulo em que você está: material para estudar, quiz para provar o que aprendeu e atividade prática.",
+        "precisaDe": "Um roadmap gerado."
+      },
+      "laboratorio": {
+        "nome": "Laboratório de código",
+        "oQueFaz": "Exemplos de código percorridos linha a linha, com o valor das variáveis a cada passo. Sugere exemplos pelo seu roadmap e nível.",
+        "precisaDe": "Linguagens marcadas em Skills."
+      },
+      "idiomas": {
+        "nome": "Idiomas",
+        "oQueFaz": "Nivelamento de inglês (A1 a C2), treino diário no seu nível e tradução de palavras com um toque."
+      },
+      "cursos": {
+        "nome": "Cursos",
+        "oQueFaz": "Cursos com certificado para o LinkedIn, gratuitos primeiro, com o quanto o assunto é procurado. Marque \"já possuo\" para aparecer no seu perfil.",
+        "precisaDe": "Metas marcadas em Skills ou um objetivo."
+      },
+      "vagas": {
+        "nome": "Vagas",
+        "oQueFaz": "Vagas reais na sua região ou remotas, da que mais combina com você para a que menos, com o que falta para cada uma e cursos para chegar lá.",
+        "precisaDe": "Skills marcadas e a cidade em Configurações › Objetivo."
+      },
+      "curriculo": {
+        "nome": "Currículo",
+        "oQueFaz": "Envie o currículo: a IA lê e sugere suas tecnologias com nível, para você revisar e importar."
+      },
+      "perfil": {
+        "nome": "Perfil e tags",
+        "oQueFaz": "O resumo de quem você é no app: o que domina, o que está aprendendo, o que quer aprender e seus certificados."
+      },
+      "amigos": {
+        "nome": "Amigos",
+        "oQueFaz": "Convites, sugestões de quem mora perto ou estuda o mesmo, e a sequência de estudos em dupla — com card para compartilhar aos 7, 30, 60 e 90 dias.",
+        "precisaDe": "Um @ (escolhido no cadastro, editável em Configurações › Conta)."
+      },
+      "relatar": {
+        "nome": "Relatar",
+        "oQueFaz": "Mande uma reclamação ou sugestão, com foto se quiser, e acompanhe a resposta da moderação."
+      },
+      "conta": {
+        "nome": "Conta",
+        "oQueFaz": "Nome, @, foto, senha, chave de acesso (passkey) e segundo fator."
+      },
+      "objetivo": {
+        "nome": "Objetivo",
+        "oQueFaz": "Onde você quer chegar, as horas por semana e a região das vagas (cidade e raio em km)."
+      },
+      "skills": {
+        "nome": "Skills",
+        "oQueFaz": "As tecnologias do seu plano e o nível de cada uma, de N0 (quero aprender) a N5 (especialista)."
+      },
+      "avisos": {
+        "nome": "Avisos e privacidade",
+        "oQueFaz": "Quais e-mails receber, se aparece nas sugestões de amigos, exportar todos os seus dados ou excluir a conta."
+      },
+      "integracoes": {
+        "nome": "Integrações",
+        "oQueFaz": "O estado dos serviços que o app usa (IA, vagas, tradução, e-mail) — útil quando algo parece fora do ar."
+      }
+    },
+    "passos": {
+      "titulo": "Primeiros passos",
+      "conferindo": "conferindo…",
+      "progresso": "{feitos} de {total} essenciais feitos",
+      "manualDeBordo": "Manual de bordo",
+      "pular": "Pular",
+      "proximoPasso": "Próximo passo:",
+      "opcional": "opcional",
+      "feito": "feito",
+      "emSeguida": "Em seguida:",
+      "irPara": "Ir para: {titulo}",
+      "ir": "Ir",
+      "regiao": {
+        "titulo": "Diga onde você mora",
+        "onde": "Configurações › Objetivo › Região e abrangência das vagas",
+        "oQueFazer": "Escolha sua cidade e até quantos km você aceita ir para uma vaga presencial.",
+        "depois": "Vagas passa a mostrar só presenciais no seu raio (remotas sempre), e o seu dia de estudo segue o seu fuso."
+      },
+      "objetivo": {
+        "titulo": "Escolha o seu objetivo",
+        "onde": "Configurações › Objetivo",
+        "oQueFazer": "Escolha um destino pronto ou descreva em texto livre onde quer chegar, e as horas por semana.",
+        "depois": "O roadmap é montado para esse destino, e Vagas e Cursos priorizam o que ele pede."
+      },
+      "curriculo": {
+        "titulo": "Envie seu currículo",
+        "onde": "Currículo",
+        "oQueFazer": "Suba o PDF ou DOCX: a IA lê e sugere suas tecnologias com um nível estimado, para você revisar.",
+        "depois": "As skills chegam preenchidas no passo seguinte — você só confere os níveis."
+      },
+      "skills": {
+        "titulo": "Marque suas skills e os níveis",
+        "onde": "Configurações › Skills",
+        "oQueFazer": "Marque as tecnologias do seu plano e o nível de cada uma (N0 = quero aprender … N5 = especialista).",
+        "depois": "Cursos passa a sugerir certificados, Vagas compara sua stack, e o Laboratório mostra as suas linguagens."
+      },
+      "roadmap": {
+        "titulo": "Gere o seu roadmap",
+        "onde": "Roadmap",
+        "oQueFazer": "Gere o plano: fases e módulos do que você sabe até o objetivo, no seu ritmo semanal.",
+        "depois": "Aparecem a Trilha atual, a lista da semana e o progresso no Início, e o plano se reajusta toda semana."
+      },
+      "idioma": {
+        "titulo": "Faça o nivelamento de inglês",
+        "onde": "Idiomas",
+        "oQueFazer": "Responda o teste de nível: ele mede o seu CEFR (A1 a C2) de verdade.",
+        "depois": "Vagas compara o inglês pedido com o seu, e os treinos diários ficam no seu nível."
+      },
+      "amigos": {
+        "titulo": "Adicione amigos",
+        "onde": "Amigos",
+        "oQueFazer": "Procure pelo @ ou veja as sugestões de quem mora perto ou estuda o mesmo que você.",
+        "depois": "Estudando no mesmo dia, vocês formam uma sequência juntos — com card para compartilhar a cada marco."
+      }
+    }
+  },
+  "roadmap": {
+    "page": {
+      "carregando": "Carregando seu plano…",
+      "meta": "{semanas} semanas · {horas}h por semana · {pct}% concluído",
+      "formato": "Formato do roadmap",
+      "novoPlano": "Gerar um novo plano",
+      "historicoNota": "O plano atual fica no histórico — gerar outro não apaga este.",
+      "views": {
+        "timeline": "Linha do tempo",
+        "fases": "Fases",
+        "matriz": "Matriz"
+      },
+      "notas": {
+        "a": "Timeline vertical: a ordem manda, o prazo fica à esquerda.",
+        "b": "Fases lado a lado, para ver o escopo inteiro de uma vez.",
+        "c": "Matriz de competência: onde você está e até onde o plano leva."
+      }
+    },
+    "matriz": {
+      "vazio": "Este plano ainda não aponta para competências do seu perfil.",
+      "celula": "{nome} · N{nivel} · {estado}",
+      "estado": {
+        "atingido": "atingido",
+        "proximo": "próximo nível do plano",
+        "alem": "além deste plano"
+      },
+      "legendaPreenchido": "preenchido = nível registrado no seu perfil",
+      "legendaContorno": "contorno = próximo nível que este plano alcança"
+    },
+    "gerar": {
+      "titulo": "Gerar seu plano",
+      "intro": "Monto as fases a partir das {n} competências do seu perfil e do objetivo abaixo.",
+      "objetivoLabel": "Onde você quer chegar",
+      "objetivoPlaceholder": "ex: fullstack Java pleno, com foco em vagas internacionais",
+      "prazo": "Prazo",
+      "prazoLabel": "Prazo do plano",
+      "horas": "Horas por semana",
+      "horasLabel": "Horas por semana",
+      "horizontes": {
+        "s8": "8 semanas",
+        "s12": "12 semanas",
+        "s26": "26 semanas",
+        "ano": "1 ano"
+      },
+      "montando": "Montando o plano…",
+      "gerar": "Gerar plano",
+      "cancelar": "Cancelar",
+      "dicaMontando": "A IA está escrevendo as fases — costuma levar menos de 20 segundos.",
+      "dica": "Leva alguns segundos: o plano é escrito sob medida.",
+      "etapas": {
+        "lendo": "Lendo seu currículo e suas skills",
+        "fases": "Desenhando as fases",
+        "modulos": "Escrevendo os módulos",
+        "ordem": "Organizando a ordem de estudo"
+      },
+      "chips": {
+        "entrevistaIngles": "Quero entrevista em inglês",
+        "semIa": "Sem depender de IA para codar",
+        "pratico": "Prefiro projeto prático a leitura",
+        "fimDeSemana": "Tenho o fim de semana livre"
+      },
+      "contextoLabel": "O que mais eu deveria saber (opcional)",
+      "contextoPlaceholder": "ex: sou frontend há 3 anos, quero virar fullstack Java, e a entrevista é em junho",
+      "semSkills": {
+        "titulo": "Antes, preciso saber o que você já sabe",
+        "descricao": "O plano cobre a distância entre o que você domina e onde quer chegar. Envie seu currículo, que eu leio e extraio as tecnologias, ou marque suas competências à mão.",
+        "enviarCv": "Enviar currículo",
+        "marcar": "Marcar competências"
+      }
+    },
+    "fases": {
+      "fase": "Fase {n}",
+      "semanaCurta": "sem. {inicio}–{fim}"
+    },
+    "timeline": {
+      "fase": "Fase {n}",
+      "semanas": "semanas {inicio}–{fim}"
+    },
+    "ajustes": {
+      "titulo": "Ajustes de rota",
+      "conferindo": "Conferindo…",
+      "reajustar": "Reajustar agora",
+      "explicacao": "O plano se corrige toda semana com o que foi medido: domínio comprovado em quiz vira revisão curta, lacuna recorrente ganha mais tempo, e o cronograma segue o seu ritmo real.",
+      "semAjuste": "Nenhum ajuste necessário — o plano está coerente com o que foi medido.",
+      "aplicadoUm": "{n} ajuste aplicado.",
+      "aplicadoVarios": "{n} ajustes aplicados.",
+      "erroFallback": "Não consegui ajustar a rota.",
+      "ultimo": "Último ajuste · semana {semana} · {data}",
+      "horas": "{antes}h → {depois}h",
+      "reagenda": "termina na semana {antes} → {depois}",
+      "tipo": {
+        "compactar": "Compactado",
+        "reforcar": "Reforçado",
+        "reagendar": "Cronograma"
+      }
+    }
   }
 }

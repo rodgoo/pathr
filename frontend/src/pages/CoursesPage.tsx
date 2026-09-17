@@ -35,8 +35,9 @@ import { courses as coursesApi } from "@/api/endpoints";
 import type { Course, CourseList, DemandBand } from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
 import { useQuery } from "@/hooks/useApi";
+import { useIdioma, useT, type Traduzir } from "@/lib/i18n";
 import { C, HAIRLINE, SIZE, TEXT, tint } from "@/lib/tokens";
-import { CATEGORIAS } from "@/components/profile/SkillsTab";
+import { CATEGORIAS, rotuloCategoria } from "@/components/profile/SkillsTab";
 import { Icon } from "@/components/ui/icons";
 import { Segmented } from "@/components/ui/Segmented";
 import { Select } from "@/components/ui/Select";
@@ -51,21 +52,21 @@ type Ordem = "relevancia" | "mais_procurados" | "menos_procurados";
 /** O curso com as categorias das suas tecnologias (backend, cloud…), para o filtro. */
 type Curso = Course & { categorias?: string[] };
 
-const FILTROS: readonly { value: Filtro; label: string }[] = [
-  { value: "todos", label: "Todos" },
-  { value: "gratuitos", label: "Gratuitos" },
-  { value: "pagos", label: "Pagos" },
+const filtros = (t: Traduzir): readonly { value: Filtro; label: string }[] => [
+  { value: "todos", label: t("cursos.filtro.todos") },
+  { value: "gratuitos", label: t("cursos.filtro.gratuitos") },
+  { value: "pagos", label: t("cursos.filtro.pagos") },
 ];
 
-const ESCOPOS: readonly { value: Escopo; label: string }[] = [
-  { value: "voce", label: "Para você" },
-  { value: "catalogo", label: "Catálogo inteiro" },
+const escopos = (t: Traduzir): readonly { value: Escopo; label: string }[] => [
+  { value: "voce", label: t("cursos.escopo.voce") },
+  { value: "catalogo", label: t("cursos.escopo.catalogo") },
 ];
 
-const ORDENS: readonly { value: Ordem; label: string }[] = [
-  { value: "relevancia", label: "Mais relevantes para você" },
-  { value: "mais_procurados", label: "Mais procurados primeiro" },
-  { value: "menos_procurados", label: "Menos procurados primeiro" },
+const ordens = (t: Traduzir): readonly { value: Ordem; label: string }[] => [
+  { value: "relevancia", label: t("cursos.ordem.relevancia") },
+  { value: "mais_procurados", label: t("cursos.ordem.maisProcurados") },
+  { value: "menos_procurados", label: t("cursos.ordem.menosProcurados") },
 ];
 
 const TODAS = "todas";
@@ -76,18 +77,18 @@ function semAcento(texto: string): string {
   return texto.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
 }
 
-const NIVEL: Record<Course["nivel"], string> = {
-  iniciante: "Iniciante",
-  intermediario: "Intermediário",
-  avancado: "Avançado",
-};
+const nivelLabel = (t: Traduzir): Record<Course["nivel"], string> => ({
+  iniciante: t("cursos.nivel.iniciante"),
+  intermediario: t("cursos.nivel.intermediario"),
+  avancado: t("cursos.nivel.avancado"),
+});
 
-const MOTIVO: Record<Course["motivos"][number]["tipo"], string> = {
-  meta: "Sua meta",
-  quero_aprender: "Quero aprender",
-  roadmap: "No seu roadmap",
-  objetivo: "Seu objetivo",
-};
+const motivoLabel = (t: Traduzir): Record<Course["motivos"][number]["tipo"], string> => ({
+  meta: t("cursos.motivo.meta"),
+  quero_aprender: t("cursos.motivo.queroAprender"),
+  roadmap: t("cursos.motivo.roadmap"),
+  objetivo: t("cursos.motivo.objetivo"),
+});
 
 /** Segmentos acesos e a cor da chama em cada faixa. Do cinza ao vermelho. */
 const CHAMA: Record<DemandBand, { acesos: number; cor: string }> = {
@@ -102,12 +103,12 @@ const CHAMA: Record<DemandBand, { acesos: number; cor: string }> = {
  * esquerda para a direita, e um curso "em alta" mostra o caminho até lá. */
 const FAIXA_DO_SEGMENTO: DemandBand[] = ["basico", "comum", "procurado", "em_alta", "pegando_fogo"];
 
-const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto",
-  "setembro", "outubro", "novembro", "dezembro"];
-
-function mesPorExtenso(anoMes: string): string {
+function mesPorExtenso(anoMes: string, idioma: string): string {
   const [ano, mes] = anoMes.split("-").map(Number);
-  return MESES[mes - 1] ? `${MESES[mes - 1]} de ${ano}` : anoMes;
+  if (!ano || !mes || mes < 1 || mes > 12) return anoMes;
+  return new Intl.DateTimeFormat(idioma, { month: "long", year: "numeric" }).format(
+    new Date(ano, mes - 1, 1),
+  );
 }
 
 /** O formulário "Adicionar certificação" do LinkedIn, já preenchido. */
@@ -127,6 +128,9 @@ export function linkParaLinkedIn(
 }
 
 export function CoursesPage() {
+  const t = useT();
+  const { idioma } = useIdioma();
+  const nf = new Intl.NumberFormat(idioma);
   const { dispatch } = useAppState();
   const [escopo, setEscopo] = useState<Escopo>("voce");
   const lista = useQuery(
@@ -155,19 +159,23 @@ export function CoursesPage() {
     return () => window.clearTimeout(timer);
   }, [recemMarcado]);
 
-  if (lista.loading) return <Loading label="Procurando cursos com certificado…" />;
+  if (lista.loading) return <Loading label={t("cursos.carregando")} />;
   if (lista.error) return <ErrorState message={lista.error} onRetry={lista.reload} />;
   if (!lista.data) return null;
 
   const { conferido_em, tem_pedido } = lista.data;
   const cursos = lista.data.cursos as Curso[];
 
+  // O nome da categoria no idioma de quem lê; categoria fora do catálogo
+  // conhecido cai no próprio slug.
+  const nomeCategoria = (slug: string) => rotuloCategoria(t, slug, NOME_DA_CATEGORIA.get(slug) ?? slug);
+
   // As opções dos filtros saem da lista que chegou: filtrar por uma categoria
   // que não tem curso nenhum só levaria a uma tela vazia.
   const categorias = [...new Set(cursos.flatMap((curso) => curso.categorias ?? []))].sort((a, b) =>
-    (NOME_DA_CATEGORIA.get(a) ?? a).localeCompare(NOME_DA_CATEGORIA.get(b) ?? b, "pt-BR"),
+    nomeCategoria(a).localeCompare(nomeCategoria(b), idioma),
   );
-  const tecnologias = [...new Set(cursos.flatMap((curso) => curso.tags))].sort((a, b) => a.localeCompare(b, "pt-BR"));
+  const tecnologias = [...new Set(cursos.flatMap((curso) => curso.tags))].sort((a, b) => a.localeCompare(b, idioma));
 
   function marcarPossuo(curso: Course, possuo: boolean) {
     setPossuidos((atual) => {
@@ -224,16 +232,18 @@ export function CoursesPage() {
       >
         <div style={{ flex: 1, minWidth: 250 }}>
           <div style={{ fontSize: SIZE.apoio, color: TEXT.muted }}>
-            {filtrados.length} {filtrados.length === 1 ? "curso" : "cursos"} · {gratuitos.length} com certificado
-            gratuito
+            {t("cursos.contador", {
+              n: nf.format(filtrados.length),
+              cursos: filtrados.length === 1 ? t("cursos.curso") : t("cursos.cursos"),
+              gratuitos: nf.format(gratuitos.length),
+            })}
           </div>
-          <h1 style={{ fontSize: 28, margin: 0 }}>Cursos com certificado</h1>
+          <h1 style={{ fontSize: 28, margin: 0 }}>{t("cursos.titulo")}</h1>
           <p style={{ margin: "5.6px 0 0", fontSize: SIZE.corpo, color: TEXT.strong, maxWidth: "70ch" }}>
-            Escolhidos pelo que você quer aprender, para colocar no LinkedIn. Todos emitem
-            certificado, e os gratuitos vêm sempre primeiro.
+            {t("cursos.subtitulo")}
           </p>
         </div>
-        <Segmented name="cursos-escopo" label="Quais cursos" value={escopo} options={ESCOPOS} onChange={setEscopo} />
+        <Segmented name="cursos-escopo" label={t("cursos.quaisCursos")} value={escopo} options={escopos(t)} onChange={setEscopo} />
       </header>
 
       {cursos.length > 0 ? (
@@ -247,57 +257,57 @@ export function CoursesPage() {
             }}
           >
             <div className="field" style={{ margin: 0 }}>
-              <label htmlFor="cursos-busca">Buscar</label>
+              <label htmlFor="cursos-busca">{t("cursos.buscar")}</label>
               <input
                 id="cursos-busca"
                 className="input"
                 type="search"
-                placeholder="Curso, emissor ou tecnologia"
+                placeholder={t("cursos.buscarPlaceholder")}
                 value={busca}
                 onChange={(evento) => setBusca(evento.target.value)}
               />
             </div>
             <div className="field" style={{ margin: 0 }}>
-              <label htmlFor="cursos-categoria">Categoria</label>
+              <label htmlFor="cursos-categoria">{t("cursos.categoria")}</label>
               <Select
                 id="cursos-categoria"
                 value={categoria}
                 onChange={setCategoria}
                 options={[
-                  { value: TODAS, label: "Todas as categorias" },
-                  ...categorias.map((slug) => ({ value: slug, label: NOME_DA_CATEGORIA.get(slug) ?? slug })),
+                  { value: TODAS, label: t("cursos.todasCategorias") },
+                  ...categorias.map((slug) => ({ value: slug, label: nomeCategoria(slug) })),
                 ]}
               />
             </div>
             <div className="field" style={{ margin: 0 }}>
-              <label htmlFor="cursos-stack">Stack</label>
+              <label htmlFor="cursos-stack">{t("cursos.stack")}</label>
               <Select
                 id="cursos-stack"
                 value={stack}
                 onChange={setStack}
                 options={[
-                  { value: TODAS, label: "Todas as tecnologias" },
+                  { value: TODAS, label: t("cursos.todasTecnologias") },
                   ...tecnologias.map((nome) => ({ value: nome, label: nome })),
                 ]}
               />
             </div>
             <div className="field" style={{ margin: 0 }}>
-              <label htmlFor="cursos-ordem">Ordenar</label>
-              <Select id="cursos-ordem" value={ordem} onChange={setOrdem} options={ORDENS} />
+              <label htmlFor="cursos-ordem">{t("cursos.ordenar")}</label>
+              <Select id="cursos-ordem" value={ordem} onChange={setOrdem} options={ordens(t)} />
             </div>
           </div>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 8.4, marginTop: 10 }}>
             <Segmented
               name="cursos-filtro"
-              label="Tipo de certificado"
+              label={t("cursos.tipoCertificado")}
               value={filtro}
-              options={FILTROS}
+              options={filtros(t)}
               onChange={setFiltro}
             />
             {filtrando ? (
               <button type="button" className="btn btn-ghost" style={{ fontSize: 12 }} onClick={limpar}>
                 <Icon name="x" size={14} />
-                Limpar filtros
+                {t("cursos.limparFiltros")}
               </button>
             ) : null}
             {escondidos > 0 ? (
@@ -309,7 +319,9 @@ export function CoursesPage() {
                 onClick={() => setMostrarPossuidos((valor) => !valor)}
               >
                 <Icon name="check" size={14} />
-                {mostrarPossuidos ? "Esconder os que já possuo" : `Mostrar os que já possuo (${escondidos})`}
+                {mostrarPossuidos
+                  ? t("cursos.esconderPossuidos")
+                  : t("cursos.mostrarPossuidos", { n: nf.format(escondidos) })}
               </button>
             ) : null}
           </div>
@@ -335,49 +347,49 @@ export function CoursesPage() {
         >
           <Icon name="check" size={15} style={{ color: C.verde }} />
           <span style={{ flex: 1, minWidth: 0 }}>
-            <strong>{recemMarcado.titulo}</strong> saiu da lista e foi para Perfil e tags.
+            <strong>{recemMarcado.titulo}</strong> {t("cursos.saiuDaLista")}
           </span>
           <button type="button" className="btn btn-ghost" style={{ fontSize: 12 }} onClick={() => void desfazer(recemMarcado)}>
-            Desfazer
+            {t("cursos.desfazer")}
           </button>
         </div>
       ) : null}
 
       {cursos.length > 0 && filtrados.length === 0 && escondidos === cursos.length ? (
         <EmptyState
-          title="Você já possui todos os cursos desta lista"
+          title={t("cursos.vazioPossuiTodos.titulo")}
           description={
             escopo === "voce"
-              ? "Eles estão em Perfil e tags. Procure no catálogo inteiro para ver outros certificados."
-              : "Eles estão em Perfil e tags."
+              ? t("cursos.vazioPossuiTodos.descVoce")
+              : t("cursos.vazioPossuiTodos.descCatalogo")
           }
           action={
             escopo === "voce" ? (
               <button type="button" className="btn btn-secondary" onClick={() => setEscopo("catalogo")}>
                 <Icon name="search" size={15} />
-                Buscar no catálogo inteiro
+                {t("cursos.buscarCatalogo")}
               </button>
             ) : undefined
           }
         />
       ) : cursos.length > 0 && filtrados.length === 0 ? (
         <EmptyState
-          title="Nenhum curso com estes filtros"
+          title={t("cursos.vazioFiltros.titulo")}
           description={
             escopo === "voce"
-              ? "Tente outra busca ou procure no catálogo inteiro, que traz também o que você ainda não pediu."
-              : "Tente outra busca, categoria ou tecnologia."
+              ? t("cursos.vazioFiltros.descVoce")
+              : t("cursos.vazioFiltros.descCatalogo")
           }
           action={
             escopo === "voce" ? (
               <button type="button" className="btn btn-secondary" onClick={() => setEscopo("catalogo")}>
                 <Icon name="search" size={15} />
-                Buscar no catálogo inteiro
+                {t("cursos.buscarCatalogo")}
               </button>
             ) : (
               <button type="button" className="btn btn-secondary" onClick={limpar}>
                 <Icon name="x" size={15} />
-                Limpar filtros
+                {t("cursos.limparFiltros")}
               </button>
             )
           }
@@ -387,8 +399,8 @@ export function CoursesPage() {
       {cursos.length === 0 ? (
         tem_pedido ? (
           <EmptyState
-            title="Ainda não há certificação séria para o que você pediu"
-            description="Só entram cursos com certificado de emissor reconhecido. Marque outras tecnologias como meta e a lista cresce."
+            title={t("cursos.vazioSemCurso.titulo")}
+            description={t("cursos.vazioSemCurso.desc")}
             action={
               <button
                 type="button"
@@ -396,14 +408,14 @@ export function CoursesPage() {
                 onClick={() => dispatch({ type: "navigate", screen: "config", settingsTab: "skills" })}
               >
                 <Icon name="code" size={15} />
-                Escolher tecnologias
+                {t("cursos.escolherTecnologias")}
               </button>
             }
           />
         ) : (
           <EmptyState
-            title="Diga o que você quer aprender"
-            description="Os cursos saem do seu objetivo e das tecnologias marcadas como meta. Sem isso, não há como escolher."
+            title={t("cursos.vazioSemPedido.titulo")}
+            description={t("cursos.vazioSemPedido.desc")}
             action={
               <button
                 type="button"
@@ -411,7 +423,7 @@ export function CoursesPage() {
                 onClick={() => dispatch({ type: "navigate", screen: "config", settingsTab: "objetivo" })}
               >
                 <Icon name="flag" size={15} />
-                Definir objetivo
+                {t("cursos.definirObjetivo")}
               </button>
             }
           />
@@ -420,25 +432,24 @@ export function CoursesPage() {
         <>
           {filtro !== "pagos" ? (
             <Bloco
-              titulo="Certificado gratuito"
+              titulo={t("cursos.blocoGratuito")}
               cursos={gratuitos}
               possuidos={possuidos}
               onPossuo={marcarPossuo}
-              vazio="Nenhum curso gratuito para o que você pediu."
+              vazio={t("cursos.vazioGratuito")}
             />
           ) : null}
           {filtro !== "gratuitos" ? (
             <Bloco
-              titulo="Certificado pago"
+              titulo={t("cursos.blocoPago")}
               cursos={pagos}
               possuidos={possuidos}
               onPossuo={marcarPossuo}
-              vazio="Nenhum curso pago para o que você pediu."
+              vazio={t("cursos.vazioPago")}
             />
           ) : null}
           <p style={{ margin: "22.4px 0 0", fontSize: 11.5, color: TEXT.faint, maxWidth: "76ch" }}>
-            Preços e gratuidade conferidos em {mesPorExtenso(conferido_em)}. Quem define é o emissor, e
-            as condições mudam: confira no site antes de começar.
+            {t("cursos.rodapePrecos", { mes: mesPorExtenso(conferido_em, idioma) })}
           </p>
         </>
       )}
@@ -459,10 +470,11 @@ function Bloco({
   onPossuo: (curso: Course, possuo: boolean) => void;
   vazio: string;
 }) {
+  const { idioma } = useIdioma();
   return (
     <section aria-label={titulo} style={{ marginBottom: 28 }}>
       <Kicker style={{ display: "block", marginBottom: 11.2 }}>
-        {titulo} · {cursos.length}
+        {titulo} · {new Intl.NumberFormat(idioma).format(cursos.length)}
       </Kicker>
       {cursos.length === 0 ? (
         <p style={{ margin: 0, fontSize: SIZE.apoio, color: TEXT.faint }}>{vazio}</p>
@@ -492,6 +504,9 @@ function CartaoDoCurso({
   possuo: boolean;
   onPossuo: (curso: Course, possuo: boolean) => void;
 }) {
+  const t = useT();
+  const NIVEL = nivelLabel(t);
+  const MOTIVO = motivoLabel(t);
   const [salvando, setSalvando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const { gratuito, detalhe } = curso.certificado;
@@ -507,14 +522,14 @@ function CartaoDoCurso({
       else await coursesApi.own(curso.id);
     } catch (caught) {
       onPossuo(curso, antes);
-      setErro(caught instanceof Error ? caught.message : "Não consegui salvar.");
+      setErro(caught instanceof Error ? caught.message : t("cursos.erroSalvar"));
     } finally {
       setSalvando(false);
     }
   }
   const corDoSelo = gratuito ? C.verde : C.ambar;
-  const meta = [curso.emissor, NIVEL[curso.nivel], curso.idioma === "pt" ? "Português" : "Inglês"];
-  if (curso.horas) meta.push(`~${curso.horas}h`);
+  const meta = [curso.emissor, NIVEL[curso.nivel], curso.idioma === "pt" ? t("cursos.portugues") : t("cursos.ingles")];
+  if (curso.horas) meta.push(t("cursos.horas", { h: curso.horas }));
 
   return (
     <Panel pad={16.8} style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
@@ -538,7 +553,7 @@ function CartaoDoCurso({
           <Icon name="award" size={16} style={{ color: corDoSelo, flex: "none", marginTop: 1 }} />
           <div style={{ minWidth: 0 }}>
             <div style={{ fontSize: 12.5, fontWeight: 500, color: corDoSelo }}>
-              {gratuito ? "Certificado gratuito" : "Certificado pago"}
+              {gratuito ? t("cursos.blocoGratuito") : t("cursos.blocoPago")}
             </div>
             <div style={{ fontSize: 12, color: TEXT.strong, lineHeight: 1.45 }}>{detalhe}</div>
           </div>
@@ -580,7 +595,7 @@ function CartaoDoCurso({
             rel="noreferrer noopener"
             style={{ textDecoration: "none" }}
           >
-            Ir para o curso
+            {t("cursos.irParaCurso")}
             <Icon name="externalLink" size={14} />
           </a>
           <button
@@ -589,22 +604,22 @@ function CartaoDoCurso({
             aria-pressed={possuo}
             disabled={salvando}
             onClick={() => void alternarPossuo()}
-            title={possuo ? "Aparece em Perfil e tags. Clique para desmarcar." : "Marque se você já tem este certificado."}
+            title={possuo ? t("cursos.possuoTitleSim") : t("cursos.possuoTitleNao")}
             style={possuo ? { background: tint(C.verde, 14), borderColor: C.verde, color: C.verde } : undefined}
           >
             {possuo ? <Icon name="check" size={14} /> : null}
-            {possuo ? "Já possuo" : "Já possuo?"}
+            {possuo ? t("cursos.jaPossuo") : t("cursos.jaPossuoPergunta")}
           </button>
           <a
             className="btn btn-ghost"
             href={linkParaLinkedIn(curso)}
             target="_blank"
             rel="noreferrer noopener"
-            title="Depois de receber o certificado"
+            title={t("cursos.linkedinTitle")}
             style={{ textDecoration: "none", fontSize: SIZE.apoio }}
           >
             <Icon name="externalLink" size={15} />
-            Adicionar ao LinkedIn
+            {t("cursos.adicionarLinkedin")}
           </a>
         </div>
         {erro ? <div style={{ fontSize: 12, color: C.ambar }}>{erro}</div> : null}
@@ -614,13 +629,14 @@ function CartaoDoCurso({
 }
 
 function BarraDeChama({ demanda }: { demanda: Course["demanda"] }) {
+  const t = useT();
   const { acesos, cor } = CHAMA[demanda.faixa];
   const quente = acesos >= 4;
   return (
     <div>
       <div
         role="meter"
-        aria-label="Procura no mercado"
+        aria-label={t("cursos.procuraNoMercado")}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-valuenow={demanda.nota}

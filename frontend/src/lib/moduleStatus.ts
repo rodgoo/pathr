@@ -7,6 +7,7 @@
  * stays legible without competing.
  */
 import { ACC, ACC4, SURF } from "@/lib/tokens";
+import { traduzirPt, type Traduzir } from "@/lib/i18n";
 import type { NodeStatus } from "@/api/types";
 
 export interface ModuleStatusStyle {
@@ -56,11 +57,16 @@ export function moduleStatusStyle(status: NodeStatus): ModuleStatusStyle {
   };
 }
 
-/** Spoken form of the status, for the tick that is otherwise decorative. */
-export function moduleStatusLabel(status: NodeStatus): string {
-  if (status === "done") return "concluído";
-  if (status === "doing") return "em curso";
-  if (status === "locked") return "bloqueado";
-  if (status === "skipped") return "pulado";
-  return "a fazer";
+/** Spoken form of the status, for the tick that is otherwise decorative.
+ *
+ * Recebe o tradutor da tela; sem ele (chamada fora de componente ou ainda não
+ * migrada) cai no português via `traduzirPt`. */
+export function moduleStatusLabel(status: NodeStatus, t: Traduzir = traduzirPt): string {
+  const chave: Partial<Record<NodeStatus, string>> = {
+    done: "comum.status.concluido",
+    doing: "comum.status.emCurso",
+    locked: "comum.status.bloqueado",
+    skipped: "comum.status.pulado",
+  };
+  return t(chave[status] ?? "comum.status.aFazer");
 }

@@ -11,22 +11,24 @@
  */
 
 import { useState } from "react";
+import { useT } from "@/lib/i18n";
 import { ACC, ACC4, C, TEXT, tint } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { IconButton } from "@/components/ui/IconButton";
 import { Kicker, Panel } from "@/components/ui/primitives";
-import { MASTERY_LABELS } from "./TechnologyRow";
+import { MASTERY_KEYS } from "./TechnologyRow";
 
 const CHAVE = "pathr:tutorial-niveis:fechado";
 
-/** O que cada nível quer dizer, com um exemplo do dia a dia, e o que o plano faz com ele. */
+/** O que cada nível quer dizer: as CHAVES do exemplo e do que o plano faz, na
+ * ordem N0..N5. Resolvidas no render com `t()`. */
 const NIVEIS: { exemplo: string; plano: string }[] = [
-  { exemplo: "Ainda não usei, mas quero aprender.", plano: "Vira meta: o roadmap ensina do zero, e Cursos sugere certificados." },
-  { exemplo: "Já vi em tutorial ou num projeto de estudo.", plano: "O roadmap começa pelos fundamentos, sem repetir o básico demais." },
-  { exemplo: "Consigo usar, consultando documentação e exemplos.", plano: "O roadmap aprofunda até você fazer sozinho." },
-  { exemplo: "Uso no trabalho sem ajuda, do começo ao fim.", plano: "Dominado: o roadmap não ensina de novo, só revisa. Conta como sua stack nas Vagas." },
-  { exemplo: "Resolvo problemas difíceis e oriento outras pessoas.", plano: "Conta como ponto forte nas Vagas e nas sugestões de amigos." },
-  { exemplo: "Referência no assunto: arquitetura, performance, detalhes internos.", plano: "Conta como ponto forte, e o plano usa como base para o que vem depois." },
+  { exemplo: "perfil.tutorial.n0.exemplo", plano: "perfil.tutorial.n0.plano" },
+  { exemplo: "perfil.tutorial.n1.exemplo", plano: "perfil.tutorial.n1.plano" },
+  { exemplo: "perfil.tutorial.n2.exemplo", plano: "perfil.tutorial.n2.plano" },
+  { exemplo: "perfil.tutorial.n3.exemplo", plano: "perfil.tutorial.n3.plano" },
+  { exemplo: "perfil.tutorial.n4.exemplo", plano: "perfil.tutorial.n4.plano" },
+  { exemplo: "perfil.tutorial.n5.exemplo", plano: "perfil.tutorial.n5.plano" },
 ];
 
 function lerFechado(): boolean {
@@ -38,6 +40,7 @@ function lerFechado(): boolean {
 }
 
 export function TutorialDeNiveis() {
+  const t = useT();
   const [fechado, setFechado] = useState(lerFechado);
   const [passo, setPasso] = useState(0);
 
@@ -63,7 +66,7 @@ export function TutorialDeNiveis() {
         }}
       >
         <Icon name="info" size={15} />
-        Como funcionam os níveis?
+        {t("perfil.tutorial.comoFunciona")}
       </button>
     );
   }
@@ -72,29 +75,28 @@ export function TutorialDeNiveis() {
 
   return (
     <Panel pad={16.8} style={{ boxShadow: `inset 0 0 0 1px ${tint(ACC, 40)}` }}>
-      <section aria-label="Como funcionam os níveis">
+      <section aria-label={t("perfil.tutorial.titulo")}>
         <div style={{ display: "flex", alignItems: "center", gap: 8.4, marginBottom: 8.4 }}>
           <Icon name="info" size={16} style={{ color: ACC4 }} />
-          <Kicker>Como funcionam os níveis</Kicker>
+          <Kicker>{t("perfil.tutorial.titulo")}</Kicker>
           <span style={{ fontSize: 11.5, color: TEXT.faint }}>
-            {ultimo ? "resumo" : `${passo + 1} de ${NIVEIS.length}`}
+            {ultimo ? t("perfil.tutorial.resumo") : t("perfil.tutorial.contador", { atual: passo + 1, total: NIVEIS.length })}
           </span>
-          <IconButton icon="x" label="Fechar tutorial" onClick={() => alternar(true)} style={{ marginLeft: "auto" }} />
+          <IconButton icon="x" label={t("perfil.tutorial.fechar")} onClick={() => alternar(true)} style={{ marginLeft: "auto" }} />
         </div>
 
         <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 11.2px", maxWidth: "72ch" }}>
-          Para cada tecnologia, marque se ela entra no seu plano e escolha o nível que você tem hoje. Seja honesto:
-          o nível decide o que o roadmap ensina e o que ele pula.
+          {t("perfil.tutorial.introducao")}
         </p>
 
         {/* A régua inteira, sempre à vista: cada nível é um botão que leva ao passo dele. */}
-        <div role="tablist" aria-label="Níveis" style={{ display: "flex", flexWrap: "wrap", gap: 5.6, marginBottom: 11.2 }}>
-          {MASTERY_LABELS.map((rotulo, nivel) => {
+        <div role="tablist" aria-label={t("perfil.tutorial.niveisLabel")} style={{ display: "flex", flexWrap: "wrap", gap: 5.6, marginBottom: 11.2 }}>
+          {MASTERY_KEYS.map((chave, nivel) => {
             const ativo = passo === nivel;
             const dominado = nivel >= 3;
             return (
               <button
-                key={rotulo}
+                key={chave}
                 type="button"
                 role="tab"
                 aria-selected={ativo}
@@ -110,7 +112,7 @@ export function TutorialDeNiveis() {
                   color: ativo ? ACC4 : dominado ? C.verde : TEXT.muted,
                 }}
               >
-                <strong>N{nivel}</strong> · {rotulo}
+                <strong>N{nivel}</strong> · {t(chave)}
               </button>
             );
           })}
@@ -119,13 +121,12 @@ export function TutorialDeNiveis() {
         {ultimo ? (
           <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, color: TEXT.strong, lineHeight: 1.6 }}>
             <li>
-              <strong>N0 a N2</strong>: o roadmap ensina e vira meta de estudo.
+              <strong>{t("perfil.tutorial.resumoN0N2Rotulo")}</strong>{t("perfil.tutorial.resumoN0N2Texto")}
             </li>
             <li>
-              <strong>N3 ou mais</strong>: dominado — o roadmap não ensina de novo, e a tecnologia conta como sua stack
-              nas Vagas.
+              <strong>{t("perfil.tutorial.resumoN3Rotulo")}</strong>{t("perfil.tutorial.resumoN3Texto")}
             </li>
-            <li>Mudou de nível? Troque aqui a qualquer momento: o plano se ajusta na próxima semana.</li>
+            <li>{t("perfil.tutorial.resumoMudou")}</li>
           </ul>
         ) : (
           <div
@@ -138,12 +139,12 @@ export function TutorialDeNiveis() {
             }}
           >
             <div style={{ fontSize: 14, color: TEXT.full }}>
-              <strong style={{ color: passo >= 3 ? C.verde : ACC4 }}>N{passo}</strong> · {MASTERY_LABELS[passo]}
+              <strong style={{ color: passo >= 3 ? C.verde : ACC4 }}>N{passo}</strong> · {t(MASTERY_KEYS[passo])}
             </div>
-            <div style={{ fontSize: 13, color: TEXT.strong }}>{NIVEIS[passo].exemplo}</div>
+            <div style={{ fontSize: 13, color: TEXT.strong }}>{t(NIVEIS[passo].exemplo)}</div>
             <div style={{ fontSize: 12.5, color: TEXT.muted, display: "flex", gap: 6, alignItems: "flex-start" }}>
               <Icon name="road" size={14} style={{ color: ACC4, flex: "none", marginTop: 2 }} />
-              {NIVEIS[passo].plano}
+              {t(NIVEIS[passo].plano)}
             </div>
           </div>
         )}
@@ -151,22 +152,22 @@ export function TutorialDeNiveis() {
         <div style={{ display: "flex", gap: 8.4, marginTop: 11.2, flexWrap: "wrap" }}>
           <button type="button" className="btn btn-ghost" disabled={passo === 0} onClick={() => setPasso((p) => Math.max(0, p - 1))}>
             <Icon name="arrowLeft" size={15} />
-            Anterior
+            {t("perfil.tutorial.anterior")}
           </button>
           {ultimo ? (
             <button type="button" className="btn btn-primary" onClick={() => alternar(true)}>
               <Icon name="check" size={15} />
-              Entendi, vou marcar minhas skills
+              {t("perfil.tutorial.entendi")}
             </button>
           ) : (
             <>
               <button type="button" className="btn btn-secondary" onClick={() => setPasso((p) => p + 1)}>
-                Próximo
+                {t("perfil.tutorial.proximo")}
                 <Icon name="arrowRight" size={15} />
               </button>
               {/* Pular inteiro, de qualquer passo: quem já conhece os níveis não precisa percorrer seis telas. */}
               <button type="button" className="btn btn-ghost" style={{ marginLeft: "auto" }} onClick={() => alternar(true)}>
-                Pular tutorial
+                {t("perfil.tutorial.pular")}
               </button>
             </>
           )}

@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import { quizzes as quizzesApi } from "@/api/endpoints";
 import type { Quiz, QuizResult } from "@/api/types";
 import { useMutation } from "@/hooks/useApi";
+import { useT } from "@/lib/i18n";
 import { ACC, ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { IconButton } from "@/components/ui/IconButton";
@@ -64,6 +65,7 @@ export function QuizRunner({
    */
   onSubmitted?: () => void;
 }) {
+  const t = useT();
   // Inicializador preguicoso: le o storage uma vez, na montagem.
   const [progresso] = useState(() => lerProgresso(quiz.id));
   const [index, setIndex] = useState(progresso.index);
@@ -133,11 +135,11 @@ export function QuizRunner({
         <span
           style={{ fontSize: 11, letterSpacing: ".08em", textTransform: "uppercase", color: ACC }}
         >
-          Pergunta {index + 1} de {quiz.questions.length}
+          {t("modulo.quizRunner.perguntaXdeY", { atual: index + 1, total: quiz.questions.length })}
         </span>
         <span className="tag tag-outline">{question.difficulty}</span>
         <span style={{ marginLeft: "auto", fontSize: 11.5, color: TEXT.faint }}>
-          {Object.keys(answers).length} respondidas
+          {t("modulo.quizRunner.respondidas", { n: Object.keys(answers).length })}
         </span>
       </div>
 
@@ -148,7 +150,7 @@ export function QuizRunner({
       {question.code_snippet ? (
         <div style={{ marginBottom: 16.8 }}>
           <CodeBlock
-            label="Trecho da questão"
+            label={t("modulo.quizRunner.trechoDaQuestao")}
             lines={question.code_snippet.split("\n")}
             filename={question.code_language ?? undefined}
           />
@@ -156,7 +158,7 @@ export function QuizRunner({
       ) : null}
 
       <ChoiceList
-        label="Opções de resposta"
+        label={t("modulo.quizRunner.opcoesDeResposta")}
         options={question.options}
         pick={picked ?? null}
         numerada
@@ -171,7 +173,7 @@ export function QuizRunner({
         {index > 0 ? (
           <IconButton
             icon="arrowLeft"
-            label="Voltar"
+            label={t("modulo.quizRunner.voltar")}
             tone="secondary"
             onClick={() => setIndex((current) => current - 1)}
           />
@@ -183,10 +185,10 @@ export function QuizRunner({
           disabled={picked === undefined || submit.pending}
         >
           <Icon name="send" size={15} />
-          {submit.pending ? "Corrigindo…" : last ? "Enviar respostas" : "Próxima"}
+          {submit.pending ? t("modulo.quizRunner.corrigindo") : last ? t("modulo.quizRunner.enviarRespostas") : t("modulo.quizRunner.proxima")}
         </button>
         {picked === undefined ? (
-          <span style={{ fontSize: 11.5, color: TEXT.faint }}>Escolha uma alternativa.</span>
+          <span style={{ fontSize: 11.5, color: TEXT.faint }}>{t("modulo.quizRunner.escolhaAlternativa")}</span>
         ) : null}
       </div>
     </Panel>
@@ -210,6 +212,7 @@ function Review({
   result: QuizResult;
   onRestart?: () => void;
 }) {
+  const t = useT();
   const byId = new Map(quiz.questions.map((question) => [question.id, question]));
   const passed = result.score >= 70;
 
@@ -221,8 +224,8 @@ function Review({
         </div>
         <p style={{ fontSize: 14, color: "rgba(233,233,237,.7)", margin: "8.4px 0 0" }}>
           {passed
-            ? "Bom resultado — a proficiência das tags deste quiz subiu no seu perfil."
-            : "Abaixo de 70%. Revise o material antes de seguir; o perfil não subiu."}
+            ? t("modulo.quizRunner.bomResultado")
+            : t("modulo.quizRunner.abaixoDe70")}
         </p>
         <ReviewOutcome review={result.review} />
       </div>
@@ -251,25 +254,25 @@ function Review({
                   color: TEXT.faint,
                 }}
               >
-                <span>Pergunta {position + 1}</span>
+                <span>{t("modulo.quizRunner.perguntaN", { n: position + 1 })}</span>
                 <span style={{ marginLeft: "auto", color: item.is_correct ? C.verde : C.ambar }}>
-                  {item.is_correct ? "acertou" : "errou"}
+                  {item.is_correct ? t("modulo.quizRunner.acertou") : t("modulo.quizRunner.errou")}
                 </span>
               </div>
               <div style={{ fontSize: 14, marginBottom: 8.4 }}>{question.prompt}</div>
               <div style={{ fontSize: 12.5, color: TEXT.muted, marginBottom: 4 }}>
-                Correta: {question.options[item.correct_index]}
+                {t("modulo.quizRunner.correta")} {question.options[item.correct_index]}
               </div>
               {!item.is_correct && item.answer !== null ? (
                 <div style={{ fontSize: 12.5, color: TEXT.faint, marginBottom: 8.4 }}>
-                  Você escolheu: {question.options[item.answer]}
+                  {t("modulo.quizRunner.vocEscolheu")} {question.options[item.answer]}
                 </div>
               ) : null}
               <div style={{ fontSize: 13, color: "rgba(233,233,237,.85)", lineHeight: 1.5 }}>
                 {item.explanation}
               </div>
               <div style={{ marginTop: 8.4 }}>
-                <Perguntar contextoTipo="quiz" contextoRef={item.question_id} rotulo="Perguntar sobre esta questão" />
+                <Perguntar contextoTipo="quiz" contextoRef={item.question_id} rotulo={t("modulo.quizRunner.perguntarQuestao")} />
               </div>
             </div>
           );
@@ -284,7 +287,7 @@ function Review({
           onClick={onRestart}
         >
           <Icon name="refresh" size={15} />
-          Gerar outro quiz
+          {t("modulo.quizRunner.gerarOutroQuiz")}
         </button>
       ) : null}
     </Panel>
@@ -303,6 +306,7 @@ function Review({
  * o enunciado bastaria, e é exatamente isso que a reescrita evita.
  */
 function ReviewOutcome({ review }: { review?: { volta: string[]; aprendido: string[] } }) {
+  const t = useT();
   if (!review) return null;
   const { volta, aprendido } = review;
   if (volta.length === 0 && aprendido.length === 0) return null;
@@ -321,15 +325,15 @@ function ReviewOutcome({ review }: { review?: { volta: string[]; aprendido: stri
       {aprendido.length > 0 ? (
         <div style={{ color: C.verde }}>
           {aprendido.length === 1
-            ? "1 conceito que você tinha errado voltou e você acertou."
-            : `${aprendido.length} conceitos que você tinha errado voltaram e você acertou.`}{" "}
-          Eles vão rarear até sumir.
+            ? t("modulo.quizRunner.umConceitoAcertou")
+            : t("modulo.quizRunner.conceitosAcertou", { n: aprendido.length })}{" "}
+          {t("modulo.quizRunner.raearAteSumir")}
         </div>
       ) : null}
       {volta.length > 0 ? (
         <div style={{ marginTop: aprendido.length > 0 ? 5.6 : 0 }}>
-          {volta.length === 1 ? "1 conceito volta" : `${volta.length} conceitos voltam`} no próximo
-          quiz desta trilha, com outras palavras: {volta.join(" · ")}
+          {volta.length === 1 ? t("modulo.quizRunner.umConceitoVolta") : t("modulo.quizRunner.conceitosVoltam", { n: volta.length })}{" "}
+          {t("modulo.quizRunner.noProximoQuiz")} {volta.join(" · ")}
         </div>
       ) : null}
     </div>

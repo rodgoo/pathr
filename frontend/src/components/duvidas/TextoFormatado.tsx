@@ -13,6 +13,7 @@
  */
 
 import type { ReactNode } from "react";
+import { useT } from "@/lib/i18n";
 import { ACC4, TEXT } from "@/lib/tokens";
 
 const MONO = "ui-monospace, SFMono-Regular, Menlo, Consolas, monospace";
@@ -101,6 +102,7 @@ function blocosDeTexto(texto: string, chave: string): ReactNode[] {
 }
 
 export function TextoFormatado({ texto }: { texto: string }) {
+  const t = useT();
   const partes = texto.split("```");
   return (
     <div style={{ display: "flex", flexDirection: "column" }}>
@@ -114,7 +116,7 @@ export function TextoFormatado({ texto }: { texto: string }) {
           return (
             <pre
               key={indice}
-              aria-label={temLinguagem ? `Código em ${primeira.trim()}` : "Código"}
+              aria-label={temLinguagem ? t("modulo.duvidas.codigoEm", { linguagem: primeira.trim() }) : t("modulo.duvidas.codigo")}
               style={{
                 margin: "2px 0 10px",
                 padding: "9px 11px",

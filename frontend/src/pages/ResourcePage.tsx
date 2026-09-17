@@ -18,7 +18,8 @@
 import { useEffect, useState } from "react";
 import { library as libraryApi } from "@/api/endpoints";
 import type { Resource } from "@/api/types";
-import { KIND_LABEL } from "@/api/library-filters";
+import { kindLabel } from "@/api/library-filters";
+import { useT } from "@/lib/i18n";
 import { useAppState } from "@/hooks/useAppState";
 import { useQuery } from "@/hooks/useApi";
 import { ACC, ACC4, C, SIZE, TEXT, tint } from "@/lib/tokens";
@@ -41,10 +42,11 @@ const ICON_BY_KIND: Record<string, IconName> = {
 };
 
 const VOLTAR: Partial<Record<string, string>> = {
-  modulo: "Trilha",
+  modulo: "modulo.recurso.trilha",
 };
 
 export function ResourcePage() {
+  const t = useT();
   const { state, dispatch } = useAppState();
   const id = state.activeResourceId;
 
@@ -61,30 +63,30 @@ export function ResourcePage() {
   if (!id) {
     return (
       <EmptyState
-        title="Nenhum material aberto"
-        description="Escolha um item no material de um módulo para abrir aqui."
+        title={t("modulo.recurso.nenhumMaterialTitulo")}
+        description={t("modulo.recurso.nenhumMaterialDescricao")}
         action={
           <button type="button" className="btn btn-primary" onClick={voltar}>
             <Icon name="arrowLeft" size={15} />
-            Voltar
+            {t("modulo.recurso.voltar")}
           </button>
         }
       />
     );
   }
-  if (materiais.loading) return <Loading label="Abrindo o material…" />;
+  if (materiais.loading) return <Loading label={t("modulo.recurso.abrindoMaterial")} />;
   if (materiais.error) {
     return <ErrorState message={materiais.error} onRetry={materiais.reload} />;
   }
   if (!resource) {
     return (
       <EmptyState
-        title="Material não encontrado"
-        description="Ele pode ter saído do seu plano desde que esta tela foi aberta."
+        title={t("modulo.recurso.naoEncontradoTitulo")}
+        description={t("modulo.recurso.naoEncontradoDescricao")}
         action={
           <button type="button" className="btn btn-primary" onClick={voltar}>
             <Icon name="arrowLeft" size={15} />
-            Voltar
+            {t("modulo.recurso.voltar")}
           </button>
         }
       />
@@ -111,6 +113,7 @@ function Conteudo({
   onVoltar: () => void;
   de: string;
 }) {
+  const t = useT();
   const [progresso, setProgresso] = useState({
     status: resource.user_status,
     pct: resource.user_progress_pct,
@@ -141,12 +144,14 @@ function Conteudo({
         // aba da barra de baixo. Sem um nome próprio, "Biblioteca" passa a
         // designar dois botões diferentes na mesma tela — ambíguo para quem
         // navega por leitor de tela, e para qualquer teste.
-        aria-label={`Voltar para ${VOLTAR[de] ?? "a tela anterior"}`}
+        aria-label={t("modulo.recurso.voltarPara", {
+          destino: VOLTAR[de] ? t(VOLTAR[de]) : t("modulo.recurso.telaAnterior"),
+        })}
         style={{ alignSelf: "flex-start", fontSize: SIZE.apoio, paddingInline: 0 }}
         onClick={onVoltar}
       >
         <Icon name="arrowLeft" size={14} />
-        {VOLTAR[de] ?? "Voltar"}
+        {VOLTAR[de] ? t(VOLTAR[de]) : t("modulo.recurso.voltar")}
       </button>
 
       <header style={{ display: "flex", alignItems: "flex-start", gap: 11.2 }}>
@@ -173,8 +178,8 @@ function Conteudo({
             {[
               resource.provider ?? resource.author,
               resource.duration_min ? `${resource.duration_min} min` : null,
-              resource.language === "pt" ? "português" : resource.language === "en" ? "inglês" : resource.language,
-              KIND_LABEL[resource.kind] ?? resource.kind,
+              resource.language === "pt" ? t("modulo.recurso.portugues") : resource.language === "en" ? t("modulo.recurso.ingles") : resource.language,
+              kindLabel(resource.kind, t),
             ]
               .filter(Boolean)
               .join(" · ")}
@@ -205,7 +210,7 @@ function Conteudo({
           rel="noreferrer noopener"
           style={{ fontSize: SIZE.apoio, color: TEXT.muted, alignSelf: "flex-start" }}
         >
-          Abrir na fonte original
+          {t("modulo.recurso.abrirNaFonte")}
         </a>
       ) : null}
     </div>
@@ -222,6 +227,7 @@ function Progresso({
   segundos: number | null;
   concluido: boolean;
 }) {
+  const t = useT();
   return (
     <div>
       <div
@@ -234,8 +240,12 @@ function Progresso({
         }}
       >
         <span style={{ flex: 1, minWidth: 0, color: TEXT.muted }}>
-          {concluido ? "Concluído" : pct > 0 ? `${pct}% consumido` : "Ainda não começou"}
-          {segundos && !concluido ? ` · parou em ${formatarTempo(segundos)}` : ""}
+          {concluido
+            ? t("modulo.recurso.concluido")
+            : pct > 0
+              ? t("modulo.recurso.pctConsumido", { pct })
+              : t("modulo.recurso.aindaNaoComecou")}
+          {segundos && !concluido ? t("modulo.recurso.parouEm", { tempo: formatarTempo(segundos) }) : ""}
         </span>
         {concluido ? (
           <span
@@ -248,11 +258,11 @@ function Progresso({
             }}
           >
             <Icon name="check" size={13} />
-            concluído
+            {t("modulo.recurso.concluidoMinusculo")}
           </span>
         ) : null}
       </div>
-      <Meter pct={concluido ? 100 : pct} color={ACC4} label="Progresso neste material" />
+      <Meter pct={concluido ? 100 : pct} color={ACC4} label={t("modulo.recurso.progressoNesteMaterial")} />
     </div>
   );
 }

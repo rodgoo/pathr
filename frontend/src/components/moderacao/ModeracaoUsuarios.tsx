@@ -17,6 +17,7 @@ import { startAuthentication } from "@simplewebauthn/browser";
 import { admin } from "@/api/endpoints";
 import type { UsuarioAdmin } from "@/api/types";
 import { useQuery } from "@/hooks/useApi";
+import { useIdioma, useT, type Idioma, type Traduzir } from "@/lib/i18n";
 import { fotoDe } from "@/lib/fotos";
 import { C, TEXT, tint } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
@@ -25,22 +26,19 @@ import { Kicker, Panel } from "@/components/ui/primitives";
 
 type Situacao = "todos" | "ativos" | "banidos";
 
-const SITUACOES: readonly { value: Situacao; label: string }[] = [
-  { value: "todos", label: "Todos" },
-  { value: "ativos", label: "Ativos" },
-  { value: "banidos", label: "Banidos" },
-];
+// Só os valores no módulo; os rótulos saem no idioma ativo dentro do componente.
+const SITUACOES: readonly Situacao[] = ["todos", "ativos", "banidos"];
 
 const VERMELHO = "#e06c75";
 
-function data(iso: string | null): string {
+function data(iso: string | null, idioma: Idioma): string {
   if (!iso) return "—";
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString("pt-BR");
+  return Number.isNaN(d.getTime()) ? "—" : d.toLocaleDateString(idioma);
 }
 
 /** A assinatura da chave de acesso do admin, com a mensagem certa quando falha. */
-async function assinarComChave() {
+async function assinarComChave(t: Traduzir) {
   const pedido = await admin.confirmacao();
   try {
     const credential = await startAuthentication({
@@ -49,7 +47,7 @@ async function assinarComChave() {
     return { challenge_id: pedido.challenge_id, credential };
   } catch (erro) {
     if (erro instanceof Error && erro.name === "NotAllowedError") {
-      throw new Error("Confirmação cancelada. Nada foi alterado.");
+      throw new Error(t("moderacao.usuarios.confirmacaoCancelada"));
     }
     throw erro;
   }
@@ -98,6 +96,8 @@ function Selo({ cor, children }: { cor: string; children: React.ReactNode }) {
 }
 
 function LinhaUsuario({ usuario, onMudou }: { usuario: UsuarioAdmin; onMudou: () => void }) {
+  const t = useT();
+  const { idioma } = useIdioma();
   const [abrindo, setAbrindo] = useState(false);
   const [motivo, setMotivo] = useState("");
   const [enviando, setEnviando] = useState(false);
@@ -109,14 +109,14 @@ function LinhaUsuario({ usuario, onMudou }: { usuario: UsuarioAdmin; onMudou: ()
     setEnviando(true);
     setErro(null);
     try {
-      const assinatura = await assinarComChave();
+      const assinatura = await assinarComChave(t);
       if (banido) await admin.desbanir(usuario.id, assinatura);
       else await admin.banir(usuario.id, { motivo: motivo.trim(), ...assinatura });
       setAbrindo(false);
       setMotivo("");
       onMudou();
     } catch (caught) {
-      setErro(caught instanceof Error ? caught.message : "Não consegui concluir.");
+      setErro(caught instanceof Error ? caught.message : t("moderacao.usuarios.erroConcluir"));
     } finally {
       setEnviando(false);
     }
@@ -128,20 +128,20 @@ function LinhaUsuario({ usuario, onMudou }: { usuario: UsuarioAdmin; onMudou: ()
         <Foto usuario={usuario} />
         <div style={{ flex: 1, minWidth: 180 }}>
           <div style={{ display: "flex", flexWrap: "wrap", alignItems: "baseline", gap: 6 }}>
-            <strong style={{ fontWeight: 500, fontSize: 14, color: TEXT.full }}>{usuario.name || "Sem nome"}</strong>
+            <strong style={{ fontWeight: 500, fontSize: 14, color: TEXT.full }}>{usuario.name || t("moderacao.usuarios.semNome")}</strong>
             {usuario.username ? <span style={{ fontSize: 12, color: TEXT.faint }}>@{usuario.username}</span> : null}
-            {usuario.voce ? <Selo cor={C.azul}>você</Selo> : null}
-            {usuario.is_super_admin ? <Selo cor={C.teal}>admin</Selo> : null}
-            {banido ? <Selo cor={VERMELHO}>banido</Selo> : null}
-            {!usuario.email_verified ? <Selo cor={C.ambar}>e-mail não confirmado</Selo> : null}
+            {usuario.voce ? <Selo cor={C.azul}>{t("moderacao.usuarios.selos.voce")}</Selo> : null}
+            {usuario.is_super_admin ? <Selo cor={C.teal}>{t("moderacao.usuarios.selos.admin")}</Selo> : null}
+            {banido ? <Selo cor={VERMELHO}>{t("moderacao.usuarios.selos.banido")}</Selo> : null}
+            {!usuario.email_verified ? <Selo cor={C.ambar}>{t("moderacao.usuarios.selos.emailNaoConfirmado")}</Selo> : null}
           </div>
           <div style={{ fontSize: 12.5, color: TEXT.muted, overflowWrap: "anywhere" }}>{usuario.email}</div>
           <div style={{ fontSize: 11.5, color: TEXT.faint }}>
-            Entrou em {data(usuario.created_at)}
-            {banido ? ` · banido em ${data(usuario.banned_at)}` : ""}
+            {t("moderacao.usuarios.entrouEm", { data: data(usuario.created_at, idioma) })}
+            {banido ? t("moderacao.usuarios.banidoEm", { data: data(usuario.banned_at, idioma) }) : ""}
           </div>
           {banido && usuario.banned_reason ? (
-            <div style={{ fontSize: 12, color: TEXT.muted, marginTop: 2 }}>Motivo: {usuario.banned_reason}</div>
+            <div style={{ fontSize: 12, color: TEXT.muted, marginTop: 2 }}>{t("moderacao.usuarios.motivoLabel", { motivo: usuario.banned_reason })}</div>
           ) : null}
         </div>
         {podeBanir && !abrindo ? (
@@ -155,7 +155,7 @@ function LinhaUsuario({ usuario, onMudou }: { usuario: UsuarioAdmin; onMudou: ()
             }}
           >
             <Icon name={banido ? "undo" : "lock"} size={14} />
-            {banido ? "Desbanir" : "Banir"}
+            {banido ? t("moderacao.usuarios.desbanir") : t("moderacao.usuarios.banir")}
           </button>
         ) : null}
       </div>
@@ -163,7 +163,7 @@ function LinhaUsuario({ usuario, onMudou }: { usuario: UsuarioAdmin; onMudou: ()
       {abrindo ? (
         <div
           role="group"
-          aria-label={banido ? `Desbanir ${usuario.name}` : `Banir ${usuario.name}`}
+          aria-label={banido ? t("moderacao.usuarios.desbanirAria", { nome: usuario.name }) : t("moderacao.usuarios.banirAria", { nome: usuario.name })}
           style={{
             display: "flex",
             flexDirection: "column",
@@ -175,16 +175,15 @@ function LinhaUsuario({ usuario, onMudou }: { usuario: UsuarioAdmin; onMudou: ()
         >
           {banido ? (
             <p style={{ margin: 0, fontSize: 12.5, color: TEXT.strong }}>
-              A conta volta a entrar normalmente e a aparecer para os amigos.
+              {t("moderacao.usuarios.avisoDesbanir")}
             </p>
           ) : (
             <>
               <p style={{ margin: 0, fontSize: 12.5, color: TEXT.strong }}>
-                A pessoa é desconectada de todos os aparelhos na hora, não consegue entrar de novo e some da busca e
-                dos amigos. Nada é apagado: dá para desbanir depois.
+                {t("moderacao.usuarios.avisoBanir")}
               </p>
               <div className="field" style={{ margin: 0 }}>
-                <label htmlFor={`motivo-${usuario.id}`}>Motivo (fica registrado)</label>
+                <label htmlFor={`motivo-${usuario.id}`}>{t("moderacao.usuarios.motivoCampo")}</label>
                 <textarea
                   id={`motivo-${usuario.id}`}
                   className="input"
@@ -205,10 +204,10 @@ function LinhaUsuario({ usuario, onMudou }: { usuario: UsuarioAdmin; onMudou: ()
               style={banido ? undefined : { background: VERMELHO, borderColor: VERMELHO }}
             >
               <Icon name="fingerprint" size={15} />
-              {enviando ? "Aguardando a chave…" : "Confirmar com chave de acesso"}
+              {enviando ? t("moderacao.usuarios.aguardandoChave") : t("moderacao.usuarios.confirmarChave")}
             </button>
             <button type="button" className="btn btn-ghost" disabled={enviando} onClick={() => setAbrindo(false)}>
-              Cancelar
+              {t("moderacao.usuarios.cancelar")}
             </button>
           </div>
           {erro ? (
@@ -223,10 +222,12 @@ function LinhaUsuario({ usuario, onMudou }: { usuario: UsuarioAdmin; onMudou: ()
 }
 
 export function ModeracaoUsuarios() {
+  const t = useT();
   const [busca, setBusca] = useState("");
   const [termo, setTermo] = useState("");
   const [situacao, setSituacao] = useState<Situacao>("todos");
   const lista = useQuery(() => admin.usuarios(termo, situacao), [termo, situacao]);
+  const situacoes = SITUACOES.map((value) => ({ value, label: t(`moderacao.usuarios.situacoes.${value}`) }));
 
   // Espera a pessoa parar de digitar antes de buscar.
   useEffect(() => {
@@ -238,43 +239,43 @@ export function ModeracaoUsuarios() {
 
   return (
     <Panel pad={16.8} style={{ boxShadow: `0 0 0 1px ${tint(VERMELHO, 25)}`, marginBottom: 16.8 }}>
-      <section aria-label="Usuários cadastrados">
+      <section aria-label={t("moderacao.usuarios.secaoAria")}>
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: 11.2, marginBottom: 12 }}>
-          <Kicker>Usuários</Kicker>
+          <Kicker>{t("moderacao.usuarios.titulo")}</Kicker>
           {lista.data ? (
             <span style={{ fontSize: 11.5, color: TEXT.faint }}>
-              {usuarios.length} {usuarios.length === 1 ? "conta" : "contas"}
-              {usuarios.length >= lista.data.limite ? " (as mais recentes — refine a busca)" : ""}
+              {usuarios.length} {t(usuarios.length === 1 ? "moderacao.usuarios.conta" : "moderacao.usuarios.contas")}
+              {usuarios.length >= lista.data.limite ? t("moderacao.usuarios.maisRecentes") : ""}
             </span>
           ) : null}
           <Segmented
             name="usuarios-situacao"
-            label="Situação das contas"
+            label={t("moderacao.usuarios.situacaoLabel")}
             value={situacao}
-            options={SITUACOES}
+            options={situacoes}
             onChange={setSituacao}
             style={{ marginLeft: "auto" }}
           />
         </div>
         <div className="field" style={{ margin: "0 0 12px" }}>
-          <label htmlFor="usuarios-busca">Buscar</label>
+          <label htmlFor="usuarios-busca">{t("moderacao.usuarios.buscar")}</label>
           <input
             id="usuarios-busca"
             className="input"
             type="search"
-            placeholder="Nome, @ ou e-mail"
+            placeholder={t("moderacao.usuarios.buscarPlaceholder")}
             value={busca}
             onChange={(evento) => setBusca(evento.target.value)}
           />
         </div>
-        {lista.loading && !lista.data ? <p style={{ fontSize: 12.5, color: TEXT.faint, margin: 0 }}>Carregando…</p> : null}
+        {lista.loading && !lista.data ? <p style={{ fontSize: 12.5, color: TEXT.faint, margin: 0 }}>{t("moderacao.usuarios.carregando")}</p> : null}
         {lista.error ? (
           <p role="alert" style={{ fontSize: 12.5, color: C.ambar, margin: 0 }}>
             {lista.error}
           </p>
         ) : null}
         {lista.data && usuarios.length === 0 ? (
-          <p style={{ fontSize: 13, color: TEXT.muted, margin: 0 }}>Nenhuma conta encontrada.</p>
+          <p style={{ fontSize: 13, color: TEXT.muted, margin: 0 }}>{t("moderacao.usuarios.vazio")}</p>
         ) : null}
         {usuarios.length > 0 ? (
           <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "flex", flexDirection: "column", gap: 8.4 }}>

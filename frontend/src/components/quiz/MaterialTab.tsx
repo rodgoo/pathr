@@ -15,12 +15,13 @@
  */
 
 import { library as libraryApi } from "@/api/endpoints";
-import { KIND_LABEL, LIBRARY_FILTERS } from "@/api/library-filters";
+import { kindLabel, LIBRARY_FILTERS } from "@/api/library-filters";
 import type { Resource, RoadmapNode } from "@/api/types";
 import { useEffect, useState } from "react";
 import { useAppState } from "@/hooks/useAppState";
 import { useQuery, type Query } from "@/hooks/useApi";
 import { curarModulo } from "@/lib/curadoria";
+import { useT } from "@/lib/i18n";
 import { C, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import type { ContentLang } from "@/types";
@@ -31,15 +32,17 @@ import { ProgressoDaTarefa } from "@/components/ui/ProgressoDaTarefa";
 import { CurateButton } from "@/components/library/CurateButton";
 import { LibraryRow } from "@/components/library/LibraryRow";
 
-const LANGS: readonly { value: ContentLang; label: string }[] = [
-  { value: "pt", label: "Português" },
-  { value: "en", label: "Inglês" },
-  { value: "both", label: "Ambos" },
+const LANGS: readonly { value: ContentLang; labelKey: string }[] = [
+  { value: "pt", labelKey: "modulo.material.langPt" },
+  { value: "en", labelKey: "modulo.material.langEn" },
+  { value: "both", labelKey: "modulo.material.langAmbos" },
 ];
 
 export function MaterialTab({ node }: { node: RoadmapNode }) {
+  const t = useT();
   const { state, dispatch } = useAppState();
   const [curando, setCurando] = useState(false);
+  const langOptions = LANGS.map((lang) => ({ value: lang.value, label: t(lang.labelKey) }));
 
   const termo = state.librarySearch.trim();
   const filtro = state.libraryFilter;
@@ -113,12 +116,12 @@ export function MaterialTab({ node }: { node: RoadmapNode }) {
     <div style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
       <div style={{ display: "flex", flexWrap: "wrap", gap: 11.2, alignItems: "flex-end" }}>
         <div className="field" style={{ flex: 1, minWidth: 220, margin: 0 }}>
-          <label htmlFor="material-search">Buscar material</label>
+          <label htmlFor="material-search">{t("modulo.material.buscarMaterial")}</label>
           <input
             id="material-search"
             className="input"
             type="search"
-            placeholder="Buscar em todo o seu material"
+            placeholder={t("modulo.material.buscarPlaceholder")}
             value={state.librarySearch}
             onChange={(event) => dispatch({ type: "setLibrarySearch", value: event.target.value })}
           />
@@ -127,12 +130,12 @@ export function MaterialTab({ node }: { node: RoadmapNode }) {
             filtro, e quem usava "Português" nunca via o botão. */}
         <CurateButton nodeId={node.id} onFound={resources.reload} />
         <span style={{ display: "flex", alignItems: "center", gap: 8.4 }}>
-          <span style={{ fontSize: 11, color: TEXT.faint }}>idioma</span>
+          <span style={{ fontSize: 11, color: TEXT.faint }}>{t("modulo.material.idioma")}</span>
           <Segmented
             name="material-lang"
-            label="Idioma do material"
+            label={t("modulo.material.idiomaDoMaterial")}
             value={state.contentLang}
-            options={LANGS}
+            options={langOptions}
             onChange={(lang) => dispatch({ type: "setContentLang", lang })}
           />
         </span>
@@ -140,7 +143,7 @@ export function MaterialTab({ node }: { node: RoadmapNode }) {
 
       <div
         role="group"
-        aria-label="Filtrar por tipo"
+        aria-label={t("modulo.material.filtrarPorTipo")}
         style={{ display: "flex", flexWrap: "wrap", gap: 5.6 }}
       >
         {LIBRARY_FILTERS.map((item) => (
@@ -150,7 +153,7 @@ export function MaterialTab({ node }: { node: RoadmapNode }) {
             active={filtro === item.key}
             onClick={() => dispatch({ type: "setLibraryFilter", filter: item.key })}
           >
-            {item.label}
+            {t(item.label)}
           </Chip>
         ))}
       </div>
@@ -198,7 +201,8 @@ function Lista({
   onMostrarIngles: () => void;
   onAbrir: (id: string) => void;
 }) {
-  if (resources.loading) return <Loading label="Buscando material…" />;
+  const t = useT();
+  if (resources.loading) return <Loading label={t("modulo.material.buscandoMaterial")} />;
   if (resources.error) {
     return <ErrorState message={resources.error} onRetry={resources.reload} />;
   }
@@ -207,7 +211,11 @@ function Lista({
       <ProgressoDaTarefa
         ativo
         chave="material-buscar"
-        etapas={["Buscando artigos, vídeos e documentação", "Conferindo se cada link abre", "Escolhendo os melhores"]}
+        etapas={[
+          t("modulo.material.curarEtapa1"),
+          t("modulo.material.curarEtapa2"),
+          t("modulo.material.curarEtapa3"),
+        ]}
         duracaoMs={20_000}
         style={{ padding: "22.4px 0" }}
       />
@@ -221,11 +229,11 @@ function Lista({
     if (emOutroIdioma > 0) {
       return (
         <EmptyState
-          title="Nada em português"
-          description={`Não há material em português para este recorte — há ${emOutroIdioma} em inglês.`}
+          title={t("modulo.material.nadaEmPortuguesTitulo")}
+          description={t("modulo.material.nadaEmPortuguesDescricao", { n: emOutroIdioma })}
           action={
             <button type="button" className="btn btn-secondary" onClick={onMostrarIngles}>
-              Mostrar também em inglês
+              {t("modulo.material.mostrarIngles")}
             </button>
           }
         />
@@ -233,13 +241,13 @@ function Lista({
     }
     return acervo ? (
       <EmptyState
-        title="Nada encontrado"
-        description="Nenhum material do seu plano casa com esse termo. Limpe a busca para voltar ao material deste módulo."
+        title={t("modulo.material.nadaEncontradoTitulo")}
+        description={t("modulo.material.nadaEncontradoDescricao")}
       />
     ) : (
       <EmptyState
-        title="Sem material para este módulo ainda"
-        description="Já procurei nas tecnologias deste módulo e não achei nada que passasse na verificação. Tentar de novo mais tarde costuma trazer resultado."
+        title={t("modulo.material.semMaterialTitulo")}
+        description={t("modulo.material.semMaterialDescricao")}
         action={<CurateButton nodeId={node.id} onFound={resources.reload} />}
       />
     );
@@ -250,7 +258,7 @@ function Lista({
       key={resource.id}
       resource={resource}
       onAbrir={() => onAbrir(resource.id)}
-      kindLabel={KIND_LABEL[resource.kind] ?? resource.kind}
+      kindLabel={kindLabel(resource.kind, t)}
       onProgress={async (next) => {
         resources.set((current) =>
           current.map((item) =>
@@ -287,21 +295,21 @@ function Lista({
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 8.4 }}>
       <p style={{ fontSize: 11.5, color: TEXT.faint, margin: 0 }}>
-        {matching.length} {matching.length === 1 ? "material" : "materiais"}{" "}
-        {acervo ? "em todo o seu plano." : "para as tecnologias deste módulo."}
-        {concluidos.length > 0 ? ` ${concluidos.length} ${concluidos.length === 1 ? "concluído" : "concluídos"}.` : ""}
+        {matching.length} {matching.length === 1 ? t("modulo.material.materialSingular") : t("modulo.material.materiaisPlural")}{" "}
+        {acervo ? t("modulo.material.emTodoPlano") : t("modulo.material.paraTecnologias")}
+        {concluidos.length > 0 ? ` ${concluidos.length} ${concluidos.length === 1 ? t("modulo.material.concluidoSingular") : t("modulo.material.concluidosPlural")}.` : ""}
       </p>
       {pendentes.map(linha)}
       {pendentes.length === 0 ? (
         <p style={{ fontSize: 12.5, color: C.verde, margin: "2px 0", display: "flex", alignItems: "center", gap: 6 }}>
-          <Icon name="check" size={14} /> Tudo deste recorte já foi concluído.
+          <Icon name="check" size={14} /> {t("modulo.material.tudoConcluido")}
         </p>
       ) : null}
       {concluidos.length > 0 ? (
-        <section aria-label="Concluídos" style={{ display: "flex", flexDirection: "column", gap: 8.4, marginTop: 10 }}>
+        <section aria-label={t("modulo.material.concluidosSecao")} style={{ display: "flex", flexDirection: "column", gap: 8.4, marginTop: 10 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 7, fontSize: 11.5, letterSpacing: ".12em", textTransform: "uppercase", color: C.verde, fontWeight: 600 }}>
             <Icon name="check" size={13} />
-            Concluído · {concluidos.length}
+            {t("modulo.material.concluidoRotulo")} · {concluidos.length}
             <span aria-hidden style={{ flex: 1, height: 1, background: "rgba(99,180,143,.25)", marginLeft: 4 }} />
           </div>
           {concluidos.map(linha)}

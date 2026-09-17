@@ -7,6 +7,7 @@
  */
 
 import { useAppState } from "@/hooks/useAppState";
+import { useT } from "@/lib/i18n";
 import { useIsCompact } from "@/hooks/useMediaQuery";
 import { moduleStatusLabel, moduleStatusStyle } from "@/lib/moduleStatus";
 import { C, SIZE, TEXT } from "@/lib/tokens";
@@ -16,6 +17,7 @@ import { ModuleDot } from "./ModuleDot";
 const PHASE_COLORS = [C.verde, "#9184d9", C.teal, C.azul, C.ambar];
 
 export function Timeline({ roadmap }: { roadmap: Roadmap }) {
+  const t = useT();
   const { dispatch } = useAppState();
   // No celular a coluna da esquerda comeria um terço da largura para dizer
   // duas linhas. Ela vira um cabeçalho em cima, e os cartões ficam com a
@@ -51,13 +53,16 @@ export function Timeline({ roadmap }: { roadmap: Roadmap }) {
                   color,
                 }}
               >
-                Fase {index + 1}
+                {t("roadmap.timeline.fase", { n: index + 1 })}
               </div>
               {phase.week_start ? (
                 <div
                   style={{ fontSize: 12.5, color: TEXT.muted, marginTop: compacto ? 0 : 2.8 }}
                 >
-                  semanas {phase.week_start}–{phase.week_end ?? phase.week_start}
+                  {t("roadmap.timeline.semanas", {
+                    inicio: phase.week_start,
+                    fim: phase.week_end ?? phase.week_start,
+                  })}
                 </div>
               ) : null}
               {compacto ? null : (
@@ -114,7 +119,7 @@ export function Timeline({ roadmap }: { roadmap: Roadmap }) {
                         {module.title}
                       </span>
                       <span style={{ display: "block", fontSize: 11, color: TEXT.faint }}>
-                        {module.kind} · {moduleStatusLabel(module.status)}
+                        {module.kind} · {moduleStatusLabel(module.status, t)}
                         {module.level ? ` · ${module.level}` : ""}
                       </span>
                     </span>

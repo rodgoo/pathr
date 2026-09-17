@@ -15,19 +15,13 @@ import { roadmap as roadmapApi, tags as tagsApi } from "@/api/endpoints";
 import { useAppState } from "@/hooks/useAppState";
 import { curarModulo } from "@/lib/curadoria";
 import { useMutation, useQuery } from "@/hooks/useApi";
+import { useT, type Traduzir } from "@/lib/i18n";
 import { TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { Segmented } from "@/components/ui/Segmented";
 import { EmptyState, ErrorState } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
 import { ProgressoDaTarefa } from "@/components/ui/ProgressoDaTarefa";
-
-const HORIZONS = [
-  { value: "8", label: "8 semanas" },
-  { value: "12", label: "12 semanas" },
-  { value: "26", label: "26 semanas" },
-  { value: "52", label: "1 ano" },
-] as const;
 
 const HOURS = [
   { value: "4", label: "4h" },
@@ -36,13 +30,6 @@ const HOURS = [
   { value: "12", label: "12h" },
 ] as const;
 
-const CHIPS = [
-  "Quero entrevista em inglês",
-  "Sem depender de IA para codar",
-  "Prefiro projeto prático a leitura",
-  "Tenho o fim de semana livre",
-];
-
 export function GenerateRoadmap({
   onGenerated,
   onCancel,
@@ -50,7 +37,15 @@ export function GenerateRoadmap({
   onGenerated: () => void;
   onCancel?: () => void;
 }) {
+  const t = useT();
   const { dispatch } = useAppState();
+
+  const HORIZONS = [
+    { value: "8", label: t("roadmap.gerar.horizontes.s8") },
+    { value: "12", label: t("roadmap.gerar.horizontes.s12") },
+    { value: "26", label: t("roadmap.gerar.horizontes.s26") },
+    { value: "52", label: t("roadmap.gerar.horizontes.ano") },
+  ] as const;
   const tags = useQuery(() => tagsApi.mine(), []);
   const [objective, setObjective] = useState("");
   const [weeks, setWeeks] = useState<string>("12");
@@ -91,10 +86,9 @@ export function GenerateRoadmap({
 
   return (
     <div style={{ maxWidth: 720, ...SCREEN_IN }}>
-      <h1 style={{ fontSize: 28, margin: "0 0 5.6px" }}>Gerar seu plano</h1>
+      <h1 style={{ fontSize: 28, margin: "0 0 5.6px" }}>{t("roadmap.gerar.titulo")}</h1>
       <p style={{ margin: "0 0 16.8px", fontSize: 13.5, color: "rgba(233,233,237,.6)" }}>
-        Monto as fases a partir das {tags.data?.length ?? 0} competências do seu perfil e do
-        objetivo abaixo.
+        {t("roadmap.gerar.intro", { n: tags.data?.length ?? 0 })}
       </p>
 
       {generate.error ? <ErrorState message={generate.error} /> : null}
@@ -102,13 +96,13 @@ export function GenerateRoadmap({
       <form onSubmit={submit}>
         <Panel pad={16.8} style={{ display: "flex", flexDirection: "column", gap: 16.8 }}>
           <div className="field">
-            <label htmlFor="objective">Onde você quer chegar</label>
+            <label htmlFor="objective">{t("roadmap.gerar.objetivoLabel")}</label>
             <input
               id="objective"
               className="input"
               required
               minLength={5}
-              placeholder="ex: fullstack Java pleno, com foco em vagas internacionais"
+              placeholder={t("roadmap.gerar.objetivoPlaceholder")}
               value={objective}
               onChange={(event) => setObjective(event.target.value)}
             />
@@ -116,20 +110,20 @@ export function GenerateRoadmap({
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 22.4 }}>
             <div>
-              <Kicker style={{ display: "block", marginBottom: 8.4 }}>Prazo</Kicker>
+              <Kicker style={{ display: "block", marginBottom: 8.4 }}>{t("roadmap.gerar.prazo")}</Kicker>
               <Segmented
                 name="horizon"
-                label="Prazo do plano"
+                label={t("roadmap.gerar.prazoLabel")}
                 value={weeks}
                 options={HORIZONS}
                 onChange={setWeeks}
               />
             </div>
             <div>
-              <Kicker style={{ display: "block", marginBottom: 8.4 }}>Horas por semana</Kicker>
+              <Kicker style={{ display: "block", marginBottom: 8.4 }}>{t("roadmap.gerar.horas")}</Kicker>
               <Segmented
                 name="weekly-hours"
-                label="Horas por semana"
+                label={t("roadmap.gerar.horasLabel")}
                 value={hours}
                 options={HOURS}
                 onChange={setHours}
@@ -137,7 +131,7 @@ export function GenerateRoadmap({
             </div>
           </div>
 
-          <ContextField value={context} onChange={setContext} />
+          <ContextField value={context} onChange={setContext} t={t} />
 
           <div style={{ display: "flex", flexWrap: "wrap", gap: 8.4, alignItems: "center" }}>
             <button
@@ -146,25 +140,30 @@ export function GenerateRoadmap({
               disabled={generate.pending || objective.trim().length < 5}
             >
               <Icon name="plus" size={15} />
-              {generate.pending ? "Montando o plano…" : "Gerar plano"}
+              {generate.pending ? t("roadmap.gerar.montando") : t("roadmap.gerar.gerar")}
             </button>
             {onCancel ? (
               <button type="button" className="btn btn-ghost" onClick={onCancel}>
                 <Icon name="x" size={15} />
-                Cancelar
+                {t("roadmap.gerar.cancelar")}
               </button>
             ) : null}
             <span style={{ fontSize: 11.5, color: TEXT.faint }}>
               {generate.pending
-                ? "A IA está escrevendo as fases — costuma levar menos de 20 segundos."
-                : "Leva alguns segundos: o plano é escrito sob medida."}
+                ? t("roadmap.gerar.dicaMontando")
+                : t("roadmap.gerar.dica")}
             </span>
           </div>
 
           <ProgressoDaTarefa
             ativo={generate.pending}
             chave="roadmap-gerar"
-            etapas={["Lendo seu currículo e suas skills", "Desenhando as fases", "Escrevendo os módulos", "Organizando a ordem de estudo"]}
+            etapas={[
+              t("roadmap.gerar.etapas.lendo"),
+              t("roadmap.gerar.etapas.fases"),
+              t("roadmap.gerar.etapas.modulos"),
+              t("roadmap.gerar.etapas.ordem"),
+            ]}
             duracaoMs={30_000}
           />
         </Panel>
@@ -174,12 +173,13 @@ export function GenerateRoadmap({
 }
 
 function NeedsSkills({ dispatch }: { dispatch: ReturnType<typeof useAppState>["dispatch"] }) {
+  const t = useT();
   return (
     <div style={SCREEN_IN}>
-      <h1 style={{ fontSize: 28, margin: "0 0 16.8px" }}>Gerar seu plano</h1>
+      <h1 style={{ fontSize: 28, margin: "0 0 16.8px" }}>{t("roadmap.gerar.titulo")}</h1>
       <EmptyState
-        title="Antes, preciso saber o que você já sabe"
-        description="O plano cobre a distância entre o que você domina e onde quer chegar. Envie seu currículo, que eu leio e extraio as tecnologias, ou marque suas competências à mão."
+        title={t("roadmap.gerar.semSkills.titulo")}
+        description={t("roadmap.gerar.semSkills.descricao")}
         action={
           <div style={{ display: "flex", gap: 8.4, justifyContent: "center", flexWrap: "wrap" }}>
             <button
@@ -188,14 +188,14 @@ function NeedsSkills({ dispatch }: { dispatch: ReturnType<typeof useAppState>["d
               onClick={() => dispatch({ type: "navigate", screen: "cv" })}
             >
               <Icon name="upload" size={15} />
-              Enviar currículo
+              {t("roadmap.gerar.semSkills.enviarCv")}
             </button>
             <button
               type="button"
               className="btn btn-secondary"
               onClick={() => dispatch({ type: "navigate", screen: "config", settingsTab: "skills" })}
             >
-              Marcar competências
+              {t("roadmap.gerar.semSkills.marcar")}
             </button>
           </div>
         }
@@ -204,17 +204,31 @@ function NeedsSkills({ dispatch }: { dispatch: ReturnType<typeof useAppState>["d
   );
 }
 
-function ContextField({ value, onChange }: { value: string; onChange: (next: string) => void }) {
+function ContextField({
+  value,
+  onChange,
+  t,
+}: {
+  value: string;
+  onChange: (next: string) => void;
+  t: Traduzir;
+}) {
+  const CHIPS = [
+    t("roadmap.gerar.chips.entrevistaIngles"),
+    t("roadmap.gerar.chips.semIa"),
+    t("roadmap.gerar.chips.pratico"),
+    t("roadmap.gerar.chips.fimDeSemana"),
+  ];
   return (
     <div className="field">
-      <label htmlFor="context">O que mais eu deveria saber (opcional)</label>
+      <label htmlFor="context">{t("roadmap.gerar.contextoLabel")}</label>
       <textarea
         id="context"
         className="input"
         // Sem `fontSize` inline: ele venceria a regra de toque e o Safari do
         // iPhone daria zoom na página ao focar o campo.
         style={{ minHeight: 100 }}
-        placeholder="ex: sou frontend há 3 anos, quero virar fullstack Java, e a entrevista é em junho"
+        placeholder={t("roadmap.gerar.contextoPlaceholder")}
         value={value}
         onChange={(event) => onChange(event.target.value)}
       />

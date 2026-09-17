@@ -7,6 +7,7 @@
  */
 
 import { useAppState } from "@/hooks/useAppState";
+import { useT } from "@/lib/i18n";
 import { C, SIZE, TEXT, tint } from "@/lib/tokens";
 import type { Roadmap } from "@/api/types";
 import { Panel } from "@/components/ui/primitives";
@@ -16,6 +17,7 @@ const CIRCUMFERENCE = 88;
 const PHASE_COLORS = [C.verde, "#9184d9", C.teal, C.azul, C.ambar];
 
 export function TrackProgress({ roadmap }: { roadmap: Roadmap }) {
+  const t = useT();
   const { dispatch } = useAppState();
 
   const phases = roadmap.phases.map((phase, index) => {
@@ -24,7 +26,7 @@ export function TrackProgress({ roadmap }: { roadmap: Roadmap }) {
       id: phase.id,
       order: index + 1,
       title: phase.title,
-      meta: `${done} de ${phase.modules.length} módulos`,
+      meta: t("home.fases.modulos", { feitos: done, total: phase.modules.length }),
       pct: phase.modules.length ? Math.round((100 * done) / phase.modules.length) : 0,
       color: PHASE_COLORS[index % PHASE_COLORS.length],
     };
@@ -32,7 +34,7 @@ export function TrackProgress({ roadmap }: { roadmap: Roadmap }) {
 
   return (
     <Panel style={{ display: "flex", flexDirection: "column" }}>
-      <div style={{ fontSize: 14, marginBottom: 14 }}>Progresso por fase</div>
+      <div style={{ fontSize: 14, marginBottom: 14 }}>{t("home.fases.titulo")}</div>
       <div style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
         {phases.map((phase) => (
           <button

@@ -7,14 +7,15 @@
  */
 
 import type { UserTag } from "@/api/types";
+import { useT } from "@/lib/i18n";
 import { MarcaDaTecnologia, identidade } from "@/lib/tecnologias";
 import { TEXT, tint } from "@/lib/tokens";
 
 const SOURCE_LABEL: Record<string, string> = {
-  cv: "do currículo",
-  manual: "definido por você",
-  quiz: "comprovado em quiz",
-  roadmap: "estudado no plano",
+  cv: "perfil.tag.origem.cv",
+  manual: "perfil.tag.origem.manual",
+  quiz: "perfil.tag.origem.quiz",
+  roadmap: "perfil.tag.origem.roadmap",
 };
 
 export function TagButton({
@@ -27,7 +28,8 @@ export function TagButton({
   /** Tracejado marca o que o plano vai ensinar, não o que já se tem. */
   dashed?: boolean;
 }) {
-  const source = SOURCE_LABEL[tag.source] ?? tag.source;
+  const t = useT();
+  const source = SOURCE_LABEL[tag.source] ? t(SOURCE_LABEL[tag.source]) : tag.source;
   // A cor é da tecnologia (Java laranja, React ciano): marcada, ela preenche;
   // desmarcada, fica só no contorno — a diferença entre "está no plano" e
   // "não está" continua sendo de intensidade, como antes, só que colorida.
@@ -37,7 +39,11 @@ export function TagButton({
       type="button"
       onClick={onToggle}
       aria-pressed={tag.is_target}
-      title={`N${tag.proficiency} · ${source} · confiança ${Math.round(tag.confidence * 100)}%`}
+      title={t("perfil.tag.titulo", {
+        n: tag.proficiency,
+        origem: source,
+        conf: Math.round(tag.confidence * 100),
+      })}
       style={{
         display: "inline-flex",
         alignItems: "center",

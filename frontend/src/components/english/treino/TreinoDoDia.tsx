@@ -30,25 +30,24 @@ import type {
   PracticeSession,
   PracticeSummary,
 } from "@/api/types";
+import { useT } from "@/lib/i18n";
 import { ACC, ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { IconButton } from "@/components/ui/IconButton";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
-import { NOME_DA_HABILIDADE } from "@/components/english/QuadroDeHabilidades";
-import { Exercicio, NOME_DO_FORMATO } from "./Exercicios";
+import { nomeDaHabilidade } from "@/components/english/QuadroDeHabilidades";
+import { Exercicio, nomeDoFormato } from "./Exercicios";
 
 const ORIGEM: Record<PracticeItem["origin"], string> = {
-  revisao: "Revisão do que você errou",
-  reforco: "Reforço de tópico fraco",
-  novo: "Novo",
+  revisao: "idiomas.treino.origem.revisao",
+  reforco: "idiomas.treino.origem.reforco",
+  novo: "idiomas.treino.origem.novo",
 };
 
 const PONTO: Record<NonNullable<PracticeAnswerResult["improvement"]>, string> = {
-  novo_ponto:
-    "Esse erro virou um ponto de melhora: ele volta nos próximos treinos, com outras palavras.",
-  subiu:
-    "Ponto de melhora recuperado. Ele volta mais tarde, num formato mais exigente, até ficar firme.",
-  volta_hoje: "Ainda não firmou: esse ponto volta de novo em breve, começando pelo reconhecer.",
+  novo_ponto: "idiomas.treino.ponto.novoPonto",
+  subiu: "idiomas.treino.ponto.subiu",
+  volta_hoje: "idiomas.treino.ponto.voltaHoje",
 };
 
 export function TreinoDoDia({
@@ -60,6 +59,7 @@ export function TreinoDoDia({
   idioma: string;
   onSair: () => void;
 }) {
+  const t = useT();
   const [sessao, setSessao] = useState(inicial);
   const [respondendo, setRespondendo] = useState<PracticeItem | null>(null);
   const [resultado, setResultado] = useState<PracticeAnswerResult | null>(null);
@@ -80,7 +80,7 @@ export function TreinoDoDia({
       setResultado(await englishApi.answerPractice(sessao.id, atual.id, resposta));
     } catch (caught) {
       setRespondendo(null);
-      setErro(caught instanceof Error ? caught.message : "Não consegui corrigir. Tente de novo.");
+      setErro(caught instanceof Error ? caught.message : t("idiomas.treino.erroCorrigir"));
     } finally {
       setEnviando(false);
     }
@@ -92,7 +92,7 @@ export function TreinoDoDia({
     try {
       setSessao(await englishApi.practice(id));
     } catch (caught) {
-      setErro(caught instanceof Error ? caught.message : "Não consegui preparar os próximos.");
+      setErro(caught instanceof Error ? caught.message : t("idiomas.treino.erroPreparar"));
     } finally {
       setPreparando(false);
     }
@@ -120,10 +120,10 @@ export function TreinoDoDia({
   return (
     <div style={{ ...SCREEN_IN, maxWidth: 680 }}>
       <div style={{ display: "flex", alignItems: "center", gap: 11.2, marginBottom: 11.2 }}>
-        <IconButton icon="arrowLeft" label="Sair do treino" onClick={onSair} />
+        <IconButton icon="arrowLeft" label={t("idiomas.treino.sairDoTreino")} onClick={onSair} />
         <div
           role="progressbar"
-          aria-label="Progresso do treino de hoje"
+          aria-label={t("idiomas.treino.progressoAria")}
           aria-valuemin={0}
           aria-valuemax={sessao.total}
           aria-valuenow={sessao.answered}
@@ -138,7 +138,7 @@ export function TreinoDoDia({
           <div style={{ width: `${feito}%`, height: "100%", background: ACC4, transition: "width .3s" }} />
         </div>
         <span style={{ fontSize: 12, color: TEXT.faint, whiteSpace: "nowrap" }}>
-          {sessao.answered} de {sessao.total}
+          {t("idiomas.treino.deTotal", { feito: sessao.answered, total: sessao.total })}
         </span>
       </div>
 
@@ -147,7 +147,7 @@ export function TreinoDoDia({
           <p style={{ fontSize: 13, color: C.ambar, margin: "0 0 8px" }}>{erro}</p>
           <button type="button" className="btn btn-secondary" onClick={() => buscarProximos(sessao.id)}>
             <Icon name="refresh" size={15} />
-            Tentar de novo
+            {t("idiomas.treino.tentarDeNovo")}
           </button>
         </Panel>
       ) : null}
@@ -155,7 +155,7 @@ export function TreinoDoDia({
       {!atual ? (
         <Panel>
           <p style={{ fontSize: 13.5, color: TEXT.muted, margin: 0 }}>
-            {preparando ? "Preparando os próximos exercícios…" : "Nenhum exercício pronto agora."}
+            {preparando ? t("idiomas.treino.preparandoProximos") : t("idiomas.treino.nenhumPronto")}
           </p>
           {!preparando && !erro && sessao.status !== "done" ? (
             <button
@@ -165,7 +165,7 @@ export function TreinoDoDia({
               onClick={() => buscarProximos(sessao.id)}
             >
               <Icon name="refresh" size={15} />
-              Carregar os próximos
+              {t("idiomas.treino.carregarProximos")}
             </button>
           ) : null}
         </Panel>
@@ -174,9 +174,9 @@ export function TreinoDoDia({
           <div
             style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 12, alignItems: "center" }}
           >
-            <span className="tag tag-outline">{NOME_DO_FORMATO[atual.type]}</span>
+            <span className="tag tag-outline">{nomeDoFormato(atual.type, t)}</span>
             <span style={{ fontSize: 11.5, color: TEXT.faint }}>
-              {NOME_DA_HABILIDADE[atual.skill] ?? atual.skill}
+              {nomeDaHabilidade(atual.skill, t)}
               {atual.topic ? ` · ${atual.topic}` : ""}
               {atual.band ? ` · ${atual.band}` : ""}
             </span>
@@ -188,7 +188,7 @@ export function TreinoDoDia({
                   atual.origin === "revisao" ? C.ambar : atual.origin === "reforco" ? ACC4 : TEXT.faint,
               }}
             >
-              {ORIGEM[atual.origin]}
+              {t(ORIGEM[atual.origin])}
             </span>
           </div>
 
@@ -220,12 +220,13 @@ function Correcao({
   resultado: PracticeAnswerResult;
   onContinuar: () => void;
 }) {
+  const t = useT();
   const tom = resultado.skipped ? TEXT.muted : resultado.is_correct ? C.verde : C.ambar;
   const titulo = resultado.skipped
-    ? "Pulado — não conta como erro."
+    ? t("idiomas.treino.pulado")
     : resultado.is_correct
-      ? "Certo!"
-      : "Ainda não.";
+      ? t("idiomas.treino.certo")
+      : t("idiomas.treino.aindaNao");
 
   return (
     <div role="status" style={{ marginTop: 18, paddingTop: 14, borderTop: `1px solid ${HAIRLINE}` }}>
@@ -237,19 +238,20 @@ function Correcao({
       ) : null}
       {resultado.improvement ? (
         <p style={{ fontSize: 12.5, lineHeight: 1.5, color: ACC4, margin: "0 0 10px" }}>
-          {PONTO[resultado.improvement]}
+          {t(PONTO[resultado.improvement])}
         </p>
       ) : null}
       {/* O foco vai para o botão: quem responde pelo teclado segue com Enter. */}
       <button type="button" className="btn btn-primary" autoFocus onClick={onContinuar}>
         <Icon name="arrowRight" size={15} />
-        Continuar
+        {t("idiomas.treino.continuar")}
       </button>
     </div>
   );
 }
 
 function Resumo({ resumo, onSair }: { resumo: PracticeSummary; onSair: () => void }) {
+  const t = useT();
   const mudaramDeLetra = resumo.levels.filter((n) => n.before && n.before !== n.after);
   const avancaram = resumo.levels.filter(
     (n) => n.delta !== null && n.delta >= 0.05 && !(n.before && n.before !== n.after),
@@ -258,29 +260,29 @@ function Resumo({ resumo, onSair }: { resumo: PracticeSummary; onSair: () => voi
   return (
     <div style={{ ...SCREEN_IN, maxWidth: 680 }}>
       <Panel pad={22.4}>
-        <Kicker style={{ display: "block", marginBottom: 8 }}>Treino de hoje concluído</Kicker>
+        <Kicker style={{ display: "block", marginBottom: 8 }}>{t("idiomas.treino.concluido")}</Kicker>
         <div style={{ fontSize: 42, lineHeight: 1, color: ACC4 }}>
           {resumo.correct}/{resumo.answered}
         </div>
         <p style={{ fontSize: 13.5, color: TEXT.muted, margin: "8px 0 0" }}>
           {resumo.reviewed > 0
-            ? `Você recuperou ${resumo.recovered} de ${resumo.reviewed} pontos de melhora que tinha errado antes.`
-            : "Nenhum ponto de melhora vencia hoje."}
+            ? t("idiomas.treino.recuperou", { recuperados: resumo.recovered, total: resumo.reviewed })
+            : t("idiomas.treino.nadaVencia")}
         </p>
 
         {mudaramDeLetra.length > 0 || avancaram.length > 0 ? (
           <div style={{ marginTop: 16 }}>
-            <Kicker style={{ display: "block", marginBottom: 6 }}>Seu nível hoje</Kicker>
+            <Kicker style={{ display: "block", marginBottom: 6 }}>{t("idiomas.treino.seuNivelHoje")}</Kicker>
             {mudaramDeLetra.map((nivel) => (
               <div key={nivel.skill} style={{ fontSize: 13.5, padding: "3px 0" }}>
-                {NOME_DA_HABILIDADE[nivel.skill] ?? nivel.skill}:{" "}
+                {nomeDaHabilidade(nivel.skill, t)}:{" "}
                 <span style={{ color: TEXT.faint }}>{nivel.before}</span> →{" "}
                 <span style={{ color: (nivel.delta ?? 0) >= 0 ? C.verde : C.ambar }}>{nivel.after}</span>
               </div>
             ))}
             {avancaram.map((nivel) => (
               <div key={nivel.skill} style={{ fontSize: 13, padding: "3px 0", color: TEXT.muted }}>
-                {NOME_DA_HABILIDADE[nivel.skill] ?? nivel.skill}: avançou dentro do {nivel.after}
+                {t("idiomas.treino.avancouDentro", { nome: nomeDaHabilidade(nivel.skill, t), nivel: nivel.after ?? "" })}
               </div>
             ))}
           </div>
@@ -288,7 +290,7 @@ function Resumo({ resumo, onSair }: { resumo: PracticeSummary; onSair: () => voi
 
         {resumo.topics.length > 0 ? (
           <div style={{ marginTop: 16 }}>
-            <Kicker style={{ display: "block", marginBottom: 6 }}>Por tópico</Kicker>
+            <Kicker style={{ display: "block", marginBottom: 6 }}>{t("idiomas.treino.porTopico")}</Kicker>
             {resumo.topics.map((topico) => {
               const cor =
                 topico.correct === topico.answered ? C.verde : topico.correct === 0 ? C.ambar : ACC;
@@ -299,10 +301,10 @@ function Resumo({ resumo, onSair }: { resumo: PracticeSummary; onSair: () => voi
                 >
                   <span style={{ color: "rgba(233,233,237,.82)" }}>{topico.topic}</span>
                   <span style={{ color: TEXT.faint }}>
-                    {NOME_DA_HABILIDADE[topico.skill] ?? topico.skill}
+                    {nomeDaHabilidade(topico.skill, t)}
                   </span>
                   <span style={{ marginLeft: "auto", color: cor }}>
-                    {topico.correct} de {topico.answered}
+                    {t("idiomas.quadro.correctDe", { correct: topico.correct, total: topico.answered })}
                   </span>
                 </div>
               );
@@ -312,7 +314,7 @@ function Resumo({ resumo, onSair }: { resumo: PracticeSummary; onSair: () => voi
 
         <button type="button" className="btn btn-primary" style={{ marginTop: 18 }} onClick={onSair}>
           <Icon name="arrowLeft" size={15} />
-          Voltar ao idioma
+          {t("idiomas.treino.voltarAoIdioma")}
         </button>
       </Panel>
     </div>
@@ -333,32 +335,32 @@ export function CartaoDoTreino({
   erro: string | null;
   onComecar: () => void;
 }) {
+  const t = useT();
   const feito = hoje?.status === "done";
   const emAndamento = hoje !== null && !feito && hoje.answered > 0;
 
   return (
     <Panel>
-      <Kicker style={{ display: "block", marginBottom: 6 }}>Treino de hoje</Kicker>
+      <Kicker style={{ display: "block", marginBottom: 6 }}>{t("idiomas.treino.treinoDeHoje")}</Kicker>
       {feito && hoje?.summary ? (
         <>
           <div style={{ fontSize: 14, color: C.verde }}>
-            Feito hoje · {hoje.summary.correct} de {hoje.summary.answered}
+            {t("idiomas.treino.feitoHoje", { correct: hoje.summary.correct, total: hoje.summary.answered })}
           </div>
           <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "6px 0 10px" }}>
-            O próximo fica pronto amanhã, com o que vencer na revisão e os tópicos que ainda pedem
-            reforço.
+            {t("idiomas.treino.proximoAmanha")}
           </p>
           <button type="button" className="btn btn-secondary btn-block" onClick={onComecar}>
             <Icon name="arrowRight" size={15} />
-            Ver o resumo
+            {t("idiomas.treino.verResumo")}
           </button>
         </>
       ) : (
         <>
           <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 10px", lineHeight: 1.5 }}>
             {emAndamento && hoje
-              ? `${hoje.answered} de ${hoje.total} feitos. Continue de onde parou.`
-              : "Revisão do que você errou, reforço dos tópicos fracos e algo um pouco acima do seu nível — em oito formatos, com correção na hora."}
+              ? t("idiomas.treino.emAndamentoDesc", { feito: hoje.answered, total: hoje.total })
+              : t("idiomas.treino.novoDesc")}
           </p>
           <button
             type="button"
@@ -367,14 +369,14 @@ export function CartaoDoTreino({
             onClick={onComecar}
           >
             {comecando
-              ? "Preparando os exercícios…"
+              ? t("idiomas.treino.preparandoExercicios")
               : emAndamento
-                ? "Continuar o treino"
-                : "Começar o treino"}
+                ? t("idiomas.treino.continuarTreino")
+                : t("idiomas.treino.comecarTreino")}
           </button>
           {comecando ? (
             <p style={{ fontSize: 11.5, color: TEXT.faint, margin: "6px 0 0" }}>
-              Os primeiros levam alguns segundos; o resto fica pronto enquanto você responde.
+              {t("idiomas.treino.primeirosSegundos")}
             </p>
           ) : null}
         </>

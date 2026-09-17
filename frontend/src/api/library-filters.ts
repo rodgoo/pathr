@@ -17,29 +17,37 @@
  */
 
 import type { IconName } from "@/components/ui/icons";
+import { traduzirPt, type Traduzir } from "@/lib/i18n";
 
+/** `label` guarda a CHAVE de tradução; quem renderiza resolve com `t()`. */
 export const LIBRARY_FILTERS = [
-  { key: "todos", label: "Tudo", icon: "library" },
-  { key: "video", label: "Vídeos", icon: "play" },
-  { key: "article", label: "Artigos", icon: "article" },
-  { key: "doc", label: "Documentação", icon: "file" },
-  { key: "exercise", label: "Exercícios", icon: "code" },
+  { key: "todos", label: "biblioteca.filtro.todos", icon: "library" },
+  { key: "video", label: "biblioteca.filtro.video", icon: "play" },
+  { key: "article", label: "biblioteca.filtro.article", icon: "article" },
+  { key: "doc", label: "biblioteca.filtro.doc", icon: "file" },
+  { key: "exercise", label: "biblioteca.filtro.exercise", icon: "code" },
 ] as const satisfies readonly { key: string; label: string; icon: IconName }[];
 
 export type LibraryFilter = (typeof LIBRARY_FILTERS)[number]["key"];
 
-/** Rótulo em português para um `kind` vindo do servidor.
+/** A chave de tradução de cada `kind` vindo do servidor.
  *
  * `course` continua aqui mesmo sem filtro próprio: linhas gravadas antes da
  * remoção ainda têm esse tipo, e sem o rótulo elas apareceriam sem nada escrito
  * em "Tudo". O filtro sumiu; o que já existe continua legível. */
-export const KIND_LABEL: Record<string, string> = {
-  video: "vídeo",
-  article: "artigo",
-  course: "curso",
-  doc: "documentação",
-  book: "livro",
-  podcast: "podcast",
-  repo: "repositório",
-  exercise: "exercício",
+const KIND_KEY: Record<string, string> = {
+  video: "biblioteca.kind.video",
+  article: "biblioteca.kind.article",
+  course: "biblioteca.kind.course",
+  doc: "biblioteca.kind.doc",
+  book: "biblioteca.kind.book",
+  podcast: "biblioteca.kind.podcast",
+  repo: "biblioteca.kind.repo",
+  exercise: "biblioteca.kind.exercise",
 };
+
+/** Rótulo do `kind` no idioma de quem lê; `kind` desconhecido volta como veio. */
+export function kindLabel(kind: string, t: Traduzir = traduzirPt): string {
+  const chave = KIND_KEY[kind];
+  return chave ? t(chave) : kind;
+}
