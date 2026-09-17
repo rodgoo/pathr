@@ -11,6 +11,7 @@ import type {
   Amizades,
   NovidadeDeAmizade,
   ApiStatusReport,
+  EventoDeNoticia,
   DisponibilidadeUsername,
   PessoaCartao,
   Relacao,
@@ -25,6 +26,7 @@ import type {
   AssinaturaAdmin,
   StatusRelato,
   TipoRelato,
+  ChaveDaExtensao,
   City,
   CourseList,
   OwnedCourse,
@@ -128,9 +130,12 @@ export const social = {
     ),
   trocarUsername: (username: string) =>
     api.put<DisponibilidadeUsername>("/social/username", { username }),
-  privacidade: () => api.get<{ discoverable: boolean }>("/social/privacidade"),
-  gravarPrivacidade: (discoverable: boolean) =>
-    api.put<{ discoverable: boolean }>("/social/privacidade", { discoverable }),
+  privacidade: () => api.get<{ discoverable: boolean; show_attendance: boolean }>("/social/privacidade"),
+  gravarPrivacidade: (discoverable: boolean, showAttendance: boolean) =>
+    api.put<{ discoverable: boolean; show_attendance: boolean }>("/social/privacidade", {
+      discoverable,
+      show_attendance: showAttendance,
+    }),
   sugestoes: () => api.get<PessoaCartao[]>("/social/pessoas/sugestoes"),
   buscar: (q: string) =>
     api.get<PessoaCartao[]>(`/social/pessoas/busca?q=${encodeURIComponent(q)}`),
@@ -270,6 +275,29 @@ export const candidaturas = {
   enviar: (id: string, body: { email?: string; carta?: string; assunto?: string } = {}) =>
     api.post<Candidatura>(`/candidaturas/${encodeURIComponent(id)}/enviar`, body),
   descartar: (id: string) => api.post<Candidatura>(`/candidaturas/${encodeURIComponent(id)}/descartar`),
+};
+
+/**
+ * As chaves da PathR Extension — a extensão que preenche o formulário da vaga
+ * no navegador.
+ *
+ * `criar` devolve a chave em claro UMA vez. Não há "ver de novo": perdeu, cria
+ * outra e revoga a antiga.
+ */
+export const extensao = {
+  chaves: () => api.get<{ chaves: ChaveDaExtensao[] }>("/extensao/chaves"),
+  criar: (nome = "Extensão") => api.post<ChaveDaExtensao>("/extensao/chaves", { nome }),
+  revogar: (id: string) => api.del<void>(`/extensao/chaves/${encodeURIComponent(id)}`),
+};
+
+export const noticias = {
+  list: (raioKm?: number) =>
+    api.get<EventoDeNoticia[]>(`/noticias${raioKm != null ? `?raio_km=${raioKm}` : ""}`),
+  confirmar: (id: string) => api.post<void>(`/noticias/${encodeURIComponent(id)}/presenca`),
+  cancelar: (id: string) => api.del<void>(`/noticias/${encodeURIComponent(id)}/presenca`),
+  /** O `.ics` para "Adicionar ao calendário" — baixado como blob (cookie de
+   * sessão precisa ir junto, e a API mora noutro host). */
+  ics: (id: string) => api.blob(`/noticias/${encodeURIComponent(id)}/calendario.ics`),
 };
 
 export const tags = {

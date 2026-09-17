@@ -1,0 +1,73 @@
+<!doctype html>
+<!--
+  A janelinha que abre ao clicar no ícone.
+
+  Duas telas, nunca as duas ao mesmo tempo: sem chave, só o campo para colar a
+  chave; com chave, só o botão de preencher. Um popup que mostra tudo de uma vez
+  obriga a pessoa a descobrir qual metade é a dela.
+-->
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <title>PathR Extension</title>
+    <link rel="stylesheet" href="popup.css" />
+  </head>
+  <body>
+    <header class="topo">
+      <img class="icone" src="../icones/icone-48.png" alt="" />
+      <div>
+        <p class="nome">PathR Extension</p>
+        <p class="sub" id="situacao">Conferindo…</p>
+      </div>
+    </header>
+
+    <main class="corpo">
+      <!-- Sem chave -->
+      <section id="tela-conectar" hidden>
+        <p class="texto">
+          No PathR, em <strong>Candidaturas</strong>, crie uma chave da extensão e cole aqui.
+        </p>
+        <form id="form-chave">
+          <label class="rotulo" for="chave">Chave da extensão</label>
+          <input
+            class="entrada"
+            id="chave"
+            name="chave"
+            type="password"
+            autocomplete="off"
+            spellcheck="false"
+            placeholder="pathr_ext_…"
+            required
+          />
+          <details class="avancado">
+            <summary>Outro servidor</summary>
+            <label class="rotulo" for="api">Endereço da API</label>
+            <input
+              class="entrada"
+              id="api"
+              name="api"
+              type="url"
+              autocomplete="off"
+              spellcheck="false"
+              placeholder="https://api.pathr.notter.com.br"
+            />
+          </details>
+          <p class="erro" id="erro" hidden></p>
+          <button class="botao" id="conectar" type="submit">Conectar</button>
+        </form>
+      </section>
+
+      <!-- Com chave -->
+      <section id="tela-pronta" hidden>
+        <button class="botao" id="preencher" type="button">Preencher esta página</button>
+        <p class="texto">
+          Leio os campos do formulário e preencho com o que o PathR já sabe. O que eu não souber,
+          pergunto a você ali na página. <strong>Enviar é com você.</strong>
+        </p>
+        <button class="link" id="desconectar" type="button">Desconectar esta chave</button>
+      </section>
+    </main>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

@@ -1,0 +1,158 @@
+/**
+ * A janelinha do ícone. Mesmas cores do painel e do app.
+ *
+ * Largura fixa de 320px: popup de extensão não tem "responsivo" — o navegador
+ * dá o tamanho que a página pedir, e um popup que muda de largura conforme o
+ * conteúdo pula na cara de quem abre.
+ */
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  width: 320px;
+  margin: 0;
+  color: #e9e9ed;
+  font: 13.5px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(145, 132, 217, 0.22), transparent 62%),
+    linear-gradient(180deg, #14121f, #0c0c10);
+}
+
+.topo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 14px;
+  border-bottom: 1px solid rgba(233, 233, 237, 0.1);
+}
+
+.icone {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  box-shadow: 0 0 16px rgba(145, 132, 217, 0.45);
+}
+
+.nome {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.sub {
+  margin: 0;
+  font-size: 11.5px;
+  color: rgba(233, 233, 237, 0.5);
+}
+
+.sub.ligada {
+  color: #63b48f;
+}
+
+.corpo {
+  padding: 14px;
+}
+
+.texto {
+  margin: 12px 0 0;
+  font-size: 12.5px;
+  color: rgba(233, 233, 237, 0.6);
+}
+
+.rotulo {
+  display: block;
+  margin: 10px 0 4px;
+  font-size: 11px;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: rgba(233, 233, 237, 0.5);
+}
+
+.entrada {
+  width: 100%;
+  padding: 9px 10px;
+  border-radius: 10px;
+  font: inherit;
+  color: #e9e9ed;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(233, 233, 237, 0.14);
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.entrada:focus {
+  outline: 0;
+  border-color: #9184d9;
+  box-shadow: 0 0 0 3px rgba(145, 132, 217, 0.2);
+}
+
+.avancado {
+  margin-top: 10px;
+  font-size: 12px;
+  color: rgba(233, 233, 237, 0.42);
+}
+
+.avancado summary {
+  cursor: pointer;
+}
+
+.botao {
+  margin-top: 12px;
+  padding: 10px 14px;
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  color: #0c0c10;
+  background: linear-gradient(180deg, #b5abfc, #9184d9);
+  box-shadow: 0 4px 16px rgba(145, 132, 217, 0.3);
+  transition: filter 0.12s, transform 0.08s;
+}
+
+.botao:hover {
+  filter: brightness(1.08);
+}
+
+.botao:active {
+  transform: translateY(1px);
+}
+
+.botao:disabled {
+  cursor: default;
+  filter: grayscale(0.4) brightness(0.8);
+}
+
+.link {
+  display: block;
+  margin: 12px auto 0;
+  padding: 4px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  color: rgba(233, 233, 237, 0.42);
+  text-decoration: underline;
+}
+
+.link:hover {
+  color: #e9e9ed;
+}
+
+.erro {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-radius: 9px;
+  font-size: 12.5px;
+  color: #e9c1c1;
+  background: rgba(209, 137, 171, 0.14);
+  border: 1px solid rgba(209, 137, 171, 0.3);
+}
+
+[hidden] {
+  display: none !important;
+}

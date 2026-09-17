@@ -1,0 +1,333 @@
+/**
+ * O painel da PathR Extension.
+ *
+ * As cores são as do app (`frontend/src/lib/tokens.ts`): acento #9184d9, fundo
+ * quase preto, texto #e9e9ed. O ar "de visor" — grade fraca, cantoneiras, brilho
+ * violeta — é o mesmo do ícone, para que o painel dentro de um site estranho
+ * ainda pareça parte do PathR.
+ *
+ * Tudo mora num shadow root, então não há prefixo nem `!important` em lugar
+ * nenhum: nada daqui vaza, nada de fora entra.
+ */
+
+:host,
+* {
+  box-sizing: border-box;
+}
+
+.painel {
+  position: relative; /* a grade do ::before se apoia nele */
+  width: 384px;
+  max-width: calc(100vw - 40px);
+  max-height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border-radius: 16px;
+  color: #e9e9ed;
+  font: 13.5px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  background:
+    radial-gradient(120% 90% at 50% 0%, rgba(145, 132, 217, 0.22), transparent 60%),
+    linear-gradient(180deg, #14121f, #0c0c10);
+  border: 1px solid rgba(145, 132, 217, 0.35);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    0 24px 60px rgba(0, 0, 0, 0.55),
+    0 0 40px rgba(145, 132, 217, 0.12);
+  animation: chegando 0.18s ease-out;
+}
+
+@keyframes chegando {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+
+/* A grade de fundo, bem apagada — a textura do ícone. */
+.painel::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(145, 132, 217, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(145, 132, 217, 0.06) 1px, transparent 1px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(120% 80% at 50% 0%, #000 30%, transparent 75%);
+}
+
+/* ------------------------------------------------------------------ topo */
+
+.topo {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-bottom: 1px solid rgba(233, 233, 237, 0.1);
+  background: rgba(12, 12, 16, 0.6);
+  backdrop-filter: blur(8px);
+}
+
+.marca {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.icone {
+  width: 26px;
+  height: 26px;
+  border-radius: 7px;
+  box-shadow: 0 0 14px rgba(145, 132, 217, 0.45);
+}
+
+.nome {
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+}
+
+.fechar {
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 17px;
+  line-height: 1;
+  color: rgba(233, 233, 237, 0.5);
+  background: transparent;
+  transition: background 0.12s, color 0.12s;
+}
+
+.fechar:hover {
+  background: rgba(233, 233, 237, 0.08);
+  color: #e9e9ed;
+}
+
+/* ----------------------------------------------------------------- corpo */
+
+.corpo {
+  position: relative;
+  overflow-y: auto;
+  padding: 14px;
+}
+
+.corpo::-webkit-scrollbar {
+  width: 8px;
+}
+
+.corpo::-webkit-scrollbar-thumb {
+  border-radius: 8px;
+  background: rgba(145, 132, 217, 0.35);
+}
+
+.resumo {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+
+.numero {
+  flex: 1;
+  padding: 10px;
+  text-align: center;
+  border-radius: 12px;
+  border: 1px solid rgba(145, 132, 217, 0.22);
+  background: rgba(145, 132, 217, 0.08);
+}
+
+.numero strong {
+  display: block;
+  font-size: 20px;
+  font-weight: 650;
+  color: #d2cefd;
+}
+
+.numero span {
+  font-size: 11px;
+  color: rgba(233, 233, 237, 0.5);
+}
+
+.titulo {
+  margin: 14px 0 6px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  color: rgba(233, 233, 237, 0.5);
+}
+
+.explicacao,
+.rodape {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: rgba(233, 233, 237, 0.5);
+}
+
+.rodape {
+  margin: 14px 0 0;
+  padding-top: 10px;
+  border-top: 1px solid rgba(233, 233, 237, 0.1);
+}
+
+/* ---------------------------------------------------------------- listas */
+
+.lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.item {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 2px 8px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(233, 233, 237, 0.04);
+  border: 1px solid rgba(233, 233, 237, 0.06);
+}
+
+.item-rotulo {
+  font-size: 12px;
+  color: rgba(233, 233, 237, 0.75);
+  overflow-wrap: anywhere;
+}
+
+.item-valor {
+  grid-column: 1 / -1;
+  font-size: 13px;
+  color: #e9e9ed;
+  overflow-wrap: anywhere;
+}
+
+.etiqueta {
+  align-self: start;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 10px;
+  white-space: nowrap;
+  color: #d2cefd;
+  background: rgba(145, 132, 217, 0.16);
+}
+
+/* ------------------------------------------------------------- perguntas */
+
+.perguntas {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pergunta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pergunta-texto {
+  font-size: 12.5px;
+  color: #e9e9ed;
+  overflow-wrap: anywhere;
+}
+
+.motivo {
+  font-size: 11px;
+  color: rgba(233, 233, 237, 0.42);
+}
+
+/* Cada motivo tem cor própria: "só você responde" e "ainda não sei esta" pedem
+   coisas diferentes de quem lê, e a cor separa as duas antes da leitura. */
+.motivo-sensivel {
+  color: #cfa25e;
+}
+
+.motivo-aberta {
+  color: #6aa6de;
+}
+
+.motivo-escolha {
+  color: #d189ab;
+}
+
+.entrada {
+  width: 100%;
+  padding: 8px 10px;
+  border-radius: 10px;
+  font: inherit;
+  color: #e9e9ed;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(233, 233, 237, 0.14);
+  resize: vertical;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+.entrada:focus {
+  outline: 0;
+  border-color: #9184d9;
+  box-shadow: 0 0 0 3px rgba(145, 132, 217, 0.2);
+}
+
+.botao {
+  margin-top: 2px;
+  padding: 10px 14px;
+  width: 100%;
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  color: #0c0c10;
+  background: linear-gradient(180deg, #b5abfc, #9184d9);
+  box-shadow: 0 4px 16px rgba(145, 132, 217, 0.3);
+  transition: filter 0.12s, transform 0.08s;
+}
+
+.botao:hover {
+  filter: brightness(1.08);
+}
+
+.botao:active {
+  transform: translateY(1px);
+}
+
+.botao:disabled {
+  cursor: default;
+  filter: grayscale(0.4) brightness(0.8);
+}
+
+/* --------------------------------------------------------------- avisos */
+
+.aviso {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(145, 132, 217, 0.25);
+  background: rgba(145, 132, 217, 0.08);
+}
+
+.aviso-titulo {
+  margin: 0 0 4px;
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.aviso-detalhe {
+  margin: 0;
+  font-size: 12.5px;
+  color: rgba(233, 233, 237, 0.6);
+}
+
+.carregando {
+  margin: 0;
+  font-size: 13px;
+  color: rgba(233, 233, 237, 0.5);
+}

@@ -56,6 +56,35 @@ export interface PessoaCartao {
   mesma_stack?: boolean;
   /** Só entre amigos: os dias seguidos em que os dois estudaram. */
   sequencia?: SequenciaDupla;
+  /** Presença confirmada em Notícias — só quando a pessoa deixou visível. */
+  proximos_eventos?: EventoProximo[];
+}
+
+export interface EventoProximo {
+  id: string;
+  titulo: string;
+  data_inicio: string;
+  cidade: string | null;
+}
+
+export interface EventoDeNoticia {
+  id: string;
+  titulo: string;
+  resumo: string;
+  local: string | null;
+  cidade: string | null;
+  estado: string | null;
+  data_inicio: string;
+  data_fim: string | null;
+  gratuito: boolean | null;
+  preco_info: string | null;
+  inscricao_inicio: string | null;
+  inscricao_fim: string | null;
+  /** "Datas de inscrição ainda não foram definidas" quando não achou — null
+   * quando há prazo (inscricao_inicio/inscricao_fim já preenchidos). */
+  inscricao_texto: string | null;
+  url_ingresso: string;
+  eu_vou: boolean;
 }
 
 /** Um aviso de amizade para o pop-up: convite recebido ou convite aceito. */
@@ -777,6 +806,20 @@ export interface RespostaGuardada {
   resposta: string;
   origem: string;
   atualizada_em: string | null;
+}
+
+/**
+ * Uma chave da PathR Extension.
+ *
+ * `chave` (o segredo) só existe na resposta da criação — depois dela, nem o
+ * servidor sabe qual era. Por isso é opcional aqui: a listagem nunca a traz.
+ */
+export interface ChaveDaExtensao {
+  id: string;
+  nome: string;
+  criada_em: string | null;
+  usada_em: string | null;
+  chave?: string;
 }
 
 export interface FilaDeCandidaturas {

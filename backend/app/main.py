@@ -212,11 +212,13 @@ from app.routers import (  # noqa: E402
     courses,
     eventos as eventos_router,
     explanations,
+    extensao,
     jobs,
     walkthroughs,
     language_practice,
     languages,
     library,
+    noticias,
     passkeys,
     plan,
     profile,
@@ -263,6 +265,7 @@ app.include_router(tags.router)
 app.include_router(courses.router)
 app.include_router(vagas.router)
 app.include_router(candidaturas.router)
+app.include_router(extensao.router)
 app.include_router(geo.router)
 app.include_router(status_apis.router)
 app.include_router(roadmap.router)
@@ -277,3 +280,4 @@ app.include_router(jobs.router)
 app.include_router(varredura.router)
 app.include_router(recursos.router)
 app.include_router(walkthroughs.router)
+app.include_router(noticias.router)

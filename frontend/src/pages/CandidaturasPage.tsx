@@ -23,7 +23,12 @@
  */
 
 import { useEffect, useMemo, useState } from "react";
-import { candidaturas as candidaturasApi, profile as profileApi, resumes as resumesApi } from "@/api/endpoints";
+import {
+  candidaturas as candidaturasApi,
+  extensao as extensaoApi,
+  profile as profileApi,
+  resumes as resumesApi,
+} from "@/api/endpoints";
 import type { Candidatura, PassoDaCandidatura, PerguntaPendente } from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
 import { useMutation, useQuery } from "@/hooks/useApi";
@@ -83,6 +88,7 @@ export function CandidaturasPage() {
       ) : null}
 
       {temCurriculo ? <EnvioAutomatico /> : null}
+      {temCurriculo ? <ChaveDaExtensaoPanel /> : null}
 
       {temCurriculo ? (
         <Panel pad={16.8}>
@@ -377,6 +383,140 @@ function EnvioAutomatico() {
         pronta devolve a pergunta em vez de inventar um número.
       </p>
       {salvar.error ? <ErrorState message={salvar.error} /> : null}
+    </Panel>
+  );
+}
+
+/**
+ * A chave que liga a PathR Extension a esta conta.
+ *
+ * A extensão preenche o formulário da vaga no navegador — o que o app já sabe
+ * entra sozinho, e o que ela não sabe vira pergunta ali mesmo, alimentando o
+ * mesmo banco de respostas desta tela.
+ *
+ * A chave aparece UMA vez. Não é esquecimento nosso: guardá-la para mostrar de
+ * novo significaria guardá-la em claro, e uma credencial que o servidor sabe
+ * ler é uma credencial que vaza junto com o banco.
+ */
+function ChaveDaExtensaoPanel() {
+  const chaves = useQuery(() => extensaoApi.chaves(), []);
+  const criar = useMutation((nome: string) => extensaoApi.criar(nome));
+  const revogar = useMutation((id: string) => extensaoApi.revogar(id));
+  const [nova, setNova] = useState<string | null>(null);
+  const [copiada, setCopiada] = useState(false);
+
+  const lista = chaves.data?.chaves ?? [];
+
+  async function gerar() {
+    setCopiada(false);
+    const resposta = await criar.run("Extensão");
+    if (resposta?.chave) {
+      setNova(resposta.chave);
+      chaves.reload();
+    }
+  }
+
+  async function copiar() {
+    if (!nova) return;
+    await navigator.clipboard.writeText(nova);
+    setCopiada(true);
+  }
+
+  return (
+    <Panel pad={16.8}>
+      <div style={{ display: "flex", gap: 11.2, alignItems: "flex-start", flexWrap: "wrap" }}>
+        <div style={{ flex: 1, minWidth: 260 }}>
+          <Kicker style={{ display: "block", marginBottom: 4 }}>PathR Extension</Kicker>
+          <p style={{ margin: 0, fontSize: 13, color: TEXT.muted, lineHeight: 1.55, maxWidth: "62ch" }}>
+            A extensão do navegador lê o formulário da vaga e preenche com o que o PathR já sabe de você —
+            inclusive anexando o currículo. O que ela não souber, pergunta ali na hora, e a resposta passa a
+            valer para as próximas vagas em qualquer site. Enviar continua sendo com você.
+          </p>
+          <p style={{ margin: "6px 0 0", fontSize: 11.5, color: TEXT.faint, lineHeight: 1.5, maxWidth: "62ch" }}>
+            Instale a pasta <code>extensao/</code> em chrome://extensions (Modo do desenvolvedor → Carregar sem
+            compactação) e cole a chave na janelinha dela.
+          </p>
+        </div>
+        <button type="button" className="btn btn-primary" disabled={criar.pending} onClick={() => void gerar()}>
+          <Icon name="plus" size={15} />
+          {criar.pending ? "Criando…" : "Criar chave"}
+        </button>
+      </div>
+
+      {nova ? (
+        <div
+          style={{
+            marginTop: 14,
+            padding: 11.2,
+            borderRadius: 10,
+            background: tint(ACC, 8),
+            border: `1px solid ${tint(ACC, 25)}`,
+          }}
+        >
+          <p style={{ margin: "0 0 6px", fontSize: 11.5, color: ACC4 }}>
+            Copie agora: esta chave não aparece de novo.
+          </p>
+          <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+            <code
+              style={{
+                flex: 1,
+                minWidth: 200,
+                fontSize: 12,
+                wordBreak: "break-all",
+                color: TEXT.full,
+              }}
+            >
+              {nova}
+            </code>
+            <button type="button" className="btn btn-ghost" onClick={() => void copiar()}>
+              <Icon name={copiada ? "check" : "file"} size={14} />
+              {copiada ? "Copiada" : "Copiar"}
+            </button>
+          </div>
+        </div>
+      ) : null}
+
+      {lista.length > 0 ? (
+        <ul style={{ listStyle: "none", margin: "14px 0 0", padding: 0, display: "flex", flexDirection: "column", gap: 6 }}>
+          {lista.map((chave) => (
+            <li
+              key={chave.id}
+              style={{
+                display: "flex",
+                gap: 8,
+                alignItems: "center",
+                justifyContent: "space-between",
+                padding: "8px 11.2px",
+                borderRadius: 10,
+                border: `1px solid ${HAIRLINE}`,
+              }}
+            >
+              <div>
+                <div style={{ fontSize: 13, color: TEXT.full }}>{chave.nome}</div>
+                <div style={{ fontSize: 11, color: TEXT.faint }}>
+                  {chave.usada_em
+                    ? `usada em ${new Date(chave.usada_em).toLocaleDateString()}`
+                    : "ainda não usada"}
+                </div>
+              </div>
+              <button
+                type="button"
+                className="btn btn-ghost"
+                disabled={revogar.pending}
+                onClick={async () => {
+                  await revogar.run(chave.id);
+                  chaves.reload();
+                }}
+              >
+                Revogar
+              </button>
+            </li>
+          ))}
+        </ul>
+      ) : null}
+
+      {criar.error ? <ErrorState message={criar.error} /> : null}
+      {revogar.error ? <ErrorState message={revogar.error} /> : null}
     </Panel>
   );
 }
