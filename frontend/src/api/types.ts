@@ -737,7 +737,11 @@ export interface Candidatura {
   /** Carta de apresentacao, escrita sob medida quando pedida. */
   letter: string | null;
   /** Respostas prontas para o formulario da vaga: a pessoa confere e cola. */
-  answers: { pergunta: string; resposta: string }[];
+  answers: { pergunta: string; chave?: string; resposta: string }[];
+  /** O passo a passo do envio, na ordem em que aconteceu. */
+  steps: PassoDaCandidatura[];
+  /** O que o app nao pode responder por voce — vira campo na tela. */
+  pending: PerguntaPendente[];
   subject: string | null;
   to_email: string | null;
   status: "sugerida" | "enviada" | "descartada";
@@ -745,11 +749,43 @@ export interface Candidatura {
   created_at: string | null;
 }
 
+/** Um passo do envio: o que o app fez, e como terminou. */
+export interface PassoDaCandidatura {
+  /** `anuncio`, `curriculo`, `carta`, `respostas`, `envio`. */
+  passo: string;
+  situacao: "feito" | "pendente" | "falhou" | "pulado";
+  detalhe: string;
+  em: string;
+}
+
+/**
+ * Pergunta que ficou faltando.
+ *
+ * `motivo` diz por que o app nao respondeu: `sensivel` (genero, raca — a
+ * escolha e sua), `aberta` (muda a cada empresa) ou `desconhecida` (nunca vista).
+ */
+export interface PerguntaPendente {
+  pergunta: string;
+  chave: string;
+  motivo: "sensivel" | "aberta" | "desconhecida";
+}
+
+/** Resposta guardada, que preenche as proximas candidaturas. */
+export interface RespostaGuardada {
+  chave: string;
+  pergunta: string;
+  resposta: string;
+  origem: string;
+  atualizada_em: string | null;
+}
+
 export interface FilaDeCandidaturas {
   hoje: string;
   por_dia: number;
   candidaturas: Candidatura[];
   enviadas: number;
+  /** Curriculos que sairam hoje, ontem e nos ultimos sete dias. */
+  resumo: { hoje: number; ontem: number; ultimos7: number };
 }
 
 export interface CodeLanguage {

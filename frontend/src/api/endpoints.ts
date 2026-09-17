@@ -60,6 +60,7 @@ import type {
   User,
   UserTag,
   Candidatura,
+  RespostaGuardada,
   CodeLanguage,
   FilaDeCandidaturas,
   Walkthrough,
@@ -256,6 +257,16 @@ export const candidaturas = {
   carta: (id: string) => api.post<Candidatura>(`/candidaturas/${encodeURIComponent(id)}/carta`),
   /** Respostas prontas para as perguntas do formulário da vaga. */
   respostas: (id: string) => api.post<Candidatura>(`/candidaturas/${encodeURIComponent(id)}/respostas`),
+  /**
+   * Roda a candidatura passo a passo. Com `enviar`, o currículo sai nesta
+   * chamada (quando a vaga tem e-mail de contato).
+   */
+  preparar: (id: string, enviar = false) =>
+    api.post<Candidatura>(`/candidaturas/${encodeURIComponent(id)}/preparar?enviar=${enviar ? "true" : "false"}`),
+  /** As respostas guardadas, que preenchem as próximas vagas. */
+  banco: () => api.get<{ respostas: RespostaGuardada[] }>("/candidaturas/banco"),
+  guardarRespostas: (respostas: { pergunta: string; chave?: string; resposta: string }[]) =>
+    api.post<{ guardadas: number; respostas: RespostaGuardada[] }>("/candidaturas/banco", { respostas }),
   enviar: (id: string, body: { email?: string; carta?: string; assunto?: string } = {}) =>
     api.post<Candidatura>(`/candidaturas/${encodeURIComponent(id)}/enviar`, body),
   descartar: (id: string) => api.post<Candidatura>(`/candidaturas/${encodeURIComponent(id)}/descartar`),
