@@ -49,6 +49,7 @@ const FOLHA: Destino[] = [
   { chave: "nav.cursos", screen: "cursos", icon: "award" },
   { chave: "nav.vagas", screen: "vagas", icon: "suitcase" },
   { chave: "nav.candidaturas", screen: "candidaturas", icon: "send" },
+  { chave: "nav.noticias", screen: "noticias", icon: "clock" },
   { chave: "nav.codigoCurto", screen: "codigo", icon: "code" },
   // "Idiomas" virou "Treino de idiomas": o idioma do APP agora se troca em
   // Configurações, e o nome antigo apontava para a coisa errada.

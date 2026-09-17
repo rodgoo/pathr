@@ -342,6 +342,7 @@
     "cursos": "Cursos",
     "vagas": "Vagas",
     "candidaturas": "Candidaturas",
+    "noticias": "Notícias",
     "amigos": "Amigos",
     "codigo": "Laboratório de código",
     "codigoCurto": "Código",
@@ -1069,6 +1070,30 @@
       "salvando": "Salvando…"
     }
   },
+  "noticias": {
+    "kicker": "Notícias",
+    "titulo": "Eventos de tecnologia perto de você",
+    "descricaoComCidade": "Eventos e anúncios de tecnologia em {cidade} e nos arredores.",
+    "descricaoSemCidade": "Cadastre sua cidade no perfil para ver os eventos mais perto de você — por enquanto, estes são de qualquer lugar.",
+    "carregando": "Buscando eventos…",
+    "gratuito": "Gratuito",
+    "pago": "Pago",
+    "inscricao": "Inscrições de {inicio} até {fim}",
+    "abrirIngresso": "Abrir ingresso",
+    "adicionarCalendario": "Adicionar ao calendário",
+    "baixando": "Gerando…",
+    "erroCalendario": "Não consegui gerar o arquivo do calendário.",
+    "euVou": {
+      "botao": "Eu vou!",
+      "confirmado": "Você vai",
+      "explicacao": "Sua presença fica visível para outras pessoas no seu cartão, se você permitir em Configurações › Pessoas."
+    },
+    "vazio": {
+      "titulo": "Nenhum evento encontrado ainda",
+      "comCidade": "Ainda não achamos eventos de tecnologia perto de você. Volte mais tarde — a busca roda de novo em algumas horas.",
+      "semCidade": "Cadastre sua cidade no perfil para a busca de eventos ter onde procurar."
+    }
+  },
   "amigos": {
     "voceEh": "Você é",
     "titulo": "Amigos",
@@ -1110,7 +1135,9 @@
       "erroSalvar": "Não consegui salvar.",
       "titulo": "Pessoas",
       "aparecer": "Aparecer nas sugestões de amigos",
-      "explicacao": "Desligado, você não aparece nas sugestões nem na busca por nome. Quem já tem o seu @ ainda consegue te encontrar e te convidar."
+      "explicacao": "Desligado, você não aparece nas sugestões nem na busca por nome. Quem já tem o seu @ ainda consegue te encontrar e te convidar.",
+      "mostrarPresenca": "Mostrar no meu cartão os eventos que eu confirmei presença",
+      "mostrarPresencaExplicacao": "Desligado, ninguém vê em quais eventos de Notícias você marcou \"Eu vou!\" — o \"Eu vou!\" continua funcionando normalmente para você."
     }
   },
   "idiomas": {

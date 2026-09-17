@@ -60,9 +60,9 @@ def test_resolucao_por_estado(banco):
 
 def test_features_do_usuario(como):
     corpo = como(ANA).get("/features").json()
-    assert corpo == {"candidaturas": False}
+    assert corpo == {"candidaturas": False, "noticias": True}
     corpo = como(ADMIN).get("/features").json()
-    assert corpo == {"candidaturas": True}
+    assert corpo == {"candidaturas": True, "noticias": True}
 
 
 def test_so_super_admin_lista_e_muda(como, banco):

@@ -31,6 +31,7 @@ import { CvPage } from "@/pages/CvPage";
 import { EnglishPage } from "@/pages/EnglishPage";
 import { HomePage } from "@/pages/HomePage";
 import { ModulePage } from "@/pages/ModulePage";
+import { NoticiasPage } from "@/pages/NoticiasPage";
 import { ProfilePage } from "@/pages/ProfilePage";
 import { ResourcePage } from "@/pages/ResourcePage";
 import { RoadmapPage } from "@/pages/RoadmapPage";
@@ -54,6 +55,7 @@ const SCREENS: Record<Screen, () => JSX.Element | null> = {
   cursos: CoursesPage,
   vagas: JobsPage,
   candidaturas: CandidaturasPage,
+  noticias: NoticiasPage,
   config: SettingsPage,
   manual: ManualPage,
 };

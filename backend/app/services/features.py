@@ -50,6 +50,13 @@ REGISTRO: tuple[Recurso, ...] = (
         "do currículo por e-mail para as vagas com contato.",
         "admin",
     ),
+    Recurso(
+        "noticias",
+        "Notícias",
+        "Eventos e anúncios de tecnologia perto da cidade da pessoa, com prazo de "
+        "inscrição, adicionar ao calendário e confirmação de presença.",
+        "todos",
+    ),
 )
 
 _POR_CHAVE = {r.chave: r for r in REGISTRO}

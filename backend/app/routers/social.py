@@ -38,7 +38,7 @@ from supabase import Client
 from app.config import settings
 from app.database import get_supabase
 from app.deps import client_ip, get_current_user
-from app.services import cifra, eventos, limites, sequencia_dupla, usernames
+from app.services import cifra, eventos, limites, noticias, sequencia_dupla, usernames
 from app.services.progress import local_today
 
 router = APIRouter(prefix="/social", tags=["pessoas"])
@@ -174,6 +174,10 @@ def trocar_username(
 
 class Privacidade(BaseModel):
     discoverable: bool
+    # Se os próximos eventos que a pessoa confirmou presença ("Eu vou!" em
+    # Notícias) aparecem no cartão que outras contas veem. Ligado por padrão:
+    # é o que faz sentido para quem quer combinar de ir junto.
+    show_attendance: bool = True
 
 
 @router.get("/privacidade", response_model=Privacidade)
@@ -182,10 +186,14 @@ def ler_privacidade(
     supabase: Client = Depends(get_supabase),
 ):
     linhas = (
-        supabase.table("pathr_profile").select("discoverable")
+        supabase.table("pathr_profile").select("discoverable,show_attendance")
         .eq("user_id", str(current_user["id"])).limit(1).execute().data or []
     )
-    return Privacidade(discoverable=bool((linhas[0] if linhas else {}).get("discoverable", True)))
+    dados = linhas[0] if linhas else {}
+    return Privacidade(
+        discoverable=bool(dados.get("discoverable", True)),
+        show_attendance=bool(dados.get("show_attendance", True)),
+    )
 
 
 @router.put("/privacidade", response_model=Privacidade)
@@ -194,9 +202,9 @@ def gravar_privacidade(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
 ):
-    supabase.table("pathr_profile").update({"discoverable": payload.discoverable}).eq(
-        "user_id", str(current_user["id"])
-    ).execute()
+    supabase.table("pathr_profile").update(
+        {"discoverable": payload.discoverable, "show_attendance": payload.show_attendance}
+    ).eq("user_id", str(current_user["id"])).execute()
     return payload
 
 
@@ -255,10 +263,12 @@ def _cartoes(
         str(p["user_id"]): p
         for p in (
             supabase.table("pathr_profile")
-            .select("user_id,city,state,target_role,headline,current_role,seniority")
+            .select("user_id,city,state,target_role,headline,current_role,seniority,show_attendance")
             .in_("user_id", ids).execute().data or []
         )
     }
+    ids_com_presenca_publica = [uid for uid in ids if perfis.get(uid, {}).get("show_attendance", True)]
+    proximos_eventos = _proximos_eventos_por_usuario(supabase, ids_com_presenca_publica)
     competencias = (
         supabase.table("pathr_user_tag").select("user_id,tag_id,proficiency")
         .in_("user_id", ids).execute().data or []
@@ -295,12 +305,24 @@ def _cartoes(
             "stack": stack[:_STACK_NO_CARTAO],
             "relacao": relacao.get("relacao", "nenhuma"),
             "friendship_id": relacao.get("friendship_id"),
+            # Só preenchido para quem deixou `show_attendance` ligado — ver
+            # `_proximos_eventos_por_usuario`.
+            "proximos_eventos": proximos_eventos.get(uid, []),
             "_tag_ids": {str(t["tag_id"]) for t in tags},
             "_ids_por_nome": {
                 nomes_de_tag[str(t["tag_id"])]: str(t["tag_id"]) for t in tags if str(t["tag_id"]) in nomes_de_tag
             },
         }
     return cartoes
+
+
+def _proximos_eventos_por_usuario(supabase: Client, ids: list[str]) -> dict[str, list[dict[str, Any]]]:
+    """Os eventos de Notícias que cada uma destas contas confirmou presença —
+    só para quem está na lista (já filtrada por `show_attendance`). Ver
+    services/noticias.eventos_que_vou, usado do mesmo jeito no próprio perfil."""
+    if not ids:
+        return {}
+    return {uid: noticias.eventos_que_vou(supabase, uid) for uid in ids}
 
 
 def _publico(cartao: dict[str, Any], minhas_tags: set[str] | None = None) -> dict[str, Any]:

@@ -15,6 +15,7 @@ import type { Screen } from "@/types";
 
 const RECURSO_DA_TELA: Partial<Record<Screen, string>> = {
   candidaturas: "candidaturas",
+  noticias: "noticias",
 };
 
 export function telaLiberada(screen: Screen, features?: Record<string, boolean>): boolean {

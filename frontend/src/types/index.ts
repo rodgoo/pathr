@@ -23,6 +23,7 @@ export type Screen =
   | "amigos"
   | "relatar"
   | "manual"
+  | "noticias"
   | "config";
 
 /** Idioma do material curado. "both" é ausência de filtro, não um terceiro. */
