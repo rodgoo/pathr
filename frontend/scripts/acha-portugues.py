@@ -15,6 +15,18 @@ ignorado — a documentação do código é em português de propósito.
 toa, e "Save" fixo em inglês passa batido. Serve para dar a LISTA por onde
 começar, não para bater o martelo — por isso imprime contagem por arquivo, e a
 conferência é de quem lê.
+
+## Duas famílias que ele acusa e NÃO devem ser traduzidas
+
+- **Rótulo que é a fonte**: em `SkillsTab` e `ObjectiveTab`, o texto português
+  dentro de `CATEGORIAS`/`AREAS` é a chave de origem — quem traduz é o render,
+  por `rotuloCategoria`. Trocar a fonte por `t(...)` quebra a correspondência.
+- **Valor que é persistido**: `target_role` e afins viajam para o backend e
+  ficam gravados. Traduzir o valor faz a mesma pessoa virar duas no banco,
+  conforme o idioma em que estava quando salvou.
+
+Regra prática: traduza o que é DESENHADO na tela; deixe em paz o que é
+comparado, gravado ou usado como chave.
 """
 
 import re, pathlib, collections
