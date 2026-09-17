@@ -1,7 +1,11 @@
 """A chave que liga a extensão do navegador à conta.
 
 Revision ID: 0041_chave_da_extensao
-Revises: 0040_noticias
+Revises: 0039_banco_de_respostas
+
+O número pula o 0040: ele ficou reservado para a leva de Notícias, escrita em
+paralelo e ainda não publicada. Id de revisão é texto, não contagem — o que
+importa é a cadeia, e esta se liga a 0039.
 Create Date: 2026-09-16
 
 A extensão roda em outra origem (chrome-extension://…) e o cookie de sessão não
@@ -23,7 +27,7 @@ from alembic import op
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
 revision: str = "0041_chave_da_extensao"
-down_revision: Union[str, None] = "0040_noticias"
+down_revision: Union[str, None] = "0039_banco_de_respostas"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
