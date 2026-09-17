@@ -137,6 +137,24 @@ def _tecnologias(supabase: Client, node: dict[str, Any]) -> list[str]:
         return []
 
 
+def _e_violacao_de_unicidade(erro: BaseException) -> bool:
+    """O banco recusou por índice único (23505)?
+
+    O cliente do Supabase embrulha o erro do PostgREST de formas diferentes
+    conforme a versão — às vezes um objeto com `.code`, às vezes um dicionário,
+    às vezes só a mensagem. Procura-se o código nos três, e por último o texto.
+    """
+    codigo = getattr(erro, "code", None)
+    if codigo is None and getattr(erro, "args", None):
+        primeiro = erro.args[0]
+        if isinstance(primeiro, dict):
+            codigo = primeiro.get("code")
+    if str(codigo) == "23505":
+        return True
+    texto = str(erro).lower()
+    return "23505" in texto or "duplicate key" in texto or "already exists" in texto
+
+
 async def gerar(supabase: Client, user_id: str, node: dict[str, Any]) -> dict[str, Any]:
     """Gera, grava e devolve a próxima atividade do módulo."""
     node_id = str(node["id"])
@@ -192,11 +210,17 @@ async def gerar(supabase: Client, user_id: str, node: dict[str, Any]) -> dict[st
             .execute()
             .data[0]
         )
-    except Exception:  # noqa: BLE001
-        # Corrida: dois cliques chegaram juntos, os dois passaram pela checagem
-        # de "não há atividade aberta" e tentaram inserir. O índice parcial
-        # único (migração 0038) recusa a segunda; em vez de estourar, devolve a
-        # atividade aberta que já existe — a que venceu a corrida.
+    except Exception as erro:  # noqa: BLE001
+        # SÓ a corrida é tratada aqui: dois cliques chegaram juntos, os dois
+        # passaram pela checagem de "não há atividade aberta" e tentaram
+        # inserir; o índice parcial único (migração 0038) recusa a segunda, e
+        # em vez de estourar devolvemos a atividade que venceu a corrida.
+        #
+        # Qualquer outra falha (rede, permissão, coluna errada) sobe: tratada
+        # como corrida, ela devolveria em silêncio a atividade aberta anterior
+        # e o defeito real não apareceria nem no log, nem na tela.
+        if not _e_violacao_de_unicidade(erro):
+            raise
         aberta = (
             supabase.table("pathr_activity_exercise")
             .select("*")

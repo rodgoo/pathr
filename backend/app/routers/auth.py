@@ -195,52 +195,32 @@ def _gravar_cookie_de_dispositivo(response: Optional[Response], dispositivo: str
     response.set_cookie(DEVICE_COOKIE, dispositivo, max_age=_DEVICE_TTL_DIAS * 24 * 3600, **atributos)
 
 
-def _dispositivo_por_assinatura(supabase: Client, user_id: str, ua: Optional[str]) -> Optional[str]:
-    """O id de aparelho de uma sessão VIVA do mesmo usuário no mesmo
-    navegador+sistema, se houver — a mais recente.
-
-    Um site não tem acesso a número de série nem a nenhum id de hardware (o
-    navegador não expõe isso, de propósito); o cookie é o mais estável que dá.
-    Quando ele é limpo, isto evita que o mesmo aparelho vire um item novo:
-    limpar cookies NÃO revoga a sessão no servidor, então ela continua lá para
-    reconhecer o navegador pela assinatura. Não é infalível — dois computadores
-    iguais sem cookie colapsam num só — mas é o mais próximo possível sem
-    recorrer a fingerprint, que a política de privacidade não permite.
-    """
-    alvo = aparelho.assinatura(ua)
-    try:
-        linhas = (
-            supabase.table("pathr_refresh_token")
-            .select("device_id,user_agent,created_at,expires_at,revoked_at")
-            .eq("user_id", user_id)
-            .execute()
-            .data
-            or []
-        )
-    except Exception:  # noqa: BLE001
-        return None
-    agora = _now()
-    melhor: Optional[str] = None
-    melhor_em: Optional[datetime] = None
-    for linha in linhas:
-        if linha.get("revoked_at") or not linha.get("device_id"):
-            continue
-        expira = _parse_momento(linha.get("expires_at"))
-        if not expira or expira <= agora:
-            continue
-        if aparelho.assinatura(linha.get("user_agent")) != alvo:
-            continue
-        criado = _parse_momento(linha.get("created_at"))
-        if melhor is None or (criado and (melhor_em is None or criado > melhor_em)):
-            melhor, melhor_em = str(linha["device_id"]), criado
-    return melhor
-
-
 def _resolver_dispositivo(
     supabase: Client, user_id: str, request: Optional[Request], response: Optional[Response]
 ) -> str:
-    """O id do aparelho: o do cookie; senão o de uma sessão viva do mesmo
-    navegador (cookie limpo); senão um novo. Sempre (re)grava o cookie."""
+    """O id do aparelho: o do cookie, ou um novo. Sempre (re)grava o cookie.
+
+    ## Por que só o cookie
+
+    Houve aqui uma segunda via: sem cookie, reaproveitar o id de uma sessão
+    viva com o MESMO "navegador + sistema". A intenção era boa — quem limpa
+    cookies não viraria um aparelho novo na lista. O efeito não era: "Chrome no
+    Windows" é a assinatura de uma parte enorme das pessoas, então dois
+    computadores diferentes da mesma conta colapsavam num id só, e daí saíam
+    dois estragos:
+
+    1. o aviso de "novo acesso à sua conta" não saía — entrar de um aparelho
+       desconhecido parecia entrar de um já conhecido, e esse é justamente o
+       e-mail que precisa sair quando alguém usa uma senha roubada;
+    2. `_revogar_dispositivo` encerra as sessões anteriores DAQUELE aparelho;
+       com os dois colapsados, entrar no computador do trabalho derrubava a
+       sessão legítima do computador de casa.
+
+    Sem número de série nem fingerprint (a política de privacidade não permite),
+    o cookie é o único identificador honesto de aparelho. Cookie limpo passa a
+    contar como aparelho novo: a lista de sessões ganha um item a mais e sai um
+    e-mail de novo acesso — barulho pequeno, e do lado seguro.
+    """
     bruto = request.cookies.get(DEVICE_COOKIE) if request else None
     dispositivo: Optional[str] = None
     if bruto:
@@ -248,8 +228,6 @@ def _resolver_dispositivo(
             dispositivo = str(uuid.UUID(bruto))
         except ValueError:
             dispositivo = None
-    if dispositivo is None:
-        dispositivo = _dispositivo_por_assinatura(supabase, user_id, user_agent(request))
     if dispositivo is None:
         dispositivo = str(uuid.uuid4())
     _gravar_cookie_de_dispositivo(response, dispositivo)

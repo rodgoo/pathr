@@ -21,12 +21,16 @@ FAM_BRUNO = "33333333-0000-0000-0000-00000000000c"
 CHROME_WIN = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36"
 SAFARI_IPHONE = "Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1"
 EDGE_WIN = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0 Safari/537.36 Edg/140.0"
+# O cookie de aparelho é um UUID — qualquer outra coisa o servidor descarta.
+DEV_PC = "dddddddd-0000-0000-0000-00000000dev1".replace("dev1", "0001")
 
 
-def _token(id_, user, familia, ua, *, criado_ha=timedelta(minutes=5), revogado=False, ip="189.40.12.7"):
+def _token(id_, user, familia, ua, *, criado_ha=timedelta(minutes=5), revogado=False, ip="189.40.12.7",
+           dispositivo=None):
     agora = datetime.now(timezone.utc)
     return {
         "id": id_, "user_id": user, "family_id": familia, "user_agent": ua, "ip": ip,
+        **({"device_id": dispositivo} if dispositivo else {}),
         "token_hash": id_, "created_at": (agora - criado_ha).isoformat(),
         "expires_at": (agora + timedelta(days=20)).isoformat(),
         "revoked_at": (agora - timedelta(minutes=1)).isoformat() if revogado else None,
@@ -79,11 +83,23 @@ def test_nao_encerra_sessao_de_outra_conta_nem_diz_que_existe(cliente, banco):
     assert bruno["revoked_at"] is None
 
 
-def test_aparelho_novo_so_quando_navegador_e_sistema_nunca_entraram(banco):
-    assert sessoes.aparelho_novo(banco, ANA, CHROME_WIN.replace("140.0", "141.0")) is False  # só atualizou
-    assert sessoes.aparelho_novo(banco, ANA, EDGE_WIN) is True
+def test_aparelho_novo_olha_o_id_do_aparelho_e_nao_o_navegador(banco):
+    """Navegador+sistema é assinatura de meio mundo: por ela, quem roubou a
+    senha e entra de um Chrome no Windows passava por aparelho conhecido e o
+    aviso nunca saía. Quem responde é o cookie de aparelho."""
+    # A sessão viva do PC tem um id de aparelho: é o cookie daquele computador.
+    for linha in banco.linhas("pathr_refresh_token"):
+        if linha["id"] == "pc-2":
+            linha["device_id"] = "dev-do-pc"
+
+    # Mesmo aparelho (o cookie que já entrou): conhecido.
+    assert sessoes.aparelho_novo(banco, ANA, CHROME_WIN, "dev-do-pc") is False
+    # Outro aparelho, MESMO navegador e sistema: novo — e é este o aviso que importa.
+    assert sessoes.aparelho_novo(banco, ANA, CHROME_WIN, "dev-de-outro-pc") is True
+    # Sem cookie de aparelho, conta como novo: avisar demais é recuperável.
+    assert sessoes.aparelho_novo(banco, ANA, CHROME_WIN, None) is True
     # Primeiro login da conta: não há com o que comparar, não é "novo acesso".
-    assert sessoes.aparelho_novo(banco, "cccccccc-0000-0000-0000-000000000003", EDGE_WIN) is False
+    assert sessoes.aparelho_novo(banco, "cccccccc-0000-0000-0000-000000000003", EDGE_WIN, "dev-x") is False
 
 
 def test_descricao_do_aparelho():
@@ -128,21 +144,42 @@ def test_mesmo_dispositivo_colapsa_em_uma_linha(cliente, banco):
     assert all(t.get("revoked_at") for t in banco.linhas("pathr_refresh_token"))
 
 
-def test_cookie_limpo_herda_o_dispositivo_da_sessao_viva_do_mesmo_navegador():
-    """Sem cookie, o aparelho é reconhecido por uma sessão VIVA do mesmo
-    usuário no mesmo navegador+sistema — limpar cookies não vira aparelho novo."""
+def test_aparelho_sai_do_cookie_e_nada_mais():
+    """Dois computadores com o mesmo Chrome no Windows são dois aparelhos.
+
+    Reconhecer por navegador+sistema colapsava os dois num id só, e daí o
+    login no segundo encerrava a sessão legítima do primeiro
+    (`_revogar_dispositivo` mata as sessões anteriores DAQUELE aparelho).
+    """
     from app.routers import auth
 
     agora = datetime.now(timezone.utc)
     banco = FakeSupabase(pathr_refresh_token=[
-        {"id": "s1", "user_id": "u1", "device_id": "dev-1", "user_agent": CHROME_WIN,
+        {"id": "s1", "user_id": "u1", "device_id": DEV_PC, "user_agent": CHROME_WIN,
          "created_at": (agora - timedelta(hours=1)).isoformat(),
          "expires_at": (agora + timedelta(days=10)).isoformat(), "revoked_at": None},
     ])
-    # mesmo navegador -> herda o device_id existente
-    assert auth._dispositivo_por_assinatura(banco, "u1", CHROME_WIN) == "dev-1"
-    # navegador diferente -> não herda (aparelho de verdade novo)
-    assert auth._dispositivo_por_assinatura(banco, "u1", SAFARI_IPHONE) is None
-    # sessão já revogada não empresta a identidade
-    banco.tabelas["pathr_refresh_token"][0]["revoked_at"] = agora.isoformat()
-    assert auth._dispositivo_por_assinatura(banco, "u1", CHROME_WIN) is None
+
+    class _Pedido:
+        def __init__(self, cookies):
+            self.cookies = cookies
+            self.headers = {"user-agent": CHROME_WIN}
+            self.client = None
+
+    class _Resposta:
+        def __init__(self):
+            self.cookies_gravados = {}
+
+        def set_cookie(self, nome, valor, **_):
+            self.cookies_gravados[nome] = valor
+
+    # Com o cookie: continua sendo o mesmo aparelho.
+    resposta = _Resposta()
+    assert auth._resolver_dispositivo(banco, "u1", _Pedido({auth.DEVICE_COOKIE: DEV_PC}), resposta) == DEV_PC
+
+    # Sem cookie, mesmo navegador e sistema: aparelho NOVO, e não o "dev-1" de
+    # outra máquina. O cookie novo é gravado na resposta.
+    resposta = _Resposta()
+    novo = auth._resolver_dispositivo(banco, "u1", _Pedido({}), resposta)
+    assert novo != DEV_PC
+    assert resposta.cookies_gravados[auth.DEVICE_COOKIE] == novo

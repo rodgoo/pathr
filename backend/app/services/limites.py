@@ -119,6 +119,26 @@ def consumir(supabase: Client, regra: Regra, chave: Optional[str]) -> None:
         return
     chave = chave.strip().lower()[:200]
     desde = (_agora() - regra.janela).isoformat()
+
+    # REGISTRA PRIMEIRO, conta depois.
+    #
+    # Na ordem inversa (contar, decidir, registrar) havia uma janela entre a
+    # contagem e a escrita: dez pedidos simultâneos liam "0 usados", os dez
+    # passavam e os dez gravavam — o teto diário virava dez vezes o teto, que é
+    # exatamente o que um ataque faz (pedidos em paralelo, não em fila).
+    #
+    # Gravando antes, cada pedido já entra na conta que ele mesmo vai ler: quem
+    # chegou junto vê a si e aos outros, e todos além do teto são recusados. O
+    # preço é que o pedido recusado também deixa a sua linha — tentativa
+    # recusada consome cota, que para um limite de abuso é o comportamento
+    # certo, não um defeito.
+    try:
+        # A linha velha sai no disparo de hora em hora (services/faxina.py).
+        supabase.table("pathr_rate_event").insert({"action": regra.acao, "key": chave}).execute()
+    except Exception:  # noqa: BLE001
+        logger.warning("limite %s: registro indisponivel", regra.acao)
+        return
+
     try:
         usados = (
             supabase.table("pathr_rate_event")
@@ -135,18 +155,14 @@ def consumir(supabase: Client, regra: Regra, chave: Optional[str]) -> None:
         logger.warning("limite %s: contagem indisponivel, deixando passar", regra.acao)
         return
 
-    if usados >= regra.limite:
+    # `>` e não `>=`: a linha deste pedido já está contada, então o pedido de
+    # número `limite` ainda passa e o seguinte é recusado.
+    if usados > regra.limite:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=regra.mensagem,
             headers={"Retry-After": str(int(regra.janela.total_seconds()))},
         )
-
-    try:
-        # A linha velha sai no disparo de hora em hora (services/faxina.py).
-        supabase.table("pathr_rate_event").insert({"action": regra.acao, "key": chave}).execute()
-    except Exception:  # noqa: BLE001
-        logger.warning("limite %s: registro indisponivel", regra.acao)
 
 
 def consumir_ia(supabase_factory) -> None:

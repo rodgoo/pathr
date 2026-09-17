@@ -73,19 +73,73 @@ _EMAIL_PROIBIDO = re.compile(r"(no[-_.]?reply|nao[-_.]?responda|donotreply|examp
 # Com mais de um endereço no anúncio, o de recrutamento é o certo.
 _EMAIL_DE_VAGA = re.compile(r"(vaga|rh|recrut|talent|selecao|curricul|\bcv\b|job|carreira|career|people)", re.IGNORECASE)
 
+# Provedor de e-mail pessoal. Um endereço destes no anúncio quase nunca é "a
+# empresa": é a caixa de uma pessoa — às vezes de outro candidato, que colou o
+# próprio e-mail num comentário. Currículo tem nome, telefone e histórico;
+# mandar para a caixa errada é vazamento, e não tem volta. Nunca no automático.
+_PROVEDOR_PESSOAL = frozenset(
+    """
+    gmail.com googlemail.com hotmail.com hotmail.com.br outlook.com outlook.com.br live.com msn.com
+    yahoo.com yahoo.com.br ymail.com icloud.com me.com proton.me protonmail.com pm.me tutanota.com
+    bol.com.br uol.com.br terra.com.br ig.com.br globo.com r7.com zipmail.com.br aol.com gmx.com
+    """.split()
+)
+
+
+def _dominio(email: str) -> str:
+    return email.rsplit("@", 1)[-1].lower()
+
 
 def email_do_anuncio(texto: Optional[str]) -> Optional[str]:
-    """O e-mail para onde mandar o currículo, se o anúncio disser um.
+    """O e-mail que o anúncio dá como contato, se der algum.
 
-    A maioria das vagas não diz — manda aplicar no site. Quando diz, costuma ser
-    em "envie seu currículo para vagas@empresa.com", e é nessa que o envio
-    automático se apoia.
+    A maioria das vagas não dá — manda aplicar no site. Quando dá, costuma ser
+    em "envie seu currículo para vagas@empresa.com".
+
+    Isto é SUGESTÃO para a tela: a pessoa vê o endereço, confere e decide. O
+    que o envio automático aceita é mais estreito — ver `email_confiavel`.
     """
     candidatos = [e for e in _EMAIL.findall(texto or "") if not _EMAIL_PROIBIDO.search(e)]
     if not candidatos:
         return None
     de_vaga = [e for e in candidatos if _EMAIL_DE_VAGA.search(e)]
     return (de_vaga or candidatos)[0][:200]
+
+
+def email_confiavel(email: Optional[str], empresa: Optional[str], url: Optional[str]) -> bool:
+    """Dá para mandar o currículo para cá SEM a pessoa conferir?
+
+    O extrator acima acerta na maioria, e erra de formas caras: o anúncio cita
+    o e-mail de um fornecedor, de um jornalista, de outro candidato. No envio
+    manual isso não é problema — a pessoa lê o endereço antes de clicar. No
+    automático não há ninguém lendo, então o critério aqui é duro de propósito,
+    e o que não passa continua na fila esperando um clique:
+
+    1. nada de provedor pessoal (gmail, hotmail, …): não é caixa de empresa;
+    2. o nome da caixa precisa ser de recrutamento (vagas@, rh@, jobs@…), OU
+    3. o domínio precisa ser o do anúncio ou o da empresa — aí é a empresa
+       falando de si mesma, ainda que a caixa se chame "contato".
+    """
+    if not email or "@" not in email:
+        return False
+    dominio = _dominio(email)
+    if dominio in _PROVEDOR_PESSOAL:
+        return False
+    if _EMAIL_DE_VAGA.search(email):
+        return True
+
+    # O domínio do anúncio (o host da URL, sem "www.") e o nome da empresa sem
+    # espaço nem acento: "Empresa Boa" casa com "empresaboa.com.br".
+    host = ""
+    if url:
+        from urllib.parse import urlparse
+
+        host = (urlparse(url).hostname or "").lower().removeprefix("www.")
+    nome = re.sub(r"[^a-z0-9]", "", (empresa or "").lower())
+    raiz = dominio.split(".")[0]
+    if host and (dominio == host or host.endswith(f".{dominio}") or dominio.endswith(f".{host}")):
+        return True
+    return bool(nome) and len(nome) >= 4 and (raiz == nome or nome in dominio.replace(".", ""))
 
 CARTA_SCHEMA: dict[str, Any] = {
     "type": "OBJECT",
@@ -372,6 +426,12 @@ async def enviar_automaticamente(
             break
         destino = str(linha.get("to_email") or "").strip()
         if not destino or int(linha.get("score") or 0) < LIMIAR_AUTOMATICO:
+            continue
+        # O endereço veio do texto do anúncio: só sai sozinho se for mesmo da
+        # empresa. O resto fica na fila, com o endereço à vista para a pessoa
+        # conferir antes de mandar.
+        if not email_confiavel(destino, linha.get("company"), linha.get("url")):
+            logger.info("candidatura %s: e-mail do anúncio não é confiável para envio automático", linha.get("id"))
             continue
         try:
             com_carta = await escrever_carta(supabase, current_user, linha)

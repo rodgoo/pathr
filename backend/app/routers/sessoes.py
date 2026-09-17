@@ -153,8 +153,18 @@ def encerrar(
 # ---------------------------------------------------------------------------
 
 
-def aparelho_novo(supabase: Client, user_id: str, ua: Optional[str]) -> bool:
-    """A conta nunca entrou por este navegador+sistema nos últimos 180 dias?
+def aparelho_novo(
+    supabase: Client, user_id: str, ua: Optional[str], dispositivo: Optional[str] = None
+) -> bool:
+    """A conta nunca entrou por ESTE aparelho nos últimos 180 dias?
+
+    Quem responde é o id de aparelho (o cookie), não "navegador + sistema".
+    Pela assinatura, qualquer acesso de um Chrome no Windows — o de metade do
+    mundo, inclusive o de quem roubou a senha — passava por aparelho conhecido,
+    e o aviso nunca saía. É o oposto do que este e-mail existe para fazer.
+
+    Sem id de aparelho (cliente que não guarda cookie), o acesso conta como
+    novo: avisar demais é recuperável, não avisar não é.
 
     Chamado ANTES de criar a sessão nova. Conta sem nenhuma sessão anterior
     (o primeiro login depois do cadastro) não é "novo acesso": não há com o
@@ -163,7 +173,7 @@ def aparelho_novo(supabase: Client, user_id: str, ua: Optional[str]) -> bool:
     try:
         linhas = (
             supabase.table("pathr_refresh_token")
-            .select("user_agent,created_at")
+            .select("device_id,user_agent,created_at")
             .eq("user_id", user_id)
             .execute()
             .data
@@ -173,13 +183,14 @@ def aparelho_novo(supabase: Client, user_id: str, ua: Optional[str]) -> bool:
         return False
     if not linhas:
         return False
+    if not dispositivo:
+        return True
     limite = _agora() - _MEMORIA_DO_APARELHO
-    alvo = aparelho.assinatura(ua)
     for linha in linhas:
         criado = _momento(linha.get("created_at"))
         if criado and criado < limite:
             continue
-        if aparelho.assinatura(linha.get("user_agent")) == alvo:
+        if str(linha.get("device_id") or "") == str(dispositivo):
             return False
     return True
 
@@ -194,7 +205,12 @@ def avisar_se_novo(supabase: Client, user: dict, request: Optional[Request], met
     if not destino:
         return
     ua = user_agent(request)
-    if not aparelho_novo(supabase, str(user["id"]), ua):
+    # O cookie de aparelho, como ele chegou: é ele que diz se este aparelho já
+    # entrou nesta conta. Vem de `routers/auth.DEVICE_COOKIE`.
+    from app.routers.auth import DEVICE_COOKIE
+
+    dispositivo = request.cookies.get(DEVICE_COOKIE) if request else None
+    if not aparelho_novo(supabase, str(user["id"]), ua, dispositivo):
         return
     dados = {
         "aparelho": aparelho.descrever(ua),

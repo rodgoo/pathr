@@ -37,9 +37,33 @@ from app.database import get_supabase
 from app.deps import get_current_user
 from app.services import candidaturas as servico
 from app.services import email as email_service
-from app.services import limites
+from app.services import features, limites
 
-router = APIRouter(prefix="/candidaturas", tags=["candidaturas"])
+def recurso_ligado(
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+) -> dict:
+    """Recusa quem não tem o recurso ligado — no SERVIDOR, não só na tela.
+
+    Esconder a aba no frontend é apresentação: o endereço continuava aberto a
+    qualquer conta com sessão, e "Todos / Somente admin / Ninguém" não valia
+    nada para quem chamasse a API direto. A porta é aqui.
+
+    404 e não 403: para quem não tem o recurso, ele não existe — e a resposta
+    não confirma que existe algo escondido atrás.
+    """
+    if not features.habilitadas_para(current_user, supabase).get("candidaturas", False):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recurso indisponível.")
+    return current_user
+
+
+router = APIRouter(
+    prefix="/candidaturas",
+    tags=["candidaturas"],
+    # Vale para TODAS as rotas do arquivo, inclusive as que vierem depois: quem
+    # esquecer a dependência numa rota nova não abre um buraco.
+    dependencies=[Depends(recurso_ligado)],
+)
 
 
 class PedidoDeEnvio(BaseModel):
