@@ -32,7 +32,8 @@
     "sair": "Quitter",
     "principal": "Navigation principale",
     "maisDestinos": "Plus de destinations",
-    "fecharMenu": "Fermer le menu"
+    "fecharMenu": "Fermer le menu",
+    "noticias": "Actualités"
   },
   "landing": {
     "palavras": {
@@ -1126,7 +1127,9 @@
       "erroSalvar": "Je n'ai pas réussi à l'enregistrer.",
       "titulo": "Personnes",
       "aparecer": "Apparaître dans les suggestions d'amis",
-      "explicacao": "Si vous êtes déconnecté, vous n'apparaissez ni dans les suggestions ni dans les résultats de recherche par nom. Les personnes qui connaissent déjà votre @ peuvent toujours vous trouver et vous inviter."
+      "explicacao": "Si vous êtes déconnecté, vous n'apparaissez ni dans les suggestions ni dans les résultats de recherche par nom. Les personnes qui connaissent déjà votre @ peuvent toujours vous trouver et vous inviter.",
+      "mostrarPresenca": "Afficher sur ma carte les événements auxquels j'ai confirmé ma présence",
+      "mostrarPresencaExplicacao": "Lorsque cette fonction est désactivée, personne ne peut voir pour quels événements de la rubrique Actualités vous avez cliqué sur « J'y vais ! » — la fonction « J'y vais ! » continue de fonctionner normalement pour vous."
     }
   },
   "idiomas": {
@@ -2581,5 +2584,41 @@
         "reagendar": "Calendrier"
       }
     }
+  },
+  "noticias": {
+    "kicker": "Actualités",
+    "titulo": "Événements technologiques près de chez vous",
+    "descricaoComCidade": "Événements et annonces dans le domaine des technologies à{cidade}, et dans les environs.",
+    "descricaoSemCidade": "Indiquez votre ville dans votre profil pour voir les événements les plus proches de chez vous — pour l'instant, ceux-ci peuvent se dérouler n'importe où.",
+    "carregando": "Recherche d'événements…",
+    "gratuito": "Gratuit",
+    "pago": "Payé",
+    "inscricao": "Inscriptions du {inicio} au {fim}",
+    "abrirIngresso": "Créer un ticket",
+    "adicionarCalendario": "Ajouter au calendrier",
+    "baixando": "Génération en cours…",
+    "erroCalendario": "Je n'ai pas réussi à générer le fichier du calendrier.",
+    "euVou": {
+      "botao": "J'y vais !",
+      "confirmado": "Tu vas",
+      "explicacao": "Votre présence apparaît sur la carte des autres utilisateurs, si vous l'autorisez dans Paramètres › Personnes."
+    },
+    "vazio": {
+      "titulo": "Aucun événement n'a encore été trouvé",
+      "comCidade": "Nous n'avons pas encore trouvé d'événements technologiques près de chez vous. Revenez plus tard : la recherche sera relancée dans quelques heures.",
+      "semCidade": "Ajoutez votre ville dans votre profil afin que la recherche d'événements sache où chercher."
+    }
+  },
+  "extensao": {
+    "descricao": "L'extension du navigateur lit le formulaire de candidature et le remplit avec les informations dont PathR dispose déjà à votre sujet — y compris en joignant votre CV. Si elle manque d'informations, elle vous pose la question sur-le-champ, et votre réponse sera prise en compte pour les prochaines offres d'emploi sur n'importe quel site. C'est toujours à vous de valider l'envoi.",
+    "comoInstalar": "Installez le dossier « extension/ » dans chrome://extensions (Mode développeur → Charger sans compression) et collez la clé dans la petite fenêtre qui s'affiche.",
+    "criarChave": "Créer une clé",
+    "criando": "Chargement…",
+    "copieAgora": "Copiez-la maintenant : cette clé ne s'affichera plus.",
+    "copiar": "Copier",
+    "copiada": "Copiée",
+    "usadaEm": "utilisée sur {data}",
+    "nuncaUsada": "pas encore utilisée",
+    "revogar": "Abroger"
   }
 }

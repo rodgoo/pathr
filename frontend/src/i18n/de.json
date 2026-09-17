@@ -32,7 +32,8 @@
     "sair": "Beenden",
     "principal": "Hauptnavigation",
     "maisDestinos": "Weitere Reiseziele",
-    "fecharMenu": "Menü schließen"
+    "fecharMenu": "Menü schließen",
+    "noticias": "Nachrichten"
   },
   "landing": {
     "palavras": {
@@ -1126,7 +1127,9 @@
       "erroSalvar": "Ich konnte es nicht speichern.",
       "titulo": "Personen",
       "aparecer": "In den Freundschaftsvorschlägen erscheinen",
-      "explicacao": "Wenn du deaktiviert bist, erscheinst du weder in den Vorschlägen noch bei der Suche nach Namen. Wer deinen @-Namen bereits hat, kann dich weiterhin finden und einladen."
+      "explicacao": "Wenn du deaktiviert bist, erscheinst du weder in den Vorschlägen noch bei der Suche nach Namen. Wer deinen @-Namen bereits hat, kann dich weiterhin finden und einladen.",
+      "mostrarPresenca": "Auf meiner Karte die Veranstaltungen anzeigen, für die ich meine Teilnahme bestätigt habe",
+      "mostrarPresencaExplicacao": "Wenn die Funktion deaktiviert ist, sieht niemand, bei welchen Nachrichten-Veranstaltungen Sie „Ich komme!“ markiert haben – die Funktion „Ich komme!“ funktioniert für Sie weiterhin wie gewohnt."
     }
   },
   "idiomas": {
@@ -2581,5 +2584,41 @@
         "reagendar": "Zeitplan"
       }
     }
+  },
+  "noticias": {
+    "kicker": "Nachrichten",
+    "titulo": "Technologieveranstaltungen in Ihrer Nähe",
+    "descricaoComCidade": "Technologieveranstaltungen und Ankündigungen in {cidade} und Umgebung.",
+    "descricaoSemCidade": "Gib deine Stadt in deinem Profil ein, um die Veranstaltungen in deiner Nähe anzuzeigen – derzeit werden noch Veranstaltungen aus allen möglichen Orten angezeigt.",
+    "carregando": "Veranstaltungen werden gesucht…",
+    "gratuito": "Kostenlos",
+    "pago": "Bezahlt",
+    "inscricao": "Anmeldungen unter {inicio} bis {fim}",
+    "abrirIngresso": "Ticket öffnen",
+    "adicionarCalendario": "Zum Kalender hinzufügen",
+    "baixando": "Wird generiert…",
+    "erroCalendario": "Ich konnte die Kalenderdatei nicht erstellen.",
+    "euVou": {
+      "botao": "Ich komme!",
+      "confirmado": "Du wirst",
+      "explicacao": "Ihre Anwesenheit wird für andere Personen auf Ihrer Karte angezeigt, sofern Sie dies unter „Einstellungen“ › „Personen“ zulassen."
+    },
+    "vazio": {
+      "titulo": "Es wurden noch keine Veranstaltungen gefunden",
+      "comCidade": "Wir haben noch keine Technologieveranstaltungen in Ihrer Nähe gefunden. Schauen Sie später noch einmal vorbei – die Suche wird in einigen Stunden erneut durchgeführt.",
+      "semCidade": "Tragen Sie Ihre Stadt in Ihrem Profil ein, damit die Veranstaltungssuche weiß, wo sie suchen soll."
+    }
+  },
+  "extensao": {
+    "descricao": "Die Browser-Erweiterung liest das Bewerbungsformular aus und füllt es mit den Daten aus, die PathR bereits über Sie hat – einschließlich des Lebenslaufs als Anhang. Was sie nicht weiß, fragt sie direkt vor Ort nach, und die Antwort gilt dann auch für zukünftige Stellenangebote auf jeder beliebigen Website. Das Absenden bleibt weiterhin Ihre Aufgabe.",
+    "comoInstalar": "Fügen Sie den Ordner „extensão/“ unter chrome://extensions ein (Entwicklermodus → Unkomprimiert laden) und fügen Sie den Schlüssel in das entsprechende Feld ein.",
+    "criarChave": "Schlüssel erstellen",
+    "criando": "Wird geladen…",
+    "copieAgora": "Jetzt kopieren: Dieser Schlüssel wird nicht noch einmal angezeigt.",
+    "copiar": "Kopieren",
+    "copiada": "Kopiert",
+    "usadaEm": "verwendet unter {data}",
+    "nuncaUsada": "noch nicht verwendet",
+    "revogar": "Aufheben"
   }
 }

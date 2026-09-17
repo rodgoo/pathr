@@ -32,7 +32,8 @@
     "sair": "Log Out",
     "principal": "Main Navigation",
     "maisDestinos": "More destinations",
-    "fecharMenu": "Close menu"
+    "fecharMenu": "Close menu",
+    "noticias": "News"
   },
   "landing": {
     "palavras": {
@@ -1126,7 +1127,9 @@
       "erroSalvar": "I couldn't save it.",
       "titulo": "People",
       "aparecer": "Appear in friend suggestions",
-      "explicacao": "If you're offline, you won't appear in suggestions or in name searches. People who already have your @ handle can still find you and invite you."
+      "explicacao": "If you're offline, you won't appear in suggestions or in name searches. People who already have your @ handle can still find you and invite you.",
+      "mostrarPresenca": "Show the events I've RSVP'd to on my calendar",
+      "mostrarPresencaExplicacao": "When turned off, no one can see which News events you've marked as \"I'm going!\" — the \"I'm going!\" feature continues to work normally for you."
     }
   },
   "idiomas": {
@@ -2581,5 +2584,41 @@
         "reagendar": "Schedule"
       }
     }
+  },
+  "noticias": {
+    "kicker": "News",
+    "titulo": "Tech events near you",
+    "descricaoComCidade": "Technology events and announcements in{cidade}, and the surrounding area.",
+    "descricaoSemCidade": "Add your city to your profile to see events near you — for now, these are from all over.",
+    "carregando": "Searching for events…",
+    "gratuito": "Free",
+    "pago": "Paid",
+    "inscricao": "Registration from {inicio} to {fim}",
+    "abrirIngresso": "Open a ticket",
+    "adicionarCalendario": "Add to calendar",
+    "baixando": "Generating…",
+    "erroCalendario": "I was unable to generate the calendar file.",
+    "euVou": {
+      "botao": "I'm going!",
+      "confirmado": "You're going to",
+      "explicacao": "Your presence will be visible to others on your card if you allow it in Settings › People."
+    },
+    "vazio": {
+      "titulo": "No events found yet",
+      "comCidade": "We haven't found any tech events near you yet. Check back later—the search will run again in a few hours.",
+      "semCidade": "Add your city to your profile so the event search knows where to look."
+    }
+  },
+  "extensao": {
+    "descricao": "The browser extension reads the job posting and fills it out with what PathR already knows about you—including attaching your resume. For anything it doesn’t know, it asks you right then and there, and your answer is saved for future job postings on any website. You’re still in charge of submitting the application.",
+    "comoInstalar": "Install the \"extensão/\" folder in chrome://extensions (Developer Mode → Load unpacked) and paste the key into the small window there.",
+    "criarChave": "Create key",
+    "criando": "Loading…",
+    "copieAgora": "Copy it now: this key won't appear again.",
+    "copiar": "Copy",
+    "copiada": "Copied",
+    "usadaEm": "used at {data}",
+    "nuncaUsada": "not yet used",
+    "revogar": "Repeal"
   }
 }

@@ -32,7 +32,8 @@
     "sair": "Salir",
     "principal": "Navegación principal",
     "maisDestinos": "Más destinos",
-    "fecharMenu": "Cerrar menú"
+    "fecharMenu": "Cerrar menú",
+    "noticias": "Noticias"
   },
   "landing": {
     "palavras": {
@@ -1126,7 +1127,9 @@
       "erroSalvar": "No he podido guardarlo.",
       "titulo": "Personas",
       "aparecer": "Aparecer en las sugerencias de amigos",
-      "explicacao": "Si lo desactivas, no aparecerás en las sugerencias ni en la búsqueda por nombre. Quienes ya tengan tu @ podrán seguir encontrándote e invitándote."
+      "explicacao": "Si lo desactivas, no aparecerás en las sugerencias ni en la búsqueda por nombre. Quienes ya tengan tu @ podrán seguir encontrándote e invitándote.",
+      "mostrarPresenca": "Mostrar en mi tarjeta los eventos en los que he confirmado mi asistencia",
+      "mostrarPresencaExplicacao": "Cuando la función está desactivada, nadie puede ver en qué eventos de Noticias has marcado «¡Voy a ir!»; la opción «¡Voy a ir!» sigue funcionando con normalidad para ti."
     }
   },
   "idiomas": {
@@ -2581,5 +2584,41 @@
         "reagendar": "Calendario"
       }
     }
+  },
+  "noticias": {
+    "kicker": "Noticias",
+    "titulo": "Eventos tecnológicos cerca de ti",
+    "descricaoComCidade": "Eventos y anuncios sobre tecnología en {cidade} y alrededores.",
+    "descricaoSemCidade": "Añade tu ciudad en tu perfil para ver los eventos más cercanos a ti; por ahora, estos son de cualquier lugar.",
+    "carregando": "Buscando eventos…",
+    "gratuito": "Gratis",
+    "pago": "Pagado",
+    "inscricao": "Inscripciones en {inicio} hasta el {fim}",
+    "abrirIngresso": "Abrir entrada",
+    "adicionarCalendario": "Añadir al calendario",
+    "baixando": "Generando…",
+    "erroCalendario": "No he podido generar el archivo del calendario.",
+    "euVou": {
+      "botao": "¡Yo voy!",
+      "confirmado": "Vas a...",
+      "explicacao": "Tu presencia será visible para otras personas en tu perfil, si lo permites en Ajustes › Personas."
+    },
+    "vazio": {
+      "titulo": "Aún no se ha encontrado ningún evento",
+      "comCidade": "Aún no hemos encontrado eventos tecnológicos cerca de ti. Vuelve más tarde: la búsqueda se volverá a realizar dentro de unas horas.",
+      "semCidade": "Añade tu ciudad al perfil para que la búsqueda de eventos sepa dónde buscar."
+    }
+  },
+  "extensao": {
+    "descricao": "La extensión del navegador lee el formulario de la oferta de empleo y lo rellena con la información que PathR ya tiene sobre ti, incluyendo incluso el currículum. Lo que no sepa, te lo pregunta en ese mismo momento, y la respuesta se aplica a las próximas ofertas de empleo en cualquier página web. El envío sigue estando en tus manos.",
+    "comoInstalar": "Instala la carpeta «extensao/» en chrome://extensions (Modo de desarrollador → Cargar sin comprimir) y pega la clave en la ventanilla que aparece.",
+    "criarChave": "Crear clave",
+    "criando": "Generando…",
+    "copieAgora": "Cópiala ahora: esta clave no volverá a aparecer.",
+    "copiar": "Copiar",
+    "copiada": "Copiada",
+    "usadaEm": "utilizada en {data}",
+    "nuncaUsada": "aún sin usar",
+    "revogar": "Derogar"
   }
 }
