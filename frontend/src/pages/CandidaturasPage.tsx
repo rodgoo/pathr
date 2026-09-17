@@ -399,6 +399,7 @@ function EnvioAutomatico() {
  * ler é uma credencial que vaza junto com o banco.
  */
 function ChaveDaExtensaoPanel() {
+  const t = useT();
   const chaves = useQuery(() => extensaoApi.chaves(), []);
   const criar = useMutation((nome: string) => extensaoApi.criar(nome));
   const revogar = useMutation((id: string) => extensaoApi.revogar(id));
@@ -426,20 +427,19 @@ function ChaveDaExtensaoPanel() {
     <Panel pad={16.8}>
       <div style={{ display: "flex", gap: 11.2, alignItems: "flex-start", flexWrap: "wrap" }}>
         <div style={{ flex: 1, minWidth: 260 }}>
+          {/* O nome do produto não é traduzido: é como ele aparece na loja e na
+              barra do navegador, em qualquer idioma. */}
           <Kicker style={{ display: "block", marginBottom: 4 }}>PathR Extension</Kicker>
           <p style={{ margin: 0, fontSize: 13, color: TEXT.muted, lineHeight: 1.55, maxWidth: "62ch" }}>
-            A extensão do navegador lê o formulário da vaga e preenche com o que o PathR já sabe de você —
-            inclusive anexando o currículo. O que ela não souber, pergunta ali na hora, e a resposta passa a
-            valer para as próximas vagas em qualquer site. Enviar continua sendo com você.
+            {t("extensao.descricao")}
           </p>
           <p style={{ margin: "6px 0 0", fontSize: 11.5, color: TEXT.faint, lineHeight: 1.5, maxWidth: "62ch" }}>
-            Instale a pasta <code>extensao/</code> em chrome://extensions (Modo do desenvolvedor → Carregar sem
-            compactação) e cole a chave na janelinha dela.
+            {t("extensao.comoInstalar")}
           </p>
         </div>
         <button type="button" className="btn btn-primary" disabled={criar.pending} onClick={() => void gerar()}>
           <Icon name="plus" size={15} />
-          {criar.pending ? "Criando…" : "Criar chave"}
+          {criar.pending ? t("extensao.criando") : t("extensao.criarChave")}
         </button>
       </div>
 
@@ -453,9 +453,7 @@ function ChaveDaExtensaoPanel() {
             border: `1px solid ${tint(ACC, 25)}`,
           }}
         >
-          <p style={{ margin: "0 0 6px", fontSize: 11.5, color: ACC4 }}>
-            Copie agora: esta chave não aparece de novo.
-          </p>
+          <p style={{ margin: "0 0 6px", fontSize: 11.5, color: ACC4 }}>{t("extensao.copieAgora")}</p>
           <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
             <code
               style={{
@@ -470,7 +468,7 @@ function ChaveDaExtensaoPanel() {
             </code>
             <button type="button" className="btn btn-ghost" onClick={() => void copiar()}>
               <Icon name={copiada ? "check" : "file"} size={14} />
-              {copiada ? "Copiada" : "Copiar"}
+              {copiada ? t("extensao.copiada") : t("extensao.copiar")}
             </button>
           </div>
         </div>
@@ -495,8 +493,8 @@ function ChaveDaExtensaoPanel() {
                 <div style={{ fontSize: 13, color: TEXT.full }}>{chave.nome}</div>
                 <div style={{ fontSize: 11, color: TEXT.faint }}>
                   {chave.usada_em
-                    ? `usada em ${new Date(chave.usada_em).toLocaleDateString()}`
-                    : "ainda não usada"}
+                    ? t("extensao.usadaEm", { data: new Date(chave.usada_em).toLocaleDateString() })
+                    : t("extensao.nuncaUsada")}
                 </div>
               </div>
               <button
@@ -508,7 +506,7 @@ function ChaveDaExtensaoPanel() {
                   chaves.reload();
                 }}
               >
-                Revogar
+                {t("extensao.revogar")}
               </button>
             </li>
           ))}
