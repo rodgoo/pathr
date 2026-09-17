@@ -15,7 +15,7 @@
     "inicio": "Startseite",
     "roadmap": "Roadmap",
     "trilha": "Aktueller Pfad",
-    "trilhaCurta": "Wanderweg",
+    "trilhaCurta": "Pfad",
     "cursos": "Kurse",
     "vagas": "Stellenangebote",
     "candidaturas": "Bewerbungen",
@@ -111,7 +111,7 @@
     },
     "recursos": {
       "trilha": {
-        "rotulo": "Wanderweg",
+        "rotulo": "Pfad",
         "titulo": "Ein in Etappen unterteilter Weg, der anzeigt, wie weit es noch ist",
         "texto": "Jedes Modul enthält das passende Material – Artikel, Video, Dokumentation oder Schritt-für-Schritt-Anleitung – sowie die dafür benötigte Zeit. Markieren Sie, was Sie bereits abgeschlossen haben, und verfolgen Sie Ihren Fortschritt.",
         "ponto1": "Reihenfolge, wie es Ihr Ziel erfordert",
@@ -372,7 +372,7 @@
     "naSemana": "in der Woche",
     "tempoTotal": "Gesamtzeit",
     "mediaPorDia": "Durchschnitt pro Tag mit Lernen",
-    "melhorDia": "schöner Tag"
+    "melhorDia": "bester Tag"
   },
   "kpi": {
     "sequencia": "Lernserie",
@@ -398,7 +398,7 @@
   "senioridade": {
     "estagio": "Praktikum",
     "junior": "Junior",
-    "pleno": "Plenarsitzung",
+    "pleno": "Erfahren",
     "senior": "Senior",
     "especialista": "Experte",
     "lideranca": "Führung"
@@ -1098,7 +1098,7 @@
     "procurandoPerto": "Auf der Suche nach Menschen in Ihrer Nähe…",
     "semSugestoes": "Es gibt noch keine Vorschläge. Diese stammen von Leuten, die in deiner Nähe wohnen und ähnliche Fächer wie du studieren.",
     "carregandoAmigos": "Wird geladen…",
-    "seusAmigos": "Seine Freunde",
+    "seusAmigos": "Deine Freunde",
     "nenhumAmigo": "Noch keine Freunde",
     "nenhumAmigoDesc": "Füge jemanden aus den Vorschlägen hinzu oder suche mit dem @-Zeichen nach jemandem, den du bereits kennst.",
     "convitesEnviados": "Versendete Einladungen",
@@ -1160,9 +1160,9 @@
       "grammar": "Grammatik",
       "vocabulary": "Vokabeln",
       "reading": "Lesen",
-      "listening": "Hör mal",
-      "writing": "Schriftlich",
-      "speaking": "Sag mal",
+      "listening": "Hörverstehen",
+      "writing": "Schreiben",
+      "speaking": "Sprechen",
       "business": "Unternehmen"
     },
     "confianca": {
@@ -1242,11 +1242,11 @@
       "mcq": "Wählen Sie",
       "gap": "Fertigstellen",
       "reorder": "Setze den Satz zusammen",
-      "match": "Mitglied werden",
-      "listening": "Hör mal",
-      "dictation": "Sprichwort",
+      "match": "Zuordnen",
+      "listening": "Hörverstehen",
+      "dictation": "Diktat",
       "image": "Bild",
-      "speaking": "Sag mal"
+      "speaking": "Sprechen"
     },
     "treino": {
       "origem": {
@@ -1269,7 +1269,7 @@
       "nenhumPronto": "Derzeit gibt es keine fertigen Übungen.",
       "carregarProximos": "Die nächsten laden",
       "pulado": "Übersprungen – zählt nicht als Fehler.",
-      "certo": "Klar!",
+      "certo": "Richtig!",
       "aindaNao": "Noch nicht.",
       "continuar": "Weiter",
       "concluido": "Das heutige Training ist beendet",
@@ -1389,7 +1389,7 @@
     "linhaN": "{linha}-Reihe",
     "niveis": {
       "iniciante": "Anfänger",
-      "intermediario": "Zwischenstufe",
+      "intermediario": "Mittelstufe",
       "avancado": "Fortgeschritten"
     },
     "sugestoes": {
@@ -1446,7 +1446,7 @@
     "biblioteca": {
       "vazioTitulo": "Noch keine Beispiele",
       "vazioDescricao": "Wählen Sie oben die Sprache und das Thema aus. Das Beispiel wird hier gespeichert, sodass Sie es so oft aufrufen können, wie Sie möchten.",
-      "titulo": "Ihre Beispiele",
+      "titulo": "Deine Beispiele",
       "arquivosN": "{n} Dateien",
       "passosN": "{n} Schritte",
       "removendo": "Wird entfernt…",
@@ -1495,7 +1495,7 @@
       "entrouEm": "Er hat sich unter {data} angemeldet",
       "banidoEm": " · auf {data} gesperrt",
       "motivoLabel": "Grund: {motivo}",
-      "desbanir": "Entzaubern",
+      "desbanir": "Entsperren",
       "banir": "Sperren",
       "desbanirAria": "{nome} entfernen",
       "banirAria": "{nome} sperren",
@@ -1513,7 +1513,7 @@
       "situacaoLabel": "Finanzlage",
       "situacoes": {
         "todos": "Alle",
-        "ativos": "Vermögenswerte",
+        "ativos": "Aktive",
         "banidos": "Gebannt"
       },
       "buscar": "Suchen",
@@ -1539,14 +1539,14 @@
     },
     "nivel": {
       "iniciante": "Anfänger",
-      "intermediario": "Zwischenstufe",
+      "intermediario": "Mittelstufe",
       "avancado": "Fortgeschritten"
     },
     "motivo": {
       "meta": "Ihr Ziel",
       "queroAprender": "Ich möchte lernen",
       "roadmap": "In Ihrer Roadmap",
-      "objetivo": "Ihr Ziel"
+      "objetivo": "Dein Ziel"
     },
     "carregando": "Auf der Suche nach Kursen mit Zertifikat…",
     "contador": "{n} {cursos} · {gratuitos} mit kostenlosem Zertifikat",
@@ -1627,7 +1627,7 @@
     },
     "nivel": {
       "junior": "Junior",
-      "pleno": "Plenarsitzung",
+      "pleno": "Erfahren",
       "senior": "Senior"
     },
     "situacao": {
@@ -1831,7 +1831,7 @@
       "gerarPlano": "Plan erstellen",
       "planoConcluidoTitulo": "Plan abgeschlossen",
       "planoConcluidoDescricao": "Alle Module wurden geliefert. Erstelle ein neues Ziel, um fortzufahren.",
-      "trilha": "Wanderweg",
+      "trilha": "Pfad",
       "concluir": "Abschließen",
       "concluirDescricao": "Wenn Sie die Aufgabe als abgeschlossen markieren, wird die Lerneinheit erfasst und die Kompetenz in den Technologien dieses Moduls erhöht.",
       "concluido": "Abgeschlossen",
@@ -1841,7 +1841,7 @@
       "modulosDaFase": "Phasenmodule"
     },
     "recurso": {
-      "trilha": "Wanderweg",
+      "trilha": "Pfad",
       "nenhumMaterialTitulo": "Kein offenes Material",
       "nenhumMaterialDescricao": "Wählen Sie hier einen Eintrag aus dem Modulinhalt aus, um ihn zu öffnen.",
       "voltar": "Zurück",

@@ -15,7 +15,7 @@
     "inicio": "Home",
     "roadmap": "Roadmap",
     "trilha": "Current track",
-    "trilhaCurta": "Trail",
+    "trilhaCurta": "Track",
     "cursos": "Courses",
     "vagas": "Job Openings",
     "candidaturas": "Applications",
@@ -111,7 +111,7 @@
     },
     "recursos": {
       "trilha": {
-        "rotulo": "Trail",
+        "rotulo": "Track",
         "titulo": "A progress bar that shows how much is left",
         "texto": "Each module includes the right material—an article, video, documentation, or guided example—and the time it takes to complete. Check off what you've finished and watch your progress grow.",
         "ponto1": "Order as required by your objective",
@@ -398,7 +398,7 @@
   "senioridade": {
     "estagio": "Internship",
     "junior": "Junior",
-    "pleno": "Plenary Session",
+    "pleno": "Mid-level",
     "senior": "Senior",
     "especialista": "Expert",
     "lideranca": "Leadership"
@@ -1160,9 +1160,9 @@
       "grammar": "Grammar",
       "vocabulary": "Vocabulary",
       "reading": "Reading",
-      "listening": "Listen",
+      "listening": "Listening",
       "writing": "Writing",
-      "speaking": "Hey",
+      "speaking": "Speaking",
       "business": "Corporate"
     },
     "confianca": {
@@ -1174,7 +1174,7 @@
     "situacao": {
       "reforcar": "to strengthen",
       "progredindo": "making progress",
-      "dominado": "dominated",
+      "dominado": "mastered",
       "poucosDados": "limited data"
     },
     "quadro": {
@@ -1242,11 +1242,11 @@
       "mcq": "Choose",
       "gap": "Complete",
       "reorder": "Put the sentence together",
-      "match": "Join",
-      "listening": "Listen",
-      "dictation": "Proverb",
+      "match": "Match",
+      "listening": "Listening",
+      "dictation": "Dictation",
       "image": "Image",
-      "speaking": "Hey"
+      "speaking": "Speaking"
     },
     "treino": {
       "origem": {
@@ -1269,7 +1269,7 @@
       "nenhumPronto": "There are no exercises available right now.",
       "carregarProximos": "Load the next ones",
       "pulado": "Skipped — does not count as an error.",
-      "certo": "Okay!",
+      "certo": "Correct!",
       "aindaNao": "Not yet.",
       "continuar": "Continue",
       "concluido": "Today's workout is done",
@@ -1389,7 +1389,7 @@
     "linhaN": "{linha} line",
     "niveis": {
       "iniciante": "Beginner",
-      "intermediario": "Intermediary",
+      "intermediario": "Intermediate",
       "avancado": "Advanced"
     },
     "sugestoes": {
@@ -1446,7 +1446,7 @@
     "biblioteca": {
       "vazioTitulo": "No examples yet",
       "vazioDescricao": "Select the language and topic above. The example will be saved here so you can come back to it as often as you like.",
-      "titulo": "Their examples",
+      "titulo": "Your examples",
       "arquivosN": "{n} files",
       "passosN": "{n} steps",
       "removendo": "Removing…",
@@ -1460,7 +1460,7 @@
       "situacoes": {
         "abertos": "Open",
         "resolvidos": "Resolved",
-        "todos": "Everyone"
+        "todos": "All"
       },
       "statusLabel": "Status",
       "status": {
@@ -1495,7 +1495,7 @@
       "entrouEm": "Go to {data}",
       "banidoEm": " · Banned at {data}",
       "motivoLabel": "Reason: {motivo}",
-      "desbanir": "Dispel",
+      "desbanir": "Unban",
       "banir": "Ban",
       "desbanirAria": "Exorcise {nome}",
       "banirAria": "Ban {nome}",
@@ -1512,8 +1512,8 @@
       "maisRecentes": " (the most recent — refine your search)",
       "situacaoLabel": "Financial Status",
       "situacoes": {
-        "todos": "Everyone",
-        "ativos": "Assets",
+        "todos": "All",
+        "ativos": "Active",
         "banidos": "Banned"
       },
       "buscar": "Search",
@@ -1524,7 +1524,7 @@
   },
   "cursos": {
     "filtro": {
-      "todos": "Everyone",
+      "todos": "All",
       "gratuitos": "Free",
       "pagos": "Paid"
     },
@@ -1539,14 +1539,14 @@
     },
     "nivel": {
       "iniciante": "Beginner",
-      "intermediario": "Intermediary",
+      "intermediario": "Intermediate",
       "avancado": "Advanced"
     },
     "motivo": {
       "meta": "Your goal",
       "queroAprender": "I want to learn",
       "roadmap": "In its roadmap",
-      "objetivo": "Its goal"
+      "objetivo": "Your goal"
     },
     "carregando": "Looking for courses that offer a certificate…",
     "contador": "{n} {cursos} · {gratuitos} with a free certificate",
@@ -1627,7 +1627,7 @@
     },
     "nivel": {
       "junior": "Junior",
-      "pleno": "Plenary Session",
+      "pleno": "Mid-level",
       "senior": "Senior"
     },
     "situacao": {
@@ -1831,7 +1831,7 @@
       "gerarPlano": "Generate plan",
       "planoConcluidoTitulo": "Plan completed",
       "planoConcluidoDescricao": "All modules have been delivered. Generate a new objective to continue.",
-      "trilha": "Trail",
+      "trilha": "Track",
       "concluir": "Finish",
       "concluirDescricao": "Marking it as complete records the study and increases your proficiency in the technologies covered in this module.",
       "concluido": "Completed",
@@ -1841,7 +1841,7 @@
       "modulosDaFase": "Phase Modules"
     },
     "recurso": {
-      "trilha": "Trail",
+      "trilha": "Track",
       "nenhumMaterialTitulo": "No open materials",
       "nenhumMaterialDescricao": "Select an item from a module's content to open it here.",
       "voltar": "Back",

@@ -48,6 +48,29 @@ const NAO_TRADUZIR = [
 
 const literal = (chave) => NAO_TRADUZIR.some((padrao) => padrao.test(chave));
 
+/**
+ * Termos do produto com tradução fixa (glossario.json).
+ *
+ * Rótulo de uma palavra ("Fala", "Ditado", "Desbanir") não dá contexto ao
+ * DeepL, que escolhe o sentido mais comum — "Fala" vira "Hey", "Desbanir" vira
+ * "desenfeitiçar". A tradução daqui vence a do tradutor, por igualdade EXATA
+ * do valor em português, e é reaplicada a cada geração (conserta chave já
+ * gravada e não deixa a próxima rodada reintroduzir o erro).
+ */
+const GLOSSARIO = (() => {
+  const caminho = join(PASTA, "glossario.json");
+  if (!existsSync(caminho)) return {};
+  const { _comentario, ...termos } = JSON.parse(readFileSync(caminho, "utf8"));
+  return termos;
+})();
+
+function aplicarGlossario(saida, base, codigo) {
+  for (const [chave, textoPt] of Object.entries(base)) {
+    const fixo = GLOSSARIO[textoPt];
+    if (fixo && typeof fixo[codigo] === "string") inserir(saida, chave, fixo[codigo]);
+  }
+}
+
 const argumentos = process.argv.slice(2);
 const TUDO = argumentos.includes("--tudo");
 const SO_ESTE = (() => {
@@ -145,11 +168,6 @@ async function gerar(codigo, alvoDeepL, base) {
   const pendentes = Object.entries(base).filter(
     ([chave]) => !literal(chave) && (TUDO || !jaTem[chave]),
   );
-  if (pendentes.length === 0) {
-    console.log(`${codigo}: nada a traduzir (${Object.keys(base).length} chaves em dia)`);
-    return;
-  }
-
   const saida = TUDO ? {} : atual;
   // O que não se traduz entra igual, sempre: se o português mudar, o outro
   // idioma acompanha em vez de ficar com o texto antigo.
@@ -168,6 +186,13 @@ async function gerar(codigo, alvoDeepL, base) {
     console.log(`${codigo}: ${Math.min(i + lote.length, pendentes.length)}/${pendentes.length}`);
   }
 
+  // O glossário roda SEMPRE — mesmo sem chave nova — para corrigir termo já
+  // gravado com o sentido errado e reforçar o certo na próxima rodada.
+  aplicarGlossario(saida, base, codigo);
+
+  if (pendentes.length === 0) {
+    console.log(`${codigo}: nada novo a traduzir (${Object.keys(base).length} chaves); glossário reaplicado`);
+  }
   writeFileSync(arquivo, `${JSON.stringify(saida, null, 2)}\n`, "utf8");
   console.log(`${codigo}: gravado`);
 }

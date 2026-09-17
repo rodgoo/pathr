@@ -15,7 +15,7 @@
     "inicio": "Inicio",
     "roadmap": "Hoja de ruta",
     "trilha": "Ruta actual",
-    "trilhaCurta": "Sendero",
+    "trilhaCurta": "Ruta",
     "cursos": "Cursos",
     "vagas": "Ofertas de empleo",
     "candidaturas": "Solicitudes",
@@ -111,7 +111,7 @@
     },
     "recursos": {
       "trilha": {
-        "rotulo": "Sendero",
+        "rotulo": "Ruta",
         "titulo": "Una ruta por etapas que muestra lo que queda por recorrer",
         "texto": "Cada módulo incluye el material adecuado —un artículo, un vídeo, documentación o un ejemplo paso a paso— y el tiempo que lleva completarlo. Marca lo que hayas terminado y observa cómo avanza tu progreso.",
         "ponto1": "El orden que exige su objetivo",
@@ -372,7 +372,7 @@
     "naSemana": "durante la semana",
     "tempoTotal": "tiempo total",
     "mediaPorDia": "media diaria según el estudio",
-    "melhorDia": "un día mejor"
+    "melhorDia": "mejor día"
   },
   "kpi": {
     "sequencia": "Racha de estudio",
@@ -398,7 +398,7 @@
   "senioridade": {
     "estagio": "Prácticas",
     "junior": "Júnior",
-    "pleno": "Pleno",
+    "pleno": "Semisenior",
     "senior": "Sénior",
     "especialista": "Especialista",
     "lideranca": "Liderazgo"
@@ -1098,7 +1098,7 @@
     "procurandoPerto": "Buscando gente cerca de ti…",
     "semSugestoes": "Aún no hay sugerencias. Las aportan personas que viven cerca y estudian materias similares a las tuyas.",
     "carregandoAmigos": "Cargando a tus amigos…",
-    "seusAmigos": "Sus amigos",
+    "seusAmigos": "Tus amigos",
     "nenhumAmigo": "Todavía no tengo ningún amigo",
     "nenhumAmigoDesc": "Añade a alguien de las sugerencias o busca con el símbolo @ a alguien que ya conozcas.",
     "convitesEnviados": "Invitaciones enviadas",
@@ -1160,9 +1160,9 @@
       "grammar": "Gramática",
       "vocabulary": "Vocabulario",
       "reading": "Lectura",
-      "listening": "Escucha",
-      "writing": "Escrita",
-      "speaking": "Oye",
+      "listening": "Comprensión auditiva",
+      "writing": "Expresión escrita",
+      "speaking": "Expresión oral",
       "business": "Empresarial"
     },
     "confianca": {
@@ -1242,11 +1242,11 @@
       "mcq": "Elige",
       "gap": "Completar",
       "reorder": "Forma la frase",
-      "match": "Regístrate",
-      "listening": "Escucha",
-      "dictation": "Refrán",
+      "match": "Relaciona",
+      "listening": "Comprensión auditiva",
+      "dictation": "Dictado",
       "image": "Imagen",
-      "speaking": "Oye"
+      "speaking": "Expresión oral"
     },
     "treino": {
       "origem": {
@@ -1269,7 +1269,7 @@
       "nenhumPronto": "De momento no hay ningún ejercicio disponible.",
       "carregarProximos": "Cargar los siguientes",
       "pulado": "Omitido: no cuenta como error.",
-      "certo": "¡Claro!",
+      "certo": "¡Correcto!",
       "aindaNao": "Todavía no.",
       "continuar": "Continuar",
       "concluido": "Entrenamiento de hoy finalizado",
@@ -1446,7 +1446,7 @@
     "biblioteca": {
       "vazioTitulo": "Todavía no hay ningún ejemplo",
       "vazioDescricao": "Elige el idioma y el tema más arriba. El ejemplo se guarda aquí para que puedas volver a consultarlo tantas veces como quieras.",
-      "titulo": "Sus ejemplos",
+      "titulo": "Tus ejemplos",
       "arquivosN": "{n} archivos",
       "passosN": "{n} pasos",
       "removendo": "Eliminando…",
@@ -1495,7 +1495,7 @@
       "entrouEm": "Entró en {data}",
       "banidoEm": " · Expulsado de {data}",
       "motivoLabel": "Motivo: {motivo}",
-      "desbanir": "Desbanir",
+      "desbanir": "Readmitir",
       "banir": "Expulsar",
       "desbanirAria": "Eliminar {nome}",
       "banirAria": "¿Se va a expulsar a {nome}?",
@@ -1546,7 +1546,7 @@
       "meta": "Su objetivo",
       "queroAprender": "Quiero aprender",
       "roadmap": "En su hoja de ruta",
-      "objetivo": "Su objetivo"
+      "objetivo": "Tu objetivo"
     },
     "carregando": "Busco cursos con certificado…",
     "contador": "{n} {cursos} · {gratuitos} con certificado gratuito",
@@ -1627,7 +1627,7 @@
     },
     "nivel": {
       "junior": "Júnior",
-      "pleno": "Pleno",
+      "pleno": "Semisenior",
       "senior": "Sénior"
     },
     "situacao": {
@@ -1831,7 +1831,7 @@
       "gerarPlano": "Generar un plan",
       "planoConcluidoTitulo": "Plan finalizado",
       "planoConcluidoDescricao": "Se han entregado todos los módulos. Crea un nuevo objetivo para continuar.",
-      "trilha": "Sendero",
+      "trilha": "Ruta",
       "concluir": "Finalizar",
       "concluirDescricao": "Al marcarlo como completado, se registra el estudio y aumenta el nivel de competencia en las tecnologías de este módulo.",
       "concluido": "Finalizado",
@@ -1841,7 +1841,7 @@
       "modulosDaFase": "Módulos de la fase"
     },
     "recurso": {
-      "trilha": "Sendero",
+      "trilha": "Ruta",
       "nenhumMaterialTitulo": "No hay material disponible",
       "nenhumMaterialDescricao": "Elige un elemento del material de un módulo para abrirlo aquí.",
       "voltar": "Volver",

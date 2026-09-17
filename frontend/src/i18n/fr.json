@@ -15,7 +15,7 @@
     "inicio": "Accueil",
     "roadmap": "Feuille de route",
     "trilha": "Piste actuelle",
-    "trilhaCurta": "Piste",
+    "trilhaCurta": "Parcours",
     "cursos": "Cours",
     "vagas": "Offres d'emploi",
     "candidaturas": "Candidatures",
@@ -111,7 +111,7 @@
     },
     "recursos": {
       "trilha": {
-        "rotulo": "Piste",
+        "rotulo": "Parcours",
         "titulo": "Un parcours par étapes qui indique la distance restante",
         "texto": "Chaque module propose le contenu adapté — article, vidéo, documentation ou exemple guidé — ainsi que la durée nécessaire. Cochez ce que vous avez terminé et suivez la progression.",
         "ponto1": "L'ordre que son objectif exige",
@@ -372,7 +372,7 @@
     "naSemana": "au cours de la semaine",
     "tempoTotal": "durée totale",
     "mediaPorDia": "moyenne quotidienne selon une étude",
-    "melhorDia": "meilleure journée"
+    "melhorDia": "meilleur jour"
   },
   "kpi": {
     "sequencia": "Série d'études",
@@ -398,7 +398,7 @@
   "senioridade": {
     "estagio": "Stage",
     "junior": "Junior",
-    "pleno": "Séance plénière",
+    "pleno": "Confirmé",
     "senior": "Senior",
     "especialista": "Spécialiste",
     "lideranca": "Leadership"
@@ -1098,7 +1098,7 @@
     "procurandoPerto": "À la recherche de personnes près de chez vous…",
     "semSugestoes": "Il n'y a pas encore de suggestions. Elles proviennent de personnes qui habitent près de chez toi et qui étudient des matières similaires aux tiennes.",
     "carregandoAmigos": "Chargement de vos amis…",
-    "seusAmigos": "Ses amis",
+    "seusAmigos": "Vos amis",
     "nenhumAmigo": "Pas encore d'amis",
     "nenhumAmigoDesc": "Ajoutez l'une des personnes proposées, ou recherchez le @ d'une personne que vous connaissez déjà.",
     "convitesEnviados": "Invitations envoyées",
@@ -1160,9 +1160,9 @@
       "grammar": "Grammaire",
       "vocabulary": "Vocabulaire",
       "reading": "Lecture",
-      "listening": "Écoute",
-      "writing": "Écriture",
-      "speaking": "Salut",
+      "listening": "Compréhension orale",
+      "writing": "Expression écrite",
+      "speaking": "Expression orale",
       "business": "Entreprise"
     },
     "confianca": {
@@ -1174,7 +1174,7 @@
     "situacao": {
       "reforcar": "à renforcer",
       "progredindo": "en progressant",
-      "dominado": "dominé",
+      "dominado": "maîtrisé",
       "poucosDados": "peu de données"
     },
     "quadro": {
@@ -1242,11 +1242,11 @@
       "mcq": "Choisissez",
       "gap": "Terminer",
       "reorder": "Construisez la phrase",
-      "match": "Rejoignez-nous",
-      "listening": "Écoute",
-      "dictation": "Proverbe",
+      "match": "Associez",
+      "listening": "Compréhension orale",
+      "dictation": "Dictée",
       "image": "Image",
-      "speaking": "Salut"
+      "speaking": "Expression orale"
     },
     "treino": {
       "origem": {
@@ -1269,7 +1269,7 @@
       "nenhumPronto": "Il n'y a pas d'exercice disponible pour le moment.",
       "carregarProximos": "Charger les suivants",
       "pulado": "Ignoré — ne compte pas comme une erreur.",
-      "certo": "D'accord !",
+      "certo": "Correct !",
       "aindaNao": "Pas encore.",
       "continuar": "Continuer",
       "concluido": "L'entraînement d'aujourd'hui est terminé",
@@ -1495,7 +1495,7 @@
       "entrouEm": "Il s'est connecté sur {data}",
       "banidoEm": " · banni sur {data}",
       "motivoLabel": "Motif : {motivo}",
-      "desbanir": "Désenvoûter",
+      "desbanir": "Réintégrer",
       "banir": "Bannir",
       "desbanirAria": "Supprimer « {nome} »",
       "banirAria": "Bannir {nome}",
@@ -1546,7 +1546,7 @@
       "meta": "Votre objectif",
       "queroAprender": "Je veux apprendre",
       "roadmap": "Dans sa feuille de route",
-      "objetivo": "Son objectif"
+      "objetivo": "Votre objectif"
     },
     "carregando": "À la recherche de formations sanctionnées par un certificat…",
     "contador": "{n} {cursos} · {gratuitos} avec certificat gratuit",
@@ -1627,7 +1627,7 @@
     },
     "nivel": {
       "junior": "Junior",
-      "pleno": "Séance plénière",
+      "pleno": "Confirmé",
       "senior": "Senior"
     },
     "situacao": {
@@ -1831,7 +1831,7 @@
       "gerarPlano": "Générer un plan",
       "planoConcluidoTitulo": "Plan terminé",
       "planoConcluidoDescricao": "Tous les modules ont été livrés. Créez un nouvel objectif pour continuer.",
-      "trilha": "Piste",
+      "trilha": "Parcours",
       "concluir": "Terminer",
       "concluirDescricao": "Le fait de marquer ce module comme terminé permet de valider l'étude et d'améliorer le niveau de maîtrise des technologies abordées dans ce module.",
       "concluido": "Terminé",
@@ -1841,7 +1841,7 @@
       "modulosDaFase": "Modules de la phase"
     },
     "recurso": {
-      "trilha": "Piste",
+      "trilha": "Parcours",
       "nenhumMaterialTitulo": "Aucun document accessible",
       "nenhumMaterialDescricao": "Choisissez un élément dans le contenu d'un module pour l'ouvrir ici.",
       "voltar": "Retour",
