@@ -1013,5 +1013,49 @@
         "notaB": ". Si se produjera un incidente relevante relacionado con tus datos, se te notificará, de conformidad con la LGPD."
       }
     }
+  },
+  "sequencia": {
+    "ambosHoje": "Los dos ya habéis estudiado hoy.",
+    "faltaAmigo": "{nome}á falta hoy en clase.",
+    "faltaVoce": "{nome} Ya han estudiado hoy. Solo te falta a ti.",
+    "mantenham": "Estudiad hoy para mantener el ritmo.",
+    "comecar": "Estudiad el mismo día para empezar una secuencia.",
+    "diaJuntos": "un día estudiando juntos",
+    "diasJuntos": "días estudiando juntos",
+    "semSequencia": "Todavía no han jugado juntos ningún partido",
+    "recorde": "récord {n}",
+    "faltamParaCard": "Quedan {faltam} para el evento de {alvo} días.",
+    "cardDias": "Tarjeta «{n}» días"
+  },
+  "conquista": {
+    "frases": [
+      "La constancia de dos vence al talento de uno solo.",
+      "Uno tiró del otro, y nadie se quedó atrás.",
+      "Cada día un poco, siempre juntos.",
+      "La disciplina resulta más llevadera cuando se comparte.",
+      "No fue cuestión de suerte: fue ir día a día.",
+      "Quienes estudian juntos llegan más lejos.",
+      "La continuación la tenéis vosotros. La evolución también.",
+      "Sin saltarme ni un día. Sin bajar la guardia.",
+      "El código se compila mejor en paralelo.",
+      "La colaboración en el estudio es el mejor marco de trabajo.",
+      "Commit diario, fusión garantizada.",
+      "Dos mentes, un objetivo, cero excusas."
+    ],
+    "diaDeSequencia": "día siguiente",
+    "diasDeSequencia": "días consecutivos",
+    "subtitulo": "de amistad y de estudios juntos",
+    "voce": "Tú",
+    "semCanvas": "Este navegador no puede mostrar la imagen.",
+    "cabecalho": "{dias} días con {nome}",
+    "fechar": "Cerrar",
+    "montando": "Montando la tarjeta…",
+    "baixado": "Tu navegador no permite compartir imágenes directamente: la imagen se ha descargado para que puedas enviarla.",
+    "compartilhar": "Compartir",
+    "baixar": "Descargar imagen",
+    "outraFrase": "Otra frase",
+    "dialogoAria": "Récord: {dias} días seguidos con {nome}",
+    "imagemAlt": "Ficha: {dias} días de estudio consecutivo con {nome}",
+    "textoCompartilhar": "{dias} ¡Días consecutivos de estudio con @{username} en PathR! {url}"
   }
 }

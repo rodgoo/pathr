@@ -1013,5 +1013,49 @@
         "notaB": ". En cas d'incident significatif concernant vos données, vous en serez informé, conformément à la LGPD."
       }
     }
+  },
+  "sequencia": {
+    "ambosHoje": "Vous avez déjà étudié tous les deux aujourd'hui.",
+    "faltaAmigo": "{nome}n'est pas venu en cours aujourd'hui.",
+    "faltaVoce": "{nome} Il a déjà révisé aujourd'hui. Il ne manque plus que toi.",
+    "mantenham": "Étudiez aujourd'hui pour ne pas perdre le rythme.",
+    "comecar": "Étudiez le même jour pour entamer une série.",
+    "diaJuntos": "une journée à étudier ensemble",
+    "diasJuntos": "jours passés à étudier ensemble",
+    "semSequencia": "Ils n'ont pas encore enchaîné plusieurs matchs ensemble",
+    "recorde": "record {n}",
+    "faltamParaCard": "Il reste {faltam} pour la carte de {alvo} jours.",
+    "cardDias": "Carte «{n}» jours"
+  },
+  "conquista": {
+    "frases": [
+      "La persévérance à deux l'emporte sur le talent à soi seul.",
+      "L'un a entraîné l'autre, et personne n'est resté à la traîne.",
+      "Un peu chaque jour, toujours ensemble.",
+      "La discipline est plus facile à supporter lorsqu'elle est partagée.",
+      "Ce n'était pas de la chance : j'ai pris les choses un jour à la fois.",
+      "En étudiant ensemble, on va plus loin.",
+      "À vous de jouer. L'avenir aussi.",
+      "Sans sauter un seul jour. Sans lâcher prise.",
+      "Le code se compile mieux en binôme.",
+      "Le partenariat d'étude est le meilleur cadre de travail.",
+      "Commit quotidien, fusion garantie.",
+      "Deux têtes, un objectif, aucune excuse."
+    ],
+    "diaDeSequencia": "jour suivant",
+    "diasDeSequencia": "jours consécutifs",
+    "subtitulo": "d'amitié et d'études communes",
+    "voce": "Toi",
+    "semCanvas": "Ce navigateur ne parvient pas à afficher l'image.",
+    "cabecalho": "{dias} quelques jours avec {nome}",
+    "fechar": "Fermer",
+    "montando": "Assemblage de la carte…",
+    "baixado": "Votre navigateur ne partage pas directement les images : l'image a été téléchargée pour que vous puissiez l'envoyer.",
+    "compartilhar": "Partager",
+    "baixar": "Télécharger l'image",
+    "outraFrase": "Une autre phrase",
+    "dialogoAria": "Record : {dias} jours d'affilée avec {nome}",
+    "imagemAlt": "Fiche : {dias} jours d'études consécutives avec {nome}",
+    "textoCompartilhar": "{dias} Plusieurs jours d'études consécutives avec @{username} sur PathR ! {url}"
   }
 }

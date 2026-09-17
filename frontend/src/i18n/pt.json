@@ -997,5 +997,49 @@
         "notaB": ". Se ocorrer um incidente relevante envolvendo seus dados, você será avisado, conforme a LGPD."
       }
     }
+  },
+  "sequencia": {
+    "ambosHoje": "Vocês dois já estudaram hoje.",
+    "faltaAmigo": "Falta {nome} estudar hoje.",
+    "faltaVoce": "{nome} já estudou hoje. Falta você.",
+    "mantenham": "Estudem hoje para manter a sequência.",
+    "comecar": "Estudem no mesmo dia para começar uma sequência.",
+    "diaJuntos": "dia estudando juntos",
+    "diasJuntos": "dias estudando juntos",
+    "semSequencia": "Sem sequência juntos ainda",
+    "recorde": "recorde {n}",
+    "faltamParaCard": "Faltam {faltam} para o card de {alvo} dias.",
+    "cardDias": "Card de {n} dias"
+  },
+  "conquista": {
+    "frases": [
+      "Constância a dois vence talento sozinho.",
+      "Um puxou o outro, e ninguém ficou para trás.",
+      "Todo dia um pouco, sempre juntos.",
+      "Disciplina fica mais leve quando é dividida.",
+      "Não foi sorte: foi um dia de cada vez.",
+      "Quem estuda junto chega mais longe.",
+      "A sequência é de vocês. A evolução também.",
+      "Sem pular um dia. Sem largar a mão.",
+      "O código compila melhor em dupla.",
+      "Parceria de estudo é o melhor framework.",
+      "Commit diário, merge garantido.",
+      "Duas cabeças, uma meta, zero desculpas."
+    ],
+    "diaDeSequencia": "dia de sequência",
+    "diasDeSequencia": "dias de sequência",
+    "subtitulo": "de amizade e estudos juntos",
+    "voce": "Você",
+    "semCanvas": "Este navegador não consegue desenhar a imagem.",
+    "cabecalho": "{dias} dias com {nome}",
+    "fechar": "Fechar",
+    "montando": "Montando o card…",
+    "baixado": "Seu navegador não compartilha imagens direto: a imagem foi baixada para você enviar.",
+    "compartilhar": "Compartilhar",
+    "baixar": "Baixar imagem",
+    "outraFrase": "Outra frase",
+    "dialogoAria": "Conquista: {dias} dias de sequência com {nome}",
+    "imagemAlt": "Card: {dias} dias de sequência de estudos com {nome}",
+    "textoCompartilhar": "{dias} dias de sequência de estudos com @{username} no PathR! {url}"
   }
 }

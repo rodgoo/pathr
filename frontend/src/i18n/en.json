@@ -1013,5 +1013,49 @@
         "notaB": ". If a significant incident involving your data occurs, you will be notified, in accordance with the LGPD."
       }
     }
+  },
+  "sequencia": {
+    "ambosHoje": "You two have already studied today.",
+    "faltaAmigo": "{nome}s not in class today.",
+    "faltaVoce": "{nome} Everyone else has already studied today. You're the only one left.",
+    "mantenham": "Study today to keep up with the material.",
+    "comecar": "Study on the same day to start a sequence.",
+    "diaJuntos": "a day studying together",
+    "diasJuntos": "days studying together",
+    "semSequencia": "They haven't appeared together in a series yet",
+    "recorde": "{n} record",
+    "faltamParaCard": "There are {faltam} days left until the card at {alvo}.",
+    "cardDias": "{n}-Day Card"
+  },
+  "conquista": {
+    "frases": [
+      "Consistency as a team beats talent on its own.",
+      "One pulled the other, and no one was left behind.",
+      "A little bit every day, always together.",
+      "Discipline is easier when it's shared.",
+      "It wasn't luck: I took it one day at a time.",
+      "Those who study together go further.",
+      "The next step is up to you. So is the progress.",
+      "Without skipping a day. Without letting go.",
+      "The code compiles better in pairs.",
+      "A study partnership is the best framework.",
+      "Daily commit, guaranteed merge.",
+      "Two minds, one goal, zero excuses."
+    ],
+    "diaDeSequencia": "consecutive day",
+    "diasDeSequencia": "consecutive days",
+    "subtitulo": "friendship and studying together",
+    "voce": "You",
+    "semCanvas": "This browser cannot display the image.",
+    "cabecalho": "{dias} Days with {nome}",
+    "fechar": "Close",
+    "montando": "Assembling the card…",
+    "baixado": "Your browser doesn't share images directly: the image was downloaded so you could send it.",
+    "compartilhar": "Share",
+    "baixar": "Download image",
+    "outraFrase": "Another sentence",
+    "dialogoAria": "Achievement: {dias} consecutive days with {nome}",
+    "imagemAlt": "Card: {dias} days of consecutive study sessions with {nome}",
+    "textoCompartilhar": "{dias} A series of study days with @{username} on PathR! {url}"
   }
 }

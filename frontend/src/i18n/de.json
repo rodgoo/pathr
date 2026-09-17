@@ -1013,5 +1013,49 @@
         "notaB": ". Sollte es zu einem relevanten Vorfall kommen, der Ihre Daten betrifft, werden Sie gemäß dem LGPD benachrichtigt."
       }
     }
+  },
+  "sequencia": {
+    "ambosHoje": "Ihr beide habt heute schon gelernt.",
+    "faltaAmigo": "{nome}ch muss heute noch lernen.",
+    "faltaVoce": "{nome} Er hat heute schon gelernt. Jetzt bist du dran.",
+    "mantenham": "Lernt heute, damit ihr den Anschluss nicht verliert.",
+    "comecar": "Lernt am selben Tag, um eine Abfolge zu beginnen.",
+    "diaJuntos": "Ein Tag, an dem wir gemeinsam gelernt haben",
+    "diasJuntos": "Tage, an denen wir gemeinsam gelernt haben",
+    "semSequencia": "Bisher noch keine gemeinsamen Auftritte",
+    "recorde": "Rekord {n}",
+    "faltamParaCard": "Es fehlen noch {faltam} für die Karte „{alvo}“ Tage.",
+    "cardDias": "{n}-Tage-Karte"
+  },
+  "conquista": {
+    "frases": [
+      "Beharrlichkeit zu zweit schlägt Talent allein.",
+      "Der eine zog den anderen mit, und niemand blieb zurück.",
+      "Jeden Tag ein bisschen, immer zusammen.",
+      "Disziplin fällt leichter, wenn man sie aufteilt.",
+      "Das war kein Glück: Ich habe einen Tag nach dem anderen gemeistert.",
+      "Wer gemeinsam lernt, kommt weiter.",
+      "Die Fortsetzung liegt bei euch. Die Entwicklung auch.",
+      "Ohne einen Tag auszulassen. Ohne die Hand loszulassen.",
+      "Der Code lässt sich im Doppelbetrieb besser kompilieren.",
+      "Eine Lernpartnerschaft ist das beste Rahmenkonzept.",
+      "Tägliches Commit, garantiertes Merge.",
+      "Zwei Köpfe, ein Ziel, keine Ausreden."
+    ],
+    "diaDeSequencia": "Folgetag",
+    "diasDeSequencia": "aufeinanderfolgende Tage",
+    "subtitulo": "Freundschaft und gemeinsames Lernen",
+    "voce": "Du",
+    "semCanvas": "Dieser Browser kann das Bild nicht anzeigen.",
+    "cabecalho": "{dias} Tage mit {nome}",
+    "fechar": "Schließen",
+    "montando": "Die Karte zusammenbauen…",
+    "baixado": "Ihr Browser stellt Bilder nicht direkt bereit: Das Bild wurde heruntergeladen, damit Sie es versenden können.",
+    "compartilhar": "Teilen",
+    "baixar": "Bild herunterladen",
+    "outraFrase": "Ein weiterer Satz",
+    "dialogoAria": "Erfolg: „{dias}“ Tage in Folge mit „{nome}“",
+    "imagemAlt": "Karte: {dias} Tage hintereinander mit {nome} lernen",
+    "textoCompartilhar": "{dias} Mehrere Tage hintereinander Lernreihe mit @{username} auf PathR! {url}"
   }
 }
