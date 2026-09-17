@@ -35,6 +35,7 @@ import {
   type KeyboardEvent,
   type ReactNode,
 } from "react";
+import { useT } from "@/lib/i18n";
 
 export interface SelectOption<T extends string> {
   value: T;
@@ -71,13 +72,15 @@ export function Select<T extends string>({
   options,
   value,
   onChange,
-  placeholder = "Selecione",
+  placeholder,
   disabled = false,
   required = false,
   name,
   label,
   style,
 }: SelectProps<T>) {
+  const t = useT();
+  const rotuloVazio = placeholder ?? t("comum.selecione");
   const listaId = useId();
   const raiz = useRef<HTMLDivElement | null>(null);
   const lista = useRef<HTMLUListElement | null>(null);
@@ -231,7 +234,7 @@ export function Select<T extends string>({
       >
         {escolhida?.icon ? <span className="sel-icone">{escolhida.icon}</span> : null}
         <span className={escolhida ? "sel-rotulo" : "sel-rotulo sel-vazio"}>
-          {escolhida ? escolhida.label : placeholder}
+          {escolhida ? escolhida.label : rotuloVazio}
         </span>
         <svg className="sel-seta" width="14" height="14" viewBox="0 0 24 24" aria-hidden>
           <path

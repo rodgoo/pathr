@@ -27,11 +27,13 @@
 import { roadmap as roadmapApi } from "@/api/endpoints";
 import { useAppState } from "@/hooks/useAppState";
 import { useQuery } from "@/hooks/useApi";
+import { useT } from "@/lib/i18n";
 import { ACC4, SIZE, TEXT } from "@/lib/tokens";
 import { Logo } from "@/components/ui/Logo";
 import { Meter } from "@/components/ui/primitives";
 
 export function MobileHeader() {
+  const t = useT();
   const { state } = useAppState();
   const plano = useQuery(() => roadmapApi.current(), []);
 
@@ -96,19 +98,19 @@ export function MobileHeader() {
             <Meter
               pct={plano.data.progress_pct}
               color={ACC4}
-              label="Progresso do roadmap"
+              label={t("kpi.progresso")}
               style={{ flex: 1, minWidth: 40 }}
             />
             {/* A barra sozinha não diz de QUE ela é medida. Estes dois números
                 são o que transforma um traço colorido em informação. */}
             <span style={{ fontSize: SIZE.rotulo, color: TEXT.muted, whiteSpace: "nowrap" }}>
-              {plano.data.done_nodes} de {plano.data.total_nodes} módulos ·{" "}
+              {t("home.continue.modulos", { feitos: plano.data.done_nodes, total: plano.data.total_nodes })} ·{" "}
               {plano.data.progress_pct}%
             </span>
           </div>
         ) : (
           <div style={{ fontSize: SIZE.rotulo, color: TEXT.faint, marginTop: 2 }}>
-            {plano.loading ? "carregando o plano…" : "nenhum plano gerado ainda"}
+            {plano.loading ? t("cabecalho.carregandoPlano") : t("cabecalho.semPlano")}
           </div>
         )}
       </div>

@@ -19,6 +19,7 @@ import { useEffect, useId, useRef, useState, type KeyboardEvent } from "react";
 import { geo as geoApi } from "@/api/endpoints";
 import type { City } from "@/api/types";
 import { Icon } from "@/components/ui/icons";
+import { useT } from "@/lib/i18n";
 import { C, TEXT } from "@/lib/tokens";
 
 function normaliza(texto: string): string {
@@ -40,6 +41,7 @@ export function CidadeDoCadastro({
   /** `null` quando a pessoa volta a editar o texto depois de escolher. */
   onEscolher: (cidade: City | null) => void;
 }) {
+  const t = useT();
   const [texto, setTexto] = useState(escolhida ? `${escolhida.nome} - ${escolhida.uf}` : "");
   const [sugestoes, setSugestoes] = useState<City[]>([]);
   const [aberta, setAberta] = useState(false);
@@ -79,7 +81,7 @@ export function CidadeDoCadastro({
           setDestaque(0);
         })
         .catch(() => {
-          if (numero === pedido.current) setErro("Não consegui buscar cidades agora. Tente de novo em instantes.");
+          if (numero === pedido.current) setErro(t("cidade.erro"));
         });
     }, 200);
     return () => window.clearTimeout(temporizador);
@@ -107,7 +109,7 @@ export function CidadeDoCadastro({
 
   return (
     <div className="field" style={{ marginBottom: 11.2 }}>
-      <label htmlFor={id}>Cidade onde mora</label>
+      <label htmlFor={id}>{t("cidade.label")}</label>
       <div className="sel campo-icone" style={{ position: "relative" }}>
         <span className="campo-icone-simbolo" style={escolhida ? { color: C.verde } : undefined}>
           <Icon name={escolhida ? "check" : "mapPin"} size={17} />
@@ -121,7 +123,7 @@ export function CidadeDoCadastro({
           aria-controls={listaId}
           aria-activedescendant={mostrarLista ? `${listaId}-op-${destaque}` : undefined}
           autoComplete="off"
-          placeholder="Comece a digitar: Vit…"
+          placeholder={t("cidade.placeholder")}
           required
           value={texto}
           onChange={(evento) => {
@@ -134,7 +136,7 @@ export function CidadeDoCadastro({
           onKeyDown={teclas}
           style={{ width: "100%" }}
         />
-        <ul id={listaId} role="listbox" aria-label="Cidades sugeridas" className="sel-lista" hidden={!mostrarLista}>
+        <ul id={listaId} role="listbox" aria-label={t("cidade.sugeridas")} className="sel-lista" hidden={!mostrarLista}>
           {sugestoes.map((sugestao, posicao) => (
             <li
               key={sugestao.ibge}
@@ -155,7 +157,7 @@ export function CidadeDoCadastro({
                 {sugestao.nome} <span style={{ color: TEXT.faint }}>- {sugestao.uf}</span>
               </span>
               {sugestao.capital ? (
-                <span style={{ marginLeft: "auto", fontSize: 11, color: TEXT.faint }}>capital</span>
+                <span style={{ marginLeft: "auto", fontSize: 11, color: TEXT.faint }}>{t("cidade.capital")}</span>
               ) : null}
             </li>
           ))}
@@ -165,7 +167,9 @@ export function CidadeDoCadastro({
         <div style={{ fontSize: 11.5, color: C.ambar, marginTop: 4 }}>{erro}</div>
       ) : (
         <div style={{ fontSize: 11, color: escolhida ? C.verde : TEXT.faint, marginTop: 4 }}>
-          {escolhida ? `Cidade reconhecida: ${escolhida.nome} - ${escolhida.uf}` : "A UF vem junto com a cidade escolhida."}
+          {escolhida
+            ? t("cidade.reconhecida", { nome: escolhida.nome, uf: escolhida.uf })
+            : t("cidade.ufJunto")}
         </div>
       )}
     </div>

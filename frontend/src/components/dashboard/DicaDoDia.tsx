@@ -23,47 +23,50 @@ import {
 import { createPortal } from "react-dom";
 import type { ActivityItem } from "@/api/types";
 import { longDate, type DayDetail } from "@/lib/dashboard";
-import { useT } from "@/lib/i18n";
+import { traduzirPt, useT, type Traduzir } from "@/lib/i18n";
 
-/** O nome de cada coisa que se faz no app, como a pessoa diria. */
+/** A chave de tradução de cada tipo de material e de atividade. */
 const MATERIAL: Record<string, string> = {
-  video: "Vídeo",
-  article: "Artigo",
-  doc: "Documentação",
-  course: "Curso",
-  book: "Livro",
-  podcast: "Podcast",
-  repo: "Repositório",
-  exercise: "Exercício",
+  video: "dica.material.video",
+  article: "dica.material.article",
+  doc: "dica.material.doc",
+  course: "dica.material.course",
+  book: "dica.material.book",
+  podcast: "dica.material.podcast",
+  repo: "dica.material.repo",
+  exercise: "dica.material.exercise",
 };
 
 const ATIVIDADE: Record<string, string> = {
-  quiz_done: "Quiz",
-  explanation_done: "Explicação",
-  node_done: "Módulo concluído",
-  review_done: "Revisão",
-  english_session: "Sessão de idioma",
-  english_assessment: "Nivelamento de idioma",
-  language: "Idioma",
-  walkthrough: "Exemplo de código",
-  roadmap_created: "Plano criado",
-  resume_parsed: "Currículo importado",
+  quiz_done: "dica.atividade.quiz_done",
+  explanation_done: "dica.atividade.explanation_done",
+  node_done: "dica.atividade.node_done",
+  review_done: "dica.atividade.review_done",
+  english_session: "dica.atividade.english_session",
+  english_assessment: "dica.atividade.english_assessment",
+  language: "dica.atividade.language",
+  walkthrough: "dica.atividade.walkthrough",
+  roadmap_created: "dica.atividade.roadmap_created",
+  resume_parsed: "dica.atividade.resume_parsed",
 };
 
-export function nomeDaAtividade(item: ActivityItem): string {
+/** Recebe o tradutor da tela; sem ele (teste, código solto) cai no português. */
+export function nomeDaAtividade(item: ActivityItem, t: Traduzir = traduzirPt): string {
   if (item.kind === "resource_done") {
-    return MATERIAL[item.resource_kind ?? ""] ?? "Material";
+    const chave = MATERIAL[item.resource_kind ?? ""];
+    return chave ? t(chave) : t("dica.materialGenerico");
   }
-  return ATIVIDADE[item.kind] ?? "Atividade";
+  return ATIVIDADE[item.kind] ? t(ATIVIDADE[item.kind]) : t("dica.atividadeGenerica");
 }
 
 /** "42 minutos", "1 hora", "2 horas e 5 minutos". */
-export function tempoPorExtenso(minutos: number): string {
-  if (minutos < 60) return `${minutos} ${minutos === 1 ? "minuto" : "minutos"}`;
+export function tempoPorExtenso(minutos: number, t: Traduzir = traduzirPt): string {
+  const min = (n: number) => t(n === 1 ? "dica.minuto" : "dica.minutos");
+  if (minutos < 60) return `${minutos} ${min(minutos)}`;
   const horas = Math.floor(minutos / 60);
   const resto = minutos % 60;
-  const h = `${horas} ${horas === 1 ? "hora" : "horas"}`;
-  return resto ? `${h} e ${resto} ${resto === 1 ? "minuto" : "minutos"}` : h;
+  const h = `${horas} ${t(horas === 1 ? "dica.hora" : "dica.horas")}`;
+  return resto ? `${h} ${t("dica.e")} ${resto} ${min(resto)}` : h;
 }
 
 interface Alvo {
@@ -157,9 +160,9 @@ function Balao({ alvo }: { alvo: Alvo }) {
                 // linha, "Nivelamento de idioma" espremia o título até sobrar
                 // "Nivelame…" — e o nome é o que a pessoa procura no balão.
                 <li key={`${item.kind}-${posicao}`}>
-                  <span className="dica-tipo">{nomeDaAtividade(item)}</span>
+                  <span className="dica-tipo">{nomeDaAtividade(item, t)}</span>
                   <span className="dica-linha">
-                    <span className="dica-nome">{item.title || nomeDaAtividade(item)}</span>
+                    <span className="dica-nome">{item.title || nomeDaAtividade(item, t)}</span>
                     {item.minutes > 0 ? (
                       <span className="dica-min">
                         {item.estimated ? "≈" : ""}
@@ -179,7 +182,7 @@ function Balao({ alvo }: { alvo: Alvo }) {
             {t("dica.tempoDeEstudo")}{" "}
             <strong>
               {dia.minutes > 0
-                ? `${dia.estimated ? "≈ " : ""}${tempoPorExtenso(dia.minutes)}`
+                ? `${dia.estimated ? "≈ " : ""}${tempoPorExtenso(dia.minutes, t)}`
                 : t("dica.semTempo")}
             </strong>
           </div>
