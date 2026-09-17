@@ -72,7 +72,11 @@
       "salvando": "Salvando…",
       "salvar": "Salvar senha",
       "linkInvalido": "Link inválido",
-      "semToken": "Este endereço não traz um token de recuperação."
+      "semToken": "Este endereço não traz um token de recuperação.",
+      "pedirNovoLink": "Pedir um novo link",
+      "senhaAlterada": "Senha alterada.",
+      "sessoesEncerradas": "Por segurança, todas as sessões abertas foram encerradas.",
+      "entrarComNova": "Entrar com a nova senha"
     }
   },
   "landing": {
@@ -410,7 +414,36 @@
     "semEstudo": "Nenhum estudo neste dia.",
     "tempoDeEstudo": "Tempo de estudo:",
     "semTempo": "sem tempo registrado",
-    "estimado": "≈ estimado pelo tamanho do texto lido"
+    "estimado": "≈ estimado pelo tamanho do texto lido",
+    "materialGenerico": "Material",
+    "atividadeGenerica": "Atividade",
+    "minuto": "minuto",
+    "minutos": "minutos",
+    "hora": "hora",
+    "horas": "horas",
+    "e": "e",
+    "material": {
+      "video": "Vídeo",
+      "article": "Artigo",
+      "doc": "Documentação",
+      "course": "Curso",
+      "book": "Livro",
+      "podcast": "Podcast",
+      "repo": "Repositório",
+      "exercise": "Exercício"
+    },
+    "atividade": {
+      "quiz_done": "Quiz",
+      "explanation_done": "Explicação",
+      "node_done": "Módulo concluído",
+      "review_done": "Revisão",
+      "english_session": "Sessão de idioma",
+      "english_assessment": "Nivelamento de idioma",
+      "language": "Idioma",
+      "walkthrough": "Exemplo de código",
+      "roadmap_created": "Plano criado",
+      "resume_parsed": "Currículo importado"
+    }
   },
   "legal": {
     "layout": {
@@ -1414,7 +1447,8 @@
       "bloqueado": "bloqueado",
       "pulado": "pulado",
       "aFazer": "a fazer"
-    }
+    },
+    "selecione": "Selecione"
   },
   "config": {
     "titulo": "Configurações",
@@ -2661,5 +2695,226 @@
     "usadaEm": "usada em {data}",
     "nuncaUsada": "ainda não usada",
     "revogar": "Revogar"
+  },
+  "conta": {
+    "dadosPessoais": "Dados pessoais",
+    "comoQuerSerChamado": "Como quer ser chamado",
+    "email": "E-mail",
+    "cargoAtual": "Cargo atual",
+    "cargoPlaceholder": "ex: Desenvolvedor frontend",
+    "senioridade": "Senioridade",
+    "naoInformar": "Não informar",
+    "senioridadeRotulo": {
+      "estagio": "Estágio",
+      "junior": "Júnior",
+      "pleno": "Pleno",
+      "senior": "Sênior",
+      "especialista": "Especialista",
+      "lideranca": "Liderança"
+    },
+    "tempoExperiencia": "Tempo de experiência (anos)",
+    "anosPlaceholder": "ex: 3",
+    "horasSemana": "Horas de estudo por semana",
+    "salvando": "Salvando…",
+    "salvarAlteracoes": "Salvar alterações",
+    "salvo": "Salvo.",
+    "senha": "Senha",
+    "senhaAtual": "Senha atual",
+    "novaSenha": "Nova senha",
+    "alterando": "Alterando…",
+    "alterarSenha": "Alterar senha",
+    "senhaAlterada": "Senha alterada. As outras sessões foram encerradas.",
+    "requisitoSenha": "Ao menos 10 caracteres, com letra e número.",
+    "agora": "agora",
+    "haMin": "há {n} min",
+    "haH": "há {n} h",
+    "ontem": "ontem",
+    "erroEncerrar": "Não consegui encerrar esse aparelho agora. Tente de novo.",
+    "aparelhosConectados": "Aparelhos conectados",
+    "aparelhosExplica": "Onde a sua conta está aberta agora. Não reconhece algum? Encerre o acesso e troque a senha. Quando a conta entra por um aparelho novo, avisamos por e-mail.",
+    "buscandoAparelhos": "Buscando aparelhos…",
+    "esteAparelho": "este aparelho",
+    "emUsoAgora": "em uso agora",
+    "usado": "usado {quando}",
+    "entrouEm": " · entrou em ",
+    "rede": " · rede {ip}",
+    "sairDesteAparelho": "Sair deste aparelho",
+    "encerrarAparelho": "Encerrar {aparelho}",
+    "encerrando": "Encerrando…",
+    "sair": "Sair",
+    "encerrar": "Encerrar",
+    "sairTodos": "Sair de todos os dispositivos",
+    "encerraOutro": "Encerra este e o outro aparelho.",
+    "encerraOutros": "Encerra este e os outros {n} aparelhos.",
+    "inclusiveEste": "Inclusive este."
+  },
+  "notices": {
+    "erroSalvar": "Não consegui salvar a preferência.",
+    "erroExportar": "Não consegui exportar.",
+    "erroSair": "Não consegui encerrar as sessões.",
+    "erroExcluir": "Não consegui excluir a conta.",
+    "notificacoesEmail": "Notificações por e-mail",
+    "avisos": {
+      "lembrete_diario": {
+        "titulo": "Lembrete diário de estudo",
+        "detalhe": "Um e-mail às 8h com os blocos do dia"
+      },
+      "resumo_semanal": {
+        "titulo": "Resumo semanal",
+        "detalhe": "Progresso, constância e o que ficou para trás"
+      },
+      "novidades": {
+        "titulo": "Novidades do produto",
+        "detalhe": "Recursos novos e mudanças no app"
+      },
+      "correcao_pronta": {
+        "titulo": "Correção de atividade pronta",
+        "detalhe": "Quando a revisão do seu código sai"
+      },
+      "sequencia_em_risco": {
+        "titulo": "Sequência em risco",
+        "detalhe": "Aviso à noite se você ainda não estudou"
+      }
+    },
+    "conta": "Conta",
+    "preparando": "Preparando…",
+    "exportar": "Exportar meus dados",
+    "encerrando": "Encerrando…",
+    "sairTodos": "Sair de todos os dispositivos",
+    "excluirConta": "Excluir conta",
+    "confirmarExclusao": "Confirmar exclusão da conta",
+    "avisoExclusao": "Isto apaga a conta, o roadmap, os quizzes, o histórico e o currículo. Não dá para desfazer, e não há período de carência — se quiser guardar algo, exporte seus dados antes.",
+    "cancelar": "Cancelar",
+    "excluindo": "Excluindo…",
+    "excluirDefinitivo": "Excluir definitivamente",
+    "privacidadePre": "O que coletamos, com quem compartilhamos e por quanto tempo guardamos está na",
+    "politicaPrivacidade": "Política de privacidade"
+  },
+  "apiStatus": {
+    "estado": {
+      "ok": "Funcionando",
+      "degradada": "Com problema",
+      "erro": "Fora do ar",
+      "nao_configurada": "Sem chave",
+      "sem_verificacao": "Aguardando uso"
+    },
+    "agoraHaPouco": "agora há pouco",
+    "haUmMinuto": "há 1 minuto",
+    "haMinutos": "há {n} minutos",
+    "verificandoLoading": "Verificando as integrações…",
+    "problemaSing": "{n} integração com problema",
+    "problemaPlural": "{n} integrações com problema",
+    "tudoResponde": "Tudo o que está configurado responde",
+    "resumoLinha": "{ok} funcionando · {conf} de {total} configuradas · verificado {quando}",
+    "gastaCota": "Cada verificação gasta um pouco de cota.",
+    "verificando": "Verificando…",
+    "verificarEm": "Verificar de novo em {s}s",
+    "verificarAgora": "Verificar agora",
+    "rodape": "Tavily, Brave e Remotive não são chamados só para checar: gastam crédito ou pedem poucas chamadas. Para eles vale o resultado do último uso real. As chaves ficam no servidor e nunca aparecem aqui.",
+    "linhaAria": "{nome}: {estado}",
+    "hoje": "Hoje: {req} {rotulo} · {tokens} tokens",
+    "requisicaoSing": "requisição",
+    "requisicaoPlural": "requisições",
+    "deLimitePct": "{usados} de {limite} {unidade} ({pct}%)",
+    "usoDe": "Uso de {nome}"
+  },
+  "passkeys": {
+    "criada": "Chave de acesso criada. Na próxima entrada, é só usar o rosto, a digital ou o PIN deste aparelho.",
+    "erroRemover": "Não consegui remover a chave.",
+    "titulo": "Chaves de acesso",
+    "explica": "Entre com o rosto, a digital ou o PIN do aparelho, sem digitar senha. A chave fica presa ao PathR — uma página falsa não consegue usá-la — e já vale como segundo fator.",
+    "criadaEm": "criada em {data}",
+    "usadaEm": " · usada em {data}",
+    "aindaNaoUsada": " · ainda não usada",
+    "sincronizada": " · sincronizada entre aparelhos",
+    "removendo": "Removendo…",
+    "remover": "Remover",
+    "aguardando": "Aguardando o aparelho…",
+    "criar": "Criar chave de acesso neste aparelho",
+    "semSuporte": "Este navegador não oferece chave de acesso. Em celulares e navegadores atuais ela aparece aqui.",
+    "notaRemover": "Remover aqui desliga a chave no PathR. O aparelho pode continuar guardando-a — apague-a também no gerenciador de senhas se quiser."
+  },
+  "recursos": {
+    "todos": "Todos",
+    "admin": "Admin",
+    "ninguem": "Ninguém",
+    "explicaTodos": "Ligado para todos os usuários.",
+    "explicaAdmin": "Só administradores veem.",
+    "explicaNinguem": "Desligado para todo mundo.",
+    "erroSalvar": "Não consegui salvar. Tente de novo.",
+    "mudadoDoPadrao": "mudado do padrão",
+    "quemVe": "Quem vê {nome}",
+    "salvando": "Salvando…",
+    "titulo": "Recursos",
+    "explicaPre": "Ligue cada recurso para ",
+    "todosUsuarios": "todos os usuários",
+    "explicaMid1": ", só para ",
+    "administradores": "administradores",
+    "explicaMid2": ", ou para ",
+    "ninguemForte": "ninguém",
+    "explicaFim": ". A mudança vale na próxima vez que a pessoa abrir a tela.",
+    "buscando": "Buscando recursos…"
+  },
+  "authShell": {
+    "kicker": "Plataforma de estudos",
+    "tituloPre": "Seu próximo passo,",
+    "tituloEnfase": "já planejado.",
+    "descricao": "O PathR transforma o seu currículo numa trilha de estudos em fases, até a vaga que você quer.",
+    "beneficios": {
+      "plano": {
+        "titulo": "Plano que se corrige toda semana",
+        "detalhe": "O roteiro acompanha o seu ritmo."
+      },
+      "idioma": {
+        "titulo": "Treinos de idioma diários",
+        "detalhe": "Poucos minutos, todo dia."
+      },
+      "vagas": {
+        "titulo": "Vagas que combinam com você",
+        "detalhe": "Filtradas pelo que você já sabe."
+      }
+    },
+    "ocultarSenha": "Ocultar senha",
+    "mostrarSenha": "Mostrar senha"
+  },
+  "radar": {
+    "titulo": "Competências",
+    "legenda": "linha cheia hoje · pontilhada meta de 26 semanas",
+    "aria": "Radar de competências: forte em frontend, baixo em Spring, dados, testes e infraestrutura; a meta de 26 semanas cobre todos os eixos.",
+    "eixoDados": "Dados",
+    "eixoTestes": "Testes"
+  },
+  "erroTela": {
+    "titulo": "Esta tela não abriu",
+    "corpo": "Alguma coisa quebrou ao desenhar o conteúdo. As outras telas continuam funcionando — e nada do que você registrou se perdeu."
+  },
+  "offline": {
+    "recusadaSing": "1 alteração feita offline não pôde ser gravada — o servidor a recusou.",
+    "recusadaPlural": "{n} alterações feitas offline não puderam ser gravadas.",
+    "semConexaoFilaSing": "Sem conexão. {n} alteração guardada no aparelho — enviamos quando a rede voltar.",
+    "semConexaoFilaPlural": "Sem conexão. {n} alterações guardadas no aparelho — enviamos quando a rede voltar.",
+    "semConexao": "Sem conexão. Você está vendo o que já estava no aparelho.",
+    "enviando": "Enviando o que ficou guardado…",
+    "aguardaSing": "{n} alteração aguarda envio.",
+    "aguardaPlural": "{n} alterações aguardam envio.",
+    "enviarAgora": "Enviar agora",
+    "versaoNova": "Uma versão nova do PathR está pronta.",
+    "atualizar": "Atualizar"
+  },
+  "app": {
+    "abrindoPlano": "Abrindo seu plano…"
+  },
+  "cabecalho": {
+    "carregandoPlano": "carregando o plano…",
+    "semPlano": "nenhum plano gerado ainda"
+  },
+  "cidade": {
+    "label": "Cidade onde mora",
+    "placeholder": "Comece a digitar: Vit…",
+    "sugeridas": "Cidades sugeridas",
+    "capital": "capital",
+    "erro": "Não consegui buscar cidades agora. Tente de novo em instantes.",
+    "reconhecida": "Cidade reconhecida: {nome} - {uf}",
+    "ufJunto": "A UF vem junto com a cidade escolhida."
   }
 }

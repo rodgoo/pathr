@@ -19,41 +19,24 @@ import { auth as authApi, profile as profileApi } from "@/api/endpoints";
 import type { Profile } from "@/api/types";
 import { useAuth } from "@/hooks/useAuth";
 import { useQuery } from "@/hooks/useApi";
+import { useT } from "@/lib/i18n";
 import { C, TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel } from "@/components/ui/primitives";
 import { PrivacidadeSocial } from "@/components/social/PrivacidadeSocial";
 
-const AVISOS: readonly { chave: string; titulo: string; detalhe: string }[] = [
-  {
-    chave: "lembrete_diario",
-    titulo: "Lembrete diário de estudo",
-    detalhe: "Um e-mail às 8h com os blocos do dia",
-  },
-  {
-    chave: "resumo_semanal",
-    titulo: "Resumo semanal",
-    detalhe: "Progresso, constância e o que ficou para trás",
-  },
-  {
-    chave: "novidades",
-    titulo: "Novidades do produto",
-    detalhe: "Recursos novos e mudanças no app",
-  },
-  {
-    chave: "correcao_pronta",
-    titulo: "Correção de atividade pronta",
-    detalhe: "Quando a revisão do seu código sai",
-  },
-  {
-    chave: "sequencia_em_risco",
-    titulo: "Sequência em risco",
-    detalhe: "Aviso à noite se você ainda não estudou",
-  },
+// O título e o detalhe de cada aviso vêm do dicionário (notices.avisos.<chave>).
+const AVISOS: readonly string[] = [
+  "lembrete_diario",
+  "resumo_semanal",
+  "novidades",
+  "correcao_pronta",
+  "sequencia_em_risco",
 ];
 
 export function NoticesTab() {
+  const t = useT();
   const { user, logout } = useAuth();
   const carregado = useQuery(() => profileApi.get(), []);
   const [avisos, setAvisos] = useState<Record<string, boolean>>({});
@@ -80,7 +63,7 @@ export function NoticesTab() {
       await profileApi.update({ notifications: { [chave]: proximo } } as Partial<Profile>);
     } catch (caught) {
       setAvisos((atual) => ({ ...atual, [chave]: !proximo }));
-      setErro(caught instanceof Error ? caught.message : "Não consegui salvar a preferência.");
+      setErro(caught instanceof Error ? caught.message : t("notices.erroSalvar"));
     }
   }
 
@@ -100,7 +83,7 @@ export function NoticesTab() {
       link.click();
       URL.revokeObjectURL(url);
     } catch (caught) {
-      setErro(caught instanceof Error ? caught.message : "Não consegui exportar.");
+      setErro(caught instanceof Error ? caught.message : t("notices.erroExportar"));
     } finally {
       setOcupado(null);
     }
@@ -112,7 +95,7 @@ export function NoticesTab() {
       await authApi.logoutAll();
       await logout();
     } catch (caught) {
-      setErro(caught instanceof Error ? caught.message : "Não consegui encerrar as sessões.");
+      setErro(caught instanceof Error ? caught.message : t("notices.erroSair"));
       setOcupado(null);
     }
   }
@@ -123,7 +106,7 @@ export function NoticesTab() {
       await profileApi.deleteAccount();
       await logout();
     } catch (caught) {
-      setErro(caught instanceof Error ? caught.message : "Não consegui excluir a conta.");
+      setErro(caught instanceof Error ? caught.message : t("notices.erroExcluir"));
       setOcupado(null);
       setConfirmando(false);
     }
@@ -132,13 +115,13 @@ export function NoticesTab() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 11.2 }}>
       <Panel pad={16.8}>
-        <Kicker style={{ display: "block", marginBottom: 4 }}>Notificações por e-mail</Kicker>
+        <Kicker style={{ display: "block", marginBottom: 4 }}>{t("notices.notificacoesEmail")}</Kicker>
         <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 11.2px" }}>{user?.email}</p>
 
         <div style={{ display: "flex", flexDirection: "column", gap: 5.6 }}>
-          {AVISOS.map((aviso) => (
+          {AVISOS.map((chave) => (
             <label
-              key={aviso.chave}
+              key={chave}
               style={{
                 display: "flex",
                 gap: 11.2,
@@ -151,14 +134,14 @@ export function NoticesTab() {
             >
               <input
                 type="checkbox"
-                checked={Boolean(avisos[aviso.chave])}
-                onChange={() => void alternar(aviso.chave)}
+                checked={Boolean(avisos[chave])}
+                onChange={() => void alternar(chave)}
                 style={{ marginTop: 2, flex: "none", accentColor: "#9184d9" }}
               />
               <span style={{ minWidth: 0 }}>
-                <span style={{ display: "block", fontSize: 13.5 }}>{aviso.titulo}</span>
+                <span style={{ display: "block", fontSize: 13.5 }}>{t(`notices.avisos.${chave}.titulo`)}</span>
                 <span style={{ display: "block", fontSize: 11.5, color: TEXT.faint, marginTop: 3 }}>
-                  {aviso.detalhe}
+                  {t(`notices.avisos.${chave}.detalhe`)}
                 </span>
               </span>
             </label>
@@ -169,7 +152,7 @@ export function NoticesTab() {
       <PrivacidadeSocial />
 
       <Panel pad={16.8}>
-        <Kicker style={{ display: "block", marginBottom: 11.2 }}>Conta</Kicker>
+        <Kicker style={{ display: "block", marginBottom: 11.2 }}>{t("notices.conta")}</Kicker>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8.4, alignItems: "center" }}>
           <button
             type="button"
@@ -177,7 +160,7 @@ export function NoticesTab() {
             onClick={() => void exportar()}
             disabled={ocupado === "export"}
           >
-            {ocupado === "export" ? "Preparando…" : "Exportar meus dados"}
+            {ocupado === "export" ? t("notices.preparando") : t("notices.exportar")}
           </button>
           <button
             type="button"
@@ -185,7 +168,7 @@ export function NoticesTab() {
             onClick={() => void sairDeTudo()}
             disabled={ocupado === "logout"}
           >
-            {ocupado === "logout" ? "Encerrando…" : "Sair de todos os dispositivos"}
+            {ocupado === "logout" ? t("notices.encerrando") : t("notices.sairTodos")}
           </button>
           {confirmando ? null : (
             <button
@@ -201,7 +184,7 @@ export function NoticesTab() {
                 padding: "7px 4px",
               }}
             >
-              Excluir conta
+              {t("notices.excluirConta")}
             </button>
           )}
         </div>
@@ -209,7 +192,7 @@ export function NoticesTab() {
         {confirmando ? (
           <div
             role="alertdialog"
-            aria-label="Confirmar exclusão da conta"
+            aria-label={t("notices.confirmarExclusao")}
             style={{
               marginTop: 11.2,
               padding: 14,
@@ -219,9 +202,7 @@ export function NoticesTab() {
             }}
           >
             <p style={{ margin: "0 0 11.2px", fontSize: 13, lineHeight: 1.55 }}>
-              Isto apaga a conta, o roadmap, os quizzes, o histórico e o currículo. Não dá para
-              desfazer, e não há período de carência — se quiser guardar algo, exporte seus dados
-              antes.
+              {t("notices.avisoExclusao")}
             </p>
             <div style={{ display: "flex", gap: 8.4, flexWrap: "wrap" }}>
               <button
@@ -230,7 +211,7 @@ export function NoticesTab() {
                 onClick={() => setConfirmando(false)}
               >
                 <Icon name="x" size={15} />
-                Cancelar
+                {t("notices.cancelar")}
               </button>
               <button
                 type="button"
@@ -247,16 +228,16 @@ export function NoticesTab() {
                   color: C.ambar,
                 }}
               >
-                {ocupado === "delete" ? "Excluindo…" : "Excluir definitivamente"}
+                {ocupado === "delete" ? t("notices.excluindo") : t("notices.excluirDefinitivo")}
               </button>
             </div>
           </div>
         ) : null}
 
         <p style={{ margin: "11.2px 0 0", fontSize: 12, color: TEXT.faint, lineHeight: 1.55 }}>
-          O que coletamos, com quem compartilhamos e por quanto tempo guardamos está na{" "}
+          {t("notices.privacidadePre")}{" "}
           <a href="/privacidade" target="_blank" rel="noopener" style={{ color: "inherit" }}>
-            Política de privacidade
+            {t("notices.politicaPrivacidade")}
           </a>
           .
         </p>

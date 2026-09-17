@@ -14,6 +14,7 @@ import { startRegistration } from "@simplewebauthn/browser";
 import { passkeys as passkeysApi } from "@/api/endpoints";
 import type { Passkey } from "@/api/types";
 import { useQuery } from "@/hooks/useApi";
+import { useIdioma, useT } from "@/lib/i18n";
 import { chaveSuportada, esquecerChave, lembrarChave, mensagemDeErroDaChave } from "@/lib/passkeys";
 import { C, HAIRLINE, TEXT } from "@/lib/tokens";
 import { IconButton } from "@/components/ui/IconButton";
@@ -21,11 +22,13 @@ import { Kicker, Panel } from "@/components/ui/primitives";
 
 type OpcoesDeCadastro = Parameters<typeof startRegistration>[0]["optionsJSON"];
 
-function data(iso: string | null): string {
-  return iso ? new Date(iso).toLocaleDateString("pt-BR") : "";
+function data(iso: string | null, idioma: string): string {
+  return iso ? new Date(iso).toLocaleDateString(idioma) : "";
 }
 
 export function PasskeysPanel() {
+  const t = useT();
+  const { idioma } = useIdioma();
   const lista = useQuery(() => passkeysApi.list(), []);
   const [ocupado, setOcupado] = useState<string | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -43,9 +46,7 @@ export function PasskeysPanel() {
       });
       await passkeysApi.registerVerify(pedido.challenge_id, credencial);
       lembrarChave();
-      setAviso(
-        "Chave de acesso criada. Na próxima entrada, é só usar o rosto, a digital ou o PIN deste aparelho.",
-      );
+      setAviso(t("passkeys.criada"));
       lista.reload();
     } catch (caught) {
       const mensagem = mensagemDeErroDaChave(caught);
@@ -66,7 +67,7 @@ export function PasskeysPanel() {
       if ((lista.data ?? []).filter((c) => c.id !== chave.id).length === 0) esquecerChave();
       lista.reload();
     } catch (caught) {
-      setErro(caught instanceof Error ? caught.message : "Não consegui remover a chave.");
+      setErro(caught instanceof Error ? caught.message : t("passkeys.erroRemover"));
     } finally {
       setOcupado(null);
     }
@@ -76,10 +77,9 @@ export function PasskeysPanel() {
 
   return (
     <Panel pad={16.8}>
-      <Kicker style={{ display: "block", marginBottom: 5.6 }}>Chaves de acesso</Kicker>
+      <Kicker style={{ display: "block", marginBottom: 5.6 }}>{t("passkeys.titulo")}</Kicker>
       <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 11.2px", maxWidth: "72ch" }}>
-        Entre com o rosto, a digital ou o PIN do aparelho, sem digitar senha. A chave fica presa ao
-        PathR — uma página falsa não consegue usá-la — e já vale como segundo fator.
+        {t("passkeys.explica")}
       </p>
 
       {chavesDaConta.length > 0 ? (
@@ -98,14 +98,16 @@ export function PasskeysPanel() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 13.5 }}>{chave.name}</div>
                 <div style={{ fontSize: 11.5, color: TEXT.faint }}>
-                  criada em {data(chave.created_at)}
-                  {chave.last_used_at ? ` · usada em ${data(chave.last_used_at)}` : " · ainda não usada"}
-                  {chave.backed_up ? " · sincronizada entre aparelhos" : ""}
+                  {t("passkeys.criadaEm", { data: data(chave.created_at, idioma) })}
+                  {chave.last_used_at
+                    ? t("passkeys.usadaEm", { data: data(chave.last_used_at, idioma) })
+                    : t("passkeys.aindaNaoUsada")}
+                  {chave.backed_up ? t("passkeys.sincronizada") : ""}
                 </div>
               </div>
               <IconButton
                 icon="trash"
-                label={ocupado === chave.id ? "Removendo…" : "Remover"}
+                label={ocupado === chave.id ? t("passkeys.removendo") : t("passkeys.remover")}
                 color={C.ambar}
                 disabled={ocupado === chave.id}
                 onClick={() => void remover(chave)}
@@ -122,19 +124,17 @@ export function PasskeysPanel() {
           disabled={ocupado === "criar"}
           onClick={() => void criar()}
         >
-          {ocupado === "criar" ? "Aguardando o aparelho…" : "Criar chave de acesso neste aparelho"}
+          {ocupado === "criar" ? t("passkeys.aguardando") : t("passkeys.criar")}
         </button>
       ) : (
         <p style={{ fontSize: 12.5, color: TEXT.faint, margin: 0 }}>
-          Este navegador não oferece chave de acesso. Em celulares e navegadores atuais ela aparece
-          aqui.
+          {t("passkeys.semSuporte")}
         </p>
       )}
 
       {chavesDaConta.length > 0 ? (
         <p style={{ fontSize: 11.5, color: TEXT.faint, margin: "8.4px 0 0" }}>
-          Remover aqui desliga a chave no PathR. O aparelho pode continuar guardando-a — apague-a
-          também no gerenciador de senhas se quiser.
+          {t("passkeys.notaRemover")}
         </p>
       ) : null}
 

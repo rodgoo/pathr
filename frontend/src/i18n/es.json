@@ -349,7 +349,11 @@
       "salvando": "Guardando…",
       "salvar": "Guardar contraseña",
       "linkInvalido": "Enlace no válido",
-      "semToken": "Esta dirección no incluye un token de recuperación."
+      "semToken": "Esta dirección no incluye un token de recuperación.",
+      "pedirNovoLink": "Solicitar un nuevo enlace",
+      "senhaAlterada": "Se ha cambiado la contraseña.",
+      "sessoesEncerradas": "Por motivos de seguridad, se han cerrado todas las sesiones abiertas.",
+      "entrarComNova": "Iniciar sesión con la nueva contraseña"
     }
   },
   "sidebar": {
@@ -426,7 +430,36 @@
     "semEstudo": "Hoy no hay clase.",
     "tempoDeEstudo": "Duración del estudio:",
     "semTempo": "sin tiempo registrado",
-    "estimado": "≈ estimado en función de la extensión del texto leído"
+    "estimado": "≈ estimado en función de la extensión del texto leído",
+    "materialGenerico": "Material",
+    "atividadeGenerica": "Actividad",
+    "minuto": "minuto",
+    "minutos": "minutos",
+    "hora": "hora",
+    "horas": "horas",
+    "e": "y",
+    "material": {
+      "video": "Vídeo",
+      "article": "Artículo",
+      "doc": "Documentación",
+      "course": "Curso",
+      "book": "Libro",
+      "podcast": "Podcast",
+      "repo": "Repositorio",
+      "exercise": "Ejercicio"
+    },
+    "atividade": {
+      "quiz_done": "Cuestionario",
+      "explanation_done": "Explicación",
+      "node_done": "Módulo completado",
+      "review_done": "Revisión",
+      "english_session": "Clase de idiomas",
+      "english_assessment": "Nivel de idioma",
+      "language": "Idioma",
+      "walkthrough": "Ejemplo de código",
+      "roadmap_created": "Plan creado",
+      "resume_parsed": "Currículum importado"
+    }
   },
   "legal": {
     "layout": {
@@ -1084,7 +1117,64 @@
       "sensivel": "opcional, y solo tú respondes",
       "salvar": "Guardar respuestas",
       "salvando": "Guardando…"
-    }
+    },
+    "explicacao": "Cada mañana, PathR selecciona las ofertas de empleo que mejor se ajustan a tu currículum y redacta una carta de presentación para cada una de ellas. Cuando la oferta incluye una dirección de correo electrónico de contacto, el envío se realiza desde aquí con el currículum adjunto. Si la oferta incluye preguntas específicas, recibirás un enlace para abrirlas y responderlas.",
+    "carregando": "Cargando…",
+    "carregandoFila": "Cargando vuestras candidaturas…",
+    "hoje": "Hoy",
+    "nenhumaHoje": "Hoy todavía no hay ninguna vacante nueva.",
+    "buscando": "Buscando ofertas de empleo…",
+    "buscarAgora": "Buscar ofertas de empleo ahora",
+    "diasAnteriores": "Días anteriores",
+    "semCurriculo": {
+      "titulo": "Empieza por tu currículum",
+      "descricao": "De ahí salen las ofertas seleccionadas y la carta de presentación. Envía el archivo y deja que la IA lo lea una vez; después, la lista de tareas del día se genera sola.",
+      "enviar": "Enviar mi currículum"
+    },
+    "filaVazia": {
+      "titulo": "La cola de hoy aún no se ha formado",
+      "descricao": "Llega por la mañana, a la hora habitual, junto con un correo electrónico. Si quieres verla ahora, utiliza «Buscar vacantes ahora»."
+    },
+    "automatico": {
+      "kicker": "Envío automático",
+      "noSite": "Las ofertas de empleo en las que solo se aceptan candidaturas a través de la web (Gupy, LinkedIn, formulario propio) siguen apareciendo con el enlace y las respuestas preparadas: ahí eres tú quien responde.",
+      "ligado": "Automático: cada mañana, la aplicación envía tu currículum, de forma automática, a las ofertas de empleo que incluyen una dirección de correo electrónico de contacto y con las que hay una coincidencia del 70 % o más —hasta 5 al día—. Recibirás un correo electrónico con la información de lo que se ha enviado.",
+      "desligado": "Desactivado: la aplicación selecciona las ofertas de empleo y redacta la carta; tú solo tienes que hacer clic para enviarla. Si la activas, envía automáticamente las ofertas que incluyan un correo electrónico de contacto y con las que haya una coincidencia del 70 % o más, hasta un máximo de 5 al día.",
+      "enviando": "Enviando por mi cuenta",
+      "ligar": "Enviar solo todos los días"
+    },
+    "pretensao": "Expectativas salariales",
+    "pretensaoExemplo": "8.000 R$ según el CLT",
+    "disponibilidade": "Disponibilidad para empezar",
+    "disponibilidadeExemplo": "30 días",
+    "salvar": "Guardar",
+    "salvando": "Guardando…",
+    "salvo": "Salvo",
+    "porQueEssasDuas": "Son las dos preguntas que aparecen en todos los formularios y a las que el currículum no responde. Sin ellas, la respuesta preparada se limita a repetir la pregunta en lugar de inventarse una cifra.",
+    "combina": "{pct}% coincide",
+    "combinaDica": "¿En qué medida se ajusta esta oferta de empleo a tu perfil?",
+    "remota": "A distancia",
+    "enviada": "Enviada",
+    "escrevendo": "Escribiendo…",
+    "escreverCarta": "Escribir una carta",
+    "reescreverCarta": "Reescribir la carta",
+    "respostasDoFormulario": "Respuestas del formulario",
+    "refazerRespostas": "Reescribir respuestas",
+    "jaMeCandidatei": "Ya me he presentado como candidato",
+    "naoMeInteressa": "No me interesa",
+    "descartada": "Descartada: esta vacante no volverá a aparecer en tu lista.",
+    "rotuloDaCarta": "Carta de presentación (puedes editarla antes de enviarla)",
+    "emailDaEmpresa": "Correo electrónico de la empresa (si el anuncio lo incluye)",
+    "enviarComCurriculo": "Enviar junto con mi currículum",
+    "comoSaiOEmail": "El correo electrónico se envía a través de PathR, pero la respuesta de la empresa llega directamente a tu dirección. Tu currículum se adjunta tal y como lo enviaste.",
+    "respostasDaVaga": "Respuestas al formulario de solicitud de empleo",
+    "copiar": "Copiar",
+    "copiado": "Copiado",
+    "confiraAntes": "Compruébalo antes de copiarlo: eres tú quien responde al reclutador, y es posible que el formulario pregunte otra cosa.",
+    "umaVaga": "{quantas} una plaza reservada para ti",
+    "variasVagas": "{quantas} ofertas de empleo específicas para ti",
+    "esconderCarta": "Ocultar carta",
+    "verCarta": "Ver carta"
   },
   "amigos": {
     "voceEh": "Tú eres",
@@ -1349,7 +1439,8 @@
       "bloqueado": "bloqueado",
       "pulado": "saltado",
       "aFazer": "por hacer"
-    }
+    },
+    "selecione": "Selecciona"
   },
   "config": {
     "titulo": "Configuración",
@@ -2620,5 +2711,226 @@
     "usadaEm": "usada el {data}",
     "nuncaUsada": "aún sin usar",
     "revogar": "Revocar"
+  },
+  "conta": {
+    "dadosPessoais": "Datos personales",
+    "comoQuerSerChamado": "¿Cómo quieres que te llamen?",
+    "email": "Correo electrónico",
+    "cargoAtual": "Cargo actual",
+    "cargoPlaceholder": "p. ej.: Desarrollador front-end",
+    "senioridade": "Antigüedad",
+    "naoInformar": "No indicar",
+    "senioridadeRotulo": {
+      "estagio": "Prácticas",
+      "junior": "Júnior",
+      "pleno": "Semisenior",
+      "senior": "Sénior",
+      "especialista": "Especialista",
+      "lideranca": "Liderazgo"
+    },
+    "tempoExperiencia": "Años de experiencia",
+    "anosPlaceholder": "ej.: 3",
+    "horasSemana": "Horas de estudio a la semana",
+    "salvando": "Guardando…",
+    "salvarAlteracoes": "Guardar cambios",
+    "salvo": "Guardado.",
+    "senha": "Contraseña",
+    "senhaAtual": "Contraseña actual",
+    "novaSenha": "Nueva contraseña",
+    "alterando": "Modificando…",
+    "alterarSenha": "Cambiar contraseña",
+    "senhaAlterada": "Se ha cambiado la contraseña. Se han cerrado las demás sesiones.",
+    "requisitoSenha": "Al menos 10 caracteres, con letras y números.",
+    "agora": "ahora",
+    "haMin": "hace {n} min",
+    "haH": "hace {n} h",
+    "ontem": "ayer",
+    "erroEncerrar": "No he podido apagar este aparato ahora. Inténtalo de nuevo.",
+    "aparelhosConectados": "Dispositivos conectados",
+    "aparelhosExplica": "¿Dónde tienes abierta tu cuenta ahora? ¿No reconoces alguna de ellas? Cierra la sesión y cambia la contraseña. Cuando se inicie sesión en la cuenta desde un dispositivo nuevo, te avisaremos por correo electrónico.",
+    "buscandoAparelhos": "Buscando aparatos…",
+    "esteAparelho": "este aparato",
+    "emUsoAgora": "actualmente en uso",
+    "usado": "de segunda mano {quando}",
+    "entrouEm": " · entró en ",
+    "rede": " · red {ip}",
+    "sairDesteAparelho": "Salir de este dispositivo",
+    "encerrarAparelho": "Cerrar {aparelho}",
+    "encerrando": "Para terminar…",
+    "sair": "Salir",
+    "encerrar": "Cerrar",
+    "sairTodos": "Cerrar sesión en todos los dispositivos",
+    "encerraOutro": "Apaga este y el otro aparato.",
+    "encerraOutros": "Apaga este y los demás {n} dispositivos.",
+    "inclusiveEste": "Incluso este."
+  },
+  "notices": {
+    "erroSalvar": "No he podido guardar la configuración.",
+    "erroExportar": "No he podido exportarlo.",
+    "erroSair": "No he podido cerrar las sesiones.",
+    "erroExcluir": "No he podido eliminar la cuenta.",
+    "notificacoesEmail": "Notificaciones por correo electrónico",
+    "avisos": {
+      "lembrete_diario": {
+        "titulo": "Recordatorio diario de estudio",
+        "detalhe": "Un correo electrónico a las 8:00 h con los bloques del día"
+      },
+      "resumo_semanal": {
+        "titulo": "Resumen semanal",
+        "detalhe": "Progreso, constancia y lo que quedó atrás"
+      },
+      "novidades": {
+        "titulo": "Novedades del producto",
+        "detalhe": "Nuevas funciones y cambios en la aplicación"
+      },
+      "correcao_pronta": {
+        "titulo": "Corrección de la actividad terminada",
+        "detalhe": "¿Cuándo se publica la revisión de tu código?"
+      },
+      "sequencia_em_risco": {
+        "titulo": "Secuencia en peligro",
+        "detalhe": "Te lo diré por la noche si aún no has estudiado"
+      }
+    },
+    "conta": "Cuenta",
+    "preparando": "Preparando…",
+    "exportar": "Exportar mis datos",
+    "encerrando": "Para terminar…",
+    "sairTodos": "Cerrar sesión en todos los dispositivos",
+    "excluirConta": "Eliminar cuenta",
+    "confirmarExclusao": "Confirmar la eliminación de la cuenta",
+    "avisoExclusao": "Esto borra la cuenta, la hoja de ruta, los cuestionarios, el historial y el currículum. No se puede deshacer y no hay periodo de gracia; si quieres guardar algo, exporta tus datos antes.",
+    "cancelar": "Cancelar",
+    "excluindo": "Excluyendo…",
+    "excluirDefinitivo": "Eliminar definitivamente",
+    "privacidadePre": "La información que recopilamos, con quién la compartimos y durante cuánto tiempo la conservamos se encuentra en la",
+    "politicaPrivacidade": "Política de privacidad"
+  },
+  "apiStatus": {
+    "estado": {
+      "ok": "En funcionamiento",
+      "degradada": "Con un problema",
+      "erro": "Fuera del aire",
+      "nao_configurada": "Sin llave",
+      "sem_verificacao": "A la espera de ser utilizado"
+    },
+    "agoraHaPouco": "hace un momento",
+    "haUmMinuto": "hace 1 minuto",
+    "haMinutos": "hace {n} minutos",
+    "verificandoLoading": "Comprobando las integraciones…",
+    "problemaSing": "{n} integración con problemas",
+    "problemaPlural": "{n} integraciones con problemas",
+    "tudoResponde": "Todo lo que está configurado funciona",
+    "resumoLinha": "{ok} en funcionamiento · {conf} de {total} configuradas · comprobado {quando}",
+    "gastaCota": "Cada comprobación consume una pequeña parte del límite.",
+    "verificando": "Comprobando…",
+    "verificarEm": "Vuelve a consultarlo en {s}s",
+    "verificarAgora": "Comprobar ahora",
+    "rodape": "Tavily, Brave y Remotive no se activan solo para comprobar: consumen saldo o realizan pocas llamadas. Para ellos, lo que cuenta es el resultado del último uso real. Las claves se almacenan en el servidor y nunca aparecen aquí.",
+    "linhaAria": "{nome}: {estado}",
+    "hoje": "Hoy: {req} {rotulo} · {tokens} tokens",
+    "requisicaoSing": "solicitud",
+    "requisicaoPlural": "solicitudes",
+    "deLimitePct": "{usados} de {limite} {unidade} ({pct}%)",
+    "usoDe": "Uso de {nome}"
+  },
+  "passkeys": {
+    "criada": "Se ha creado una clave de acceso. La próxima vez que entres, solo tienes que utilizar el reconocimiento facial, la huella dactilar o el PIN de este dispositivo.",
+    "erroRemover": "No he conseguido sacar la llave.",
+    "titulo": "Claves de acceso",
+    "explica": "Inicia sesión con el reconocimiento facial, la huella dactilar o el PIN del dispositivo, sin necesidad de introducir una contraseña. La clave queda vinculada a PathR —una página falsa no puede utilizarla— y ya sirve como segundo factor de autenticación.",
+    "criadaEm": "creada en {data}",
+    "usadaEm": " · utilizada en {data}",
+    "aindaNaoUsada": " · aún no se ha utilizado",
+    "sincronizada": " · sincronizada entre dispositivos",
+    "removendo": "Eliminando…",
+    "remover": "Eliminar",
+    "aguardando": "A la espera del dispositivo…",
+    "criar": "Crear una clave de acceso en este dispositivo",
+    "semSuporte": "Este navegador no ofrece clave de acceso. En los móviles y navegadores actuales, aparece aquí.",
+    "notaRemover": "Al hacer clic aquí, se desactiva la clave en PathR. Es posible que el dispositivo siga almacenándola; si lo deseas, también puedes borrarla del gestor de contraseñas."
+  },
+  "recursos": {
+    "todos": "Todos",
+    "admin": "Admin",
+    "ninguem": "Nadie",
+    "explicaTodos": "Activado para todos los usuarios.",
+    "explicaAdmin": "Solo los administradores pueden verlo.",
+    "explicaNinguem": "Apagado para todo el mundo.",
+    "erroSalvar": "No he podido guardarlo. Inténtalo de nuevo.",
+    "mudadoDoPadrao": "cambiado respecto al estándar",
+    "quemVe": "¿Quién ve «{nome}»?",
+    "salvando": "Guardando…",
+    "titulo": "Recursos",
+    "explicaPre": "Activa cada recurso para ",
+    "todosUsuarios": "todos los usuarios",
+    "explicaMid1": ", solo para ",
+    "administradores": "administradores",
+    "explicaMid2": ", o para ",
+    "ninguemForte": "nadie",
+    "explicaFim": ". El cambio se aplicará la próxima vez que la persona abra la pantalla.",
+    "buscando": "Buscando recursos…"
+  },
+  "authShell": {
+    "kicker": "Plataforma de estudios",
+    "tituloPre": "Tu próximo paso,",
+    "tituloEnfase": "ya estaba previsto.",
+    "descricao": "PathR convierte tu currículum en un itinerario académico por etapas, hasta conseguir el puesto que deseas.",
+    "beneficios": {
+      "plano": {
+        "titulo": "Plan que se revisa cada semana",
+        "detalhe": "El itinerario se adapta a tu ritmo."
+      },
+      "idioma": {
+        "titulo": "Sesiones diarias de aprendizaje de idiomas",
+        "detalhe": "Unos pocos minutos, todos los días."
+      },
+      "vagas": {
+        "titulo": "Ofertas de empleo que se adaptan a ti",
+        "detalhe": "Filtradas en función de lo que ya sabes."
+      }
+    },
+    "ocultarSenha": "Ocultar contraseña",
+    "mostrarSenha": "Mostrar contraseña"
+  },
+  "radar": {
+    "titulo": "Competencias",
+    "legenda": "línea continua hoy · línea punteada: objetivo de 26 semanas",
+    "aria": "Análisis de competencias: nivel alto en frontend, bajo en Spring, datos, pruebas e infraestructura; el objetivo de 26 semanas abarca todas las áreas.",
+    "eixoDados": "Datos",
+    "eixoTestes": "Pruebas"
+  },
+  "erroTela": {
+    "titulo": "Esta página no se ha abierto",
+    "corpo": "Se ha producido un error al diseñar el contenido. Las demás pantallas siguen funcionando, y no se ha perdido nada de lo que hayas guardado."
+  },
+  "offline": {
+    "recusadaSing": "No se ha podido guardar una modificación realizada fuera de línea: el servidor la ha rechazado.",
+    "recusadaPlural": "{n} No se han podido guardar los cambios realizados sin conexión.",
+    "semConexaoFilaSing": "Sin conexión. {n} cambio guardado en el dispositivo — lo enviaremos cuando vuelva la red.",
+    "semConexaoFilaPlural": "Sin conexión. {n} cambios guardados en el dispositivo; los enviaremos cuando vuelva la red.",
+    "semConexao": "Sin conexión. Estás viendo lo que ya había en el dispositivo.",
+    "enviando": "Enviando lo que se había guardado…",
+    "aguardaSing": "{n} La modificación está pendiente de envío.",
+    "aguardaPlural": "{n} Las modificaciones están pendientes de envío.",
+    "enviarAgora": "Enviar ahora",
+    "versaoNova": "Ya está lista una nueva versión de PathR.",
+    "atualizar": "Actualizar"
+  },
+  "app": {
+    "abrindoPlano": "Al abrir su plan…"
+  },
+  "cabecalho": {
+    "carregandoPlano": "Cargando el plano…",
+    "semPlano": "Aún no se ha generado ningún plan"
+  },
+  "cidade": {
+    "label": "Ciudad en la que vive",
+    "placeholder": "Empieza a escribir: Vit…",
+    "sugeridas": "Ciudades recomendadas",
+    "capital": "capital",
+    "erro": "No he podido buscar ciudades ahora mismo. Inténtalo de nuevo en unos instantes.",
+    "reconhecida": "Ciudad reconocida: {nome} - {uf}",
+    "ufJunto": "La UF viene incluida con la ciudad elegida."
   }
 }

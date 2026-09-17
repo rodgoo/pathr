@@ -16,6 +16,7 @@
  */
 
 import { Component, type ErrorInfo, type ReactNode } from "react";
+import { useT } from "@/lib/i18n";
 import { TEXT } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 
@@ -53,36 +54,38 @@ export class ScreenBoundary extends Component<Props, State> {
 
   render() {
     if (!this.state.falhou) return this.props.children;
-
-    return (
-      <div
-        role="alert"
-        style={{
-          padding: "44px 22.4px",
-          borderRadius: 14,
-          textAlign: "center",
-          fontSize: 13.5,
-          color: "rgba(233,233,237,.8)",
-          border: "1px solid rgba(207,162,94,.35)",
-          background: "rgba(207,162,94,.08)",
-        }}
-      >
-        <p style={{ margin: "0 0 8.4px", fontSize: 16, color: TEXT.full }}>
-          Esta tela não abriu
-        </p>
-        <p style={{ margin: "0 auto 16.8px", maxWidth: "44ch", lineHeight: 1.6 }}>
-          Alguma coisa quebrou ao desenhar o conteúdo. As outras telas continuam
-          funcionando — e nada do que você registrou se perdeu.
-        </p>
-        <button
-          type="button"
-          className="btn btn-secondary"
-          onClick={() => this.setState({ falhou: false })}
-        >
-          <Icon name="refresh" size={15} />
-          Tentar de novo
-        </button>
-      </div>
-    );
+    // A classe não pode usar hook; o texto traduzível mora neste componente de
+    // função, que a classe apenas renderiza.
+    return <TelaQuebrada onReset={() => this.setState({ falhou: false })} />;
   }
+}
+
+/** O conteúdo do fallback, isolado numa função para poder usar `useT`. */
+function TelaQuebrada({ onReset }: { onReset: () => void }) {
+  const t = useT();
+  return (
+    <div
+      role="alert"
+      style={{
+        padding: "44px 22.4px",
+        borderRadius: 14,
+        textAlign: "center",
+        fontSize: 13.5,
+        color: "rgba(233,233,237,.8)",
+        border: "1px solid rgba(207,162,94,.35)",
+        background: "rgba(207,162,94,.08)",
+      }}
+    >
+      <p style={{ margin: "0 0 8.4px", fontSize: 16, color: TEXT.full }}>
+        {t("erroTela.titulo")}
+      </p>
+      <p style={{ margin: "0 auto 16.8px", maxWidth: "44ch", lineHeight: 1.6 }}>
+        {t("erroTela.corpo")}
+      </p>
+      <button type="button" className="btn btn-secondary" onClick={onReset}>
+        <Icon name="refresh" size={15} />
+        {t("comum.tentarDeNovo")}
+      </button>
+    </div>
+  );
 }

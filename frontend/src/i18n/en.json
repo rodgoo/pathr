@@ -349,7 +349,11 @@
       "salvando": "Saving…",
       "salvar": "Save password",
       "linkInvalido": "Invalid link",
-      "semToken": "This address does not include a recovery token."
+      "semToken": "This address does not include a recovery token.",
+      "pedirNovoLink": "Request a new link",
+      "senhaAlterada": "Password changed.",
+      "sessoesEncerradas": "For security reasons, all open sessions have been closed.",
+      "entrarComNova": "Log in with your new password"
     }
   },
   "sidebar": {
@@ -426,7 +430,36 @@
     "semEstudo": "No study today.",
     "tempoDeEstudo": "Study time:",
     "semTempo": "no recorded time",
-    "estimado": "≈ estimated based on the length of the text read"
+    "estimado": "≈ estimated based on the length of the text read",
+    "materialGenerico": "Material",
+    "atividadeGenerica": "Activity",
+    "minuto": "minute",
+    "minutos": "minutes",
+    "hora": "time",
+    "horas": "hours",
+    "e": "and",
+    "material": {
+      "video": "Video",
+      "article": "Article",
+      "doc": "Documentation",
+      "course": "Course",
+      "book": "Book",
+      "podcast": "Podcast",
+      "repo": "Repository",
+      "exercise": "Exercise"
+    },
+    "atividade": {
+      "quiz_done": "Quiz",
+      "explanation_done": "Explanation",
+      "node_done": "Module completed",
+      "review_done": "Review",
+      "english_session": "Language Session",
+      "english_assessment": "Language Placement",
+      "language": "Language",
+      "walkthrough": "Code example",
+      "roadmap_created": "Plan created",
+      "resume_parsed": "Imported Resume"
+    }
   },
   "legal": {
     "layout": {
@@ -1084,7 +1117,64 @@
       "sensivel": "optional, and only you answer",
       "salvar": "Save answers",
       "salvando": "Saving…"
-    }
+    },
+    "explicacao": "Every morning, PathR selects the job openings that best match your resume and writes a cover letter for each one. If the job opening includes a contact email address, the application is sent from here with your resume attached. If the job listing includes specific questions, you’ll receive a link to open and answer them.",
+    "carregando": "Loading…",
+    "carregandoFila": "Loading your applications…",
+    "hoje": "Today",
+    "nenhumaHoje": "No new openings today yet.",
+    "buscando": "Looking for job openings…",
+    "buscarAgora": "Search for job openings now",
+    "diasAnteriores": "Previous days",
+    "semCurriculo": {
+      "titulo": "Start with your resume",
+      "descricao": "That's where the selected job openings and the cover letter come from. Send the file and let the AI read it once—after that, the day's queue will take care of itself.",
+      "enviar": "Submit my resume"
+    },
+    "filaVazia": {
+      "titulo": "Today's line hasn't been set up yet",
+      "descricao": "It arrives in the morning, on schedule, along with an email. If you want to view it now, use “Search for openings now.”"
+    },
+    "automatico": {
+      "kicker": "Automatic shipping",
+      "noSite": "For job openings that only accept applications through the website (Gupy, LinkedIn, or a custom form), the link and pre-filled answers will still be provided—it’s up to you to fill in the blanks.",
+      "ligado": "Automatic: Every morning, the app automatically submits your resume to job openings that include a contact email and match 70% or more of your criteria—up to 5 per day. You’ll receive an email listing what was submitted.",
+      "desligado": "Off: The app sorts through job openings and drafts the cover letter; you just click to send it. When turned on, it automatically sends the job openings that include a contact email and match 70% or more of your criteria, up to 5 per day.",
+      "enviando": "Sending it on my own",
+      "ligar": "Send it by myself every day"
+    },
+    "pretensao": "Salary Expectations",
+    "pretensaoExemplo": "R$ 8,000 (under the CLT)",
+    "disponibilidade": "Availability to start",
+    "disponibilidadeExemplo": "30 days",
+    "salvar": "Save",
+    "salvando": "Saving…",
+    "salvo": "Except",
+    "porQueEssasDuas": "These are the two questions every form asks—and that a resume doesn't answer. Without them, a stock answer simply repeats the question instead of making up a number.",
+    "combina": "{pct}% match",
+    "combinaDica": "How well does this job opening match your profile?",
+    "remota": "Remote",
+    "enviada": "Sent",
+    "escrevendo": "Writing…",
+    "escreverCarta": "Write a letter",
+    "reescreverCarta": "Rewrite the letter",
+    "respostasDoFormulario": "Form Responses",
+    "refazerRespostas": "Resubmit answers",
+    "jaMeCandidatei": "I've already applied",
+    "naoMeInteressa": "I'm not interested",
+    "descartada": "Discarded — this opening will not be returned to your queue.",
+    "rotuloDaCarta": "Cover letter (you can edit it before sending)",
+    "emailDaEmpresa": "Company email address (if the ad has one)",
+    "enviarComCurriculo": "Submit with my resume",
+    "comoSaiOEmail": "The email is sent through PathR, but the company's reply goes directly to your email address. Your resume is attached, just as you sent it.",
+    "respostasDaVaga": "Answers to the Job Application Form",
+    "copiar": "Copy",
+    "copiado": "Copied",
+    "confiraAntes": "Check before pasting: you're the one responding to the recruiter, and the form might ask something else.",
+    "umaVaga": "{quantas} a spot just for you",
+    "variasVagas": "{quantas} Separate openings for you",
+    "esconderCarta": "Hide letter",
+    "verCarta": "View letter"
   },
   "amigos": {
     "voceEh": "You are",
@@ -1349,7 +1439,8 @@
       "bloqueado": "blocked",
       "pulado": "skipped",
       "aFazer": "to do"
-    }
+    },
+    "selecione": "Select"
   },
   "config": {
     "titulo": "Settings",
@@ -2620,5 +2711,226 @@
     "usadaEm": "used on {data}",
     "nuncaUsada": "not yet used",
     "revogar": "Revoke"
+  },
+  "conta": {
+    "dadosPessoais": "Personal Information",
+    "comoQuerSerChamado": "What would you like to be called?",
+    "email": "Email",
+    "cargoAtual": "Current Position",
+    "cargoPlaceholder": "e.g., Front-end Developer",
+    "senioridade": "Seniority",
+    "naoInformar": "Do not provide",
+    "senioridadeRotulo": {
+      "estagio": "Internship",
+      "junior": "Junior",
+      "pleno": "Mid-level",
+      "senior": "Senior",
+      "especialista": "Expert",
+      "lideranca": "Leadership"
+    },
+    "tempoExperiencia": "Years of experience",
+    "anosPlaceholder": "e.g., 3",
+    "horasSemana": "Hours of study per week",
+    "salvando": "Saving…",
+    "salvarAlteracoes": "Save changes",
+    "salvo": "Saved.",
+    "senha": "Password",
+    "senhaAtual": "Current password",
+    "novaSenha": "New password",
+    "alterando": "Changing…",
+    "alterarSenha": "Change Password",
+    "senhaAlterada": "Password changed. All other sessions have been closed.",
+    "requisitoSenha": "At least 10 characters, including letters and numbers.",
+    "agora": "now",
+    "haMin": "{n} minutes ago",
+    "haH": "{n} h",
+    "ontem": "yesterday",
+    "erroEncerrar": "I couldn't turn off this device just now. Please try again.",
+    "aparelhosConectados": "Connected Devices",
+    "aparelhosExplica": "Where your account is currently logged in. Do you recognize any of these? Log out and change your password. When your account is accessed from a new device, we'll notify you by email.",
+    "buscandoAparelhos": "Searching for devices…",
+    "esteAparelho": "this device",
+    "emUsoAgora": "currently in use",
+    "usado": "used {quando}",
+    "entrouEm": " · entered ",
+    "rede": " · {ip}",
+    "sairDesteAparelho": "Log out of this device",
+    "encerrarAparelho": "Close {aparelho}",
+    "encerrando": "In closing…",
+    "sair": "Log Out",
+    "encerrar": "Close",
+    "sairTodos": "Sign out of all devices",
+    "encerraOutro": "Turn off this device and the other one.",
+    "encerraOutros": "Turn off this device and the other {n} devices.",
+    "inclusiveEste": "Including this one."
+  },
+  "notices": {
+    "erroSalvar": "I was unable to save the setting.",
+    "erroExportar": "I wasn't able to export it.",
+    "erroSair": "I wasn't able to log out.",
+    "erroExcluir": "I wasn't able to delete the account.",
+    "notificacoesEmail": "Email Notifications",
+    "avisos": {
+      "lembrete_diario": {
+        "titulo": "Daily Study Reminder",
+        "detalhe": "An email at 8 a.m. with the day's sessions"
+      },
+      "resumo_semanal": {
+        "titulo": "Weekly Summary",
+        "detalhe": "Progress, perseverance, and what lies behind us"
+      },
+      "novidades": {
+        "titulo": "Product Updates",
+        "detalhe": "New features and changes to the app"
+      },
+      "correcao_pronta": {
+        "titulo": "Grading for a Completed Activity",
+        "detalhe": "When your code review is complete"
+      },
+      "sequencia_em_risco": {
+        "titulo": "Sequence at Risk",
+        "detalhe": "I'll let you know tonight if you haven't studied yet"
+      }
+    },
+    "conta": "Account",
+    "preparando": "Preparing…",
+    "exportar": "Export My Data",
+    "encerrando": "In closing…",
+    "sairTodos": "Sign out of all devices",
+    "excluirConta": "Delete Account",
+    "confirmarExclusao": "Confirm Account Deletion",
+    "avisoExclusao": "This will delete your account, roadmap, quizzes, history, and resume. You can't undo this, and there is no grace period—if you want to keep anything, export your data first.",
+    "cancelar": "Cancel",
+    "excluindo": "Excluding…",
+    "excluirDefinitivo": "Delete permanently",
+    "privacidadePre": "What we collect, who we share it with, and how long we keep it is in the",
+    "politicaPrivacidade": "Privacy Policy"
+  },
+  "apiStatus": {
+    "estado": {
+      "ok": "In operation",
+      "degradada": "With a problem",
+      "erro": "Off the air",
+      "nao_configurada": "No key",
+      "sem_verificacao": "Awaiting use"
+    },
+    "agoraHaPouco": "just a moment ago",
+    "haUmMinuto": "1 minute ago",
+    "haMinutos": "{n} minutes ago",
+    "verificandoLoading": "Checking the integrations…",
+    "problemaSing": "{n} integration with a problem",
+    "problemaPlural": "{n} problematic integrations",
+    "tudoResponde": "Everything that has been configured works",
+    "resumoLinha": "{ok} Working · {conf} from {total} configured · Verified {quando}",
+    "gastaCota": "Each check uses up a small amount of your data allowance.",
+    "verificando": "Checking…",
+    "verificarEm": "Check again at {s}s",
+    "verificarAgora": "Check now",
+    "rodape": "Tavily, Brave, and Remotive aren't just used for checking: they use up data or require few calls. For them, what counts is the result of the last actual use. The keys are stored on the server and never appear here.",
+    "linhaAria": "{nome}: {estado}",
+    "hoje": "Today: {req} {rotulo} · {tokens} tokens",
+    "requisicaoSing": "purchase order",
+    "requisicaoPlural": "purchase orders",
+    "deLimitePct": "{usados} by {limite} {unidade} ({pct}%)",
+    "usoDe": "Using {nome}"
+  },
+  "passkeys": {
+    "criada": "Access key created. The next time you log in, just use facial recognition, your fingerprint, or the PIN for this device.",
+    "erroRemover": "I couldn't remove the key.",
+    "titulo": "Access Keys",
+    "explica": "Log in using facial recognition, your fingerprint, or your device's PIN—no password required. The key is tied to PathR—a fake page can't use it—and that alone counts as two-factor authentication.",
+    "criadaEm": "Created at {data}",
+    "usadaEm": " · Used at {data}",
+    "aindaNaoUsada": " · not yet used",
+    "sincronizada": " · synced across devices",
+    "removendo": "Removing…",
+    "remover": "Remove",
+    "aguardando": "Waiting for the device…",
+    "criar": "Create an access key on this device",
+    "semSuporte": "This browser does not provide an access key. On modern mobile devices and browsers, it appears here.",
+    "notaRemover": "Clicking \"Remove\" here deletes the key from PathR. The device may still store it—delete it from your password manager as well if you wish."
+  },
+  "recursos": {
+    "todos": "All",
+    "admin": "Admin",
+    "ninguem": "No one",
+    "explicaTodos": "Enabled for all users.",
+    "explicaAdmin": "Only administrators can view this.",
+    "explicaNinguem": "Off for everyone.",
+    "erroSalvar": "I couldn't save it. Please try again.",
+    "mudadoDoPadrao": "changed from the default",
+    "quemVe": "Who's Watching \"{nome}\"",
+    "salvando": "Saving…",
+    "titulo": "Resources",
+    "explicaPre": "Set each feature to ",
+    "todosUsuarios": "all users",
+    "explicaMid1": ", just to ",
+    "administradores": "administrators",
+    "explicaMid2": ", or to ",
+    "ninguemForte": "no one",
+    "explicaFim": ". The change takes effect the next time the user opens the screen.",
+    "buscando": "Searching for resources…"
+  },
+  "authShell": {
+    "kicker": "Study Platform",
+    "tituloPre": "Your next step,",
+    "tituloEnfase": "already planned.",
+    "descricao": "PathR turns your resume into a step-by-step learning path leading to the job you want.",
+    "beneficios": {
+      "plano": {
+        "titulo": "A plan that is updated every week",
+        "detalhe": "The itinerary adapts to your pace."
+      },
+      "idioma": {
+        "titulo": "Daily language practice",
+        "detalhe": "Just a few minutes, every day."
+      },
+      "vagas": {
+        "titulo": "Jobs That Are a Good Fit for You",
+        "detalhe": "Filtered based on what you already know."
+      }
+    },
+    "ocultarSenha": "Hide password",
+    "mostrarSenha": "Show password"
+  },
+  "radar": {
+    "titulo": "Skills",
+    "legenda": "solid line today · dotted line: 26-week target",
+    "aria": "Skills radar: strong in front-end, weak in Spring, data, testing, and infrastructure; the 26-week program covers all these areas.",
+    "eixoDados": "Data",
+    "eixoTestes": "Tests"
+  },
+  "erroTela": {
+    "titulo": "This page did not open",
+    "corpo": "Something went wrong while designing the content. The other screens are still working—and none of the information you entered has been lost."
+  },
+  "offline": {
+    "recusadaSing": "1 change made offline could not be saved—the server rejected it.",
+    "recusadaPlural": "{n} Changes made offline could not be saved.",
+    "semConexaoFilaSing": "No connection. {n} Change saved on the device—we'll send it when the network is back up.",
+    "semConexaoFilaPlural": "No connection. {n} Changes saved on the device—we'll send them when the network is back up.",
+    "semConexao": "No connection. You're viewing what was already on the device.",
+    "enviando": "Sending what was saved…",
+    "aguardaSing": "{n} The change is pending submission.",
+    "aguardaPlural": "{n} Changes are pending submission.",
+    "enviarAgora": "Send Now",
+    "versaoNova": "A new version of PathR is ready.",
+    "atualizar": "Update"
+  },
+  "app": {
+    "abrindoPlano": "Opening your plan…"
+  },
+  "cabecalho": {
+    "carregandoPlano": "Loading the plan…",
+    "semPlano": "No plan has been generated yet"
+  },
+  "cidade": {
+    "label": "City where you live",
+    "placeholder": "Start typing: Vit…",
+    "sugeridas": "Suggested Cities",
+    "capital": "capital",
+    "erro": "I couldn't retrieve the cities right now. Please try again in a moment.",
+    "reconhecida": "Recognized City: {nome} - {uf}",
+    "ufJunto": "The UF comes with the selected city."
   }
 }

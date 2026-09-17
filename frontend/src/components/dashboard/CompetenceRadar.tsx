@@ -6,30 +6,33 @@
  * at showing lopsidedness — the point is that the frontend axis is long and
  * the backend axes are short.
  */
+import { useT } from "@/lib/i18n";
 import { Panel } from "@/components/ui/primitives";
 
-/** Axis labels, clockwise from the top. */
+/** Axis labels, clockwise from the top. Java/Spring/Front/Infra são marcas e
+ * ficam cravadas; Dados/Testes vêm do dicionário (chave preenchida). */
 const AXES = [
   { label: "Java", x: 110, y: 12, anchor: "middle" },
   { label: "Spring", x: 196, y: 64, anchor: "start" },
-  { label: "Dados", x: 196, y: 158, anchor: "start" },
-  { label: "Testes", x: 110, y: 188, anchor: "middle" },
+  { label: "Dados", chave: "radar.eixoDados", x: 196, y: 158, anchor: "start" },
+  { label: "Testes", chave: "radar.eixoTestes", x: 110, y: 188, anchor: "middle" },
   { label: "Infra", x: 24, y: 158, anchor: "end" },
   { label: "Front", x: 24, y: 64, anchor: "end" },
 ] as const;
 
 export function CompetenceRadar() {
+  const t = useT();
   return (
     <Panel style={{ display: "flex", flexDirection: "column" }}>
-      <div style={{ fontSize: 14, marginBottom: 5.6 }}>Competências</div>
+      <div style={{ fontSize: 14, marginBottom: 5.6 }}>{t("radar.titulo")}</div>
       <div style={{ fontSize: 11.5, color: "rgba(233,233,237,.45)", marginBottom: 8.4 }}>
-        linha cheia hoje · pontilhada meta de 26 semanas
+        {t("radar.legenda")}
       </div>
       <div style={{ display: "grid", placeItems: "center", flex: 1, minHeight: 0 }}>
         <svg
           viewBox="0 0 220 190"
           role="img"
-          aria-label="Radar de competências: forte em frontend, baixo em Spring, dados, testes e infraestrutura; a meta de 26 semanas cobre todos os eixos."
+          aria-label={t("radar.aria")}
           style={{ width: "100%", maxWidth: 220, height: "auto" }}
         >
           <g fill="none" stroke="rgba(233,233,237,.12)">
@@ -54,7 +57,7 @@ export function CompetenceRadar() {
           <g fill="rgba(233,233,237,.55)" fontSize="9" fontFamily="Inter,sans-serif">
             {AXES.map((axis) => (
               <text key={axis.label} x={axis.x} y={axis.y} textAnchor={axis.anchor}>
-                {axis.label}
+                {"chave" in axis ? t(axis.chave) : axis.label}
               </text>
             ))}
           </g>

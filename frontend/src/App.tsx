@@ -8,6 +8,7 @@
 
 import { useEffect } from "react";
 import { AppShell } from "@/components/layout/AppShell";
+import { useT } from "@/lib/i18n";
 import { MarcaCarregando } from "@/components/ui/MarcaCarregando";
 import { useAppState } from "@/hooks/useAppState";
 import { useAuth } from "@/hooks/useAuth";
@@ -143,6 +144,7 @@ function AuthenticatedApp() {
  * "travou".
  */
 function Booting() {
+  const t = useT();
   return (
     <div
       style={{
@@ -154,7 +156,7 @@ function Booting() {
         fontFamily: "Inter, system-ui, sans-serif",
       }}
     >
-      <MarcaCarregando size={72} label="Abrindo seu plano…" />
+      <MarcaCarregando size={72} label={t("app.abrindoPlano")} />
     </div>
   );
 }

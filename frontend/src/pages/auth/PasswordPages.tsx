@@ -108,7 +108,7 @@ export function ResetPasswordPage({
           className="btn btn-primary btn-block"
           onClick={() => onNavigate("/recuperar-senha")}
         >
-          Pedir um novo link
+          {t("auth.novaSenha.pedirNovoLink")}
         </button>
       </AuthShell>
     );
@@ -118,16 +118,16 @@ export function ResetPasswordPage({
     <AuthShell title={t("auth.novaSenha.titulo")} icon="shieldCheck" subtitle={done ? undefined : t("auth.novaSenha.sub")}>
       {done ? (
         <div>
-          <p style={{ fontSize: 14, color: C.verde, margin: "0 0 14px" }}>Senha alterada.</p>
+          <p style={{ fontSize: 14, color: C.verde, margin: "0 0 14px" }}>{t("auth.novaSenha.senhaAlterada")}</p>
           <p style={{ fontSize: 13, color: "rgba(233,233,237,.7)", margin: "0 0 16.8px" }}>
-            Por segurança, todas as sessões abertas foram encerradas.
+            {t("auth.novaSenha.sessoesEncerradas")}
           </p>
           <button
             type="button"
             className="btn btn-primary btn-block"
             onClick={() => onNavigate("/entrar")}
           >
-            Entrar com a nova senha
+            {t("auth.novaSenha.entrarComNova")}
             <Icon name="seta" size={17} className="auth-seta" />
           </button>
         </div>

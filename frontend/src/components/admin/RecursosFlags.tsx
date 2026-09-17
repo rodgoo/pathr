@@ -15,6 +15,7 @@
 import { useState } from "react";
 import { api } from "@/api/client";
 import { useMutation, useQuery } from "@/hooks/useApi";
+import { useT } from "@/lib/i18n";
 import { Segmented, type SegmentedOption } from "@/components/ui/Segmented";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel } from "@/components/ui/primitives";
@@ -30,18 +31,6 @@ interface RecursoFlag {
   default: EstadoDoRecurso;
 }
 
-const OPCOES: readonly SegmentedOption<EstadoDoRecurso>[] = [
-  { value: "todos", label: "Todos" },
-  { value: "admin", label: "Admin" },
-  { value: "ninguem", label: "Ninguém" },
-];
-
-const EXPLICA: Record<EstadoDoRecurso, string> = {
-  todos: "Ligado para todos os usuários.",
-  admin: "Só administradores veem.",
-  ninguem: "Desligado para todo mundo.",
-};
-
 const COR: Record<EstadoDoRecurso, string> = {
   todos: C.verde,
   admin: C.azul,
@@ -49,6 +38,17 @@ const COR: Record<EstadoDoRecurso, string> = {
 };
 
 function LinhaDoRecurso({ recurso, onTrocado }: { recurso: RecursoFlag; onTrocado: (estado: EstadoDoRecurso) => void }) {
+  const t = useT();
+  const opcoes: readonly SegmentedOption<EstadoDoRecurso>[] = [
+    { value: "todos", label: t("recursos.todos") },
+    { value: "admin", label: t("recursos.admin") },
+    { value: "ninguem", label: t("recursos.ninguem") },
+  ];
+  const explica: Record<EstadoDoRecurso, string> = {
+    todos: t("recursos.explicaTodos"),
+    admin: t("recursos.explicaAdmin"),
+    ninguem: t("recursos.explicaNinguem"),
+  };
   const [estado, setEstado] = useState<EstadoDoRecurso>(recurso.state);
   const [erro, setErro] = useState<string | null>(null);
   const salvar = useMutation((novo: EstadoDoRecurso) =>
@@ -67,7 +67,7 @@ function LinhaDoRecurso({ recurso, onTrocado }: { recurso: RecursoFlag; onTrocad
       onTrocado(novo);
     } else {
       setEstado(anterior); // desfaz se o servidor recusou
-      setErro("Não consegui salvar. Tente de novo.");
+      setErro(t("recursos.erroSalvar"));
     }
   }
 
@@ -87,7 +87,7 @@ function LinhaDoRecurso({ recurso, onTrocado }: { recurso: RecursoFlag; onTrocad
           <span
             style={{ fontSize: 11, color: C.ambar, padding: "1px 7px", borderRadius: 999, background: tint(C.ambar, 12) }}
           >
-            mudado do padrão
+            {t("recursos.mudadoDoPadrao")}
           </span>
         ) : null}
       </div>
@@ -97,14 +97,14 @@ function LinhaDoRecurso({ recurso, onTrocado }: { recurso: RecursoFlag; onTrocad
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "6px 12px" }}>
         <Segmented
           name={`recurso-${recurso.key}`}
-          label={`Quem vê ${recurso.label}`}
-          options={OPCOES}
+          label={t("recursos.quemVe", { nome: recurso.label })}
+          options={opcoes}
           value={estado}
           onChange={(novo) => void trocar(novo)}
           style={{ maxWidth: 320 }}
         />
         <span style={{ fontSize: 12, color: COR[estado] }}>
-          {salvar.pending ? "Salvando…" : EXPLICA[estado]}
+          {salvar.pending ? t("recursos.salvando") : explica[estado]}
         </span>
       </div>
       {erro ? <span role="alert" style={{ fontSize: 12, color: C.ambar }}>{erro}</span> : null}
@@ -113,20 +113,25 @@ function LinhaDoRecurso({ recurso, onTrocado }: { recurso: RecursoFlag; onTrocad
 }
 
 export function RecursosFlags() {
+  const t = useT();
   const recursos = useQuery(() => api.getSemCache<RecursoFlag[]>("/admin/recursos"), []);
 
   return (
     <Panel pad={16.8}>
       <Kicker tone="muted" style={{ display: "block", marginBottom: 4 }}>
-        Recursos
+        {t("recursos.titulo")}
       </Kicker>
       <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 8px", maxWidth: "64ch" }}>
-        Ligue cada recurso para <strong style={{ color: C.verde, fontWeight: 500 }}>todos os usuários</strong>, só para{" "}
-        <strong style={{ color: C.azul, fontWeight: 500 }}>administradores</strong>, ou para{" "}
-        <strong style={{ fontWeight: 500 }}>ninguém</strong>. A mudança vale na próxima vez que a pessoa abrir a tela.
+        {t("recursos.explicaPre")}
+        <strong style={{ color: C.verde, fontWeight: 500 }}>{t("recursos.todosUsuarios")}</strong>
+        {t("recursos.explicaMid1")}
+        <strong style={{ color: C.azul, fontWeight: 500 }}>{t("recursos.administradores")}</strong>
+        {t("recursos.explicaMid2")}
+        <strong style={{ fontWeight: 500 }}>{t("recursos.ninguemForte")}</strong>
+        {t("recursos.explicaFim")}
       </p>
 
-      {recursos.loading ? <Loading label="Buscando recursos…" /> : null}
+      {recursos.loading ? <Loading label={t("recursos.buscando")} /> : null}
       {recursos.error ? <ErrorState message={recursos.error} onRetry={recursos.reload} /> : null}
       {recursos.data && recursos.data.length > 0 ? (
         <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>

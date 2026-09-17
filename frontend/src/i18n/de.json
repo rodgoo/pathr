@@ -349,7 +349,11 @@
       "salvando": "Wird gespeichert…",
       "salvar": "Passwort speichern",
       "linkInvalido": "Ungültiger Link",
-      "semToken": "Diese Adresse enthält kein Wiederherstellungstoken."
+      "semToken": "Diese Adresse enthält kein Wiederherstellungstoken.",
+      "pedirNovoLink": "Einen neuen Link anfordern",
+      "senhaAlterada": "Das Passwort wurde geändert.",
+      "sessoesEncerradas": "Aus Sicherheitsgründen wurden alle offenen Sitzungen beendet.",
+      "entrarComNova": "Mit dem neuen Passwort anmelden"
     }
   },
   "sidebar": {
@@ -426,7 +430,36 @@
     "semEstudo": "Heute findet kein Unterricht statt.",
     "tempoDeEstudo": "Lernzeit:",
     "semTempo": "ohne Zeitangabe",
-    "estimado": "≈ geschätzt anhand der Länge des gelesenen Textes"
+    "estimado": "≈ geschätzt anhand der Länge des gelesenen Textes",
+    "materialGenerico": "Material",
+    "atividadeGenerica": "Aktivität",
+    "minuto": "Minute",
+    "minutos": "Minuten",
+    "hora": "Uhrzeit",
+    "horas": "Stunden",
+    "e": "und",
+    "material": {
+      "video": "Video",
+      "article": "Artikel",
+      "doc": "Dokumentation",
+      "course": "Kurs",
+      "book": "Buch",
+      "podcast": "Podcast",
+      "repo": "Repository",
+      "exercise": "Übung"
+    },
+    "atividade": {
+      "quiz_done": "Quiz",
+      "explanation_done": "Erläuterung",
+      "node_done": "Modul abgeschlossen",
+      "review_done": "Überprüfung",
+      "english_session": "Sprachkurs",
+      "english_assessment": "Sprachniveau",
+      "language": "Sprache",
+      "walkthrough": "Beispielcode",
+      "roadmap_created": "Plan erstellt",
+      "resume_parsed": "Importierter Lebenslauf"
+    }
   },
   "legal": {
     "layout": {
@@ -1084,7 +1117,64 @@
       "sensivel": "optional, und nur du antwortest",
       "salvar": "Antworten speichern",
       "salvando": "Wird gespeichert…"
-    }
+    },
+    "explicacao": "Jeden Morgen wählt PathR die Stellenangebote aus, die am besten zu Ihrem Lebenslauf passen, und verfasst für jedes davon ein Anschreiben. Wenn für die Stelle eine Kontakt-E-Mail-Adresse angegeben ist, wird die E-Mail von hier aus mit Ihrem Lebenslauf im Anhang versendet. Wenn die Stellenanzeige eigene Fragen enthält, erhalten Sie einen Link, über den Sie diese öffnen und beantworten können.",
+    "carregando": "Wird geladen…",
+    "carregandoFila": "Ihre Bewerbungen werden geladen…",
+    "hoje": "Heute",
+    "nenhumaHoje": "Heute gibt es noch keine neuen Stellenangebote.",
+    "buscando": "Auf der Suche nach offenen Stellen…",
+    "buscarAgora": "Jetzt nach Stellenangeboten suchen",
+    "diasAnteriores": "Vorherige Tage",
+    "semCurriculo": {
+      "titulo": "Beginnen Sie mit Ihrem Lebenslauf",
+      "descricao": "Von dort stammen die ausgewählten Stellenangebote und das Anschreiben. Senden Sie die Datei und lassen Sie die KI sie einmal durchlesen – danach ergibt sich die Tagesliste von selbst.",
+      "enviar": "Meinen Lebenslauf senden"
+    },
+    "filaVazia": {
+      "titulo": "Die Warteschlange für heute wurde noch nicht eingerichtet",
+      "descricao": "Sie kommt morgens pünktlich zusammen mit einer E-Mail an. Wenn Sie sie sich jetzt ansehen möchten, klicken Sie auf „Jetzt nach Stellen suchen“."
+    },
+    "automatico": {
+      "kicker": "Automatischer Versand",
+      "noSite": "Bei Stellenangeboten, bei denen Bewerbungen ausschließlich über die Website (Gupy, LinkedIn, eigenes Formular) eingereicht werden können, erhalten Sie weiterhin den Link und die vorgefertigten Antworten: Dort müssen Sie die Fragen selbst beantworten.",
+      "ligado": "Aktiviert: Jeden Morgen sendet die App Ihren Lebenslauf automatisch an Stellenangebote, die eine Kontakt-E-Mail-Adresse enthalten und zu 70 % oder mehr zu Ihnen passen – bis zu 5 pro Tag. Sie erhalten eine E-Mail mit den versendeten Lebensläufen.",
+      "desligado": "Ausgeschaltet: Die App filtert die Stellenangebote heraus und verfasst das Anschreiben; Sie müssen nur noch auf „Senden“ klicken. Wenn die Funktion eingeschaltet ist, versendet sie automatisch bis zu fünf Stellenangebote pro Tag, die eine Kontakt-E-Mail-Adresse enthalten und zu mindestens 70 % zu Ihrem Profil passen.",
+      "enviando": "Allein versenden",
+      "ligar": "Jeden Tag alleine verschicken"
+    },
+    "pretensao": "Gehaltsvorstellung",
+    "pretensaoExemplo": "8.000 R$ (CLT)",
+    "disponibilidade": "Verfügbarkeit für den Start",
+    "disponibilidadeExemplo": "30 Tage",
+    "salvar": "Speichern",
+    "salvando": "Wird gespeichert…",
+    "salvo": "Ausgenommen",
+    "porQueEssasDuas": "Das sind die beiden Fragen, die in jedem Formular gestellt werden und die der Lebenslauf nicht beantwortet. Ohne diese Fragen gibt die vorgefertigte Antwort lediglich die Frage zurück, anstatt eine Zahl zu erfinden.",
+    "combina": "{pct}% passt",
+    "combinaDica": "Inwieweit passt diese Stelle zu Ihrem Profil?",
+    "remota": "Fernbedienung",
+    "enviada": "Gesendet",
+    "escrevendo": "Ich schreibe gerade…",
+    "escreverCarta": "Einen Brief schreiben",
+    "reescreverCarta": "Brief umschreiben",
+    "respostasDoFormulario": "Antworten aus dem Formular",
+    "refazerRespostas": "Antworten erneut erstellen",
+    "jaMeCandidatei": "Ich habe mich bereits beworben",
+    "naoMeInteressa": "Das interessiert mich nicht",
+    "descartada": "Verworfen – diese Stelle wird nicht wieder in die Warteschlange aufgenommen.",
+    "rotuloDaCarta": "Anschreiben (Sie können es vor dem Absenden bearbeiten)",
+    "emailDaEmpresa": "E-Mail-Adresse des Unternehmens (sofern in der Anzeige angegeben)",
+    "enviarComCurriculo": "Mit meinem Lebenslauf senden",
+    "comoSaiOEmail": "Die E-Mail wird über PathR versendet, aber die Antwort des Unternehmens geht direkt an Ihre E-Mail-Adresse. Ihr Lebenslauf wird als Anhang beigefügt, so wie Sie ihn gesendet haben.",
+    "respostasDaVaga": "Antworten zum Bewerbungsformular",
+    "copiar": "Kopieren",
+    "copiado": "Kopiert",
+    "confiraAntes": "Bitte prüfen Sie dies vor dem Einfügen: Sie sind derjenige, der dem Personalvermittler antwortet, und im Formular wird möglicherweise eine andere Frage gestellt.",
+    "umaVaga": "{quantas} ein eigener Platz für dich",
+    "variasVagas": "{quantas} Separate Stellenangebote für Sie",
+    "esconderCarta": "Karte ausblenden",
+    "verCarta": "Brief anzeigen"
   },
   "amigos": {
     "voceEh": "Du bist",
@@ -1349,7 +1439,8 @@
       "bloqueado": "gesperrt",
       "pulado": "übersprungen",
       "aFazer": "zu erledigen"
-    }
+    },
+    "selecione": "Wählen Sie"
   },
   "config": {
     "titulo": "Einstellungen",
@@ -2620,5 +2711,226 @@
     "usadaEm": "verwendet am {data}",
     "nuncaUsada": "noch nicht verwendet",
     "revogar": "Widerrufen"
+  },
+  "conta": {
+    "dadosPessoais": "Personenbezogene Daten",
+    "comoQuerSerChamado": "Wie möchtest du genannt werden?",
+    "email": "E-Mail",
+    "cargoAtual": "Derzeitige Position",
+    "cargoPlaceholder": "z. B.: Frontend-Entwickler",
+    "senioridade": "Dienstalter",
+    "naoInformar": "Keine Angabe",
+    "senioridadeRotulo": {
+      "estagio": "Praktikum",
+      "junior": "Junior",
+      "pleno": "Erfahren",
+      "senior": "Senior",
+      "especialista": "Experte",
+      "lideranca": "Führung"
+    },
+    "tempoExperiencia": "Berufserfahrung (Jahre)",
+    "anosPlaceholder": "Beispiel: 3",
+    "horasSemana": "Lernstunden pro Woche",
+    "salvando": "Wird gespeichert…",
+    "salvarAlteracoes": "Änderungen speichern",
+    "salvo": "Gespeichert.",
+    "senha": "Passwort",
+    "senhaAtual": "Aktuelles Passwort",
+    "novaSenha": "Neues Passwort",
+    "alterando": "Ändern…",
+    "alterarSenha": "Passwort ändern",
+    "senhaAlterada": "Das Passwort wurde geändert. Die anderen Sitzungen wurden beendet.",
+    "requisitoSenha": "Mindestens 10 Zeichen, bestehend aus Buchstaben und Zahlen.",
+    "agora": "jetzt",
+    "haMin": "vor {n} Minuten",
+    "haH": "{n} h",
+    "ontem": "gestern",
+    "erroEncerrar": "Ich konnte dieses Gerät gerade nicht ausschalten. Versuchen Sie es bitte noch einmal.",
+    "aparelhosConectados": "Angeschlossene Geräte",
+    "aparelhosExplica": "Wo ist Ihr Konto derzeit angemeldet? Erkennen Sie einen dieser Zugriffe nicht wieder? Beenden Sie die Sitzung und ändern Sie Ihr Passwort. Wenn sich jemand über ein neues Gerät bei Ihrem Konto anmeldet, benachrichtigen wir Sie per E-Mail.",
+    "buscandoAparelhos": "Auf der Suche nach Geräten…",
+    "esteAparelho": "dieses Gerät",
+    "emUsoAgora": "derzeit im Einsatz",
+    "usado": "{quando} gebraucht",
+    "entrouEm": " · trat bei ",
+    "rede": " · Website {ip}",
+    "sairDesteAparelho": "Dieses Gerät verlassen",
+    "encerrarAparelho": "{aparelho} schließen",
+    "encerrando": "Zum Abschluss…",
+    "sair": "Beenden",
+    "encerrar": "Schließen",
+    "sairTodos": "Von allen Geräten abmelden",
+    "encerraOutro": "Schalte dieses und das andere Gerät aus.",
+    "encerraOutros": "Schaltet dieses und die anderen Geräte unter {n} aus.",
+    "inclusiveEste": "Auch dieses hier."
+  },
+  "notices": {
+    "erroSalvar": "Ich konnte die Einstellung nicht speichern.",
+    "erroExportar": "Der Export ist fehlgeschlagen.",
+    "erroSair": "Ich konnte die Sitzungen nicht beenden.",
+    "erroExcluir": "Ich konnte das Konto nicht löschen.",
+    "notificacoesEmail": "E-Mail-Benachrichtigungen",
+    "avisos": {
+      "lembrete_diario": {
+        "titulo": "Tägliche Lern-Erinnerung",
+        "detalhe": "Eine E-Mail um 8 Uhr mit den Programmpunkten des Tages"
+      },
+      "resumo_semanal": {
+        "titulo": "Wöchentliche Zusammenfassung",
+        "detalhe": "Fortschritt, Beständigkeit und das, was hinter uns liegt"
+      },
+      "novidades": {
+        "titulo": "Produktneuheiten",
+        "detalhe": "Neue Funktionen und Änderungen in der App"
+      },
+      "correcao_pronta": {
+        "titulo": "Korrektur der fertigen Aufgabe",
+        "detalhe": "Wann wird die Überprüfung Ihres Codes veröffentlicht?"
+      },
+      "sequencia_em_risco": {
+        "titulo": "Sequenz in Gefahr",
+        "detalhe": "Ich melde mich heute Abend, falls du noch nicht gelernt hast"
+      }
+    },
+    "conta": "Konto",
+    "preparando": "Wird vorbereitet…",
+    "exportar": "Meine Daten exportieren",
+    "encerrando": "Zum Abschluss…",
+    "sairTodos": "Von allen Geräten abmelden",
+    "excluirConta": "Konto löschen",
+    "confirmarExclusao": "Löschung des Kontos bestätigen",
+    "avisoExclusao": "Dadurch werden das Konto, die Roadmap, die Quizze, der Verlauf und der Lebenslauf gelöscht. Dieser Vorgang kann nicht rückgängig gemacht werden, und es gibt keine Karenzfrist – wenn Sie etwas behalten möchten, exportieren Sie Ihre Daten bitte vorher.",
+    "cancelar": "Abbrechen",
+    "excluindo": "Mit Ausnahme von…",
+    "excluirDefinitivo": "Endgültig löschen",
+    "privacidadePre": "Was wir erfassen, an wen wir es weitergeben und wie lange wir es aufbewahren, finden Sie in der",
+    "politicaPrivacidade": "Datenschutzerklärung"
+  },
+  "apiStatus": {
+    "estado": {
+      "ok": "In Betrieb",
+      "degradada": "Mit einem Problem",
+      "erro": "Nicht auf Sendung",
+      "nao_configurada": "Ohne Schlüssel",
+      "sem_verificacao": "Wartet auf Verwendung"
+    },
+    "agoraHaPouco": "vor kurzem",
+    "haUmMinuto": "vor 1 Minute",
+    "haMinutos": "vor {n} Minuten",
+    "verificandoLoading": "Integrationen werden überprüft…",
+    "problemaSing": "{n} Integration mit Problemen",
+    "problemaPlural": "{n} problematische Integrationen",
+    "tudoResponde": "Alles, was konfiguriert ist, funktioniert",
+    "resumoLinha": "{ok} in Betrieb · {conf} von {total} konfiguriert · überprüft {quando}",
+    "gastaCota": "Jede Überprüfung verbraucht ein wenig von Ihrem Kontingent.",
+    "verificando": "Wird überprüft…",
+    "verificarEm": "Noch einmal unter {s}nachsehen",
+    "verificarAgora": "Jetzt überprüfen",
+    "rodape": "Tavily, Brave und Remotive werden nicht nur zum Überprüfen aufgerufen: Sie verbrauchen Guthaben oder erfordern nur wenige Aufrufe. Für sie zählt das Ergebnis der letzten tatsächlichen Nutzung. Die Schlüssel bleiben auf dem Server und werden hier niemals angezeigt.",
+    "linhaAria": "{nome}: {estado}",
+    "hoje": "Heute: {req} {rotulo} · {tokens} tokens",
+    "requisicaoSing": "Bestellschein",
+    "requisicaoPlural": "Bestellanforderungen",
+    "deLimitePct": "{usados} von {limite} {unidade} ({pct}%)",
+    "usoDe": "Verwendung von „{nome}“"
+  },
+  "passkeys": {
+    "criada": "Der Zugangsschlüssel wurde erstellt. Beim nächsten Einloggen können Sie einfach Ihr Gesicht, Ihren Fingerabdruck oder die PIN dieses Geräts verwenden.",
+    "erroRemover": "Ich konnte den Schlüssel nicht abziehen.",
+    "titulo": "Zugangsschlüssel",
+    "explica": "Melden Sie sich per Gesichtserkennung, Fingerabdruck oder Geräte-PIN an, ohne ein Passwort einzugeben. Der Schlüssel ist an PathR gebunden – eine gefälschte Seite kann ihn nicht verwenden – und gilt bereits als zweiter Authentifizierungsfaktor.",
+    "criadaEm": "Erstellt unter {data}",
+    "usadaEm": " · verwendet unter {data}",
+    "aindaNaoUsada": " · noch nicht verwendet",
+    "sincronizada": " · geräteübergreifend synchronisiert",
+    "removendo": "Wird entfernt…",
+    "remover": "Entfernen",
+    "aguardando": "Warten auf das Gerät…",
+    "criar": "Zugangsschlüssel auf diesem Gerät erstellen",
+    "semSuporte": "Dieser Browser bietet keinen Zugangsschlüssel an. Bei aktuellen Mobiltelefonen und Browsern wird er hier angezeigt.",
+    "notaRemover": "Wenn Sie hier „Entfernen“ wählen, wird der Schlüssel in PathR deaktiviert. Das Gerät speichert ihn möglicherweise weiterhin – löschen Sie ihn gegebenenfalls auch im Passwort-Manager."
+  },
+  "recursos": {
+    "todos": "Alle",
+    "admin": "Admin",
+    "ninguem": "Niemand",
+    "explicaTodos": "Für alle Benutzer aktiviert.",
+    "explicaAdmin": "Nur Administratoren können dies sehen.",
+    "explicaNinguem": "Für alle ausgeschaltet.",
+    "erroSalvar": "Das Speichern ist fehlgeschlagen. Bitte versuche es erneut.",
+    "mudadoDoPadrao": "vom Standard abweichend",
+    "quemVe": "Wer sieht „{nome}“?",
+    "salvando": "Wird gespeichert…",
+    "titulo": "Ressourcen",
+    "explicaPre": "Aktivieren Sie jede Funktion für ",
+    "todosUsuarios": "alle Nutzer",
+    "explicaMid1": ", nur um ",
+    "administradores": "Verwalter",
+    "explicaMid2": ", oder an ",
+    "ninguemForte": "niemand",
+    "explicaFim": ". Die Änderung gilt ab dem nächsten Mal, wenn die Person den Bildschirm öffnet.",
+    "buscando": "Auf der Suche nach Ressourcen…"
+  },
+  "authShell": {
+    "kicker": "Lernplattform",
+    "tituloPre": "Ihr nächster Schritt,",
+    "tituloEnfase": "bereits geplant.",
+    "descricao": "PathR verwandelt Ihren Lebenslauf in einen stufenweisen Bildungsweg, der Sie direkt zu Ihrer Wunschstelle führt.",
+    "beneficios": {
+      "plano": {
+        "titulo": "Ein Plan, der jede Woche angepasst wird",
+        "detalhe": "Der Reiseplan passt sich Ihrem Tempo an."
+      },
+      "idioma": {
+        "titulo": "Tägliche Sprachübungen",
+        "detalhe": "Ein paar Minuten, jeden Tag."
+      },
+      "vagas": {
+        "titulo": "Stellenangebote, die zu Ihnen passen",
+        "detalhe": "Gefiltert nach dem, was Sie bereits wissen."
+      }
+    },
+    "ocultarSenha": "Passwort ausblenden",
+    "mostrarSenha": "Passwort anzeigen"
+  },
+  "radar": {
+    "titulo": "Kompetenzen",
+    "legenda": "heute durchgezogene Linie · gepunktete Linie (26-Wochen-Ziel)",
+    "aria": "Kompetenzübersicht: Stark im Frontend, Schwächen bei Spring, Daten, Tests und Infrastruktur; das 26-wöchige Programm deckt alle Bereiche ab.",
+    "eixoDados": "Daten",
+    "eixoTestes": "Tests"
+  },
+  "erroTela": {
+    "titulo": "Diese Seite wurde nicht geöffnet",
+    "corpo": "Beim Erstellen des Inhalts ist ein Fehler aufgetreten. Die anderen Bildschirme funktionieren weiterhin – und es sind keine Ihrer Eingaben verloren gegangen."
+  },
+  "offline": {
+    "recusadaSing": "1 offline vorgenommene Änderung konnte nicht gespeichert werden – der Server hat sie abgelehnt.",
+    "recusadaPlural": "{n} Offline vorgenommene Änderungen konnten nicht gespeichert werden.",
+    "semConexaoFilaSing": "Keine Verbindung. {n} Änderung auf dem Gerät gespeichert – wir senden sie, sobald das Netzwerk wieder verfügbar ist.",
+    "semConexaoFilaPlural": "Keine Verbindung. {n} Änderungen wurden auf dem Gerät gespeichert – wir senden sie, sobald die Verbindung wiederhergestellt ist.",
+    "semConexao": "Keine Verbindung. Sie sehen das, was bereits auf dem Gerät gespeichert war.",
+    "enviando": "Ich sende dir, was ich aufbewahrt habe…",
+    "aguardaSing": "{n} Die Änderung steht noch zur Übermittlung an.",
+    "aguardaPlural": "{n} Änderungen stehen noch zur Übermittlung an.",
+    "enviarAgora": "Jetzt senden",
+    "versaoNova": "Eine neue Version von PathR ist fertig.",
+    "atualizar": "Aktualisieren"
+  },
+  "app": {
+    "abrindoPlano": "Seinen Plan offenlegen…"
+  },
+  "cabecalho": {
+    "carregandoPlano": "Plan wird geladen…",
+    "semPlano": "Es wurde noch kein Plan erstellt."
+  },
+  "cidade": {
+    "label": "Stadt, in der er wohnt",
+    "placeholder": "Geben Sie Folgendes ein: Vit…",
+    "sugeridas": "Vorgeschlagene Städte",
+    "capital": "Hauptstadt",
+    "erro": "Ich konnte gerade keine Städte abrufen. Versuchen Sie es in wenigen Augenblicken erneut.",
+    "reconhecida": "Anerkannte Stadt: {nome} - {uf}",
+    "ufJunto": "Die UF gehört zur ausgewählten Stadt dazu."
   }
 }

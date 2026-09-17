@@ -13,36 +13,43 @@ import { useState } from "react";
 import { status as statusApi } from "@/api/endpoints";
 import type { ApiIntegration, ApiIntegrationState, ApiStatusReport } from "@/api/types";
 import { useQuery } from "@/hooks/useApi";
+import { useIdioma, useT, type Traduzir } from "@/lib/i18n";
 import { C, HAIRLINE, SIZE, TEXT, tint } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel } from "@/components/ui/primitives";
 
-const ESTADO: Record<ApiIntegrationState, { rotulo: string; cor: string }> = {
-  ok: { rotulo: "Funcionando", cor: C.verde },
-  degradada: { rotulo: "Com problema", cor: C.ambar },
-  erro: { rotulo: "Fora do ar", cor: C.rosa },
-  nao_configurada: { rotulo: "Sem chave", cor: "#8a8d99" },
-  sem_verificacao: { rotulo: "Aguardando uso", cor: C.azul },
+// O rótulo de cada estado vem do dicionário (apiStatus.estado.<estado>).
+const CORES: Record<ApiIntegrationState, string> = {
+  ok: C.verde,
+  degradada: C.ambar,
+  erro: C.rosa,
+  nao_configurada: "#8a8d99",
+  sem_verificacao: C.azul,
 };
 
+const rotuloEstado = (estado: ApiIntegrationState, t: Traduzir) => t(`apiStatus.estado.${estado}`);
+
 // A ordem dos grupos: do que derruba o app inteiro ao que só tira uma fonte.
+// São os valores de `categoria` que o servidor devolve — não se traduzem, senão
+// o filtro por categoria deixa de casar.
 const ORDEM = ["Base", "Inteligência artificial", "E-mail", "Idiomas", "Material de estudo", "Vagas"];
 
-function haQuanto(iso: string): string {
+function haQuanto(iso: string, t: Traduzir): string {
   const segundos = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 1000));
-  if (segundos < 60) return "agora há pouco";
+  if (segundos < 60) return t("apiStatus.agoraHaPouco");
   const minutos = Math.round(segundos / 60);
-  return minutos === 1 ? "há 1 minuto" : `há ${minutos} minutos`;
+  return minutos === 1 ? t("apiStatus.haUmMinuto") : t("apiStatus.haMinutos", { n: minutos });
 }
 
-const numero = (valor: number) => valor.toLocaleString("pt-BR");
+const numero = (valor: number, idioma: string) => valor.toLocaleString(idioma);
 
 export function ApiStatusTab() {
+  const t = useT();
   const [pedidos, setPedidos] = useState(0);
   const relatorio = useQuery(() => statusApi.apis(pedidos > 0), [pedidos]);
 
-  if (relatorio.loading && !relatorio.data) return <Loading label="Verificando as integrações…" />;
+  if (relatorio.loading && !relatorio.data) return <Loading label={t("apiStatus.verificandoLoading")} />;
   if (relatorio.error) return <ErrorState message={relatorio.error} onRetry={relatorio.reload} />;
   if (!relatorio.data) return null;
 
@@ -64,6 +71,8 @@ function Relatorio({
   verificando: boolean;
   onVerificar: () => void;
 }) {
+  const t = useT();
+  const { idioma } = useIdioma();
   const grupos = ORDEM.map((categoria) => ({
     categoria,
     itens: dados.itens.filter((item) => item.categoria === categoria),
@@ -79,12 +88,18 @@ function Relatorio({
           <div style={{ flex: "1 1 260px" }}>
             <div style={{ fontSize: SIZE.titulo, color: problemas ? C.ambar : C.verde }}>
               {problemas
-                ? `${problemas} ${problemas === 1 ? "integração com problema" : "integrações com problema"}`
-                : "Tudo o que está configurado responde"}
+                ? problemas === 1
+                  ? t("apiStatus.problemaSing", { n: problemas })
+                  : t("apiStatus.problemaPlural", { n: problemas })
+                : t("apiStatus.tudoResponde")}
             </div>
             <div style={{ fontSize: 12.5, color: TEXT.muted, marginTop: 3 }}>
-              {dados.resumo.ok ?? 0} funcionando · {configuradas} de {dados.itens.length} configuradas · verificado{" "}
-              {haQuanto(dados.verificado_em)}
+              {t("apiStatus.resumoLinha", {
+                ok: dados.resumo.ok ?? 0,
+                conf: configuradas,
+                total: dados.itens.length,
+                quando: haQuanto(dados.verificado_em, t),
+              })}
             </div>
           </div>
           <button
@@ -92,10 +107,14 @@ function Relatorio({
             className="btn btn-secondary"
             disabled={verificando || espera > 0}
             onClick={onVerificar}
-            title={espera > 0 ? "Cada verificação gasta um pouco de cota." : undefined}
+            title={espera > 0 ? t("apiStatus.gastaCota") : undefined}
           >
             <Icon name="refresh" size={15} />
-            {verificando ? "Verificando…" : espera > 0 ? `Verificar de novo em ${espera}s` : "Verificar agora"}
+            {verificando
+              ? t("apiStatus.verificando")
+              : espera > 0
+                ? t("apiStatus.verificarEm", { s: espera })
+                : t("apiStatus.verificarAgora")}
           </button>
         </div>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 11.2, marginTop: 11.2 }}>
@@ -104,8 +123,8 @@ function Relatorio({
               key={estado}
               style={{ fontSize: 11.5, color: TEXT.faint, display: "inline-flex", alignItems: "center", gap: 6 }}
             >
-              <Ponto cor={ESTADO[estado].cor} />
-              {ESTADO[estado].rotulo} · {dados.resumo[estado] ?? 0}
+              <Ponto cor={CORES[estado]} />
+              {rotuloEstado(estado, t)} · {dados.resumo[estado] ?? 0}
             </span>
           ))}
         </div>
@@ -123,8 +142,7 @@ function Relatorio({
       ))}
 
       <p style={{ margin: 0, fontSize: 11.5, color: TEXT.faint, maxWidth: "76ch", lineHeight: 1.5 }}>
-        Tavily, Brave e Remotive não são chamados só para checar: gastam crédito ou pedem poucas chamadas. Para
-        eles vale o resultado do último uso real. As chaves ficam no servidor e nunca aparecem aqui.
+        {t("apiStatus.rodape")}
       </p>
     </div>
   );
@@ -148,11 +166,14 @@ function Ponto({ cor }: { cor: string }) {
 }
 
 function Linha({ item, primeira }: { item: ApiIntegration; primeira: boolean }) {
-  const { rotulo, cor } = ESTADO[item.estado];
+  const t = useT();
+  const { idioma } = useIdioma();
+  const rotulo = rotuloEstado(item.estado, t);
+  const cor = CORES[item.estado];
   return (
     <div
       role="group"
-      aria-label={`${item.nome}: ${rotulo}`}
+      aria-label={t("apiStatus.linhaAria", { nome: item.nome, estado: rotulo })}
       style={{
         padding: "11.2px 0",
         borderTop: primeira ? "none" : `1px solid ${HAIRLINE}`,
@@ -171,7 +192,7 @@ function Linha({ item, primeira }: { item: ApiIntegration; primeira: boolean }) 
           <span style={{ flex: "none", textAlign: "right", whiteSpace: "nowrap" }}>
             <span style={{ fontSize: 12.5, color: cor }}>{rotulo}</span>
             {item.latencia_ms !== null ? (
-              <span style={{ fontSize: 11, color: TEXT.faint }}> · {numero(item.latencia_ms)} ms</span>
+              <span style={{ fontSize: 11, color: TEXT.faint }}> · {numero(item.latencia_ms, idioma)} ms</span>
             ) : null}
           </span>
         </div>
@@ -190,6 +211,8 @@ function Linha({ item, primeira }: { item: ApiIntegration; primeira: boolean }) 
 }
 
 function Uso({ item }: { item: ApiIntegration }) {
+  const t = useT();
+  const { idioma } = useIdioma();
   const uso = item.uso;
   if (!uso) return null;
   const estilo = { fontSize: 11.5, color: TEXT.faint, marginTop: 5, paddingLeft: 16.4 };
@@ -197,8 +220,14 @@ function Uso({ item }: { item: ApiIntegration }) {
   if (uso.hoje) {
     return (
       <div style={estilo}>
-        Hoje: {numero(uso.hoje.requisicoes)} {uso.hoje.requisicoes === 1 ? "requisição" : "requisições"} ·{" "}
-        {numero(uso.hoje.tokens)} tokens
+        {t("apiStatus.hoje", {
+          req: numero(uso.hoje.requisicoes, idioma),
+          rotulo:
+            uso.hoje.requisicoes === 1
+              ? t("apiStatus.requisicaoSing")
+              : t("apiStatus.requisicaoPlural"),
+          tokens: numero(uso.hoje.tokens, idioma),
+        })}
       </div>
     );
   }
@@ -207,11 +236,16 @@ function Uso({ item }: { item: ApiIntegration }) {
     return (
       <div style={estilo}>
         <div>
-          {numero(uso.usados ?? 0)} de {numero(uso.limite)} {uso.unidade} ({pct}%)
+          {t("apiStatus.deLimitePct", {
+            usados: numero(uso.usados ?? 0, idioma),
+            limite: numero(uso.limite, idioma),
+            unidade: uso.unidade,
+            pct,
+          })}
         </div>
         <div
           role="meter"
-          aria-label={`Uso de ${item.nome}`}
+          aria-label={t("apiStatus.usoDe", { nome: item.nome })}
           aria-valuemin={0}
           aria-valuemax={100}
           aria-valuenow={pct}
@@ -227,7 +261,7 @@ function Uso({ item }: { item: ApiIntegration }) {
   if (uso.restantes !== undefined) {
     return (
       <div style={estilo}>
-        {numero(uso.restantes)} {uso.unidade}
+        {numero(uso.restantes, idioma)} {uso.unidade}
       </div>
     );
   }

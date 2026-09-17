@@ -15,16 +15,18 @@
 
 import { useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
+import { useT } from "@/lib/i18n";
 import { C, TEXT } from "@/lib/tokens";
 import { Icon, type IconName } from "@/components/ui/icons";
 import { Logo } from "@/components/ui/Logo";
 import { Select, type SelectOption } from "@/components/ui/Select";
 import "@/styles/auth.css";
 
-const BENEFICIOS: readonly { icone: IconName; tom: string; titulo: string; detalhe: string }[] = [
-  { icone: "refresh", tom: C.azul, titulo: "Plano que se corrige toda semana", detalhe: "O roteiro acompanha o seu ritmo." },
-  { icone: "flag", tom: C.verde, titulo: "Treinos de idioma diários", detalhe: "Poucos minutos, todo dia." },
-  { icone: "suitcase", tom: C.ambar, titulo: "Vagas que combinam com você", detalhe: "Filtradas pelo que você já sabe." },
+// Título e detalhe de cada benefício vêm do dicionário (authShell.beneficios.<chave>).
+const BENEFICIOS: readonly { icone: IconName; tom: string; chave: string }[] = [
+  { icone: "refresh", tom: C.azul, chave: "plano" },
+  { icone: "flag", tom: C.verde, chave: "idioma" },
+  { icone: "suitcase", tom: C.ambar, chave: "vagas" },
 ];
 
 export function AuthShell({
@@ -41,6 +43,7 @@ export function AuthShell({
   /** Símbolo do cartão, ao lado do título. */
   icon?: IconName;
 }) {
+  const t = useT();
   return (
     <div className="auth">
       <div className="auth-brilho" aria-hidden="true" />
@@ -49,23 +52,23 @@ export function AuthShell({
         <div className="auth-painel">
           <span className="auth-kicker">
             <Icon name="road" size={13} />
-            Plataforma de estudos
+            {t("authShell.kicker")}
           </span>
           <p className="auth-painel-titulo">
-            Seu próximo passo, <em>já planejado.</em>
+            {t("authShell.tituloPre")} <em>{t("authShell.tituloEnfase")}</em>
           </p>
           <p className="auth-painel-texto">
-            O PathR transforma o seu currículo numa trilha de estudos em fases, até a vaga que você quer.
+            {t("authShell.descricao")}
           </p>
           <ul className="auth-beneficios">
             {BENEFICIOS.map((b) => (
-              <li key={b.titulo}>
+              <li key={b.chave}>
                 <span className="auth-beneficio-icone" style={{ "--tom": b.tom } as CSSProperties}>
                   <Icon name={b.icone} size={18} />
                 </span>
                 <span>
-                  {b.titulo}
-                  <small>{b.detalhe}</small>
+                  {t(`authShell.beneficios.${b.chave}.titulo`)}
+                  <small>{t(`authShell.beneficios.${b.chave}.detalhe`)}</small>
                 </span>
               </li>
             ))}
@@ -203,6 +206,7 @@ export function PasswordField({
   /** Símbolo decorativo à esquerda do texto. */
   icon?: IconName;
 } & Omit<React.InputHTMLAttributes<HTMLInputElement>, "type">) {
+  const t = useT();
   const [visible, setVisible] = useState(false);
 
   return (
@@ -226,9 +230,9 @@ export function PasswordField({
           className="olho"
           onClick={() => setVisible((atual) => !atual)}
           aria-pressed={visible}
-          aria-label={visible ? "Ocultar senha" : "Mostrar senha"}
+          aria-label={visible ? t("authShell.ocultarSenha") : t("authShell.mostrarSenha")}
           aria-controls={id}
-          title={visible ? "Ocultar senha" : "Mostrar senha"}
+          title={visible ? t("authShell.ocultarSenha") : t("authShell.mostrarSenha")}
           style={{
             position: "absolute",
             top: "50%",

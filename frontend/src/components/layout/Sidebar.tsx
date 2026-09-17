@@ -126,7 +126,7 @@ export function Sidebar() {
       </div>
 
       <nav
-        aria-label="Navegação principal"
+        aria-label={t("nav.principal")}
         // Só a lista rola, e só se não couber: META e Sair ficam presos embaixo.
         style={{ flex: 1, minHeight: 0, overflowY: "auto", display: "flex", flexDirection: "column", gap: 22.4 }}
       >

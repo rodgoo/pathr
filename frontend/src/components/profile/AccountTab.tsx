@@ -17,7 +17,7 @@ import { PasswordField } from "@/components/auth/AuthShell";
 import { Kicker, Panel } from "@/components/ui/primitives";
 import { Select } from "@/components/ui/Select";
 import { SeletorDeIdioma } from "@/components/ui/SeletorDeIdioma";
-import { useT, type Idioma } from "@/lib/i18n";
+import { useIdioma, useT, type Idioma, type Traduzir } from "@/lib/i18n";
 import { PasskeysPanel } from "./PasskeysPanel";
 import { CampoUsername } from "@/components/social/CampoUsername";
 import type { SessaoAtiva } from "@/api/types";
@@ -31,16 +31,8 @@ import type { SessaoAtiva } from "@/api/types";
  * roadmap sairia calibrado errado sem ninguém entender por quê.
  */
 // O vocabulário é o de `pathr_profile.seniority` (ver backend/app/models.py).
-/** O que se lê na tela. O valor gravado continua sendo o do vocabulário. */
-const ROTULO_SENIORIDADE: Record<(typeof SENIORIDADES)[number], string> = {
-  estagio: "Estágio",
-  junior: "Júnior",
-  pleno: "Pleno",
-  senior: "Sênior",
-  especialista: "Especialista",
-  lideranca: "Liderança",
-};
-
+// O que se lê na tela vem do dicionário (conta.senioridadeRotulo.*); o valor
+// gravado continua sendo o do vocabulário.
 const SENIORIDADES = ["estagio", "junior", "pleno", "senior", "especialista", "lideranca"] as const;
 
 export function AccountTab() {
@@ -142,7 +134,7 @@ export function AccountTab() {
       </Panel>
 
       <Panel pad={16.8}>
-        <Kicker style={{ display: "block", marginBottom: 14 }}>Dados pessoais</Kicker>
+        <Kicker style={{ display: "block", marginBottom: 14 }}>{t("conta.dadosPessoais")}</Kicker>
         <div
           style={{
             display: "grid",
@@ -151,7 +143,7 @@ export function AccountTab() {
           }}
         >
           <div className="field">
-            <label htmlFor="account-name">Como quer ser chamado</label>
+            <label htmlFor="account-name">{t("conta.comoQuerSerChamado")}</label>
             <input
               id="account-name"
               className="input"
@@ -168,36 +160,39 @@ export function AccountTab() {
             onEstado={setUsernameOk}
           />
           <div className="field">
-            <label htmlFor="account-email">E-mail</label>
+            <label htmlFor="account-email">{t("conta.email")}</label>
             <input id="account-email" className="input" value={user?.email ?? ""} disabled />
           </div>
           <div className="field">
-            <label htmlFor="account-role">Cargo atual</label>
+            <label htmlFor="account-role">{t("conta.cargoAtual")}</label>
             <input
               id="account-role"
               className="input"
-              placeholder="ex: Desenvolvedor frontend"
+              placeholder={t("conta.cargoPlaceholder")}
               value={role}
               onChange={(event) => setRole(event.target.value)}
             />
           </div>
           <div className="field">
-            <label htmlFor="account-seniority">Senioridade</label>
+            <label htmlFor="account-seniority">{t("conta.senioridade")}</label>
             <Select
               id="account-seniority"
               value={seniority}
               onChange={setSeniority}
-              placeholder="Não informar"
+              placeholder={t("conta.naoInformar")}
               options={[
                 // Uma opção explícita para desfazer: sem ela, quem escolheu
                 // uma senioridade não teria como voltar a não informar.
-                { value: "", label: "Não informar" },
-                ...SENIORIDADES.map((nivel) => ({ value: nivel, label: ROTULO_SENIORIDADE[nivel] })),
+                { value: "", label: t("conta.naoInformar") },
+                ...SENIORIDADES.map((nivel) => ({
+                  value: nivel,
+                  label: t(`conta.senioridadeRotulo.${nivel}`),
+                })),
               ]}
             />
           </div>
           <div className="field">
-            <label htmlFor="account-years">Tempo de experiência (anos)</label>
+            <label htmlFor="account-years">{t("conta.tempoExperiencia")}</label>
             <input
               id="account-years"
               className="input"
@@ -205,13 +200,13 @@ export function AccountTab() {
               min={0}
               max={60}
               step={0.5}
-              placeholder="ex: 3"
+              placeholder={t("conta.anosPlaceholder")}
               value={years}
               onChange={(event) => setYears(event.target.value)}
             />
           </div>
           <div className="field">
-            <label htmlFor="account-hours">Horas de estudo por semana</label>
+            <label htmlFor="account-hours">{t("conta.horasSemana")}</label>
             <input
               id="account-hours"
               className="input"
@@ -229,9 +224,9 @@ export function AccountTab() {
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8.4, marginTop: 14, alignItems: "center" }}>
           <button type="submit" className="btn btn-primary" disabled={save.pending || !usernameOk}>
             <Icon name="check" size={15} />
-            {save.pending ? "Salvando…" : "Salvar alterações"}
+            {save.pending ? t("conta.salvando") : t("conta.salvarAlteracoes")}
           </button>
-          {saved ? <span style={{ fontSize: 12.5, color: C.verde }}>Salvo.</span> : null}
+          {saved ? <span style={{ fontSize: 12.5, color: C.verde }}>{t("conta.salvo")}</span> : null}
         </div>
       </Panel>
 
@@ -251,6 +246,7 @@ export function AccountTab() {
  * viva e derruba as outras.
  */
 function ChangePassword() {
+  const t = useT();
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [done, setDone] = useState(false);
@@ -258,7 +254,7 @@ function ChangePassword() {
 
   return (
     <Panel pad={16.8}>
-      <Kicker style={{ display: "block", marginBottom: 14 }}>Senha</Kicker>
+      <Kicker style={{ display: "block", marginBottom: 14 }}>{t("conta.senha")}</Kicker>
       <div
         style={{
           display: "grid",
@@ -268,14 +264,14 @@ function ChangePassword() {
       >
         <PasswordField
           id="current-password"
-          label="Senha atual"
+          label={t("conta.senhaAtual")}
           autoComplete="current-password"
           value={currentPassword}
           onChange={(event) => setCurrentPassword(event.target.value)}
         />
         <PasswordField
           id="new-password"
-          label="Nova senha"
+          label={t("conta.novaSenha")}
           autoComplete="new-password"
           value={newPassword}
           onChange={(event) => setNewPassword(event.target.value)}
@@ -299,15 +295,15 @@ function ChangePassword() {
             }
           }}
         >
-          {change.pending ? "Alterando…" : "Alterar senha"}
+          {change.pending ? t("conta.alterando") : t("conta.alterarSenha")}
         </button>
         {done ? (
           <span style={{ fontSize: 12.5, color: C.verde }}>
-            Senha alterada. As outras sessões foram encerradas.
+            {t("conta.senhaAlterada")}
           </span>
         ) : (
           <span style={{ fontSize: 11.5, color: TEXT.faint }}>
-            Ao menos 10 caracteres, com letra e número.
+            {t("conta.requisitoSenha")}
           </span>
         )}
       </div>
@@ -316,14 +312,14 @@ function ChangePassword() {
 }
 
 /** "há 5 min", "há 3 h", "ontem", "12/09". Suficiente para reconhecer o aparelho. */
-function haQuanto(iso: string): string {
+function haQuanto(iso: string, t: Traduzir, idioma: string): string {
   const minutos = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60_000));
-  if (minutos < 2) return "agora";
-  if (minutos < 60) return `há ${minutos} min`;
+  if (minutos < 2) return t("conta.agora");
+  if (minutos < 60) return t("conta.haMin", { n: minutos });
   const horas = Math.round(minutos / 60);
-  if (horas < 24) return `há ${horas} h`;
-  if (horas < 48) return "ontem";
-  return new Date(iso).toLocaleDateString("pt-BR", { day: "2-digit", month: "2-digit" });
+  if (horas < 24) return t("conta.haH", { n: horas });
+  if (horas < 48) return t("conta.ontem");
+  return new Date(iso).toLocaleDateString(idioma, { day: "2-digit", month: "2-digit" });
 }
 
 /** Tela ou celular, desenhado aqui: o conjunto de ícones do app não tem os dois. */
@@ -355,6 +351,8 @@ function SimboloDoAparelho({ celular }: { celular: boolean }) {
  * na requisição seguinte, sem esperar os 30 minutos.
  */
 export function Sessions() {
+  const t = useT();
+  const { idioma } = useIdioma();
   const { logout } = useAuth();
   const [done, setDone] = useState(false);
   const [encerrando, setEncerrando] = useState<string | null>(null);
@@ -373,7 +371,7 @@ export function Sessions() {
       }
       sessoes.set((atual) => (atual ?? []).filter((item) => item.id !== sessao.id));
     } catch {
-      setErro("Não consegui encerrar esse aparelho agora. Tente de novo.");
+      setErro(t("conta.erroEncerrar"));
     } finally {
       setEncerrando(null);
     }
@@ -385,19 +383,18 @@ export function Sessions() {
   return (
     <Panel pad={16.8} style={{ boxShadow: "0 0 0 1px rgba(233,233,237,.16)" }}>
       <Kicker tone="muted" style={{ display: "block", marginBottom: 8.4 }}>
-        Aparelhos conectados
+        {t("conta.aparelhosConectados")}
       </Kicker>
       <p style={{ fontSize: 12.5, color: TEXT.muted, margin: "0 0 11.2px", maxWidth: "62ch" }}>
-        Onde a sua conta está aberta agora. Não reconhece algum? Encerre o acesso e troque a senha.
-        Quando a conta entra por um aparelho novo, avisamos por e-mail.
+        {t("conta.aparelhosExplica")}
       </p>
 
-      {sessoes.loading ? <Loading label="Buscando aparelhos…" /> : null}
+      {sessoes.loading ? <Loading label={t("conta.buscandoAparelhos")} /> : null}
       {sessoes.error ? <ErrorState message={sessoes.error} onRetry={sessoes.reload} /> : null}
 
       {lista.length > 0 ? (
         <ul
-          aria-label="Aparelhos conectados"
+          aria-label={t("conta.aparelhosConectados")}
           style={{ listStyle: "none", margin: "0 0 14px", padding: 0, display: "flex", flexDirection: "column", gap: 6 }}
         >
           {lista.map((sessao) => (
@@ -426,15 +423,17 @@ export function Sessions() {
                     <span
                       style={{ fontSize: 11, color: C.verde, padding: "1px 7px", borderRadius: 999, background: "rgba(99,180,143,.14)" }}
                     >
-                      este aparelho
+                      {t("conta.esteAparelho")}
                     </span>
                   ) : null}
                 </span>
                 <span style={{ display: "block", fontSize: 11.5, color: TEXT.faint, marginTop: 2 }}>
-                  {sessao.este_aparelho ? "em uso agora" : `usado ${haQuanto(sessao.ultimo_uso)}`}
-                  {" · entrou em "}
-                  {new Date(sessao.entrou_em).toLocaleDateString("pt-BR")}
-                  {sessao.ip ? ` · rede ${sessao.ip}` : ""}
+                  {sessao.este_aparelho
+                    ? t("conta.emUsoAgora")
+                    : t("conta.usado", { quando: haQuanto(sessao.ultimo_uso, t, idioma) })}
+                  {t("conta.entrouEm")}
+                  {new Date(sessao.entrou_em).toLocaleDateString(idioma)}
+                  {sessao.ip ? t("conta.rede", { ip: sessao.ip }) : ""}
                 </span>
               </span>
               <button
@@ -443,10 +442,18 @@ export function Sessions() {
                 style={{ "--tom": C.rosa, fontSize: 12.5 } as CSSProperties}
                 disabled={encerrando !== null}
                 onClick={() => void encerrar(sessao)}
-                aria-label={sessao.este_aparelho ? "Sair deste aparelho" : `Encerrar ${sessao.aparelho}`}
+                aria-label={
+                  sessao.este_aparelho
+                    ? t("conta.sairDesteAparelho")
+                    : t("conta.encerrarAparelho", { aparelho: sessao.aparelho })
+                }
               >
                 <Icon name="signOut" size={14} />
-                {encerrando === sessao.id ? "Encerrando…" : sessao.este_aparelho ? "Sair" : "Encerrar"}
+                {encerrando === sessao.id
+                  ? t("conta.encerrando")
+                  : sessao.este_aparelho
+                    ? t("conta.sair")
+                    : t("conta.encerrar")}
               </button>
             </li>
           ))}
@@ -467,12 +474,14 @@ export function Sessions() {
             }
           }}
         >
-          {logoutAll.pending ? "Encerrando…" : "Sair de todos os dispositivos"}
+          {logoutAll.pending ? t("conta.encerrando") : t("conta.sairTodos")}
         </button>
         <span style={{ fontSize: 11.5, color: TEXT.faint }}>
           {outros > 0
-            ? `Encerra este e ${outros === 1 ? "o outro aparelho" : `os outros ${outros} aparelhos`}.`
-            : "Inclusive este."}
+            ? outros === 1
+              ? t("conta.encerraOutro")
+              : t("conta.encerraOutros", { n: outros })
+            : t("conta.inclusiveEste")}
         </span>
         {logoutAll.error ? <span style={{ fontSize: 12, color: "#cfa25e" }}>{logoutAll.error}</span> : null}
       </div>
