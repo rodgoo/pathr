@@ -335,3 +335,74 @@ def test_sem_curriculo_o_agendador_nao_monta_fila(busca, agendador):
     banco = _banco_do_agendador([])
     resposta = asyncio.run(jobs.disparar_avisos(_pedido_do_cron(), banco))
     assert jobs.VAGAS_DO_DIA not in resposta["tipos"] and banco.linhas("pathr_application") == []
+
+
+# --- o passo a passo, o banco de respostas e os números do período ---------
+
+
+def test_perguntas_redundantes_caem_na_mesma_chave():
+    """"Nome completo", "Nome" e "Full name" são a mesma pergunta — é isso que
+    faz a resposta dada uma vez valer em qualquer site."""
+    from app.services import perguntas
+
+    assert perguntas.chave("Nome completo") == perguntas.chave("Full name") == "nome"
+    assert perguntas.chave("Currículo (PDF)") == perguntas.chave("Resume") == "curriculo"
+    assert perguntas.chave("Endereço") == perguntas.chave("Logradouro") == "endereco"
+    assert perguntas.chave("Pretensão salarial") == perguntas.chave("Salary expectation") == "pretensao"
+    # Sensível e aberta nunca viram resposta automática.
+    assert perguntas.e_sensivel("Qual seu gênero?") and not perguntas.reutilizavel("Qual seu gênero?")
+    assert perguntas.e_aberta("Por que você quer trabalhar aqui?")
+
+
+def test_banco_guarda_a_resposta_e_ela_volta_na_proxima_vaga():
+    banco = _banco(pathr_answer_bank=[])
+    guardadas = servico.guardar_respostas(banco, EU["id"], [
+        {"pergunta": "Nome completo", "resposta": "Ana Souza"},
+        {"pergunta": "Telefone", "resposta": "(27) 99999-0000"},
+        # Sensível não entra nem se a pessoa responder.
+        {"pergunta": "Qual seu gênero?", "resposta": "prefiro não dizer"},
+    ])
+    assert guardadas == 2
+
+    guardado = servico.banco_de_respostas(banco, EU["id"])
+    # Outro site pergunta "Full name": a resposta já está lá.
+    assert guardado[servico.perguntas.chave("Full name")] == "Ana Souza"
+    assert "sensivel:genero" not in guardado
+
+
+def test_preparar_monta_o_passo_a_passo_e_diz_o_que_falta(busca, curriculo, ia, monkeypatch):
+    monkeypatch.setattr(servico, "curriculo_em_anexo", lambda *_: ("cv.pdf", "YmFzZTY0"))
+    banco = _banco(
+        pathr_resume=[curriculo],
+        pathr_answer_bank=[],
+        pathr_profile=[{"user_id": EU["id"], "city": "Vitória", "salary_expectation": "R$ 9.000"}],
+        pathr_english_profile=[],
+    )
+    linha = asyncio.run(servico.montar_fila(banco, EU, agora=AGORA))[0]
+
+    pronta = servico.para_api(asyncio.run(servico.preparar(banco, EU, linha)), EU["id"])
+
+    passos = {p["passo"]: p["situacao"] for p in pronta["steps"]}
+    assert passos["anuncio"] == "feito" and passos["curriculo"] == "feito" and passos["carta"] == "feito"
+    # O que o perfil já sabe entra respondido; o resto vira campo na tela.
+    respondidas = {r["chave"] for r in pronta["answers"]}
+    assert {"nome", "email", "cidade", "pretensao"} <= respondidas
+    pendentes = {p["chave"] for p in pronta["pending"]}
+    assert "telefone" in pendentes  # ninguém informou ainda
+    # Sem e-mail de contato, o envio aponta para o site da vaga.
+    assert passos["envio"] == "pendente"
+
+
+def test_numeros_de_hoje_ontem_e_da_semana():
+    from datetime import date as tipo_data
+
+    hoje = tipo_data(2026, 9, 16)
+    linhas = [
+        {"status": "enviada", "sent_at": "2026-09-16T10:00:00+00:00"},
+        {"status": "enviada", "sent_at": "2026-09-16T18:00:00+00:00"},
+        {"status": "enviada", "sent_at": "2026-09-15T09:00:00+00:00"},
+        {"status": "enviada", "sent_at": "2026-09-12T09:00:00+00:00"},
+        {"status": "enviada", "sent_at": "2026-09-01T09:00:00+00:00"},  # fora da semana
+        {"status": "sugerida", "sent_at": None},
+    ]
+    assert servico.quantas_enviadas(linhas, hoje) == {"hoje": 2, "ontem": 1, "ultimos7": 4}

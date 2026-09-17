@@ -95,6 +95,10 @@ def _minutos(supabase: Client, user_id: str, de, ate) -> int:
 
 
 VAGAS_DO_DIA = "vagas_do_dia"
+# As rodadas da fila de vagas, na hora local de cada pessoa. Três e não uma
+# porque vaga é publicada o dia inteiro, e porque quem tratou a fila de manhã
+# não deve ficar esperando o dia seguinte para ter o que enviar.
+RODADAS = (8, 12, 17)
 # A chave da preferência que liga o envio sem confirmação (routers/profile.AVISOS).
 AUTOMATICO = "candidatura_automatica"
 
@@ -119,9 +123,9 @@ async def _fila_de_vagas(
     outros avisos), só para quem tem currículo analisado — sem currículo não há
     o que enviar nem com o que comparar — e só para quem não desligou o aviso.
     """
-    if montadas >= _FILAS_POR_RODADA or VAGAS_DO_DIA in ja_enviados:
+    if montadas >= _FILAS_POR_RODADA or f"{VAGAS_DO_DIA}:{local.hour}" in ja_enviados:
         return False
-    if not preferencias.get(VAGAS_DO_DIA, True) or not (8 <= local.hour <= 9):
+    if not preferencias.get(VAGAS_DO_DIA, True) or local.hour not in RODADAS:
         return False
     user_id = str(user["id"])
     tem_curriculo = (
@@ -262,7 +266,9 @@ async def disparar_avisos(request: Request, supabase: Client = Depends(get_supab
             if await _fila_de_vagas(supabase, user, local, preferencias, ja, filas_montadas):
                 filas_montadas += 1
                 supabase.table("pathr_email_log").insert(
-                    {"user_id": user_id, "kind": VAGAS_DO_DIA, "sent_on": hoje_local.isoformat()}
+                    # A trava é por RODADA: "vagas_do_dia:12" sai uma vez só,
+                    # e as outras duas rodadas do dia continuam livres.
+                    {"user_id": user_id, "kind": f"{VAGAS_DO_DIA}:{local.hour}", "sent_on": hoje_local.isoformat()}
                 ).execute()
                 enviados.append(VAGAS_DO_DIA)
         except Exception:  # noqa: BLE001

@@ -211,6 +211,12 @@ def ctx_relato(user_id: str, coluna: str) -> str:
     return f"pathr_report.{coluna}:{user_id}"
 
 
+def ctx_resposta(user_id: str) -> str:
+    """As respostas guardadas para formulário de vaga: telefone, endereço,
+    pretensão — dado pessoal, cifrado como o resto."""
+    return f"resposta:{user_id}"
+
+
 def ctx_carta(user_id: str) -> str:
     """A carta de apresentação da candidatura: currículo e objetivo de
     carreira misturados, o mesmo tipo de dado de `ctx_curriculo_texto`."""

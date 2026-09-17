@@ -34,7 +34,7 @@ from __future__ import annotations
 import base64
 import logging
 import re
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from typing import Any, Optional
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
@@ -42,15 +42,20 @@ from fastapi import HTTPException, status
 from supabase import Client
 
 from app.ai_providers import AiProviderError, generate_json
-from app.services import cifra, vagas
+from app.services import cifra, perguntas, vagas
 from app.services import email as emails
 
 logger = logging.getLogger(__name__)
 
-# Quantas vagas entram na fila por dia. Cinco é o que uma pessoa consegue
-# tratar com atenção num dia — vinte viram uma lista que ninguém abre.
+# Quantas vagas entram na fila a cada rodada, e o teto do dia.
+#
+# Era uma rodada só, de manhã: quem tratava as cinco de manhã ficava sem nada
+# até o dia seguinte, e as vagas publicadas ao longo do dia só apareciam 24h
+# depois. Agora são três rodadas (manhã, meio-dia e fim de tarde, no fuso da
+# pessoa), até quinze por dia — o suficiente para haver sempre o que enviar,
+# sem virar uma lista que ninguém abre.
 POR_DIA = 5
-MAXIMO_POR_DIA = 10
+MAXIMO_POR_DIA = 15
 
 ESTADOS = ("sugerida", "enviada", "descartada")
 
@@ -561,6 +566,287 @@ async def escrever_respostas(
     return (atualizada or [{**linha, "answers": respostas}])[0]
 
 
+# ---------------------------------------------------------------------------
+# O banco de respostas: responder uma vez, valer para todas as vagas
+# ---------------------------------------------------------------------------
+
+
+def banco_de_respostas(supabase: Client, user_id: str) -> dict[str, str]:
+    """`{chave da pergunta: resposta}` — o que a pessoa já respondeu um dia."""
+    try:
+        linhas = (
+            supabase.table("pathr_answer_bank").select("question_key,answer")
+            .eq("user_id", user_id).limit(500).execute().data or []
+        )
+    except Exception:  # noqa: BLE001
+        logger.warning("banco de respostas indisponível", exc_info=True)
+        return {}
+    guardadas: dict[str, str] = {}
+    for linha in linhas:
+        texto = cifra.decifrar(linha.get("answer"), cifra.ctx_resposta(user_id))
+        if texto:
+            guardadas[str(linha.get("question_key"))] = texto
+    return guardadas
+
+
+def guardar_respostas(
+    supabase: Client, user_id: str, pares: list[dict[str, str]], origem: str = "pessoa"
+) -> int:
+    """Guarda (ou atualiza) respostas no banco. Devolve quantas entraram.
+
+    Pergunta sensível não é guardada nem que a pessoa responda: gênero, raça e
+    deficiência são opcionais no formulário, e o app não tem por que manter um
+    registro disso para reusar sozinho depois.
+    """
+    guardadas = 0
+    for par in pares:
+        texto = " ".join(str(par.get("resposta") or "").split())[:2000]
+        pergunta = " ".join(str(par.get("pergunta") or "").split())[:300]
+        if not texto or not pergunta or not perguntas.reutilizavel(pergunta):
+            continue
+        chave = str(par.get("chave") or perguntas.chave(pergunta))
+        linha = {
+            "user_id": user_id,
+            "question_key": chave,
+            "question": pergunta,
+            "answer": cifra.cifrar(texto, cifra.ctx_resposta(user_id)),
+            "source": origem,
+            "updated_at": datetime.now(timezone.utc).isoformat(),
+        }
+        try:
+            existe = (
+                supabase.table("pathr_answer_bank").select("id")
+                .eq("user_id", user_id).eq("question_key", chave).limit(1).execute().data
+            )
+            if existe:
+                supabase.table("pathr_answer_bank").update(linha).eq("id", str(existe[0]["id"])).execute()
+            else:
+                supabase.table("pathr_answer_bank").insert(linha).execute()
+            guardadas += 1
+        except Exception:  # noqa: BLE001
+            logger.warning("resposta não entrou no banco (%s)", chave, exc_info=True)
+    return guardadas
+
+
+def respostas_guardadas(supabase: Client, user_id: str) -> list[dict[str, Any]]:
+    """O que está no banco, para a tela mostrar e deixar editar."""
+    try:
+        linhas = (
+            supabase.table("pathr_answer_bank").select("*")
+            .eq("user_id", user_id).order("updated_at", desc=True).limit(200).execute().data or []
+        )
+    except Exception:  # noqa: BLE001
+        return []
+    return [
+        {
+            "chave": str(linha.get("question_key")),
+            "pergunta": linha.get("question") or "",
+            "resposta": cifra.decifrar(linha.get("answer"), cifra.ctx_resposta(user_id)) or "",
+            "origem": linha.get("source") or "pessoa",
+            "atualizada_em": linha.get("updated_at"),
+        }
+        for linha in linhas
+    ]
+
+
+# ---------------------------------------------------------------------------
+# O passo a passo de uma candidatura
+# ---------------------------------------------------------------------------
+
+# Os passos, na ordem em que acontecem. A tela desenha esta lista e vai
+# pintando cada um conforme o servidor avança — é o "fazendo agora" que a
+# pessoa vê, e é também o registro de onde parou quando algo falha.
+PASSOS = ("anuncio", "curriculo", "carta", "respostas", "envio")
+
+
+def _passo(nome: str, situacao: str, detalhe: str = "") -> dict[str, Any]:
+    return {
+        "passo": nome,
+        "situacao": situacao,  # feito | pendente | falhou | pulado
+        "detalhe": detalhe[:300],
+        "em": datetime.now(timezone.utc).isoformat(),
+    }
+
+
+PERGUNTAS_PADRAO = (
+    "Nome completo",
+    "E-mail",
+    "Telefone",
+    "Cidade",
+    "LinkedIn",
+    "Pretensão salarial",
+    "Disponibilidade para início",
+    "Nível de inglês",
+    "Modelo de trabalho",
+)
+
+# Linha do anúncio que é pergunta: "?" no fim, ou "informe/envie/qual".
+_PERGUNTA_NO_ANUNCIO = re.compile(r"^(?=.{8,200}$).*(\?|^\s*(informe|envie|qual|quais|conte)\b).*$", re.IGNORECASE)
+
+
+def perguntas_da_vaga(linha: dict[str, Any]) -> list[str]:
+    """As perguntas que este formulário provavelmente faz.
+
+    As de sempre (nome, contato, pretensão) mais o que o próprio anúncio pede
+    em forma de pergunta. Não é o formulário real — o app não entra no site —,
+    é o que dá para antecipar para a pessoa chegar lá com tudo pronto.
+    """
+    do_anuncio = [
+        linha_do_texto.strip(" -•*\t")
+        for linha_do_texto in str(linha.get("snippet") or "").split("\n")
+        if _PERGUNTA_NO_ANUNCIO.match(linha_do_texto.strip())
+    ]
+    return [*PERGUNTAS_PADRAO, *do_anuncio[:6]]
+
+
+async def preparar(
+    supabase: Client, current_user: dict[str, Any], linha: dict[str, Any], enviar: bool = False
+) -> dict[str, Any]:
+    """Prepara (e, se der, envia) uma candidatura, registrando cada passo.
+
+    É o que a tela mostra acontecendo: currículo conferido, carta escrita,
+    respostas preenchidas com o que já se sabe, e o envio — ou, quando a vaga
+    só aceita pelo site, o link com tudo pronto para colar.
+
+    O que o app não consegue responder NÃO é inventado: volta em `pending`,
+    vira campo na tela, e a resposta que a pessoa der entra no banco e serve
+    para todas as próximas vagas.
+    """
+    user_id = str(current_user["id"])
+    passos: list[dict[str, Any]] = [_passo("anuncio", "feito", str(linha.get("title") or ""))]
+
+    _, dados_do_cv = _curriculo(supabase, user_id)
+    if not dados_do_cv:
+        passos.append(_passo("curriculo", "falhou", "Envie e analise seu currículo antes."))
+        return _gravar_passos(supabase, user_id, linha, passos, [], None)
+    passos.append(_passo("curriculo", "feito"))
+
+    atual = linha
+    carta = para_api(atual, user_id).get("letter") or ""
+    if not carta:
+        try:
+            atual = await escrever_carta(supabase, current_user, atual)
+            carta = para_api(atual, user_id).get("letter") or ""
+            passos.append(_passo("carta", "feito"))
+        except HTTPException as erro:
+            passos.append(_passo("carta", "falhou", str(erro.detail)))
+    else:
+        passos.append(_passo("carta", "feito", "já estava escrita"))
+
+    # As respostas: primeiro o que já se sabe (banco + perfil + currículo), e
+    # só o que sobra vai para a IA — e o que nem ela pode responder fica com a
+    # pessoa.
+    perfil = (
+        supabase.table("pathr_profile").select("*").eq("user_id", user_id).limit(1).execute().data or [{}]
+    )[0]
+    conhecido = perguntas.do_perfil(perfil, current_user, dados_do_cv)
+    respondidas, pendentes = perguntas.responder(
+        perguntas_da_vaga(atual), banco_de_respostas(supabase, user_id), conhecido
+    )
+    abertas = [p for p in pendentes if p.get("motivo") == "aberta"]
+    if abertas:
+        try:
+            escritas = await _responder_abertas(current_user, atual, dados_do_cv, abertas)
+            respondidas.extend(escritas)
+            escritas_chaves = {e["chave"] for e in escritas}
+            pendentes = [p for p in pendentes if p["chave"] not in escritas_chaves]
+        except HTTPException:
+            logger.info("IA não escreveu as abertas da candidatura %s", atual.get("id"))
+
+    passos.append(
+        _passo(
+            "respostas",
+            "feito" if not pendentes else "pendente",
+            f"{len(respondidas)} prontas, {len(pendentes)} esperando você",
+        )
+    )
+
+    destino = str(atual.get("to_email") or "").strip()
+    enviado = False
+    if enviar and destino and carta:
+        anexo_nome, anexo = curriculo_em_anexo(supabase, user_id)
+        enviado = bool(anexo) and emails.send_application(
+            to_email=destino,
+            subject=str(atual.get("subject") or f"Candidatura — {atual.get('title')}")[:200],
+            carta=carta,
+            candidato_nome=str(current_user.get("name") or ""),
+            candidato_email=str(current_user.get("email") or ""),
+            anexo_nome=anexo_nome,
+            anexo_base64=anexo,
+        )
+        passos.append(
+            _passo("envio", "feito" if enviado else "falhou", destino if enviado else "o e-mail não saiu")
+        )
+    elif destino:
+        passos.append(_passo("envio", "pendente", f"pronto para enviar para {destino}"))
+    else:
+        # A maioria: a vaga só aceita pelo site dela, com o formulário próprio.
+        passos.append(_passo("envio", "pendente", "responder no site da vaga"))
+
+    return _gravar_passos(supabase, user_id, atual, passos, respondidas, pendentes, enviado)
+
+
+async def _responder_abertas(
+    current_user: dict[str, Any],
+    linha: dict[str, Any],
+    curriculo: dict[str, Any],
+    abertas: list[dict[str, str]],
+) -> list[dict[str, str]]:
+    """As perguntas abertas ("por que esta vaga?") escritas pela IA.
+
+    São as únicas que ela responde: dependem do currículo e daquele anúncio, e
+    não se reaproveitam de outra vaga.
+    """
+    pedido = "\n".join([
+        f"--- CURRÍCULO DE {str(current_user.get('name') or '').strip()} ---",
+        _resumo_do_curriculo(curriculo),
+        "",
+        "--- VAGA ---",
+        f"Cargo: {linha.get('title')} | Empresa: {linha.get('company')}",
+        str(linha.get("snippet") or "")[:3000],
+        "",
+        "--- PERGUNTAS ---",
+        *[f"- {p['pergunta']}" for p in abertas],
+    ])
+    resultado = await generate_json(SISTEMA_DAS_RESPOSTAS, pedido, RESPOSTAS_SCHEMA)
+    conteudo = resultado.content if isinstance(resultado.content, dict) else {}
+    escritas: list[dict[str, str]] = []
+    for item in conteudo.get("respostas") or []:
+        if not isinstance(item, dict):
+            continue
+        texto = " ".join(str(item.get("resposta") or "").split())[:1200]
+        pergunta = " ".join(str(item.get("pergunta") or "").split())[:300]
+        if texto and pergunta:
+            escritas.append({"pergunta": pergunta, "chave": perguntas.chave(pergunta), "resposta": texto})
+    return escritas
+
+
+def _gravar_passos(
+    supabase: Client,
+    user_id: str,
+    linha: dict[str, Any],
+    passos: list[dict[str, Any]],
+    respondidas: list[dict[str, str]],
+    pendentes: Optional[list[dict[str, str]]],
+    enviado: bool = False,
+) -> dict[str, Any]:
+    campos: dict[str, Any] = {"steps": passos, "pending": pendentes or []}
+    if respondidas:
+        campos["answers"] = respondidas
+    if enviado:
+        campos["status"] = "enviada"
+        campos["sent_at"] = datetime.now(timezone.utc).isoformat()
+    try:
+        atualizada = (
+            supabase.table("pathr_application").update(campos)
+            .eq("id", str(linha["id"])).eq("user_id", user_id).execute().data
+        )
+    except Exception:  # noqa: BLE001
+        logger.warning("passo a passo não gravou", exc_info=True)
+        atualizada = None
+    return (atualizada or [{**linha, **campos}])[0]
+
+
 def para_api(linha: dict[str, Any], user_id: str) -> dict[str, Any]:
     """A linha como a tela precisa dela, com a carta já decifrada."""
     return {
@@ -576,12 +862,42 @@ def para_api(linha: dict[str, Any], user_id: str) -> dict[str, Any]:
         "snippet": (linha.get("snippet") or "")[:600] or None,
         "letter": cifra.decifrar(linha.get("letter"), cifra.ctx_carta(user_id)),
         "answers": linha.get("answers") or [],
+        "steps": linha.get("steps") or [],
+        "pending": linha.get("pending") or [],
         "subject": linha.get("subject"),
         "to_email": linha.get("to_email"),
         "status": linha.get("status") or "sugerida",
         "sent_at": linha.get("sent_at"),
         "created_at": linha.get("created_at"),
     }
+
+
+def quantas_enviadas(linhas: list[dict[str, Any]], hoje: date) -> dict[str, int]:
+    """Quantas candidaturas saíram hoje, ontem e nos últimos 7 dias.
+
+    Conta pelo dia do ENVIO (`sent_at`), e não pelo dia em que a vaga entrou na
+    fila: a pergunta é "o que eu já mandei", não "o que me sugeriram".
+    """
+    ontem = hoje - timedelta(days=1)
+    semana = hoje - timedelta(days=6)
+    contagem = {"hoje": 0, "ontem": 0, "ultimos7": 0}
+    for linha in linhas:
+        if linha.get("status") != "enviada":
+            continue
+        bruto = str(linha.get("sent_at") or "")[:10]
+        if not bruto:
+            continue
+        try:
+            dia = date.fromisoformat(bruto)
+        except ValueError:
+            continue
+        if dia == hoje:
+            contagem["hoje"] += 1
+        elif dia == ontem:
+            contagem["ontem"] += 1
+        if semana <= dia <= hoje:
+            contagem["ultimos7"] += 1
+    return contagem
 
 
 def uma(supabase: Client, user_id: str, application_id: str) -> dict[str, Any]:

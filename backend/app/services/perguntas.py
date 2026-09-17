@@ -90,9 +90,20 @@ def _normalizar(texto: str) -> str:
     return " ".join(re.sub(r"[^a-z0-9]+", " ", sem_acento.lower()).split())
 
 
+def _contem(pergunta: str, forma: str) -> bool:
+    """A forma aparece como PALAVRA na pergunta.
+
+    Substring crua confundia coisas que não têm nada a ver: "cidade" contém
+    "idade" (pergunta sensível), "cor" aparece dentro de "corporativo", "cv"
+    dentro de "cvs". Com fronteira de palavra, "Cidade" é cidade e "Qual sua
+    idade?" é idade.
+    """
+    return re.search(rf"(?<![a-z0-9]){re.escape(forma)}(?![a-z0-9])", pergunta) is not None
+
+
 def e_sensivel(pergunta: str) -> bool:
     limpo = _normalizar(pergunta)
-    return any(forma in limpo for formas in SENSIVEIS.values() for forma in formas)
+    return any(_contem(limpo, forma) for formas in SENSIVEIS.values() for forma in formas)
 
 
 def e_aberta(pergunta: str) -> bool:
@@ -111,14 +122,14 @@ def chave(pergunta: str) -> str:
     if not limpo:
         return "livre:vazio"
     for canonica, formas in SENSIVEIS.items():
-        if any(forma in limpo for forma in formas):
+        if any(_contem(limpo, forma) for forma in formas):
             return f"sensivel:{canonica}"
     # A forma mais longa primeiro: "nome completo" ganha de "nome", e
     # "salario atual" não é confundido com "pretensao".
     melhor: Optional[tuple[int, str]] = None
     for canonica, formas in _SINONIMOS.items():
         for forma in formas:
-            if forma in limpo and (melhor is None or len(forma) > melhor[0]):
+            if _contem(limpo, forma) and (melhor is None or len(forma) > melhor[0]):
                 melhor = (len(forma), canonica)
     if melhor:
         return melhor[1]

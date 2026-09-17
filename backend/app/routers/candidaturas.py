@@ -95,6 +95,10 @@ def listar(
         "por_dia": servico.POR_DIA,
         "candidaturas": linhas,
         "enviadas": sum(1 for linha in linhas if linha["status"] == "enviada"),
+        # Quantas saíram hoje, ontem e na semana: é a pergunta que quem está
+        # procurando emprego faz todo dia, e ela não se responde contando
+        # cartões na tela.
+        "resumo": servico.quantas_enviadas(linhas, hoje),
     }
 
 
@@ -121,6 +125,59 @@ async def carta(
     limites.consumir(supabase, limites.CARTA_POR_USUARIO, user_id)
     linha = servico.uma(supabase, user_id, application_id)
     return servico.para_api(await servico.escrever_carta(supabase, current_user, linha), user_id)
+
+
+class RespostasDaPessoa(BaseModel):
+    """O que a pessoa respondeu para as perguntas que faltavam."""
+
+    respostas: list[dict[str, str]] = Field(default_factory=list, max_length=40)
+
+
+@router.post("/{application_id}/preparar")
+async def preparar(
+    application_id: str,
+    enviar: bool = False,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """Roda a candidatura passo a passo e devolve onde ela está.
+
+    `enviar=true` é o "Enviar agora" da tela: com e-mail de contato, o
+    currículo sai nesta chamada; sem ele, a candidatura fica pronta e o passo
+    de envio aponta para o site da vaga.
+    """
+    user_id = str(current_user["id"])
+    limites.consumir(supabase, limites.CARTA_POR_USUARIO, user_id)
+    if enviar:
+        limites.consumir(supabase, limites.ENVIO_DE_CANDIDATURA, user_id)
+    linha = servico.uma(supabase, user_id, application_id)
+    return servico.para_api(await servico.preparar(supabase, current_user, linha, enviar=enviar), user_id)
+
+
+@router.get("/banco")
+def banco(
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """As respostas que você já deu — as mesmas que preenchem a próxima vaga."""
+    return {"respostas": servico.respostas_guardadas(supabase, str(current_user["id"]))}
+
+
+@router.post("/banco")
+def guardar_no_banco(
+    payload: RespostasDaPessoa,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """Guarda o que a pessoa respondeu, para valer nas próximas candidaturas.
+
+    É o que faz o trabalho diminuir a cada vaga: a pergunta respondida hoje
+    aparece preenchida amanhã, inclusive em outro site que a chame por outro
+    nome ("Nome completo" e "Full name" são a mesma pergunta).
+    """
+    user_id = str(current_user["id"])
+    guardadas = servico.guardar_respostas(supabase, user_id, payload.respostas)
+    return {"guardadas": guardadas, "respostas": servico.respostas_guardadas(supabase, user_id)}
 
 
 @router.post("/{application_id}/respostas")
