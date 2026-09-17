@@ -1,7 +1,7 @@
 """Notícias: eventos de tecnologia perto da pessoa, e quem confirmou presença.
 
 Revision ID: 0040_noticias
-Revises: 0039_banco_de_respostas
+Revises: 0041_chave_da_extensao
 Create Date: 2026-09-16
 
 `pathr_news_event` guarda o que a busca (Tavily/Brave, com a IA completando o
@@ -25,7 +25,10 @@ from alembic import op
 from sqlalchemy.dialects.postgresql import UUID as PGUUID
 
 revision: str = "0040_noticias"
-down_revision: Union[str, None] = "0039_banco_de_respostas"
+# Depois da chave da extensão, e não de 0039: as duas nasceram em paralelo sobre
+# 0039, o que deixava o Alembic com duas heads — e `upgrade head` com duas heads
+# não sobe. A ordem dos números fica trocada; a cadeia é o que importa.
+down_revision: Union[str, None] = "0041_chave_da_extensao"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
