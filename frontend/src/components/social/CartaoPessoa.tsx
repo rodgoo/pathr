@@ -305,6 +305,7 @@ export function CartaoPessoa({
  * para compartilhar.
  */
 function SequenciaJuntos({ pessoa, sequencia }: { pessoa: PessoaCartao; sequencia: SequenciaDupla }) {
+  const t = useT();
   const [abrindo, setAbrindo] = useState(false);
   const primeiro = pessoa.name.split(/\s+/)[0] ?? pessoa.name;
   const { atual, hoje_voce, hoje_amigo } = sequencia;
@@ -312,10 +313,10 @@ function SequenciaJuntos({ pessoa, sequencia }: { pessoa: PessoaCartao; sequenci
   const cor = atual > 0 ? "#e2794a" : TEXT.faint;
 
   let hoje: string;
-  if (hoje_voce && hoje_amigo) hoje = "Vocês dois já estudaram hoje.";
-  else if (hoje_voce) hoje = `Falta ${primeiro} estudar hoje.`;
-  else if (hoje_amigo) hoje = `${primeiro} já estudou hoje. Falta você.`;
-  else hoje = atual > 0 ? "Estudem hoje para manter a sequência." : "Estudem no mesmo dia para começar uma sequência.";
+  if (hoje_voce && hoje_amigo) hoje = t("sequencia.ambosHoje");
+  else if (hoje_voce) hoje = t("sequencia.faltaAmigo", { nome: primeiro });
+  else if (hoje_amigo) hoje = t("sequencia.faltaVoce", { nome: primeiro });
+  else hoje = atual > 0 ? t("sequencia.mantenham") : t("sequencia.comecar");
 
   return (
     <div
@@ -332,18 +333,23 @@ function SequenciaJuntos({ pessoa, sequencia }: { pessoa: PessoaCartao; sequenci
         <Icon name="fogo" size={16} style={{ color: cor }} fill={atual > 0 ? cor : "none"} fillOpacity={atual > 0 ? 0.35 : undefined} />
         {atual > 0 ? (
           <span>
-            <strong style={{ color: cor }}>{atual}</strong> {atual === 1 ? "dia" : "dias"} estudando juntos
+            <strong style={{ color: cor }}>{atual}</strong>{" "}
+            {atual === 1 ? t("sequencia.diaJuntos") : t("sequencia.diasJuntos")}
           </span>
         ) : (
-          <span style={{ color: TEXT.muted }}>Sem sequência juntos ainda</span>
+          <span style={{ color: TEXT.muted }}>{t("sequencia.semSequencia")}</span>
         )}
         {sequencia.recorde > atual ? (
-          <span style={{ marginLeft: "auto", fontSize: 11, color: TEXT.faint }}>recorde {sequencia.recorde}</span>
+          <span style={{ marginLeft: "auto", fontSize: 11, color: TEXT.faint }}>
+            {t("sequencia.recorde", { n: sequencia.recorde })}
+          </span>
         ) : null}
       </div>
       <div style={{ fontSize: 12, color: TEXT.muted }}>
         {hoje}
-        {atual > 0 && !marco ? ` Faltam ${proximoMarco(atual) - atual} para o card de ${proximoMarco(atual)} dias.` : ""}
+        {atual > 0 && !marco
+          ? ` ${t("sequencia.faltamParaCard", { faltam: proximoMarco(atual) - atual, alvo: proximoMarco(atual) })}`
+          : ""}
       </div>
       {marco ? (
         <button
@@ -353,7 +359,7 @@ function SequenciaJuntos({ pessoa, sequencia }: { pessoa: PessoaCartao; sequenci
           onClick={() => setAbrindo(true)}
         >
           <Icon name="award" size={15} />
-          Card de {marco} dias
+          {t("sequencia.cardDias", { n: marco })}
         </button>
       ) : null}
       {abrindo && marco ? <CardDeConquista amigo={pessoa} dias={marco} onFechar={() => setAbrindo(false)} /> : null}

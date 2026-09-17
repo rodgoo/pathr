@@ -17,6 +17,7 @@ import { useEffect, useRef, useState } from "react";
 import { profile as profileApi, social, tags as tagsApi } from "@/api/endpoints";
 import type { PessoaCartao } from "@/api/types";
 import { useAuth } from "@/hooks/useAuth";
+import { useT } from "@/lib/i18n";
 import { fraseAleatoria } from "@/lib/conquista";
 import { fotoDe } from "@/lib/fotos";
 import { ACC, ACC3, ACC4, TEXT } from "@/lib/tokens";
@@ -46,6 +47,17 @@ export interface DadosDoCard {
   frase: string;
   eu: PessoaDoCard;
   amigo: PessoaDoCard;
+  /**
+   * Os textos fixos do card, já resolvidos no idioma de quem lê. Vêm prontos
+   * (e não como `t()` aqui dentro) para `desenharCard` continuar uma função
+   * pura, desenhável em qualquer contexto e testável sem o provider de idioma.
+   */
+  textos: {
+    /** "dias de sequência" / "dia de sequência" — o número grande vai à parte. */
+    sequencia: string;
+    /** "de amizade e estudos juntos". */
+    subtitulo: string;
+  };
 }
 
 function quebrar(ctx: CanvasRenderingContext2D, texto: string, largura: number): string[] {
@@ -180,10 +192,10 @@ export function desenharCard(ctx: CanvasRenderingContext2D, dados: DadosDoCard) 
   ctx.fillText(String(dados.dias), LARGURA / 2, 450);
   ctx.fillStyle = "#ffffff";
   ctx.font = `700 60px ${FONTE}`;
-  ctx.fillText(dados.dias === 1 ? "dia de sequência" : "dias de sequência", LARGURA / 2, 540);
+  ctx.fillText(dados.textos.sequencia, LARGURA / 2, 540);
   ctx.fillStyle = TEXT.muted;
   ctx.font = `400 38px ${FONTE}`;
-  ctx.fillText("de amizade e estudos juntos", LARGURA / 2, 596);
+  ctx.fillText(dados.textos.subtitulo, LARGURA / 2, 596);
 
   desenharPessoa(ctx, dados.eu, 330, 800);
   desenharPessoa(ctx, dados.amigo, 750, 800);
@@ -233,12 +245,14 @@ export function CardDeConquista({
   dias: number;
   onFechar: () => void;
 }) {
+  const t = useT();
   const { user } = useAuth();
   const canvas = useRef<HTMLCanvasElement | null>(null);
   const [imagem, setImagem] = useState<string | null>(null);
   const [png, setPng] = useState<Blob | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
-  const [frase, setFrase] = useState(() => fraseAleatoria());
+  const [fraseChave, setFraseChave] = useState(() => fraseAleatoria());
+  const frase = t(fraseChave);
 
   useEffect(() => {
     let vivo = true;
@@ -251,14 +265,18 @@ export function CardDeConquista({
       const alvo = canvas.current;
       const ctx = alvo?.getContext("2d");
       if (!vivo || !alvo || !ctx) {
-        if (vivo && !ctx) setAviso("Este navegador não consegue desenhar a imagem.");
+        if (vivo && !ctx) setAviso(t("conquista.semCanvas"));
         return;
       }
       desenharCard(ctx, {
         dias,
         frase,
+        textos: {
+          sequencia: dias === 1 ? t("conquista.diaDeSequencia") : t("conquista.diasDeSequencia"),
+          subtitulo: t("conquista.subtitulo"),
+        },
         eu: {
-          nome: user?.name ?? "Você",
+          nome: user?.name ?? t("conquista.voce"),
           username: user?.username ?? "",
           stack: [...minhas]
             .filter((tag) => tag.category !== "idioma")
@@ -277,7 +295,7 @@ export function CardDeConquista({
     return () => {
       vivo = false;
     };
-  }, [amigo, dias, frase, user]);
+  }, [amigo, dias, frase, user, t]);
 
   useEffect(() => () => {
     if (imagem) URL.revokeObjectURL(imagem);
@@ -292,7 +310,7 @@ export function CardDeConquista({
   }, [onFechar]);
 
   const nomeDoArquivo = `pathr-${dias}-dias-com-${amigo.username}.png`;
-  const texto = `${dias} dias de sequência de estudos com @${amigo.username} no PathR! ${URL_DO_APP}`;
+  const texto = t("conquista.textoCompartilhar", { dias, username: amigo.username, url: URL_DO_APP });
 
   async function compartilhar() {
     if (!png) return;
@@ -306,7 +324,7 @@ export function CardDeConquista({
       }
     }
     baixar();
-    setAviso("Seu navegador não compartilha imagens direto: a imagem foi baixada para você enviar.");
+    setAviso(t("conquista.baixado"));
   }
 
   function baixar() {
@@ -321,7 +339,7 @@ export function CardDeConquista({
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Conquista: ${dias} dias de sequência com ${amigo.name}`}
+      aria-label={t("conquista.dialogoAria", { dias, nome: amigo.name })}
       onClick={(evento) => {
         if (evento.target === evento.currentTarget) onFechar();
       }}
@@ -352,16 +370,16 @@ export function CardDeConquista({
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <Icon name="fogo" size={18} style={{ color: "#e2794a" }} />
           <span style={{ fontSize: 14.5, color: TEXT.strong }}>
-            {dias} dias com {amigo.name.split(/\s+/)[0]}
+            {t("conquista.cabecalho", { dias, nome: amigo.name.split(/\s+/)[0] ?? amigo.name })}
           </span>
-          <IconButton icon="x" label="Fechar" onClick={onFechar} style={{ marginLeft: "auto" }} />
+          <IconButton icon="x" label={t("conquista.fechar")} onClick={onFechar} style={{ marginLeft: "auto" }} />
         </div>
 
         <canvas ref={canvas} width={LARGURA} height={ALTURA} hidden />
         {imagem ? (
           <img
             src={imagem}
-            alt={`Card: ${dias} dias de sequência de estudos com ${amigo.name}`}
+            alt={t("conquista.imagemAlt", { dias, nome: amigo.name })}
             style={{ width: "100%", borderRadius: 10, display: "block" }}
           />
         ) : (
@@ -376,7 +394,7 @@ export function CardDeConquista({
               fontSize: 13,
             }}
           >
-            Montando o card…
+            {t("conquista.montando")}
           </div>
         )}
 
@@ -385,11 +403,11 @@ export function CardDeConquista({
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8.4 }}>
           <button type="button" className="btn btn-primary" disabled={!png} onClick={() => void compartilhar()}>
             <Icon name="send" size={15} />
-            Compartilhar
+            {t("conquista.compartilhar")}
           </button>
           <button type="button" className="btn btn-secondary" disabled={!imagem} onClick={baixar}>
             <Icon name="download" size={15} />
-            Baixar imagem
+            {t("conquista.baixar")}
           </button>
           <button
             type="button"
@@ -397,7 +415,7 @@ export function CardDeConquista({
             onClick={() => {
               setImagem(null);
               setPng(null);
-              setFrase((atual) => {
+              setFraseChave((atual) => {
                 let nova = fraseAleatoria();
                 for (let tentativa = 0; nova === atual && tentativa < 5; tentativa += 1) nova = fraseAleatoria();
                 return nova;
@@ -405,7 +423,7 @@ export function CardDeConquista({
             }}
           >
             <Icon name="refresh" size={15} />
-            Outra frase
+            {t("conquista.outraFrase")}
           </button>
         </div>
       </div>

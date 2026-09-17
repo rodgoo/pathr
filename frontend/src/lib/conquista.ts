@@ -21,24 +21,18 @@ export function proximoMarco(dias: number): number {
   return proximo ?? (Math.floor(dias / 30) + 1) * 30;
 }
 
-const FRASES = [
-  "Constância a dois vence talento sozinho.",
-  "Um puxou o outro, e ninguém ficou para trás.",
-  "Todo dia um pouco, sempre juntos.",
-  "Disciplina fica mais leve quando é dividida.",
-  "Não foi sorte: foi um dia de cada vez.",
-  "Quem estuda junto chega mais longe.",
-  "A sequência é de vocês. A evolução também.",
-  "Sem pular um dia. Sem largar a mão.",
-  "O código compila melhor em dupla.",
-  "Parceria de estudo é o melhor framework.",
-  "Commit diário, merge garantido.",
-  "Duas cabeças, uma meta, zero desculpas.",
-];
+/**
+ * Quantas frases o card sorteia. As frases em si moram no dicionário
+ * (`conquista.frases.0`…), para saírem no idioma de quem lê; aqui fica só a
+ * contagem e o sorteio.
+ */
+export const TOTAL_DE_FRASES = 12;
 
-/** Uma frase sorteada — outra a cada vez que o card abre. */
+/**
+ * A CHAVE de uma frase sorteada — outra a cada vez que o card abre. Devolver a
+ * chave (e não o texto) deixa o card resolvê-la com `t()` no idioma ativo.
+ */
 export function fraseAleatoria(sorteio: () => number = Math.random): string {
-  return FRASES[Math.floor(sorteio() * FRASES.length) % FRASES.length];
+  const indice = Math.floor(sorteio() * TOTAL_DE_FRASES) % TOTAL_DE_FRASES;
+  return `conquista.frases.${indice}`;
 }
-
-export const TOTAL_DE_FRASES = FRASES.length;
