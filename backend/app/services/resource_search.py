@@ -49,6 +49,7 @@ import httpx
 
 from app.ai_providers import AiProviderError, generate_json
 from app.services.reader import _url_permitida as url_publica
+from app.services import saida
 from app.config import settings
 
 logger = logging.getLogger("pathr.resource_search")
@@ -841,30 +842,15 @@ async def _keep_reachable(candidates: list[Candidate]) -> list[Candidate]:
 
 
 async def _reachable(client: httpx.AsyncClient, url: str) -> bool:
-    """A URL responde? HEAD primeiro, GET quando o servidor recusa HEAD.
+    """A URL responde? Passa pela guarda de saída (`services/saida.py`).
 
-    Muito servidor responde 405 (ou 403, ou 501) a HEAD mesmo servindo a
-    página normalmente por GET. Tratar isso como link quebrado descartaria
-    material bom, então a segunda tentativa existe — mas com `stream`, para
-    fechar a conexão assim que o status chega, sem baixar a página inteira.
+    A lógica de HEAD-e-depois-GET mora lá agora, junto da validação de
+    endereço: o `url_publica` do gancho abaixo confere o NOME, e o nome pode
+    resolver para um IP público na checagem e para um interno na conexão (DNS
+    rebinding). A guarda resolve uma vez só, conecta no IP que validou e
+    revalida cada redirecionamento.
     """
-    try:
-        head = await client.head(url)
-        if head.status_code < 400:
-            return True
-        if head.status_code not in (403, 405, 501):
-            return False
-    except httpx.HTTPError:
-        # Timeout ou conexão derrubada: ainda vale tentar o GET, porque alguns
-        # servidores simplesmente não atendem HEAD.
-        pass
-
-    try:
-        async with client.stream("GET", url) as response:
-            return response.status_code < 400
-    except httpx.HTTPError as exc:
-        logger.debug("link descartado %s: %s", url, exc)
-        return False
+    return await saida.alcancavel(client, url)
 
 
 # ---------------------------------------------------------------------------

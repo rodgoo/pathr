@@ -46,6 +46,7 @@ from supabase import Client
 from app.ai_providers import AiProviderError, generate_json
 from app.config import settings
 from app.services import geo
+from app.services import saida
 
 logger = logging.getLogger("pathr.noticias")
 
@@ -271,21 +272,15 @@ async def organizar(bruto: EventoBruto, cidade_buscada: str, uf_buscada: str) ->
 
 
 async def _reachable(client: httpx.AsyncClient, url: str) -> bool:
-    """A mesma checagem de `resource_search._reachable`: HEAD primeiro, GET
-    com `stream` se o servidor recusar HEAD — sem baixar a página inteira."""
-    try:
-        head = await client.head(url)
-        if head.status_code < 400:
-            return True
-        if head.status_code not in (403, 405, 501):
-            return False
-    except httpx.HTTPError:
-        pass
-    try:
-        async with client.stream("GET", url) as resposta:
-            return resposta.status_code < 400
-    except httpx.HTTPError:
-        return False
+    """O ingresso responde? Passa pela guarda de saída (`services/saida.py`).
+
+    A URL vem da busca de terceiros e do que a IA leu do anúncio — endereço de
+    fora, portanto. Pedir direto era SSRF: bastava um evento com
+    `ticket_url` apontando para 169.254.169.254 (o metadata da nuvem) ou para a
+    rede interna, e o NOSSO servidor batia lá. A guarda resolve o nome uma vez,
+    recusa IP interno, conecta no IP validado e revalida cada redirecionamento.
+    """
+    return await saida.alcancavel(client, url)
 
 
 def _precisa_buscar(supabase: Client, cidade: str, uf: str) -> bool:

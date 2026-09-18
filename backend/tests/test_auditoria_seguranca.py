@@ -22,6 +22,7 @@ from app.limite_corpo import LimiteDeCorpo
 from app.routers import auth as auth_router
 from app.routers import quizzes, roadmap
 from app.services import resource_search as rs
+from app.services import reader
 from app.services.upload import ler_com_limite
 from tests.fake_supabase import FakeSupabase
 
@@ -83,11 +84,27 @@ def rede_falsa(monkeypatch):
 
     def responder(pedido: httpx.Request) -> httpx.Response:
         pedidos.append(str(pedido.url))
-        if pedido.url.host == "redireciona.exemplo":
+        # Pelo cabeçalho Host, e não por `url.host`: a guarda de saída conecta
+        # no IP validado e leva o domínio no Host (é o que mantém o servidor
+        # virtual certo e o SNI). Olhando só a URL, todo pedido pareceria ser
+        # para o mesmo IP e este servidor de mentira não saberia quem atender.
+        host = pedido.headers.get("Host", pedido.url.host or "")
+        if host.startswith("redireciona.exemplo"):
             return httpx.Response(302, headers={"location": "http://169.254.169.254/latest/meta-data/"})
         return httpx.Response(200)
 
     monkeypatch.setattr(rs, "url_publica", lambda url: "169.254" not in url and "interno" not in url)
+
+    # O DNS também é de mentira, e precisa ser: a guarda de saída
+    # (services/saida.py) resolve o nome de verdade antes de conectar — é assim
+    # que ela fecha o DNS rebinding. Sem isto, "publico.exemplo" simplesmente
+    # não resolve e o teste passaria pelo motivo errado (tudo recusado).
+    def resolver(host, porta=None, **k):
+        interno = "interno" in host or host.startswith("169.254")
+        endereco = "169.254.169.254" if interno else "93.184.216.34"
+        return [(2, 1, 6, "", (endereco, porta or 443))]
+
+    monkeypatch.setattr(reader.socket, "getaddrinfo", resolver)
     monkeypatch.setattr(httpx, "AsyncClient", lambda **kw: original(transport=httpx.MockTransport(responder), **kw))
     return pedidos
 
