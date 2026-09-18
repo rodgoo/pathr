@@ -37,6 +37,7 @@ import { Icon } from "@/components/ui/icons";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
 import { useT } from "@/lib/i18n";
+import { linkExterno } from "@/lib/linkExterno";
 
 export function CandidaturasPage() {
   const t = useT();
@@ -632,7 +633,7 @@ function Cartao({
               do formulário da empresa, que é o caminho da maioria das vagas. */}
           <a
             className="btn btn-primary"
-            href={item.url}
+            href={linkExterno(item.url)}
             target="_blank"
             rel="noopener noreferrer"
             style={{ textDecoration: "none" }}
