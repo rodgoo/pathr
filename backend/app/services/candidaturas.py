@@ -75,8 +75,14 @@ MAXIMO_AUTOMATICO = 5
 _EMAIL = re.compile(r"[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}")
 # Caixas que não recebem candidatura: mandar para elas é jogar o currículo fora.
 _EMAIL_PROIBIDO = re.compile(r"(no[-_.]?reply|nao[-_.]?responda|donotreply|example\.(com|org)|sentry)", re.IGNORECASE)
-# Com mais de um endereço no anúncio, o de recrutamento é o certo.
-_EMAIL_DE_VAGA = re.compile(r"(vaga|rh|recrut|talent|selecao|curricul|\bcv\b|job|carreira|career|people)", re.IGNORECASE)
+# Com mais de um endereço no anúncio, o de recrutamento é o certo. `rh` leva \b
+# dos dois lados (não tem plural nem variação); `vaga` e `job` levam \b só no
+# início, para continuar casando "vagas@" e "jobs@". Sem nenhuma borda, "rh"
+# casava como substring de qualquer domínio com essas letras em sequência
+# (ex.: "contato@empresarh.com"), mesmo sem relação nenhuma com recrutamento.
+_EMAIL_DE_VAGA = re.compile(
+    r"(\bvaga|\brh\b|recrut|talent|selecao|curricul|\bcv\b|\bjob|carreira|career|people)", re.IGNORECASE
+)
 
 # Provedor de e-mail pessoal. Um endereço destes no anúncio quase nunca é "a
 # empresa": é a caixa de uma pessoa — às vezes de outro candidato, que colou o
@@ -121,17 +127,19 @@ def email_confiavel(email: Optional[str], empresa: Optional[str], url: Optional[
     e o que não passa continua na fila esperando um clique:
 
     1. nada de provedor pessoal (gmail, hotmail, …): não é caixa de empresa;
-    2. o nome da caixa precisa ser de recrutamento (vagas@, rh@, jobs@…), OU
-    3. o domínio precisa ser o do anúncio ou o da empresa — aí é a empresa
-       falando de si mesma, ainda que a caixa se chame "contato".
+    2. o domínio precisa ser o do anúncio ou o da empresa — aí é a empresa
+       falando de si mesma, ainda que a caixa se chame "contato". Isto é
+       SEMPRE exigido: o nome da caixa (vagas@, rh@, jobs@…) sozinho não basta
+       — "rh@outra.com" bate a regra do nome mas o domínio não tem nada a ver
+       com o anúncio, e mandar currículo para lá é o vazamento que esta função
+       existe para evitar. O nome de recrutamento só entra como REFORÇO: com o
+       domínio já batendo, ele não muda a resposta (que já seria `True`).
     """
     if not email or "@" not in email:
         return False
     dominio = _dominio(email)
     if dominio in _PROVEDOR_PESSOAL:
         return False
-    if _EMAIL_DE_VAGA.search(email):
-        return True
 
     # O domínio do anúncio (o host da URL, sem "www.") e o nome da empresa sem
     # espaço nem acento: "Empresa Boa" casa com "empresaboa.com.br".
@@ -144,7 +152,13 @@ def email_confiavel(email: Optional[str], empresa: Optional[str], url: Optional[
     raiz = dominio.split(".")[0]
     if host and (dominio == host or host.endswith(f".{dominio}") or dominio.endswith(f".{host}")):
         return True
-    return bool(nome) and len(nome) >= 4 and (raiz == nome or nome in dominio.replace(".", ""))
+    if not nome:
+        return False
+    # Igualdade exata da raiz não precisa de piso de tamanho — "Boa" bater com
+    # "boa.com" não é coincidência, é o nome inteiro. O piso vale só para a
+    # inclusão por substring: um nome de 2-3 letras apareceria por acaso dentro
+    # de qualquer domínio grande o bastante.
+    return raiz == nome or (len(nome) >= 4 and nome in dominio.replace(".", ""))
 
 CARTA_SCHEMA: dict[str, Any] = {
     "type": "OBJECT",

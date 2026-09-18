@@ -110,7 +110,10 @@ def test_todas_as_rotas_de_candidaturas_passam_pela_guarda():
     "email,empresa,url,confiavel",
     [
         ("vagas@empresaboa.com.br", "Empresa Boa", "https://empresaboa.com.br/vaga/1", True),
-        ("rh@outra.com", "Empresa Boa", "https://empresaboa.com.br/vaga/1", True),
+        # Nome de caixa de recrutamento, mas domínio sem nenhuma relação com o
+        # anúncio ou a empresa: não confia. O nome da caixa é reforço, nunca
+        # substituto da checagem de domínio (ver docstring de email_confiavel).
+        ("rh@outra.com", "Empresa Boa", "https://empresaboa.com.br/vaga/1", False),
         ("contato@empresaboa.com.br", "Empresa Boa", "https://empresaboa.com.br/vaga/1", True),
         ("contato@empresaboa.com.br", "Empresa Boa", None, True),
         ("joao.silva@gmail.com", "Empresa Boa", "https://empresaboa.com.br/vaga/1", False),

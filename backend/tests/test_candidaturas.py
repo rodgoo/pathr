@@ -224,7 +224,9 @@ def test_envio_automatico_para_no_teto_do_dia(busca, curriculo, ia, monkeypatch)
     banco = _banco(pathr_resume=[curriculo])
     linhas = []
     for i in range(servico.MAXIMO_AUTOMATICO + 3):
-        linha = {"id": f"x{i}", "title": "Java", "company": "Empresa", "score": 90, "to_email": f"vagas{i}@e.com", "snippet": "Java"}
+        # Domínio precisa bater com a empresa — é o teto diário que este teste
+        # mede, não a confiabilidade do e-mail (ver email_confiavel).
+        linha = {"id": f"x{i}", "title": "Java", "company": "Empresa", "score": 90, "to_email": f"vagas{i}@empresa.com", "snippet": "Java"}
         linhas.append(linha)
         banco.tabelas["pathr_application"].append({**linha, "user_id": EU["id"], "status": "sugerida"})
 
