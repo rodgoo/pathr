@@ -127,21 +127,36 @@ def test_link_publico_continua_valendo(monkeypatch):
     assert _rodar(cenario(lambda p: httpx.Response(404))) is False
 
 
-def test_os_dois_reachable_passam_pela_guarda(monkeypatch):
-    """A correção vale para os DOIS lugares que checam link de terceiro — foi
-    justamente um deles que ficou de fora quando o reader foi corrigido."""
-    vistos: list[str] = []
+def test_quem_pede_para_fora_passa_pela_guarda(monkeypatch):
+    """Os dois caminhos de saída com URL de terceiro usam a guarda — foi
+    justamente um deles que ficou de fora quando o reader foi corrigido.
 
-    async def espia(_cliente, url, *args, **kwargs):
-        vistos.append(url)
+    São caminhos diferentes de propósito: a curadoria só precisa saber se o
+    link responde (`alcancavel`), e as Notícias precisam LER a página, porque
+    é lá que estão a data e a imagem do evento (`baixar`).
+    """
+    checados: list[str] = []
+    baixados: list[str] = []
+
+    async def espia_alcancavel(_cliente, url, *args, **kwargs):
+        checados.append(url)
         return True
 
-    monkeypatch.setattr(saida, "alcancavel", espia)
+    async def espia_baixar(_cliente, url, *args, **kwargs):
+        baixados.append(url)
+        return None  # sem página, o evento é descartado — o que aqui basta
+
+    monkeypatch.setattr(saida, "alcancavel", espia_alcancavel)
+    monkeypatch.setattr(noticias.saida, "baixar", espia_baixar)
 
     async def cenario():
         async with httpx.AsyncClient() as cliente:
-            await noticias._reachable(cliente, "https://a.exemplo/1")
             await resource_search._reachable(cliente, "https://b.exemplo/2")
+            await noticias._montar(
+                cliente, noticias.EventoBruto("https://a.exemplo/1", "Evento", "trecho"),
+                "Vitória", "ES", {"vitoria"},
+            )
 
     _rodar(cenario())
-    assert vistos == ["https://a.exemplo/1", "https://b.exemplo/2"]
+    assert checados == ["https://b.exemplo/2"]
+    assert baixados == ["https://a.exemplo/1"]

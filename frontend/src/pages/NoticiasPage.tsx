@@ -9,7 +9,7 @@
  * `inscricao_texto`, nunca inventada na tela.
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { noticias as noticiasApi, profile as profileApi } from "@/api/endpoints";
 import type { EventoDeNoticia } from "@/api/types";
 import { useMutation, useQuery } from "@/hooks/useApi";
@@ -23,6 +23,23 @@ export function NoticiasPage() {
   const t = useT();
   const perfil = useQuery(() => profileApi.get(), []);
   const eventos = useQuery(() => noticiasApi.list(), []);
+  const lista = eventos.data?.eventos ?? [];
+  const atualizando = eventos.data?.atualizando ?? false;
+
+  // O servidor saiu para procurar AGORA, em segundo plano. A tela já mostrou o
+  // que havia; daqui a pouco pede de novo, duas vezes, e para. Antes isto era
+  // um "Buscando eventos…" que prendia a tela enquanto o servidor lia dezenas
+  // de páginas — e que às vezes nunca terminava.
+  useEffect(() => {
+    if (!atualizando) return;
+    let tentativas = 0;
+    const relogio = setInterval(() => {
+      tentativas += 1;
+      eventos.reload();
+      if (tentativas >= 2) clearInterval(relogio);
+    }, 20_000);
+    return () => clearInterval(relogio);
+  }, [atualizando, eventos]);
 
   return (
     <div style={{ ...SCREEN_IN, display: "flex", flexDirection: "column", gap: 16.8 }}>
@@ -41,7 +58,16 @@ export function NoticiasPage() {
       {eventos.error ? <ErrorState message={eventos.error} onRetry={eventos.reload} /> : null}
       {eventos.loading && !eventos.data ? <Loading label={t("noticias.carregando")} /> : null}
 
-      {!eventos.loading && (eventos.data ?? []).length === 0 && !eventos.error ? (
+      {atualizando ? (
+        <Panel pad={11.2}>
+          <p style={{ margin: 0, fontSize: 12.5, color: TEXT.muted }}>
+            <Icon name="refresh" size={13} style={{ verticalAlign: "-2px", marginRight: 6 }} aria-hidden />
+            {t("noticias.procurando")}
+          </p>
+        </Panel>
+      ) : null}
+
+      {!eventos.loading && lista.length === 0 && !eventos.error ? (
         <EmptyState
           title={t("noticias.vazio.titulo")}
           description={
@@ -50,12 +76,15 @@ export function NoticiasPage() {
         />
       ) : null}
 
-      {(eventos.data ?? []).map((evento) => (
+      {lista.map((evento) => (
         <EventoCard
           key={evento.id}
           evento={evento}
           onMudou={(atualizado) =>
-            eventos.set((atuais) => atuais.map((item) => (item.id === atualizado.id ? atualizado : item)))
+            eventos.set((atuais) => ({
+              ...atuais,
+              eventos: atuais.eventos.map((item) => (item.id === atualizado.id ? atualizado : item)),
+            }))
           }
         />
       ))}
@@ -114,6 +143,41 @@ function EventoCard({
     }
   }
 
+  /**
+   * O endereço que abre o evento já preenchido no Google Agenda.
+   *
+   * No computador, baixar um `.ics` só ajuda quem tem Outlook ou Calendário
+   * instalado e associado ao formato — para quem vive de agenda no navegador,
+   * o arquivo cai na pasta de downloads e não acontece nada. O link abre a
+   * agenda na hora; o `.ics` continua aqui ao lado para Outlook, Apple e
+   * celular.
+   *
+   * As datas vão no formato do Google (AAAAMMDD), e o fim é EXCLUSIVO: um
+   * evento de um dia termina no dia seguinte, senão a agenda mostra um dia a
+   * menos.
+   */
+  function noGoogleAgenda(): string {
+    const soDigitos = (iso: string) => iso.replace(/-/g, "");
+    const diaSeguinte = (iso: string) => {
+      const d = new Date(`${iso}T12:00:00`);
+      d.setDate(d.getDate() + 1);
+      return soDigitos(d.toISOString().slice(0, 10));
+    };
+    const inicio = soDigitos(evento.data_inicio);
+    const fim = diaSeguinte(evento.data_fim || evento.data_inicio);
+    const onde = [evento.local, evento.cidade, evento.estado].filter(Boolean).join(", ");
+    const parametros = new URLSearchParams({
+      action: "TEMPLATE",
+      text: evento.titulo,
+      dates: `${inicio}/${fim}`,
+      details: `${evento.resumo || ""}
+
+${evento.url_ingresso}`.trim(),
+      location: onde,
+    });
+    return `https://calendar.google.com/calendar/render?${parametros.toString()}`;
+  }
+
   const periodo =
     evento.data_fim && evento.data_fim !== evento.data_inicio
       ? `${formatarData(evento.data_inicio)} – ${formatarData(evento.data_fim)}`
@@ -122,6 +186,26 @@ function EventoCard({
   return (
     <Panel pad={16.8}>
       <div style={{ display: "flex", gap: 11.2, alignItems: "flex-start", flexWrap: "wrap" }}>
+        {evento.imagem ? (
+          // `onError` some com a imagem em vez de deixar o ícone de quebrado:
+          // o endereço vem do site do evento e pode sair do ar a qualquer hora.
+          <img
+            src={evento.imagem}
+            alt=""
+            loading="lazy"
+            onError={(e) => {
+              (e.currentTarget as HTMLImageElement).style.display = "none";
+            }}
+            style={{
+              width: 96,
+              height: 96,
+              objectFit: "cover",
+              borderRadius: 10,
+              border: `1px solid ${HAIRLINE}`,
+              background: "rgba(233,233,237,.04)",
+            }}
+          />
+        ) : null}
         <div style={{ flex: 1, minWidth: 240 }}>
           <h2 style={{ fontSize: 16, fontWeight: 500, margin: 0, color: TEXT.full }}>{evento.titulo}</h2>
           <p style={{ margin: "4px 0 0", fontSize: 12.5, color: TEXT.muted }}>
@@ -168,9 +252,22 @@ function EventoCard({
           {t("noticias.abrirIngresso")}
         </a>
 
-        <button type="button" className="btn btn-secondary" disabled={baixando} onClick={() => void baixarIcs()}>
+        <a
+          className="btn btn-secondary"
+          href={noGoogleAgenda()}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ textDecoration: "none" }}
+        >
+          {/* Não há ícone de calendário no conjunto; o relógio é o mais
+              próximo e já marca a linha de prazo logo acima. */}
+          <Icon name="clock" size={15} />
+          {t("noticias.googleAgenda")}
+        </a>
+
+        <button type="button" className="btn btn-ghost" disabled={baixando} onClick={() => void baixarIcs()}>
           <Icon name="download" size={15} />
-          {baixando ? t("noticias.baixando") : t("noticias.adicionarCalendario")}
+          {baixando ? t("noticias.baixando") : t("noticias.baixarIcs")}
         </button>
 
         <button

@@ -11,7 +11,6 @@ import type {
   Amizades,
   NovidadeDeAmizade,
   ApiStatusReport,
-  EventoDeNoticia,
   DisponibilidadeUsername,
   PessoaCartao,
   Relacao,
@@ -32,6 +31,7 @@ import type {
   OwnedCourse,
   JobAnalysis,
   JobList,
+  EventosDeNoticia,
   EnglishAnswerResult,
   EnglishAssessment,
   ExplanationResult,
@@ -292,7 +292,7 @@ export const extensao = {
 
 export const noticias = {
   list: (raioKm?: number) =>
-    api.get<EventoDeNoticia[]>(`/noticias${raioKm != null ? `?raio_km=${raioKm}` : ""}`),
+    api.get<EventosDeNoticia>(`/noticias${raioKm != null ? `?raio_km=${raioKm}` : ""}`),
   confirmar: (id: string) => api.post<void>(`/noticias/${encodeURIComponent(id)}/presenca`),
   cancelar: (id: string) => api.del<void>(`/noticias/${encodeURIComponent(id)}/presenca`),
   /** O `.ics` para "Adicionar ao calendário" — baixado como blob (cookie de

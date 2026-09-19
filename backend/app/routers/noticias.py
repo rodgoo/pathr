@@ -11,7 +11,7 @@
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
 from supabase import Client
 
 from app.database import get_supabase
@@ -38,23 +38,42 @@ def _evento_da_pessoa(supabase: Client, user_id: str, event_id: str) -> dict:
 
 
 @router.get("")
-async def listar(
+def listar(
+    fundo: BackgroundTasks,
     raio_km: float = Query(_RAIO_PADRAO_KM, ge=0, le=1000),
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
 ):
+    """Os eventos que já estão no banco — AGORA — e a varredura em segundo plano.
+
+    Antes, a busca e a leitura das páginas aconteciam DENTRO desta requisição:
+    dezenas de páginas e chamadas de IA, minutos de espera, e a tela presa num
+    "Buscando eventos…" que muitas vezes nunca terminava (e, quando a
+    requisição morria, nada ficava gravado — a abertura seguinte recomeçava do
+    zero).
+
+    Agora a resposta sai na hora com o que existe, e `atualizando` diz à tela
+    que vale reconsultar em instantes. É a mesma escolha da fila de vagas: o
+    trabalho pesado não mora no caminho da tela.
+    """
     user_id = str(current_user["id"])
     perfil = (
         supabase.table("pathr_profile").select("city,state").eq("user_id", user_id).limit(1).execute().data
         or [{}]
     )[0]
     cidade, uf = perfil.get("city"), perfil.get("state")
-    if cidade and uf:
-        # Sem chave de busca configurada, ou com a região já atualizada há
-        # pouco, isto não faz nada — a listagem simplesmente segue com o que
-        # já está no banco.
-        await noticias.atualizar_regiao(supabase, cidade, uf)
-    return noticias.listar_por_regiao(supabase, user_id, cidade, uf, raio_km)
+
+    atualizando = noticias.precisa_buscar(supabase, cidade, uf)
+    if atualizando:
+        # Roda depois da resposta sair, no mesmo processo. `atualizar_regiao`
+        # marca a região antes de começar, então duas telas abertas juntas não
+        # disparam duas varreduras.
+        fundo.add_task(noticias.atualizar_regiao, supabase, cidade, uf)
+
+    return {
+        "eventos": noticias.listar_por_regiao(supabase, user_id, cidade, uf, raio_km),
+        "atualizando": atualizando,
+    }
 
 
 @router.post("/{event_id}/presenca", status_code=status.HTTP_204_NO_CONTENT)

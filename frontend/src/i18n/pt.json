@@ -1182,7 +1182,10 @@
       "titulo": "Nenhum evento encontrado ainda",
       "comCidade": "Ainda não achamos eventos de tecnologia perto de você. Volte mais tarde — a busca roda de novo em algumas horas.",
       "semCidade": "Cadastre sua cidade no perfil para a busca de eventos ter onde procurar."
-    }
+    },
+    "procurando": "Procurando eventos novos na sua região… isso leva alguns instantes; a lista se atualiza sozinha.",
+    "googleAgenda": "Adicionar ao Google Agenda",
+    "baixarIcs": "Baixar .ics"
   },
   "amigos": {
     "voceEh": "Você é",

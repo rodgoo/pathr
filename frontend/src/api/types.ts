@@ -84,7 +84,22 @@ export interface EventoDeNoticia {
    * quando há prazo (inscricao_inicio/inscricao_fim já preenchidos). */
   inscricao_texto: string | null;
   url_ingresso: string;
+  /** Cartaz publicado pela página do evento, ou o ícone do site. */
+  imagem: string | null;
   eu_vou: boolean;
+}
+
+/**
+ * A resposta da aba de Notícias.
+ *
+ * `atualizando` diz que o servidor saiu para procurar eventos desta região
+ * AGORA, em segundo plano — a lista já veio com o que existia. É o que
+ * substitui o antigo "Buscando eventos…" que prendia a tela: a pessoa vê o
+ * que há e recebe o resto quando chega.
+ */
+export interface EventosDeNoticia {
+  eventos: EventoDeNoticia[];
+  atualizando: boolean;
 }
 
 /** Um aviso de amizade para o pop-up: convite recebido ou convite aceito. */

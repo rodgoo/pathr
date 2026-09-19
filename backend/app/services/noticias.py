@@ -34,6 +34,7 @@ página; aqui o motivo e o precedente são os mesmos.
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import re
 from dataclasses import dataclass
@@ -45,8 +46,7 @@ from supabase import Client
 
 from app.ai_providers import AiProviderError, generate_json
 from app.config import settings
-from app.services import geo
-from app.services import saida
+from app.services import evento_da_pagina, geo, saida
 
 logger = logging.getLogger("pathr.noticias")
 
@@ -63,6 +63,15 @@ SITES_DE_EVENTO = ("sympla.com.br", "eventbrite.com.br", "eventbrite.com", "meet
 # Evento não muda de hora em hora; uma busca por cidade a cada tantas horas
 # evita bater na cota de Tavily/Brave a cada abertura da tela.
 _VALIDADE_S = 12 * 3600
+
+# Quantos candidatos a busca entrega por varredura, e quantas páginas se lê
+# ao mesmo tempo. O teto antigo era 12 — pouco para uma capital, e a causa
+# de 'faltam eventos que existem'. Seis páginas de uma vez é rápido sem
+# parecer ataque para o site do catálogo.
+_MAXIMO_POR_VARREDURA = 40
+_CONCORRENCIA = 6
+# O raio que define 'perto': o mesmo padrão da tela de Vagas.
+_RAIO_DA_BUSCA_KM = 80.0
 
 # Texto fixo, literal — nunca gerado pela IA. É o que a tela mostra quando as
 # duas tentativas (o texto da busca, depois a pergunta focada) não acham o
@@ -125,22 +134,33 @@ async def buscar_bruto(cidade: str, uf: str) -> list[EventoBruto]:
     vazio — a tela mostra "nenhum evento encontrado ainda", não erro: é a
     mesma decisão que `vagas.py` toma para a busca em sites.
     """
-    consulta = f"eventos de tecnologia em {cidade} {uf}".strip()
+    onde = f"{cidade} {uf}".strip()
+    # Várias consultas, e não uma: "eventos de tecnologia em X" traz o que a
+    # busca considerar próximo desse texto, e some com o meetup de Python e o
+    # workshop de dados que não usam a palavra "tecnologia". Cada consulta
+    # pesca de um jeito; a união é o que faz a lista deixar de parecer curta.
+    consultas = [
+        f"eventos de tecnologia em {onde}",
+        f"meetup programação desenvolvedores {onde}",
+        f"workshop dados inteligência artificial {onde}",
+        f"congresso TI startups {onde}",
+    ]
     encontrados: list[EventoBruto] = []
     vistos: set[str] = set()
     async with httpx.AsyncClient(timeout=_TIMEOUT, headers={"User-Agent": _UA}) as cliente:
-        for buscar in (_tavily, _brave):
-            try:
-                resultado = await buscar(cliente, consulta)
-            except httpx.HTTPError as exc:
-                logger.warning("busca de eventos falhou (%s): %s", buscar.__name__, exc)
-                continue
-            for item in resultado:
-                chave = item.url.strip().lower().rstrip("/")
-                if not chave or chave in vistos:
+        for consulta in consultas:
+            for buscar in (_tavily, _brave):
+                try:
+                    resultado = await buscar(cliente, consulta)
+                except httpx.HTTPError as exc:
+                    logger.warning("busca de eventos falhou (%s): %s", buscar.__name__, exc)
                     continue
-                vistos.add(chave)
-                encontrados.append(item)
+                for item in resultado:
+                    chave = item.url.strip().lower().rstrip("/")
+                    if not chave or chave in vistos:
+                        continue
+                    vistos.add(chave)
+                    encontrados.append(item)
     return encontrados
 
 
@@ -222,107 +242,289 @@ async def _completar_inscricao(titulo: str, cidade: Optional[str]) -> tuple[Opti
     return _data_valida(dados.get("inscricao_inicio")), _data_valida(dados.get("inscricao_fim"))
 
 
-async def organizar(bruto: EventoBruto, cidade_buscada: str, uf_buscada: str) -> Optional[dict[str, Any]]:
-    """Os campos do evento, extraídos do texto da busca — ou `None` se a IA
-    não conseguiu nem separar um título e um resumo dali."""
-    prompt = f"Título: {bruto.titulo}\nTrecho da busca: {bruto.trecho}\nEndereço: {bruto.url}"
-    try:
-        resultado = await generate_json(_AI_SYSTEM, prompt, _AI_SCHEMA)
-    except AiProviderError as exc:
-        logger.warning("organização por IA indisponível para %r: %s", bruto.url, exc)
-        return None
-    dados = resultado.content or {}
-    titulo = str(dados.get("titulo") or bruto.titulo).strip()
-    resumo = str(dados.get("resumo") or "").strip()
-    if not titulo or not resumo:
+async def _montar(
+    cliente: httpx.AsyncClient,
+    bruto: EventoBruto,
+    cidade_buscada: str,
+    uf_buscada: str,
+    perto: set[str],
+) -> Optional[dict[str, Any]]:
+    """Os campos do evento, lidos da PÁGINA dele — ou `None` se ela não serve.
+
+    Descarta, nesta ordem: página que não abre, página sem data explícita,
+    evento que já passou, e evento de outra região. Cada descarte é melhor do
+    que a alternativa que existia antes — gravar um palpite.
+    """
+    html = await saida.baixar(cliente, bruto.url)
+    if not html:
         return None
 
-    data_inicio = _data_valida(dados.get("data_inicio")) or date.today().isoformat()
-    inscricao_inicio = _data_valida(dados.get("inscricao_inicio"))
-    inscricao_fim = _data_valida(dados.get("inscricao_fim"))
-    if inscricao_inicio is None and inscricao_fim is None:
-        # Primeira tentativa (o texto da busca) não achou — a segunda,
-        # focada só nisso, ainda pode. Falhando ela também, os campos ficam
-        # `null` mesmo: a tela mostra o texto fixo, e não uma frase gerada.
-        inscricao_inicio, inscricao_fim = await _completar_inscricao(
-            titulo, dados.get("cidade") or cidade_buscada or None
-        )
+    pagina = evento_da_pagina.extrair(html, bruto.url)
+
+    # Sem data dita pela página, o evento não entra. Era exatamente aqui que
+    # nascia o "todo evento é hoje": o código antigo caía em `date.today()`.
+    if not pagina.data_inicio:
+        logger.debug("sem data na página, descartado: %s", bruto.url)
+        return None
+    if pagina.data_inicio < date.today().isoformat():
+        return None
+
+    lugar = _regiao(pagina, bruto, cidade_buscada, uf_buscada, perto)
+    if lugar is None:
+        logger.debug("fora da região buscada, descartado: %s", bruto.url)
+        return None
+    cidade, uf = lugar
+
+    titulo = (pagina.titulo or bruto.titulo).strip()
+    resumo = (pagina.resumo or bruto.trecho).strip()
+    if not titulo:
+        return None
+
+    inscricao_inicio: Optional[str] = None
+    inscricao_fim: Optional[str] = None
+    if pagina.data_inicio:
+        inscricao_inicio, inscricao_fim = await _completar_inscricao(titulo, cidade)
 
     return {
         "title": titulo[:300],
         "summary": resumo[:2000],
-        "venue": _texto_ou_none(dados.get("local"), 200),
-        "city": _texto_ou_none(dados.get("cidade") or cidade_buscada, 120),
-        "state": _texto_ou_none(str(dados.get("estado") or uf_buscada or "").upper(), 2),
-        "event_start": data_inicio,
-        "event_end": _data_valida(dados.get("data_fim")),
-        "is_free": dados.get("gratuito") if isinstance(dados.get("gratuito"), bool) else None,
-        "price_info": _texto_ou_none(dados.get("preco_info"), 200),
+        "venue": pagina.local,
+        "city": cidade[:120] if cidade else None,
+        "state": (uf or "")[:2].upper() or None,
+        "event_start": pagina.data_inicio,
+        "event_end": pagina.data_fim,
+        "is_free": pagina.gratuito,
+        "price_info": pagina.preco_info,
         "registration_start": inscricao_inicio,
         "registration_end": inscricao_fim,
         "ticket_url": bruto.url,
+        # A foto do cartaz quando a página publica uma; o ícone do site quando
+        # não — um card sem imagem nenhuma some no meio dos outros.
+        "image_url": pagina.imagem or evento_da_pagina.icone_do_site(bruto.url),
         "source": "busca",
         "source_url": bruto.url,
     }
 
 
-# ---------------------------------------------------------------------------
-# Gravação e listagem
-# ---------------------------------------------------------------------------
+def _regiao(
+    pagina: "evento_da_pagina.DadosDaPagina",
+    bruto: EventoBruto,
+    cidade_buscada: str,
+    uf_buscada: str,
+    perto: set[str],
+) -> Optional[tuple[str, str]]:
+    """Onde o evento acontece — ou `None` se não é por aqui.
 
-
-async def _reachable(client: httpx.AsyncClient, url: str) -> bool:
-    """O ingresso responde? Passa pela guarda de saída (`services/saida.py`).
-
-    A URL vem da busca de terceiros e do que a IA leu do anúncio — endereço de
-    fora, portanto. Pedir direto era SSRF: bastava um evento com
-    `ticket_url` apontando para 169.254.169.254 (o metadata da nuvem) ou para a
-    rede interna, e o NOSSO servidor batia lá. A guarda resolve o nome uma vez,
-    recusa IP interno, conecta no IP validado e revalida cada redirecionamento.
+    Antes, a cidade do evento caía para a cidade BUSCADA quando a página não
+    dizia nada: um evento de São Paulo virava "Vitória" por omissão, e a tela
+    anunciava como se fosse perto. Agora a cidade precisa ser afirmada pela
+    página (e estar no raio) ou pelo menos citada no título/trecho.
     """
-    return await saida.alcancavel(client, url)
+    if pagina.online:
+        return None  # a aba é de eventos PERTO de você; online é outra coisa
+
+    if pagina.cidade:
+        if geo.normaliza(pagina.cidade) in perto:
+            return pagina.cidade, (pagina.estado or uf_buscada)
+        return None
+
+    procurada = geo.normaliza(cidade_buscada)
+    texto = geo.normaliza(f"{bruto.titulo} {bruto.trecho} {pagina.local or ''}")
+    if procurada and procurada in texto:
+        return cidade_buscada, uf_buscada
+    return None
+
+
+_AI_SYSTEM_TECNOLOGIA = """Você separa eventos de TECNOLOGIA dos demais, a partir do título e do
+trecho de cada um.
+
+Conta como tecnologia: programação, dados, inteligência artificial, infra e
+nuvem, segurança da informação, produto e design digital, startups e inovação
+quando o assunto é tecnologia.
+
+NÃO conta, mesmo que a palavra "tecnologia" ou "inovação" apareça no texto:
+setor automotivo, agro, construção, saúde, moda, gastronomia, música, esporte,
+religião, concurso público, feira de negócios de outro setor. Uma feira de
+carros que fala em "inovação e tecnologia automotiva" é evento automotivo.
+
+Na dúvida, responda false: uma lista curta e certa vale mais que uma longa com
+lixo no meio."""
+
+_AI_SCHEMA_TECNOLOGIA: dict[str, Any] = {
+    "type": "OBJECT",
+    "properties": {
+        "itens": {
+            "type": "ARRAY",
+            "items": {
+                "type": "OBJECT",
+                "properties": {
+                    "indice": {"type": "INTEGER"},
+                    "tecnologia": {"type": "BOOLEAN"},
+                },
+                "required": ["indice", "tecnologia"],
+            },
+        }
+    },
+    "required": ["itens"],
+}
+
+
+async def somente_tecnologia(brutos: list[EventoBruto]) -> list[EventoBruto]:
+    """Filtra a lista, deixando só o que é evento de tecnologia.
+
+    Em UMA chamada para a lista inteira, e não uma por evento: é mais rápido,
+    mais barato, e o modelo compara os candidatos entre si — o que ajuda
+    justamente nos casos de borda ("feira automotiva que fala em inovação").
+
+    Se a IA estiver fora, devolve a lista inteira: melhor mostrar demais do que
+    a aba vazia; o resto do pipeline ainda exige data e região.
+    """
+    if not brutos:
+        return []
+    listado = "\n".join(f"{i}. {b.titulo} — {b.trecho[:300]}" for i, b in enumerate(brutos))
+    try:
+        resultado = await generate_json(
+            _AI_SYSTEM_TECNOLOGIA, f"Eventos:\n{listado}", _AI_SCHEMA_TECNOLOGIA
+        )
+    except AiProviderError as exc:
+        logger.warning("classificação de tecnologia indisponível: %s", exc)
+        return brutos
+
+    itens = (resultado.content or {}).get("itens") or []
+    aprovados = {
+        int(item["indice"])
+        for item in itens
+        if isinstance(item, dict) and item.get("tecnologia") is True and str(item.get("indice", "")).isdigit()
+    }
+    return [b for i, b in enumerate(brutos) if i in aprovados]
+
+
+# ---------------------------------------------------------------------------
+# A varredura de uma região
+# ---------------------------------------------------------------------------
+
+
+def precisa_buscar(supabase: Client, cidade: Optional[str], uf: Optional[str]) -> bool:
+    """Para a rota saber se vale agendar uma varredura — sem fazer nenhuma."""
+    if not cidade or not uf:
+        return False
+    return _precisa_buscar(supabase, cidade, uf)
 
 
 def _precisa_buscar(supabase: Client, cidade: str, uf: str) -> bool:
+    """A região foi varrida há pouco?
+
+    A marca é a varredura em si (`pathr_news_scan`), e não a existência de
+    eventos gravados: região onde a busca não achava nada continuava "nunca
+    buscada" e era varrida DE NOVO a cada abertura da tela — busca e IA
+    inteiras, por nada. Era o "Buscando eventos…" que não terminava.
+    """
     limite = (datetime.now(timezone.utc) - timedelta(seconds=_VALIDADE_S)).isoformat()
-    recentes = (
-        supabase.table("pathr_news_event").select("id")
-        .eq("city", cidade).eq("state", uf).gte("updated_at", limite).limit(1).execute().data
-        or []
-    )
+    try:
+        recentes = (
+            supabase.table("pathr_news_scan").select("id")
+            .eq("city", cidade).eq("state", uf).gte("scanned_at", limite).limit(1).execute().data
+            or []
+        )
+    except Exception:  # noqa: BLE001
+        # Na dúvida NÃO varre: falha de leitura não pode virar enxurrada de
+        # buscas a cada abertura.
+        logger.warning("não consegui ler a marca de varredura", exc_info=True)
+        return False
     return not recentes
 
 
-async def atualizar_regiao(supabase: Client, cidade: str, uf: str) -> None:
-    """Busca e grava, só se a região não foi buscada há pouco. Falha de uma
-    fonte, ou da IA numa candidata, não derruba a busca inteira — cada evento
-    é uma tentativa independente."""
+def _marcar_varredura(supabase: Client, cidade: str, uf: str, achados: int) -> None:
+    try:
+        supabase.table("pathr_news_scan").upsert(
+            {
+                "city": cidade,
+                "state": uf,
+                "scanned_at": datetime.now(timezone.utc).isoformat(),
+                "found": achados,
+            },
+            on_conflict="city,state",
+        ).execute()
+    except Exception:  # noqa: BLE001
+        logger.warning("não consegui marcar a varredura de %s/%s", cidade, uf, exc_info=True)
+
+
+def _gravar(supabase: Client, campos: dict[str, Any]) -> bool:
+    try:
+        supabase.table("pathr_news_event").upsert(
+            {**campos, "updated_at": datetime.now(timezone.utc).isoformat()},
+            on_conflict="source_url",
+        ).execute()
+        return True
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("gravação do evento %r falhou: %s", campos.get("source_url"), exc)
+        return False
+
+
+async def atualizar_regiao(supabase: Client, cidade: str, uf: str) -> int:
+    """Varre a região e grava o que achar. Devolve quantos entraram.
+
+    ## Por que grava um a um
+
+    Antes, tudo era montado em memória e gravado no fim: uma falha no meio — ou
+    a pessoa fechando a aba — jogava fora o trabalho inteiro, e a abertura
+    seguinte recomeçava do zero. Agora cada evento pronto é gravado na hora.
+
+    ## Por que a marca vem primeiro
+
+    `_marcar_varredura` é chamada ANTES de varrer: assim duas telas abertas ao
+    mesmo tempo não disparam duas varreduras da mesma região, e uma falha no
+    meio não deixa a região marcada como "nunca vista" — que é o que fazia a
+    busca reiniciar sem fim.
+    """
     if not cidade or not uf or not _precisa_buscar(supabase, cidade, uf):
-        return
+        return 0
+
+    _marcar_varredura(supabase, cidade, uf, 0)
+
     brutos = await buscar_bruto(cidade, uf)
     if not brutos:
-        return
+        return 0
 
-    organizados: list[dict[str, Any]] = []
-    for item in brutos[:12]:
-        campos = await organizar(item, cidade, uf)
-        if campos:
-            organizados.append(campos)
+    candidatos = await somente_tecnologia(brutos[:_MAXIMO_POR_VARREDURA])
+    if not candidatos:
+        return 0
 
-    if not organizados:
-        return
+    centro = geo.achar(cidade, uf)
+    perto = (
+        {geo.normaliza(c.nome) for c, _ in geo.no_raio(centro, _RAIO_DA_BUSCA_KM)}
+        if centro
+        else {geo.normaliza(cidade)}
+    )
 
-    async with httpx.AsyncClient(timeout=_TIMEOUT, headers={"User-Agent": _UA}) as cliente:
-        vivos = [c for c in organizados if await _reachable(cliente, c["ticket_url"])]
+    vez = asyncio.Semaphore(_CONCORRENCIA)
 
-    for campos in vivos:
-        try:
-            supabase.table("pathr_news_event").upsert(
-                {**campos, "updated_at": datetime.now(timezone.utc).isoformat()},
-                on_conflict="source_url",
-            ).execute()
-        except Exception as exc:  # noqa: BLE001
-            logger.warning("gravação do evento %r falhou: %s", campos.get("source_url"), exc)
+    async with httpx.AsyncClient(
+        timeout=_TIMEOUT, headers={"User-Agent": _UA}, follow_redirects=False
+    ) as cliente:
+
+        async def um(bruto: EventoBruto) -> bool:
+            async with vez:
+                campos = await _montar(cliente, bruto, cidade, uf, perto)
+            if not campos:
+                return False
+            # `to_thread` porque o cliente do Supabase é síncrono: gravar
+            # direto aqui pararia o laço de eventos, e as outras páginas
+            # ficariam esperando a escrita de uma.
+            return await asyncio.to_thread(_gravar, supabase, campos)
+
+        resultados = await asyncio.gather(*(um(b) for b in candidatos), return_exceptions=True)
+
+    entraram = 0
+    for resultado in resultados:
+        if isinstance(resultado, Exception):
+            logger.warning("evento falhou na varredura: %s", resultado)
+        elif resultado:
+            entraram += 1
+
+    _marcar_varredura(supabase, cidade, uf, entraram)
+    logger.info("varredura de %s/%s: %d de %d entraram", cidade, uf, entraram, len(candidatos))
+    return entraram
 
 
 def _publica(evento: dict[str, Any], presencas: set[str]) -> dict[str, Any]:
@@ -342,6 +544,7 @@ def _publica(evento: dict[str, Any], presencas: set[str]) -> dict[str, Any]:
         "inscricao_fim": evento.get("registration_end"),
         "inscricao_texto": None if tem_prazo else SEM_PRAZO_DE_INSCRICAO,
         "url_ingresso": evento.get("ticket_url"),
+        "imagem": evento.get("image_url"),
         "eu_vou": str(evento["id"]) in presencas,
     }
 
@@ -362,13 +565,12 @@ def listar_por_regiao(
     if cidade:
         centro = geo.achar(cidade, uf)
         if centro:
-            proximas = {c.nome.lower() for c, _ in geo.no_raio(centro, raio_km)}
-            linhas = [
-                l for l in linhas
-                if not l.get("city")
-                or str(l["city"]).lower() in proximas
-                or str(l.get("state") or "").upper() == (uf or "").upper()
-            ]
+            proximas = {geo.normaliza(c.nome) for c, _ in geo.no_raio(centro, raio_km)}
+            # Só cidade dentro do raio. Antes valia também "mesmo estado" e
+            # "sem cidade" — e o estado inteiro não é "perto de você": um
+            # evento a 400 km aparecia como se fosse na esquina, junto com
+            # todo evento cuja cidade o pipeline não soube dizer.
+            linhas = [l for l in linhas if geo.normaliza(str(l.get("city") or "")) in proximas]
 
     presencas = {
         str(p["event_id"])

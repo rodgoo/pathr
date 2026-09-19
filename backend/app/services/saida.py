@@ -104,6 +104,57 @@ async def _pedir(
         return resposta.status_code, resposta.headers.get("location")
 
 
+# Teto do que se baixa de uma página de terceiro. Página de evento tem uns
+# poucos KB de HTML útil; o resto é script e imagem, que não lemos.
+MAX_BYTES = 2 * 1024 * 1024
+
+
+async def baixar(cliente: httpx.AsyncClient, url: str, saltos: int = MAX_SALTOS) -> Optional[str]:
+    """O HTML da página, ou `None` — passando pela mesma guarda.
+
+    Existe porque ler a página do evento é a única forma de saber a data e a
+    imagem de verdade: o trecho que a busca devolve quase nunca traz data, e
+    adivinhar data de evento é pior do que não mostrar nenhuma.
+
+    Segue redirecionamento à mão, revalidando cada salto, e para no teto de
+    bytes — um endereço de fora pode apontar para um arquivo de 2 GB.
+    """
+    atual = url
+    for _ in range(saltos + 1):
+        try:
+            alvo, cabecalhos, extensoes = destino_pinado(atual)
+        except EnderecoRecusado:
+            return None
+        try:
+            async with cliente.stream(
+                "GET",
+                alvo,
+                headers={**cabecalhos, "Accept": "text/html,application/xhtml+xml"},
+                extensions=extensoes,
+                follow_redirects=False,
+            ) as resposta:
+                if resposta.status_code in _REDIRECIONAMENTOS:
+                    destino = resposta.headers.get("location")
+                    if not destino:
+                        return None
+                    atual = urljoin(atual, destino)
+                    continue
+                if resposta.status_code != 200:
+                    return None
+                if "html" not in resposta.headers.get("content-type", ""):
+                    return None
+                corpo = bytearray()
+                async for pedaco in resposta.aiter_bytes():
+                    corpo.extend(pedaco)
+                    if len(corpo) > MAX_BYTES:
+                        break
+                return corpo.decode(resposta.encoding or "utf-8", errors="replace")
+        except httpx.HTTPError as erro:
+            logger.debug("não consegui baixar %s: %s", atual, erro)
+            return None
+    return None
+
+
 async def alcancavel(cliente: httpx.AsyncClient, url: str, saltos: int = MAX_SALTOS) -> bool:
     """A URL responde? HEAD primeiro, GET quando o servidor recusa HEAD.
 
