@@ -21,15 +21,19 @@
  * FAQ estruturado, dos links internos e do sitemap.
  */
 
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { Resvg } from "@resvg/resvg-js";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(AQUI, "..", "public");
 const BASE = "https://pathr.notter.com.br";
 const APP = `${BASE}/`;
 const OG_IMG = `${BASE}/icons/icon-512.png`;
+// O cartão social 1200×630 (rasterizado de og.svg): é o que WhatsApp, LinkedIn
+// e X mostram ao compartilhar. O ícone quadrado fica só para o logo do JSON-LD.
+const OG_CARD = `${BASE}/og.png`;
 const HOJE = new Date().toISOString().slice(0, 10);
 
 /** tipo: "guia" | "roadmap"; o tipo vira o primeiro segmento da URL. */
@@ -649,12 +653,14 @@ function pagina(t) {
   <meta property="og:title" content="${esc(t.metaTitle)}" />
   <meta property="og:description" content="${esc(t.metaDesc)}" />
   <meta property="og:url" content="${url}" />
-  <meta property="og:image" content="${OG_IMG}" />
+  <meta property="og:image" content="${OG_CARD}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta property="og:locale" content="pt_BR" />
-  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${esc(t.metaTitle)}" />
   <meta name="twitter:description" content="${esc(t.metaDesc)}" />
-  <meta name="twitter:image" content="${OG_IMG}" />
+  <meta name="twitter:image" content="${OG_CARD}" />
   <script type="application/ld+json">
 ${JSON.stringify(jsonLd(t), null, 2)}
   </script>
@@ -759,7 +765,9 @@ function hub(tipo) {
   <meta property="og:title" content="${esc(meta.metaTitle)}" />
   <meta property="og:description" content="${esc(meta.metaDesc)}" />
   <meta property="og:url" content="${url}" />
-  <meta property="og:image" content="${OG_IMG}" />
+  <meta property="og:image" content="${OG_CARD}" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
   <meta property="og:locale" content="pt_BR" />
   <script type="application/ld+json">
 ${JSON.stringify(ld, null, 2)}
@@ -823,3 +831,10 @@ for (const tipo of Object.keys(HUB)) {
 }
 writeFileSync(join(PUBLIC, "sitemap.xml"), sitemap(), "utf8");
 console.log(`sitemap: ${TOPICOS.length + 6} URLs`);
+
+// O cartão social 1200×630: rasteriza og.svg -> og.png (redes sociais não
+// mostram SVG como imagem de compartilhamento; o PNG é o que aparece).
+const svgCartao = readFileSync(join(PUBLIC, "og.svg"), "utf8");
+const png = new Resvg(svgCartao, { fitTo: { mode: "width", value: 1200 } }).render().asPng();
+writeFileSync(join(PUBLIC, "og.png"), png);
+console.log("cartao:  og.png (1200x630)");

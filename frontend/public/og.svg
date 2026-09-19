@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" fill="none">
+  <defs>
+    <radialGradient id="glow" cx="80%" cy="18%" r="70%">
+      <stop offset="0" stop-color="#6a5ae0" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#6a5ae0" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glow2" cx="12%" cy="95%" r="60%">
+      <stop offset="0" stop-color="#5b4bd6" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#5b4bd6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="titulo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#c4bcff"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="#000000"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+
+  <!-- Marca oficial (mesmo traço do logo.svg), na grade de 440. -->
+  <g transform="translate(84,86) scale(0.4)" stroke="#ffffff" stroke-width="26" stroke-linecap="round" fill="none">
+    <path d="M144 89.2451L126.654 93.1647C109.013 97.1509 96.2412 112.478 95.5031 130.549L93.6673 175.498C93.1115 189.108 85.6684 201.499 73.9148 208.382L58.873 217.191C55.1505 219.371 54.8762 224.65 58.3526 227.204L77.2881 241.116C87.0774 248.308 93.0679 259.559 93.5705 271.696L95.4885 318.014C96.2355 336.054 109.008 351.928 127.055 352.464C132.987 352.64 138.933 352.361 144 351.245C146.616 350.669 149.372 349.713 152.159 348.512C173.647 339.247 183 315.025 183 291.624V260.5M183 260.5C183 260.5 183 230 183 205.002C183 175.5 208.254 154.774 236.5 154.5C261.967 154.253 286 173.778 286 199.246C286 224.399 261.652 242.301 236.5 242.5C214.056 242.678 183 260.5 183 260.5Z"/>
+    <path d="M314 351L323.88 348.232C340.681 343.524 352.492 328.47 353.066 311.032L354.666 262.462C355.072 250.124 361.152 238.666 371.141 231.412L383.039 222.772C386.115 220.538 386.365 216.042 383.554 213.482L367.786 199.117C359.809 191.849 355.107 181.667 354.747 170.883L353.305 127.716C352.621 107.233 336.567 90.5807 316.123 89.1487L314 89"/>
+  </g>
+  <text x="250" y="185" font-family="'Segoe UI',Arial,sans-serif" font-size="62" font-weight="700" fill="#ffffff" letter-spacing="-1">PathR</text>
+
+  <text font-family="'Segoe UI',Arial,sans-serif" font-weight="800" font-size="82" letter-spacing="-2" fill="url(#titulo)">
+    <tspan x="84" y="360">Seu plano de estudos</tspan>
+    <tspan x="84" y="452">em tecnologia.</tspan>
+  </text>
+
+  <text x="84" y="528" font-family="'Segoe UI',Arial,sans-serif" font-size="31" fill="#b9b3d6">Do seu currículo ao emprego — roadmap, cursos e vagas. Grátis.</text>
+
+  <text x="84" y="588" font-family="'Segoe UI',Arial,sans-serif" font-size="27" font-weight="600" fill="#b5abfc">pathr.notter.com.br</text>
+</svg>
