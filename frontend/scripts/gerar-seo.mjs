@@ -247,6 +247,189 @@ const TOPICOS = [
       },
     ],
   },
+  {
+    tipo: "roadmap",
+    slug: "python",
+    metaTitle: "Roadmap Python 2026: o que estudar para virar desenvolvedor Python | PathR",
+    h1: "Roadmap para desenvolvedor Python",
+    metaDesc:
+      "A ordem para aprender Python de verdade: fundamentos, estruturas de dados, um caminho (web, dados ou automação), banco de dados e testes.",
+    lead: "Python é a porta de entrada mais suave para a programação — e leva a três mundos: web, dados e automação. Este é o caminho, na ordem certa.",
+    secoes: [
+      { h2: "Fundamentos da linguagem", paras: ["Sintaxe, tipos, listas, dicionários, funções e laços. Python é limpo o bastante para você focar na lógica, não na cerimônia da linguagem."] },
+      { h2: "Estruturas de dados e orientação a objetos", paras: ["Listas, dicionários e conjuntos no sangue, mais o básico de classes e objetos. É o que separa um script de um programa de verdade."] },
+      { h2: "Escolha um caminho: web, dados ou automação", paras: ["Python abre três portas. Web: um framework como Django ou FastAPI. Dados: pandas, NumPy e visualização. Automação: scripts que falam com arquivos, planilhas e APIs. Escolha um para se aprofundar em vez de tocar em tudo pela metade."] },
+      { h2: "Banco de dados", paras: ["SQL e um ORM (SQLAlchemy ou o do Django). Quase todo projeto real guarda dados em algum lugar, e saber consultá-los é metade do trabalho."] },
+      { h2: "Testes, Git e o resto", paras: ["pytest, controle de versão com Git e uma noção de Docker. É o que aproxima o seu código do que roda em produção."] },
+    ],
+    faq: [
+      { q: "Python é bom para quem está começando?", a: "Sim, é uma das melhores primeiras linguagens: sintaxe limpa, comunidade enorme e uso em web, dados e automação. Você foca em aprender a pensar como programador antes de brigar com a linguagem." },
+      { q: "Python serve para conseguir emprego?", a: "Serve. Há muitas vagas em back-end (Django, FastAPI), em dados e engenharia de dados, além de automação. Escolher um caminho e ter projetos nele é o que abre a vaga." },
+      { q: "Django ou FastAPI?", a: "Django entrega mais pronto (admin, ORM, autenticação) e é ótimo para apps completos. FastAPI é enxuto, rápido e ideal para APIs. Para a primeira vaga de back-end, qualquer um dos dois é uma escolha forte." },
+    ],
+  },
+  {
+    tipo: "roadmap",
+    slug: "javascript",
+    metaTitle: "Roadmap JavaScript 2026: o que estudar do zero ao mercado | PathR",
+    h1: "Roadmap para desenvolvedor JavaScript",
+    metaDesc:
+      "A ordem para aprender JavaScript de verdade: fundamentos, o DOM, código assíncrono, um framework como React e Node.js no back-end.",
+    lead: "JavaScript é a única linguagem que roda no navegador — e, com Node.js, também no servidor. Aprender bem abre front-end e back-end.",
+    secoes: [
+      { h2: "Fundamentos da linguagem", paras: ["Tipos, funções, arrays, objetos e escopo. A base que todo framework assume — e que, quando falta, faz o resto parecer mágica."] },
+      { h2: "O DOM e eventos", paras: ["Como o JavaScript mexe na página: selecionar elementos, reagir a cliques, mudar o conteúdo. É o que torna a web interativa."] },
+      { h2: "Assíncrono: promises e async/await", paras: ["Buscar dados de uma API sem travar a tela. É o assunto que mais confunde no começo e o que mais aparece no trabalho real."] },
+      { h2: "Um framework de front-end (React)", paras: ["Depois da base, um framework como React organiza apps grandes. Aqui o JavaScript vira produto."] },
+      { h2: "Node.js no back-end", paras: ["O mesmo JavaScript no servidor: APIs, banco de dados e a stack completa numa linguagem só."] },
+    ],
+    faq: [
+      { q: "Preciso aprender JavaScript antes de React?", a: "Sim. React é JavaScript; a maior parte da dificuldade de quem 'não entende React' é JavaScript que faltou. Base primeiro." },
+      { q: "JavaScript dá emprego?", a: "Muito. É a linguagem da web: front-end (React, Vue, Angular) e back-end (Node.js). Uma das que mais têm vagas no mercado." },
+      { q: "Vale aprender TypeScript depois?", a: "Vale, e cedo. TypeScript é JavaScript com tipos e virou padrão em vagas. Comece com JS e adote TS quando a base fizer sentido." },
+    ],
+  },
+  {
+    tipo: "roadmap",
+    slug: "typescript",
+    metaTitle: "Roadmap TypeScript 2026: por que e como aprender | PathR",
+    h1: "Roadmap para aprender TypeScript",
+    metaDesc:
+      "Por que TypeScript virou padrão, e o caminho: JavaScript sólido primeiro, tipos, interfaces, generics e uso com React ou Node.",
+    lead: "TypeScript é JavaScript com tipos — e virou quase obrigatório em vagas. Mas só faz sentido depois de um JavaScript sólido.",
+    secoes: [
+      { h2: "Primeiro, JavaScript de verdade", paras: ["TypeScript não substitui aprender JavaScript; ele adiciona uma camada. Sem a base, os tipos viram ruído em vez de ajuda."] },
+      { h2: "Tipos, interfaces e uniões", paras: ["Anotar o que uma variável ou função aceita e devolve. É o que pega erro antes de o código rodar, no editor."] },
+      { h2: "Generics e tipos utilitários", paras: ["Escrever código que funciona com vários tipos sem perder a checagem. O que separa o TypeScript básico do profissional."] },
+      { h2: "TypeScript com React ou Node", paras: ["Onde ele brilha: componentes tipados no front, APIs tipadas no back. É assim que as vagas usam TypeScript de verdade."] },
+    ],
+    faq: [
+      { q: "Preciso saber JavaScript antes de TypeScript?", a: "Sim. TypeScript é uma camada sobre JavaScript. Aprender os dois ao mesmo tempo costuma confundir; base de JS primeiro." },
+      { q: "TypeScript é obrigatório para conseguir emprego?", a: "Cada vez mais pedido, principalmente em React e Node. Não é obrigatório em toda vaga, mas domina o mercado moderno de front-end." },
+      { q: "TypeScript é difícil?", a: "A sintaxe extra é pequena; a dificuldade real é entender os tipos, e isso vem com prática. Quem já sabe JavaScript pega o básico em poucas semanas." },
+    ],
+  },
+  {
+    tipo: "roadmap",
+    slug: "node",
+    metaTitle: "Roadmap Node.js 2026: o que estudar para back-end com JavaScript | PathR",
+    h1: "Roadmap para desenvolvedor Node.js",
+    metaDesc:
+      "A ordem para aprender back-end com Node.js: JavaScript sólido, um framework (Express ou NestJS), APIs REST, banco de dados, autenticação e testes.",
+    lead: "Node.js leva o JavaScript para o servidor — dá para ser full stack com uma linguagem só. Este é o caminho de back-end.",
+    secoes: [
+      { h2: "JavaScript e assíncrono primeiro", paras: ["Node é JavaScript no servidor, e quase tudo nele é assíncrono. Promises e async/await são pré-requisito, não detalhe."] },
+      { h2: "Um framework: Express ou NestJS", paras: ["Express é minimalista e ótimo para entender o básico; NestJS é estruturado e comum em vagas maiores. Comece por um e vá fundo."] },
+      { h2: "APIs REST e banco de dados", paras: ["Rotas, controllers e a comunicação com um banco (PostgreSQL ou MongoDB) via um ORM como Prisma. É o coração do back-end."] },
+      { h2: "Autenticação e segurança", paras: ["Login, tokens (JWT) e o básico de proteger uma API. O que separa um exercício de um app de verdade."] },
+      { h2: "Testes, Git e deploy", paras: ["Testes automatizados, Git e subir a API para um servidor. Fecha a stack de back-end."] },
+    ],
+    faq: [
+      { q: "Node.js ou Python para back-end?", a: "Node.js aproveita o JavaScript que você já usa no front (stack única); Python é forte em dados e tem Django/FastAPI. Ambos empregam bem — escolha pela stack que quer trabalhar." },
+      { q: "Express ou NestJS?", a: "Express para aprender os fundamentos e projetos menores; NestJS para arquitetura estruturada e vagas corporativas. Muitos começam no Express e migram." },
+      { q: "Preciso saber front-end para trabalhar com Node?", a: "Não é obrigatório, mas ajuda. Node é back-end; saber o básico de front torna você full stack, o que abre mais vagas." },
+    ],
+  },
+  {
+    tipo: "roadmap",
+    slug: "ciencia-de-dados",
+    metaTitle: "Roadmap Ciência de Dados 2026: por onde começar | PathR",
+    h1: "Roadmap para ciência de dados",
+    metaDesc:
+      "O caminho para entrar em dados: Python, estatística e SQL, manipulação com pandas, visualização e uma base de machine learning.",
+    lead: "Ciência de dados junta programação, estatística e negócio. O caminho é longo, mas cada etapa se apoia na anterior.",
+    secoes: [
+      { h2: "Python e manipulação de dados", paras: ["Python é a língua franca de dados. Some pandas e NumPy para carregar, limpar e transformar tabelas — 80% do trabalho é isso."] },
+      { h2: "Estatística e SQL", paras: ["Estatística descritiva e o básico de probabilidade para não tirar conclusão errada; SQL para buscar os dados onde eles moram."] },
+      { h2: "Visualização e storytelling", paras: ["Um gráfico claro vale mais que um modelo complexo que ninguém entende. Matplotlib/Seaborn e a habilidade de contar a história dos dados."] },
+      { h2: "Machine learning (base)", paras: ["Regressão, classificação e como avaliar um modelo de verdade — sem cair na ilusão de 99% de acerto. É o topo do caminho, não o começo."] },
+    ],
+    faq: [
+      { q: "Preciso ser bom em matemática para ciência de dados?", a: "Mais que na maioria das áreas de programação, sim — estatística e um pouco de álgebra ajudam. Mas dá para começar com o básico e aprofundar conforme avança." },
+      { q: "Por onde começo em dados?", a: "Por Python e manipulação de dados (pandas) e SQL. Análise de dados vem antes de machine learning; pular direto para ML sem essa base costuma travar." },
+      { q: "Analista ou cientista de dados?", a: "Analista foca em consultar, visualizar e explicar dados (SQL, dashboards) — porta de entrada mais rápida. Cientista adiciona estatística e machine learning. Comece por analista se quer entrar mais cedo." },
+    ],
+  },
+  {
+    tipo: "roadmap",
+    slug: "devops",
+    metaTitle: "Roadmap DevOps 2026: o que estudar para começar | PathR",
+    h1: "Roadmap para DevOps",
+    metaDesc:
+      "O caminho para DevOps: Linux e redes, Git e CI/CD, Docker e contêineres, nuvem e infraestrutura como código — na ordem certa.",
+    lead: "DevOps é a ponte entre escrever código e colocá-lo no ar de forma confiável. Exige base antes das ferramentas da moda.",
+    secoes: [
+      { h2: "Linux, redes e linha de comando", paras: ["Quase toda infraestrutura roda em Linux. Terminal, permissões e o básico de rede (DNS, HTTP, portas) são o alicerce."] },
+      { h2: "Git e CI/CD", paras: ["Controle de versão e pipelines que testam e entregam o código automaticamente. É o coração da entrega contínua."] },
+      { h2: "Docker e contêineres", paras: ["Empacotar a aplicação com tudo que ela precisa, para rodar igual em qualquer lugar. Depois, orquestração com Kubernetes."] },
+      { h2: "Nuvem e infraestrutura como código", paras: ["Um provedor (AWS, GCP ou Azure) e ferramentas como Terraform para descrever a infraestrutura em código, versionada e repetível."] },
+    ],
+    faq: [
+      { q: "Preciso saber programar para DevOps?", a: "Sim, o básico. Você automatiza com scripts (shell, Python) e lida com o código dos outros. Não precisa ser dev de aplicação, mas programar é parte do trabalho." },
+      { q: "DevOps é uma boa área para começar do zero?", a: "Costuma render mais como segunda etapa: entender desenvolvimento e Linux antes ajuda muito. Mas dá para mirar DevOps desde cedo focando em Linux, redes e automação." },
+      { q: "Qual nuvem aprender: AWS, Azure ou GCP?", a: "AWS tem mais vagas e material; Azure é forte em empresas que já usam Microsoft. Aprenda uma a fundo — os conceitos transferem para as outras." },
+    ],
+  },
+  {
+    tipo: "guia",
+    slug: "melhores-cursos-gratuitos-com-certificado",
+    metaTitle: "Melhores cursos gratuitos com certificado de programação (2026) | PathR",
+    h1: "Cursos gratuitos com certificado para programação",
+    metaDesc:
+      "Como encontrar cursos de programação gratuitos que emitem certificado de verdade — e como usá-los no currículo e no LinkedIn sem perder tempo.",
+    lead: "Certificado gratuito existe e ajuda no currículo — se for de uma fonte reconhecida e usado do jeito certo. Veja como escolher e o que evita perda de tempo.",
+    secoes: [
+      { h2: "O que faz um certificado valer", paras: ["O nome que emite pesa mais que o papel. Certificados de grandes plataformas e de empresas de tecnologia são reconhecidos; 'certificado' de fonte desconhecida acrescenta pouco."] },
+      { h2: "Onde procurar cursos gratuitos com certificado", paras: ["Grandes plataformas de educação, trilhas oficiais de empresas de nuvem e programas de formação abertos costumam ter cursos gratuitos que emitem certificado. O segredo é filtrar por área e por quem emite."] },
+      { h2: "Como usar o certificado no currículo e no LinkedIn", paras: ["Adicione à seção de certificações do LinkedIn e cite no currículo junto com o projeto que você fez com aquele conhecimento. Certificado sem prática rende menos que certificado mais um projeto no portfólio."] },
+      { h2: "O que NÃO fazer", paras: ["Colecionar dezenas de certificados de tópicos soltos não impressiona. Vale mais uma trilha coerente, ligada ao seu objetivo, do que um mural de logotipos."] },
+    ],
+    faq: [
+      { q: "Certificado gratuito de programação vale a pena?", a: "Vale, se for de uma fonte reconhecida e acompanhado de prática. Ele mostra dedicação e complementa o portfólio; sozinho, sem projeto, pesa pouco." },
+      { q: "Onde encontro cursos gratuitos com certificado?", a: "Em grandes plataformas de educação e nas trilhas oficiais de empresas de tecnologia e nuvem. O PathR reúne cursos com certificado filtrados pelo que você quer aprender." },
+      { q: "Certificado substitui faculdade?", a: "Não substitui, mas complementa. Para muitas vagas de tecnologia, portfólio, certificados relevantes e saber resolver problemas contam mais que o diploma." },
+    ],
+  },
+  {
+    tipo: "guia",
+    slug: "front-end-ou-back-end",
+    metaTitle: "Front-end ou back-end? Como escolher por onde começar | PathR",
+    h1: "Front-end ou back-end: qual escolher?",
+    metaDesc:
+      "As diferenças reais entre front-end e back-end, o que cada um exige, qual tem mais vagas e como decidir sem travar na dúvida.",
+    lead: "A dúvida trava muita gente no começo. A boa notícia: a base é parecida, e dá para trocar depois. Veja como decidir agora.",
+    secoes: [
+      { h2: "O que é cada um", paras: ["Front-end é o que a pessoa vê e usa — telas, botões, interações (HTML, CSS, JavaScript, React). Back-end é o que roda no servidor — regras, banco de dados, APIs (Java, Python, Node)."] },
+      { h2: "O que combina com você", paras: ["Gosta de ver o resultado visual e cuidar da experiência? Front-end. Prefere lógica, dados e o que acontece por trás? Back-end. Nenhum é 'mais fácil' — são gostos diferentes."] },
+      { h2: "Vagas e mercado", paras: ["Os dois têm muitas vagas. Full stack (os dois) abre ainda mais portas, mas exige mais tempo. No começo, escolher um e ir fundo rende mais que se dividir."] },
+      { h2: "E se eu errar a escolha?", paras: ["Você não erra de forma irreversível. A base (lógica, uma linguagem, Git) serve para os dois, e migrar depois é comum. Comece por um e ajuste no caminho."] },
+    ],
+    faq: [
+      { q: "Front-end é mais fácil que back-end?", a: "Não. Front-end tem a complexidade de estados, layout e experiência; back-end tem lógica, dados e escala. São dificuldades diferentes, não níveis." },
+      { q: "Qual tem mais vagas: front-end ou back-end?", a: "Os dois têm bastante. Back-end costuma ter leve vantagem em volume e salário em alguns mercados, mas a diferença é pequena — escolha pelo que gosta." },
+      { q: "Preciso escolher agora?", a: "Para focar os estudos, sim — evita se dividir. Mas a escolha não é definitiva: a base é comum e trocar depois é normal." },
+    ],
+  },
+  {
+    tipo: "guia",
+    slug: "como-conseguir-o-primeiro-emprego-de-programador",
+    metaTitle: "Como conseguir o primeiro emprego de programador (2026) | PathR",
+    h1: "Como conseguir o primeiro emprego de programador",
+    metaDesc:
+      "O que realmente abre a primeira vaga: portfólio com projetos, uma stack coerente, currículo enxuto e como se preparar para a entrevista técnica.",
+    lead: "A primeira vaga é a mais difícil — e não se ganha só acumulando cursos. Veja o que os recrutadores realmente olham.",
+    secoes: [
+      { h2: "Portfólio com projetos de verdade", paras: ["Dois ou três projetos que você construiu do zero valem mais que dez certificados. Eles provam que você resolve problemas, não só assiste a aulas."] },
+      { h2: "Uma stack coerente, não dez pela metade", paras: ["Melhor saber bem uma stack completa (uma linguagem, um framework, banco, Git) do que tocar em tudo superficialmente. Foco abre porta."] },
+      { h2: "Currículo enxuto e LinkedIn ativo", paras: ["Uma página, com projetos e tecnologias que você realmente usa. LinkedIn atualizado, porque é onde muita vaga aparece."] },
+      { h2: "Prepare a entrevista técnica", paras: ["Pratique explicar o seu código e resolver problemas em voz alta. Saber falar sobre o que fez conta tanto quanto o código."] },
+    ],
+    faq: [
+      { q: "Preciso de experiência para o primeiro emprego?", a: "É o paradoxo do começo. Projetos pessoais, freelances e contribuições contam como experiência prática — é assim que a maioria fura a barreira." },
+      { q: "Quantos projetos preciso no portfólio?", a: "Dois ou três bem feitos, que você saiba explicar por inteiro, valem mais que muitos projetos copiados. Domínio acima de quantidade." },
+      { q: "Vale a pena fazer freelance para começar?", a: "Vale. Freela e projetos reais dão experiência, portfólio e histórias para a entrevista — tudo o que falta a quem só estudou." },
+    ],
+  },
 ];
 
 // ---------------------------------------------------------------------------
@@ -276,6 +459,10 @@ p{margin:10px 0}
 .faq h3{font-size:17px;margin:22px 0 2px;color:#fff}
 .rel{margin-top:44px;padding-top:22px;border-top:1px solid rgba(233,233,237,.12)}
 .rel a{display:block;padding:8px 0;color:#e9e9ed}
+.hub a{display:block;padding:15px 0;border-bottom:1px solid rgba(233,233,237,.1);color:#e9e9ed;text-decoration:none}
+.hub a:hover b{color:#b5abfc}
+.hub b{display:block;font-size:17px}
+.hub span{display:block;font-size:13.5px;color:#8a8d99;margin-top:3px;line-height:1.45}
 footer{margin-top:40px;font-size:13px;color:#8a8d99}
 footer a{color:#8a8d99}
 `.trim();
@@ -391,9 +578,101 @@ ${relacionados}
 `;
 }
 
+/** As páginas-hub: uma por tipo (/guias/ e /roadmap/), que LISTAM e linkam as
+ * páginas daquele tipo. Não é um depósito de perguntas — é um índice, que ajuda
+ * o Google a rastrear tudo e distribui autoridade entre as páginas focadas. */
+const HUB = {
+  guia: {
+    metaTitle: "Guias para estudar programação e tecnologia | PathR",
+    h1: "Guias para estudar programação",
+    metaDesc:
+      "Guias diretos para quem estuda tecnologia: por onde começar, quanto tempo leva, front-end ou back-end, cursos com certificado e como conseguir o primeiro emprego.",
+  },
+  roadmap: {
+    metaTitle: "Roadmaps de estudo por tecnologia | PathR",
+    h1: "Roadmaps por tecnologia",
+    metaDesc:
+      "O que estudar, na ordem certa, para cada tecnologia: Java, Python, JavaScript, TypeScript, React, Node.js, DevOps e ciência de dados.",
+  },
+};
+
+const urlHub = (tipo) => `${BASE}/${PASTA[tipo]}/`;
+
+function hub(tipo) {
+  const url = urlHub(tipo);
+  const meta = HUB[tipo];
+  const itens = TOPICOS.filter((t) => t.tipo === tipo);
+  const lista = itens
+    .map((t) => `        <a href="${urlDe(t)}"><b>${esc(t.h1)}</b><span>${esc(t.metaDesc)}</span></a>`)
+    .join("\n");
+  const ld = {
+    "@context": "https://schema.org",
+    "@graph": [
+      { "@type": "CollectionPage", name: meta.h1, description: meta.metaDesc, url, inLanguage: "pt-BR" },
+      {
+        "@type": "ItemList",
+        itemListElement: itens.map((t, i) => ({ "@type": "ListItem", position: i + 1, url: urlDe(t), name: t.h1 })),
+      },
+      {
+        "@type": "BreadcrumbList",
+        itemListElement: [
+          { "@type": "ListItem", position: 1, name: "Início", item: APP },
+          { "@type": "ListItem", position: 2, name: ROTULO[tipo], item: url },
+        ],
+      },
+    ],
+  };
+  return `<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>${esc(meta.metaTitle)}</title>
+  <meta name="description" content="${esc(meta.metaDesc)}" />
+  <link rel="canonical" href="${url}" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
+  <link rel="icon" type="image/svg+xml" href="/logo.svg" />
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="PathR" />
+  <meta property="og:title" content="${esc(meta.metaTitle)}" />
+  <meta property="og:description" content="${esc(meta.metaDesc)}" />
+  <meta property="og:url" content="${url}" />
+  <meta property="og:image" content="${OG_IMG}" />
+  <meta property="og:locale" content="pt_BR" />
+  <script type="application/ld+json">
+${JSON.stringify(ld, null, 2)}
+  </script>
+  <style>${CSS}</style>
+</head>
+<body>
+  <div class="wrap">
+    <a class="top" href="/" style="text-decoration:none;color:inherit">
+      <img class="mark" src="/logo.svg" alt="PathR" width="34" height="34" />
+      <span><b>PathR</b><small>plano de estudos em tecnologia</small></span>
+    </a>
+    <nav class="bc"><a href="/">Início</a> › ${ROTULO[tipo]}</nav>
+    <main>
+      <h1>${esc(meta.h1)}</h1>
+      <p class="lead">${esc(meta.metaDesc)}</p>
+      <a class="cta" href="${APP}">Criar meu plano de estudos grátis</a>
+      <div class="hub">
+${lista}
+      </div>
+    </main>
+    <footer>
+      <a href="/">PathR</a> · <a href="/termos">Termos</a> · <a href="/privacidade">Privacidade</a> · <a href="/seguranca">Segurança</a>
+    </footer>
+  </div>
+</body>
+</html>
+`;
+}
+
 function sitemap() {
   const estaticas = [
     { loc: `${BASE}/`, freq: "weekly", pri: "1.0" },
+    { loc: urlHub("guia"), freq: "weekly", pri: "0.7" },
+    { loc: urlHub("roadmap"), freq: "weekly", pri: "0.7" },
     ...TOPICOS.map((t) => ({ loc: urlDe(t), freq: "monthly", pri: "0.8" })),
     { loc: `${BASE}/termos`, freq: "monthly", pri: "0.3" },
     { loc: `${BASE}/privacidade`, freq: "monthly", pri: "0.3" },
@@ -414,5 +693,11 @@ for (const t of TOPICOS) {
   writeFileSync(destino, pagina(t), "utf8");
   console.log("gerado:", urlDe(t));
 }
+for (const tipo of Object.keys(HUB)) {
+  const destino = join(PUBLIC, PASTA[tipo], "index.html");
+  mkdirSync(dirname(destino), { recursive: true });
+  writeFileSync(destino, hub(tipo), "utf8");
+  console.log("hub:   ", urlHub(tipo));
+}
 writeFileSync(join(PUBLIC, "sitemap.xml"), sitemap(), "utf8");
-console.log(`sitemap: ${TOPICOS.length + 4} URLs`);
+console.log(`sitemap: ${TOPICOS.length + 6} URLs`);
