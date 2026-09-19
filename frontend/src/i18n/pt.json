@@ -2004,7 +2004,9 @@
     },
     "video": {
       "carregando": "Carregando o vídeo…",
-      "retomandoDe": "Retomando de {tempo}."
+      "retomandoDe": "Retomando de {tempo}.",
+      "assistirNoYoutube": "Assistir no YouTube",
+      "checagemDoYoutube": "se o vídeo pedir login para confirmar que você não é um robô, é uma checagem do YouTube contra o bloqueio de cookies do seu navegador; assista por lá e volte, seu progresso está salvo."
     },
     "atividade": {
       "tipoCodigo": "Código",

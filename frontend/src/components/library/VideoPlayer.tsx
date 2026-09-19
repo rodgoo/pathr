@@ -179,6 +179,35 @@ export function VideoPlayer({
           {t("modulo.video.retomandoDe", { tempo: formatarTempo(comecarEm) })}
         </p>
       ) : null}
+
+      {/*
+        A saída para quando o embed não toca.
+
+        O YouTube às vezes responde, DENTRO do iframe, "faça login para
+        confirmar que você não é um bot" — acontece quando o navegador bloqueia
+        cookies de terceiros para youtube.com (Brave com escudos, Firefox
+        estrito, aba anônima). O botão de login que ele mostra ali não tem como
+        funcionar: a tela de login do Google recusa ser aberta dentro de um
+        iframe de outro site, então o clique não faz nada.
+
+        Não há o que consertar do nosso lado — é a relação entre o navegador e
+        o YouTube. O que dá para fazer é não deixar a pessoa presa: o link
+        abaixo abre o vídeo no YouTube já no segundo em que ela parou.
+      */}
+      <p style={{ fontSize: 11.5, color: TEXT.faint, margin: "8.4px 0 0", lineHeight: 1.5 }}>
+        <a
+          href={`https://www.youtube.com/watch?v=${encodeURIComponent(videoId)}${
+            comecarEm > 0 ? `&t=${Math.floor(comecarEm)}s` : ""
+          }`}
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: ACC }}
+        >
+          {t("modulo.video.assistirNoYoutube")}
+        </a>
+        {" — "}
+        {t("modulo.video.checagemDoYoutube")}
+      </p>
     </div>
   );
 }
