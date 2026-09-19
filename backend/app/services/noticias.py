@@ -200,23 +200,6 @@ _AI_SCHEMA: dict[str, Any] = {
     "required": ["titulo", "resumo"],
 }
 
-_AI_SYSTEM_INSCRICAO = """Você tenta encontrar o prazo de inscrição de UM evento de tecnologia
-específico, a partir do que você sabe sobre ele.
-
-Regra única, mais importante que qualquer outra: só responda uma data se você
-tem certeza real de que ela é o prazo de inscrição DESTE evento. Chutar uma
-data "comum" para esse tipo de evento é pior do que admitir que não sabe —
-retorne `null` nos dois campos sempre que não tiver certeza.
-"""
-
-_AI_SCHEMA_INSCRICAO: dict[str, Any] = {
-    "type": "OBJECT",
-    "properties": {
-        "inscricao_inicio": {"type": "STRING"},
-        "inscricao_fim": {"type": "STRING"},
-    },
-}
-
 _DATA_ISO = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
@@ -228,18 +211,6 @@ def _data_valida(valor: Any) -> Optional[str]:
 def _texto_ou_none(valor: Any, limite: int) -> Optional[str]:
     texto = str(valor or "").strip()
     return texto[:limite] if texto else None
-
-
-async def _completar_inscricao(titulo: str, cidade: Optional[str]) -> tuple[Optional[str], Optional[str]]:
-    """Segunda tentativa, só para o prazo de inscrição — ver o docstring do módulo."""
-    onde = f" em {cidade}" if cidade else ""
-    prompt = f'O evento é "{titulo}"{onde}. Você sabe o prazo (início e fim) das inscrições dele?'
-    try:
-        resultado = await generate_json(_AI_SYSTEM_INSCRICAO, prompt, _AI_SCHEMA_INSCRICAO)
-    except AiProviderError:
-        return None, None
-    dados = resultado.content or {}
-    return _data_valida(dados.get("inscricao_inicio")), _data_valida(dados.get("inscricao_fim"))
 
 
 async def _montar(
@@ -280,10 +251,13 @@ async def _montar(
     if not titulo:
         return None
 
-    inscricao_inicio: Optional[str] = None
-    inscricao_fim: Optional[str] = None
-    if pagina.data_inicio:
-        inscricao_inicio, inscricao_fim = await _completar_inscricao(titulo, cidade)
+    # Prazo de inscrição: só o que a página disser. A tentativa de perguntar à
+    # IA "você sabe o prazo deste evento?" custava uma chamada POR EVENTO (até
+    # 40 por varredura, estourando a cota diária) para produzir exatamente o
+    # tipo de palpite que esta leva tirou da data. Sem prazo na página, a tela
+    # mostra o texto fixo — que é a verdade: ainda não foi definido por aqui.
+    inscricao_inicio = None
+    inscricao_fim = None
 
     return {
         "title": titulo[:300],
@@ -386,7 +360,10 @@ async def somente_tecnologia(brutos: list[EventoBruto]) -> list[EventoBruto]:
         resultado = await generate_json(
             _AI_SYSTEM_TECNOLOGIA, f"Eventos:\n{listado}", _AI_SCHEMA_TECNOLOGIA
         )
-    except AiProviderError as exc:
+    except Exception as exc:  # noqa: BLE001
+        # Qualquer falha, e não só AiProviderError: a cota diária de IA chega
+        # como HTTPException 429, e ela escapava daqui para o ASGI — onde,
+        # rodando DEPOIS da resposta sair, virava "response already started".
         logger.warning("classificação de tecnologia indisponível: %s", exc)
         return brutos
 
@@ -459,6 +436,20 @@ def _gravar(supabase: Client, campos: dict[str, Any]) -> bool:
     except Exception as exc:  # noqa: BLE001
         logger.warning("gravação do evento %r falhou: %s", campos.get("source_url"), exc)
         return False
+
+
+async def varrer_em_fundo(supabase: Client, cidade: str, uf: str) -> None:
+    """`atualizar_regiao` para rodar como tarefa de fundo, sem deixar nada vazar.
+
+    Tarefa de fundo roda DEPOIS de a resposta sair: uma exceção ali não vira
+    erro 500 para ninguém — vira `RuntimeError: response already started` no
+    meio do ASGI, sem dizer o que de fato quebrou. Foi o que aconteceu quando a
+    cota diária de IA estourou. O lugar de uma falha de varredura é o log.
+    """
+    try:
+        await atualizar_regiao(supabase, cidade, uf)
+    except Exception:  # noqa: BLE001
+        logger.warning("varredura de %s/%s falhou", cidade, uf, exc_info=True)
 
 
 async def atualizar_regiao(supabase: Client, cidade: str, uf: str) -> int:

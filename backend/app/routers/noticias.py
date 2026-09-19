@@ -68,7 +68,7 @@ def listar(
         # Roda depois da resposta sair, no mesmo processo. `atualizar_regiao`
         # marca a região antes de começar, então duas telas abertas juntas não
         # disparam duas varreduras.
-        fundo.add_task(noticias.atualizar_regiao, supabase, cidade, uf)
+        fundo.add_task(noticias.varrer_em_fundo, supabase, cidade, uf)
 
     return {
         "eventos": noticias.listar_por_regiao(supabase, user_id, cidade, uf, raio_km),

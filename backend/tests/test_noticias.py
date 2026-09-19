@@ -287,3 +287,30 @@ def test_listagem_leva_a_imagem_para_a_tela():
 
     lista = noticias.listar_por_regiao(banco, "u1", "Vitória", "ES", 50.0)
     assert lista[0]["imagem"] == "https://img.exemplo/cartaz.jpg"
+
+def test_cota_de_ia_estourada_nao_derruba_a_varredura(monkeypatch):
+    """Aconteceu em produção: a cota diária de IA chega como HTTPException 429,
+    que não é AiProviderError. Escapando da classificação, ela subia por uma
+    tarefa de FUNDO — onde vira "response already started" no meio do ASGI, sem
+    dizer o que quebrou."""
+    from fastapi import HTTPException
+
+    async def estoura(*_args):
+        raise HTTPException(status_code=429, detail="Você atingiu o limite diário de uso da IA.")
+
+    monkeypatch.setattr(noticias, "generate_json", estoura)
+    candidatos = [_bruto()]
+
+    # Não levanta, e não esvazia a aba.
+    assert _rodar(noticias.somente_tecnologia(candidatos)) == candidatos
+
+
+def test_falha_na_varredura_fica_no_log_e_nao_sobe(monkeypatch):
+    """A tarefa de fundo roda depois da resposta sair: exceção ali não vira 500
+    para ninguém, vira ruído sem causa no ASGI. Fica no log."""
+
+    async def quebra(*_args, **_kwargs):
+        raise RuntimeError("busca fora do ar")
+
+    monkeypatch.setattr(noticias, "atualizar_regiao", quebra)
+    _rodar(noticias.varrer_em_fundo(_banco(), "Vitória", "ES"))  # não levanta
