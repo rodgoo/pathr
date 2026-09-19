@@ -156,7 +156,12 @@ function EventoCard({
    * evento de um dia termina no dia seguinte, senão a agenda mostra um dia a
    * menos.
    */
-  function noGoogleAgenda(): string {
+  function noGoogleAgenda(): string | null {
+    // Sem data não há o que agendar — e, principalmente, não se pode deixar um
+    // campo ausente derrubar a tela: isto roda DENTRO do render, e um throw
+    // aqui apaga a aba inteira ("Alguma coisa quebrou ao desenhar o conteúdo")
+    // por causa de um evento só.
+    if (!evento.data_inicio) return null;
     const soDigitos = (iso: string) => iso.replace(/-/g, "");
     const diaSeguinte = (iso: string) => {
       const d = new Date(`${iso}T12:00:00`);
@@ -178,6 +183,7 @@ ${evento.url_ingresso}`.trim(),
     return `https://calendar.google.com/calendar/render?${parametros.toString()}`;
   }
 
+  const agenda = noGoogleAgenda();
   const periodo =
     evento.data_fim && evento.data_fim !== evento.data_inicio
       ? `${formatarData(evento.data_inicio)} – ${formatarData(evento.data_fim)}`
@@ -252,9 +258,10 @@ ${evento.url_ingresso}`.trim(),
           {t("noticias.abrirIngresso")}
         </a>
 
+        {agenda ? (
         <a
           className="btn btn-secondary"
-          href={noGoogleAgenda()}
+          href={agenda}
           target="_blank"
           rel="noopener noreferrer"
           style={{ textDecoration: "none" }}
@@ -264,6 +271,7 @@ ${evento.url_ingresso}`.trim(),
           <Icon name="clock" size={15} />
           {t("noticias.googleAgenda")}
         </a>
+        ) : null}
 
         <button type="button" className="btn btn-ghost" disabled={baixando} onClick={() => void baixarIcs()}>
           <Icon name="download" size={15} />

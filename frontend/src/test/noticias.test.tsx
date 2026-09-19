@@ -92,6 +92,18 @@ describe("notícias", () => {
     expect(screen.getByRole("button", { name: /\.ics/ })).toBeInTheDocument();
   });
 
+  it("evento com campo faltando não derruba a tela inteira", async () => {
+    // Aconteceu em produção: um evento sem data fazia o link do Google Agenda
+    // estourar DENTRO do render, e a aba inteira virava "Alguma coisa quebrou
+    // ao desenhar o conteúdo" — por causa de um evento só.
+    const semData = { ...evento, data_inicio: null, data_fim: null, imagem: null, resumo: null };
+    monta({ eventos: [semData], atualizando: false });
+
+    expect(await screen.findByText("Meetup de Python")).toBeInTheDocument();
+    // O botão de agenda some (não há o que agendar), mas a tela fica de pé.
+    expect(screen.queryByRole("link", { name: /Google Agenda/ })).not.toBeInTheDocument();
+  });
+
   it("sem nenhum evento, explica em vez de ficar vazia", async () => {
     monta({ eventos: [], atualizando: false });
 
