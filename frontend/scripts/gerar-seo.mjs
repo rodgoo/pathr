@@ -430,6 +430,128 @@ const TOPICOS = [
       { q: "Vale a pena fazer freelance para começar?", a: "Vale. Freela e projetos reais dão experiência, portfólio e histórias para a entrevista — tudo o que falta a quem só estudou." },
     ],
   },
+  {
+    tipo: "roadmap",
+    slug: "go",
+    metaTitle: "Roadmap Go (Golang) 2026: o que estudar para back-end | PathR",
+    h1: "Roadmap para desenvolvedor Go",
+    metaDesc:
+      "A ordem para aprender Go de verdade: fundamentos, concorrência com goroutines, APIs, banco de dados e o que as vagas de back-end pedem.",
+    lead: "Go é enxuta, rápida e feita para serviços que aguentam escala. Poucos recursos, de propósito — e um caminho curto até o mercado.",
+    secoes: [
+      { h2: "Fundamentos da linguagem", paras: ["Sintaxe, tipos, structs, slices e maps. Go é pequena de propósito: dá para aprender a linguagem inteira em poucas semanas."] },
+      { h2: "Concorrência: goroutines e channels", paras: ["O grande diferencial de Go. Rodar milhares de tarefas ao mesmo tempo de forma simples é o que a torna forte em serviços, nuvem e infraestrutura."] },
+      { h2: "APIs e banco de dados", paras: ["Criar uma API HTTP (net/http ou um framework leve) e falar com um banco. É o uso mais comum de Go no mercado."] },
+      { h2: "Testes, Git e deploy", paras: ["Testes fazem parte da cultura de Go (o pacote testing é embutido). Some Git e Docker e você cobre o dia a dia."] },
+    ],
+    faq: [
+      { q: "Go é boa para iniciantes?", a: "É simples de aprender, mas costuma ser uma segunda linguagem: quem já programou aproveita mais. Como primeira funciona, mas há menos material para iniciante absoluto que em Python ou JavaScript." },
+      { q: "Go dá emprego?", a: "Sim, principalmente em back-end de alta escala, nuvem, DevOps e infraestrutura. Menos vagas que Java ou JavaScript, mas boa remuneração e concorrência menor." },
+      { q: "Preciso saber concorrência para trabalhar com Go?", a: "É o coração da linguagem e o que as vagas valorizam. Dá para começar sem, mas goroutines e channels são o que diferencia quem sabe Go de verdade." },
+    ],
+  },
+  {
+    tipo: "roadmap",
+    slug: "csharp",
+    metaTitle: "Roadmap C# e .NET 2026: o que estudar para back-end | PathR",
+    h1: "Roadmap para desenvolvedor C# / .NET",
+    metaDesc:
+      "A ordem para aprender C# de verdade: fundamentos, orientação a objetos, ASP.NET Core, Entity Framework, banco de dados e o que as vagas pedem.",
+    lead: "C# com .NET é forte em empresas, jogos (Unity) e sistemas corporativos. Um caminho sólido e cheio de vagas, na ordem certa.",
+    secoes: [
+      { h2: "Fundamentos da linguagem", paras: ["Sintaxe, tipos, coleções e LINQ (o jeito C# de trabalhar com listas). A base moderna da linguagem."] },
+      { h2: "Programação orientada a objetos", paras: ["Classes, interfaces, herança e polimorfismo. C# é orientado a objetos no osso, como Java — domine isso antes do framework."] },
+      { h2: "ASP.NET Core e APIs", paras: ["O framework web da Microsoft para criar APIs e aplicações. É o que a maioria das vagas de .NET pede."] },
+      { h2: "Entity Framework e banco de dados", paras: ["O ORM do .NET e SQL. Modelar e consultar dados é metade do trabalho de back-end."] },
+      { h2: "Testes, Git e o resto", paras: ["Testes com xUnit, Git e uma noção de Azure — a nuvem que mais aparece no mundo .NET."] },
+    ],
+    faq: [
+      { q: "C# vale a pena em 2026?", a: "Sim. É muito usada em empresas, sistemas corporativos e jogos (Unity), com muitas vagas e bons salários, principalmente em ambientes Microsoft." },
+      { q: "C# ou Java para back-end?", a: "São muito parecidas em conceito e mercado. C# é forte onde há stack Microsoft/Azure; Java em bancos e grandes corporações. Aprender uma facilita muito a outra." },
+      { q: "Preciso do Visual Studio para aprender C#?", a: "Ajuda, mas não é obrigatório — dá para usar o VS Code com .NET. O essencial é ter o SDK do .NET instalado." },
+    ],
+  },
+  {
+    tipo: "roadmap",
+    slug: "flutter",
+    metaTitle: "Roadmap Flutter 2026: o que estudar para apps mobile | PathR",
+    h1: "Roadmap para desenvolvedor Flutter",
+    metaDesc:
+      "A ordem para aprender Flutter de verdade: Dart, widgets e layout, estado, navegação, consumo de API e publicação — um código para Android e iOS.",
+    lead: "Flutter faz um app rodar em Android e iOS a partir de um código só. Cresce rápido no mercado mobile, e o caminho é bem definido.",
+    secoes: [
+      { h2: "A linguagem Dart", paras: ["Flutter usa Dart. Sintaxe, tipos, funções e o básico assíncrono (Future/async) vêm antes dos widgets."] },
+      { h2: "Widgets e layout", paras: ["Tudo em Flutter é widget. Montar telas compondo widgets e entender o layout (Row, Column, Stack) é o coração da ferramenta."] },
+      { h2: "Estado e navegação", paras: ["Gerenciar o estado da tela (setState e um gerenciador como Provider ou Riverpod) e navegar entre telas. Onde o app começa a ganhar vida."] },
+      { h2: "Consumir API e persistir dados", paras: ["Buscar dados de um servidor e guardar informação no aparelho. É o que quase todo app real faz."] },
+      { h2: "Publicar e o resto", paras: ["Testes, Git e o processo de publicar nas lojas. Fecha o ciclo de um app de verdade."] },
+    ],
+    faq: [
+      { q: "Flutter ou React Native?", a: "Flutter (Dart) tem desempenho muito bom e uma experiência de desenvolvimento consistente; React Native aproveita o JavaScript/React que você talvez já saiba. Os dois empregam — escolha pela base que já tem ou quer ter." },
+      { q: "Preciso saber programar antes de Flutter?", a: "Ajuda muito. Flutter assume lógica de programação; quem começa do zero absoluto costuma aprender os fundamentos (via Dart) junto, o que estica o caminho." },
+      { q: "Flutter serve para web também?", a: "Sim, roda em web e desktop além de mobile, mas o forte e o que mais tem vaga é o mobile — Android e iOS." },
+    ],
+  },
+  {
+    tipo: "roadmap",
+    slug: "sql",
+    metaTitle: "Roadmap SQL e banco de dados 2026: por onde começar | PathR",
+    h1: "Roadmap para SQL e banco de dados",
+    metaDesc:
+      "O que estudar de SQL de verdade: consultas, joins, agregações, modelagem e índices — a base que todo back-end, dados e análise usam.",
+    lead: "SQL é a habilidade que aparece em quase toda vaga de tecnologia — back-end, dados, análise. Aprender bem vale para a carreira inteira.",
+    secoes: [
+      { h2: "Consultas básicas", paras: ["SELECT, WHERE, ORDER BY, LIMIT. Buscar e filtrar dados é o começo, e já resolve muita coisa no dia a dia."] },
+      { h2: "Joins e relacionamentos", paras: ["Combinar tabelas com JOIN é onde SQL fica poderoso — e onde muita gente trava. Vale investir tempo aqui."] },
+      { h2: "Agregações e agrupamento", paras: ["COUNT, SUM, AVG e GROUP BY para responder perguntas de negócio: quantos, quanto, qual a média por categoria."] },
+      { h2: "Modelagem e índices", paras: ["Como organizar tabelas (normalização) e acelerar consultas com índices. O que separa quem 'usa SQL' de quem 'entende banco de dados'."] },
+    ],
+    faq: [
+      { q: "Preciso saber SQL mesmo não sendo da área de dados?", a: "Sim. Back-end, análise, produto e até QA usam SQL. É uma das habilidades mais transferíveis da área — vale para quase toda vaga." },
+      { q: "SQL é difícil de aprender?", a: "O básico (SELECT, WHERE) é rápido. A dificuldade real está em joins e modelagem, que vêm com prática. Em poucas semanas você já consulta dados de verdade." },
+      { q: "Qual banco de dados estudar?", a: "Comece com um banco relacional como PostgreSQL ou MySQL — o SQL entre eles é quase igual. O que você aprende transfere para quase todos." },
+    ],
+  },
+  {
+    tipo: "guia",
+    slug: "como-montar-portfolio-de-programador",
+    metaTitle: "Como montar um portfólio de programador que consegue emprego | PathR",
+    h1: "Como montar um portfólio de programador",
+    metaDesc:
+      "O que colocar (e o que evitar) no portfólio para conseguir a primeira vaga: quantos projetos, quais, e como apresentá-los para recrutadores.",
+    lead: "O portfólio é o que prova que você programa — mais que qualquer certificado. Veja como montar um que abre porta, não um que passa despercebido.",
+    secoes: [
+      { h2: "Poucos projetos, bem feitos", paras: ["Dois ou três projetos completos, que você saiba explicar por inteiro, valem mais que dez pela metade. Domínio acima de quantidade."] },
+      { h2: "Projetos que resolvem algo real", paras: ["Um clone de tutorial impressiona pouco. Um projeto que resolve um problema seu ou de alguém — mesmo simples — mostra que você pensa como quem constrói produto."] },
+      { h2: "Como apresentar cada projeto", paras: ["Para cada um: o que faz, quais tecnologias, um link para rodar e o código no GitHub. Um README claro conta tanto quanto o código."] },
+      { h2: "GitHub e LinkedIn", paras: ["Deixe o GitHub organizado (READMEs, commits que fazem sentido) e o LinkedIn atualizado com os projetos. É onde o recrutador vai olhar."] },
+    ],
+    faq: [
+      { q: "Quantos projetos preciso no portfólio?", a: "Dois ou três bem feitos e explicáveis. O recrutador prefere profundidade em poucos a superficialidade em muitos." },
+      { q: "Projeto de tutorial conta no portfólio?", a: "Conta pouco, porque não prova que você constrói sozinho. Vale como aprendizado, mas o portfólio brilha com projetos seus, mesmo que pequenos." },
+      { q: "Preciso de projetos publicados na internet?", a: "Ajuda muito ter um link para rodar (deploy), além do código no GitHub. Ver funcionando vale mais que só ler o código." },
+    ],
+  },
+  {
+    tipo: "guia",
+    slug: "vale-a-pena-estudar-programacao",
+    metaTitle: "Vale a pena estudar programação em 2026? | PathR",
+    h1: "Vale a pena estudar programação em 2026?",
+    metaDesc:
+      "Uma resposta honesta: mercado, salários, saturação, o que mudou com a IA e para quem realmente compensa entrar na área agora.",
+    lead: "A resposta curta é sim, mas com nuances — o mercado mudou, a IA entrou, e nem todo caminho é igual. Veja o quadro realista.",
+    secoes: [
+      { h2: "O mercado continua aquecido — mas exige mais", paras: ["Ainda faltam profissionais qualificados, e os salários seguem acima da média. O que mudou é que o nível de entrada subiu: só 'saber o básico' não basta mais como antes."] },
+      { h2: "A IA não acabou com a profissão", paras: ["Ferramentas de IA aceleram quem já sabe programar, mas não substituem quem entende de verdade o que constrói. Elas mudaram o trabalho, não o eliminaram — quem sabe usá-las sai na frente."] },
+      { h2: "Para quem compensa", paras: ["Compensa para quem gosta de resolver problemas e topa estudar de forma consistente por meses. Não compensa como 'ficar rico rápido' — quem entra só pelo salário costuma desistir na primeira dificuldade."] },
+      { h2: "Como reduzir o risco", paras: ["Estude com um plano na ordem certa, construa projetos e meça o progresso. É o que separa quem entra no mercado de quem acumula cursos sem sair do lugar."] },
+    ],
+    faq: [
+      { q: "Programação está saturada?", a: "Vagas de nível júnior são concorridas, mas falta gente qualificada de verdade. A saturação é de quem parou no básico; quem tem projetos e domina uma stack continua disputado." },
+      { q: "A IA vai acabar com o emprego de programador?", a: "Não pelo que se vê hoje. A IA aumenta a produtividade de quem programa e vira mais uma ferramenta. Entender o que o código faz — e por quê — segue sendo humano e valorizado." },
+      { q: "Vale a pena mesmo começando 'tarde'?", a: "Sim. A área valoriza resultado e portfólio mais que idade ou diploma. Muita gente muda de carreira para tecnologia e se dá bem — o que conta é a consistência." },
+    ],
+  },
 ];
 
 // ---------------------------------------------------------------------------

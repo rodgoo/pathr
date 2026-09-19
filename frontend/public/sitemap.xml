@@ -97,6 +97,42 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://pathr.notter.com.br/roadmap/go/</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pathr.notter.com.br/roadmap/csharp/</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pathr.notter.com.br/roadmap/flutter/</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pathr.notter.com.br/roadmap/sql/</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pathr.notter.com.br/guias/como-montar-portfolio-de-programador/</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://pathr.notter.com.br/guias/vale-a-pena-estudar-programacao/</loc>
+    <lastmod>2026-09-19</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://pathr.notter.com.br/termos</loc>
     <lastmod>2026-09-19</lastmod>
     <changefreq>monthly</changefreq>
