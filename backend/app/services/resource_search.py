@@ -88,7 +88,7 @@ assert _AI_SCORE < _SEARCH_FLOOR
 # Alguns servidores recusam requisição sem User-Agent de navegador. Não é
 # disfarce: é o mínimo para a validação não reprovar um link que abre bem no
 # navegador da pessoa.
-_UA = "Mozilla/5.0 (compatible; PathRBot/1.0; +https://pathr.notter.com.br)"
+_UA = f"Mozilla/5.0 (compatible; PathRBot/1.0; +{settings.frontend_url})"
 
 _YOUTUBE_SEARCH = "https://www.googleapis.com/youtube/v3/search"
 _YOUTUBE_VIDEOS = "https://www.googleapis.com/youtube/v3/videos"

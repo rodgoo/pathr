@@ -488,7 +488,7 @@
       ],
       "aceitacao": {
         "titulo": "Acceptation",
-        "p1a": "Les présentes conditions régissent l'utilisation de PathR, disponible sur pathr.notter.com.br, géré par Rodrigo Carvalho. En créant un compte, vous déclarez avoir lu et accepté ces conditions ainsi que la",
+        "p1a": "Les présentes conditions régissent l'utilisation de PathR, disponible sur pathr.notter.com.br, géré par {operador}. En créant un compte, vous déclarez avoir lu et accepté ces conditions ainsi que la",
         "p1link": "Politique de confidentialité",
         "p1b": ", qui explique comment vos données sont traitées.",
         "p2": "Si vous n'êtes pas d'accord, n'utilisez pas l'application. Vous pouvez supprimer votre compte à tout moment."
@@ -594,7 +594,7 @@
         "Le programme et le contenu pédagogique sont transmis à des fournisseurs d'intelligence artificielle afin de générer le plan de cours, les quiz et les corrigés.",
         "Les autres comptes ne voient que votre fiche de profil (nom, @, photo, ville, objectif et technologies) — jamais votre adresse e-mail ni votre date de naissance.",
         "Vous pouvez tout exporter dans un fichier ou supprimer votre compte à tout moment, dans Paramètres › Notifications et confidentialité.",
-        "Pour toute question ou demande concernant vos données : privacidade@notter.com.br."
+        "Pour toute question ou demande concernant vos données : {contato}."
       ],
       "controlador": {
         "titulo": "Qui gère vos données ?",
@@ -905,7 +905,7 @@
         "Session dans des cookies HttpOnly et SameSite=Strict, avec renouvellement rotatif et option « se déconnecter de tous les appareils ».",
         "Date de naissance, CV, photos et récits chiffrés avec l'algorithme AES-256-GCM directement dans l'application, la clé étant stockée en dehors de la base de données.",
         "Fichiers stockés dans un espace de stockage privé, accessibles uniquement via le serveur et réservés aux personnes autorisées.",
-        "Vous avez repéré une erreur ? Signalez-la à privacidade@notter.com.br avant de la diffuser."
+        "Vous avez repéré une erreur ? Signalez-la à {contato} avant de la diffuser."
       ],
       "senhas": {
         "titulo": "Mots de passe et connexion",

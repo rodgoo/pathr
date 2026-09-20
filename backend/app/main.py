@@ -37,6 +37,14 @@ async def lifespan(_app: FastAPI):
         # Recusa subir: melhor a máquina nova falhar no health check (e a Fly
         # manter a anterior) do que servir sessões forjáveis.
         raise RuntimeError("Configuração insegura para produção: " + "; ".join(problemas))
+    if settings.is_production and not settings.super_admin_emails:
+        # Não impede o boot — um app sem administrador funciona para quem usa.
+        # Mas é preciso aparecer: o padrão saiu do código (era o e-mail de uma
+        # pessoa), e quem esquecer de declarar fica sem ninguém para banir
+        # abuso e sem ninguém para moderar relato.
+        logger.warning(
+            "SUPER_ADMIN_EMAILS vazio: nenhuma conta administra esta instalação."
+        )
     logger.info("PathR subindo em %s", settings.environment)
     yield
     logger.info("PathR encerrando")

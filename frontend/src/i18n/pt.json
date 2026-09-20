@@ -472,7 +472,7 @@
       ],
       "aceitacao": {
         "titulo": "Aceitação",
-        "p1a": "Estes termos regem o uso do PathR, disponível em pathr.notter.com.br, operado por Rodrigo Carvalho. Ao criar uma conta você declara que leu e concorda com eles e com a",
+        "p1a": "Estes termos regem o uso do PathR, disponível em pathr.notter.com.br, operado por {operador}. Ao criar uma conta você declara que leu e concorda com eles e com a",
         "p1link": "Política de privacidade",
         "p1b": ", que explica como os seus dados são tratados.",
         "p2": "Se não concordar, não use o app. Você pode excluir a conta a qualquer momento."
@@ -578,7 +578,7 @@
         "O currículo e o conteúdo de estudo são enviados a provedores de inteligência artificial para gerar o plano, os quizzes e as correções.",
         "Outras contas veem só o seu cartão (nome, @, foto, cidade, objetivo e tecnologias) — nunca o seu e-mail ou a data de nascimento.",
         "Você pode exportar tudo em um arquivo ou excluir a conta a qualquer momento, em Configurações › Avisos e privacidade.",
-        "Dúvidas ou pedidos sobre seus dados: privacidade@notter.com.br."
+        "Dúvidas ou pedidos sobre seus dados: {contato}."
       ],
       "controlador": {
         "titulo": "Quem cuida dos seus dados",
@@ -889,7 +889,7 @@
         "Sessão em cookies HttpOnly e SameSite=Strict, com renovação rotativa e “sair de todos os dispositivos”.",
         "Data de nascimento, currículo, fotos e relatos cifrados com AES-256-GCM no próprio app, com a chave fora do banco.",
         "Arquivos em armazenamento privado, entregues só pelo servidor e só para quem tem permissão.",
-        "Achou uma falha? Conte para privacidade@notter.com.br antes de divulgar."
+        "Achou uma falha? Conte para {contato} antes de divulgar."
       ],
       "senhas": {
         "titulo": "Senhas e entrada",

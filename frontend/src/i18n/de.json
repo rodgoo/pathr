@@ -488,7 +488,7 @@
       ],
       "aceitacao": {
         "titulo": "Annahme",
-        "p1a": "Diese Nutzungsbedingungen regeln die Nutzung von PathR, das unter pathr.notter.com.br verfügbar ist und von Rodrigo Carvalho betrieben wird. Mit der Erstellung eines Kontos erklären Sie, dass Sie diese gelesen haben und ihnen sowie der",
+        "p1a": "Diese Nutzungsbedingungen regeln die Nutzung von PathR, das unter pathr.notter.com.br verfügbar ist und von {operador} betrieben wird. Mit der Erstellung eines Kontos erklären Sie, dass Sie diese gelesen haben und ihnen sowie der",
         "p1link": "Datenschutzerklärung",
         "p1b": ", in der erläutert wird, wie Ihre Daten verarbeitet werden.",
         "p2": "Wenn Sie damit nicht einverstanden sind, nutzen Sie die App bitte nicht. Sie können das Konto jederzeit löschen."
@@ -594,7 +594,7 @@
         "Der Lehrplan und die Lerninhalte werden an Anbieter von künstlicher Intelligenz übermittelt, um den Lehrplan, die Quizze und die Korrekturen zu erstellen.",
         "Andere Nutzer sehen nur Ihr Profil (Name, @, Foto, Stadt, Ziel und Technologien) – niemals Ihre E-Mail-Adresse oder Ihr Geburtsdatum.",
         "Sie können jederzeit unter „Einstellungen“ › „Benachrichtigungen und Datenschutz“ alles in eine Datei exportieren oder das Konto löschen.",
-        "Fragen oder Anfragen bezüglich Ihrer Daten: privacidade@notter.com.br."
+        "Fragen oder Anfragen bezüglich Ihrer Daten: {contato}."
       ],
       "controlador": {
         "titulo": "Wer kümmert sich um Ihre Daten?",
@@ -905,7 +905,7 @@
         "Sitzung in HttpOnly- und SameSite=Strict-Cookies mit rotierender Erneuerung und „Von allen Geräten abmelden“.",
         "Geburtsdatum, Lebenslauf, Fotos und Berichte, die in der App selbst mit AES-256-GCM verschlüsselt sind, wobei der Schlüssel außerhalb der Datenbank gespeichert ist.",
         "Dateien im privaten Speicher, die ausschließlich vom Server bereitgestellt werden und nur für berechtigte Personen zugänglich sind.",
-        "Haben Sie einen Fehler entdeckt? Bitte melden Sie ihn an privacidade@notter.com.br, bevor Sie ihn veröffentlichen."
+        "Haben Sie einen Fehler entdeckt? Bitte melden Sie ihn an {contato}, bevor Sie ihn veröffentlichen."
       ],
       "senhas": {
         "titulo": "Passwörter und Anmeldung",

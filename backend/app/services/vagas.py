@@ -48,7 +48,7 @@ from app.services import courses, geo
 logger = logging.getLogger("pathr.vagas")
 
 _TIMEOUT = httpx.Timeout(12.0, connect=6.0)
-_UA = "PathR/1.0 (+https://pathr.notter.com.br)"
+_UA = f"PathR/1.0 (+{settings.frontend_url})"
 
 GUPY = "https://employability-portal.gupy.io/api/v1/jobs"
 REMOTIVE = "https://remotive.com/api/remote-jobs"

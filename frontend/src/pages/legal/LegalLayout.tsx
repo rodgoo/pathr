@@ -39,7 +39,12 @@ export interface DocumentoLegal {
 }
 
 export const ULTIMA_ATUALIZACAO = "13 de setembro de 2026";
-export const EMAIL_CONTATO = "privacidade@notter.com.br";
+
+// Um lugar só para quem opera esta instalação: ver lib/operador.ts. O
+// reexport mantém quem já importava daqui.
+import { EMAIL_CONTATO, OPERADOR } from "@/lib/operador";
+
+export { EMAIL_CONTATO, OPERADOR };
 
 // ---------------------------------------------------------------------------
 // Peças de texto, usadas pelos três documentos

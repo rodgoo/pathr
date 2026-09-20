@@ -61,3 +61,17 @@ def offline_deepl(monkeypatch):
     yield
     traducao._cache.clear()
     traducao._glossario = None
+
+@pytest.fixture(autouse=True)
+def quem_modera_no_teste(monkeypatch):
+    """Declara o moderador/admin dos testes.
+
+    O código não tem mais e-mail nenhum como padrão (ter um dava poder de admin
+    ao dono da instalação original em toda cópia do projeto), então quem testa
+    moderação precisa dizer de quem é esse poder — como faz quem opera, pelo
+    ambiente.
+    """
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "moderator_emails", ["RodgooCode@Hotmail.com"], raising=False)
+    monkeypatch.setattr(settings, "super_admin_emails", ["RodgooCode@Hotmail.com"], raising=False)

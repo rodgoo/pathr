@@ -488,7 +488,7 @@
       ],
       "aceitacao": {
         "titulo": "Acceptance",
-        "p1a": "These terms govern the use of PathR, available at pathr.notter.com.br, operated by Rodrigo Carvalho. By creating an account, you acknowledge that you have read and agree to these terms and to the",
+        "p1a": "These terms govern the use of PathR, available at pathr.notter.com.br, operated by {operador}. By creating an account, you acknowledge that you have read and agree to these terms and to the",
         "p1link": "Privacy Policy",
         "p1b": ", which explains how your data is processed.",
         "p2": "If you don't agree, don't use the app. You can delete your account at any time."
@@ -594,7 +594,7 @@
         "The curriculum and course material are sent to artificial intelligence providers to generate the lesson plan, quizzes, and answer keys.",
         "Other accounts can only see your profile (name, @, photo, city, goal, and technologies)—never your email address or date of birth.",
         "You can export everything to a file or delete your account at any time under Settings › Notifications and Privacy.",
-        "Questions or requests regarding your data: privacidade@notter.com.br."
+        "Questions or requests regarding your data: {contato}."
       ],
       "controlador": {
         "titulo": "Who takes care of your data?",
@@ -905,7 +905,7 @@
         "Session cookies set to `HttpOnly` and `SameSite=Strict`, with rolling renewal and \"log out of all devices.\"",
         "Date of birth, resume, photos, and reports encrypted with AES-256-GCM within the app itself, with the key stored outside the database.",
         "Files stored in private storage, delivered only by the server and only to those with permission.",
-        "Did you find an error? Please let privacidade@notter.com.br know before sharing it."
+        "Did you find an error? Please let {contato} know before sharing it."
       ],
       "senhas": {
         "titulo": "Passwords and Login",

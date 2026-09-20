@@ -28,7 +28,9 @@ import { Resvg } from "@resvg/resvg-js";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(AQUI, "..", "public");
-const BASE = "https://pathr.notter.com.br";
+// O endereço público deste deployment. Um fork exporta SITE_URL antes de
+// gerar; sem isso, continua valendo o domínio de sempre.
+const BASE = process.env.SITE_URL ?? "https://pathr.notter.com.br";
 const APP = `${BASE}/`;
 const OG_IMG = `${BASE}/icons/icon-512.png`;
 // O cartão social 1200×630 (rasterizado de og.svg): é o que WhatsApp, LinkedIn

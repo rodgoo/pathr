@@ -488,7 +488,7 @@
       ],
       "aceitacao": {
         "titulo": "Aceptación",
-        "p1a": "Estas condiciones rigen el uso de PathR, disponible en pathr.notter.com.br, gestionado por Rodrigo Carvalho. Al crear una cuenta, declaras que las has leído y que estás de acuerdo con ellas y con la",
+        "p1a": "Estas condiciones rigen el uso de PathR, disponible en pathr.notter.com.br, gestionado por {operador}. Al crear una cuenta, declaras que las has leído y que estás de acuerdo con ellas y con la",
         "p1link": "Política de privacidad",
         "p1b": ", en la que se explica cómo se tratan sus datos.",
         "p2": "Si no estás de acuerdo, no utilices la aplicación. Puedes eliminar la cuenta en cualquier momento."
@@ -594,7 +594,7 @@
         "El plan de estudios y los contenidos se envían a proveedores de inteligencia artificial para que generen el plan de estudios, los cuestionarios y las correcciones.",
         "Las demás cuentas solo ven tu perfil (nombre, @, foto, ciudad, objetivo y tecnologías), nunca tu correo electrónico ni tu fecha de nacimiento.",
         "Puedes exportarlo todo a un archivo o eliminar la cuenta en cualquier momento, en Ajustes › Notificaciones y privacidad.",
-        "Si tienes alguna duda o solicitud relacionada con tus datos: privacidade@notter.com.br."
+        "Si tienes alguna duda o solicitud relacionada con tus datos: {contato}."
       ],
       "controlador": {
         "titulo": "¿Quién se encarga de proteger tus datos?",
@@ -905,7 +905,7 @@
         "Sesión en cookies HttpOnly y SameSite=Strict, con renovación rotativa y «cerrar sesión en todos los dispositivos».",
         "Fecha de nacimiento, currículum, fotos e informes cifrados con AES-256-GCM dentro de la propia aplicación, con la clave almacenada fuera de la base de datos.",
         "Archivos almacenados de forma privada, a los que solo puede acceder el servidor y únicamente aquellas personas que cuenten con permiso.",
-        "¿Has encontrado un error? Avísanos a privacidade@notter.com.br antes de difundirlo."
+        "¿Has encontrado un error? Avísanos a {contato} antes de difundirlo."
       ],
       "senhas": {
         "titulo": "Contraseñas y acceso",

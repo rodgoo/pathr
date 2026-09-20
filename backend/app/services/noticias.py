@@ -40,6 +40,7 @@ import re
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Optional
+from urllib.parse import urlparse
 
 import httpx
 from supabase import Client
@@ -51,7 +52,7 @@ from app.services import evento_da_pagina, geo, saida
 logger = logging.getLogger("pathr.noticias")
 
 _TIMEOUT = httpx.Timeout(12.0, connect=6.0)
-_UA = "PathR/1.0 (+https://pathr.notter.com.br)"
+_UA = f"PathR/1.0 (+{settings.frontend_url})"
 
 TAVILY = "https://api.tavily.com/search"
 BRAVE = "https://api.search.brave.com/res/v1/web/search"
@@ -607,6 +608,16 @@ def eventos_que_vou(supabase: Client, user_id: str) -> list[dict[str, Any]]:
     ]
 
 
+def _dominio_do_site() -> str:
+    """O domínio deste deployment, para o UID do arquivo de calendário.
+
+    O UID precisa ser único no mundo e estável para o mesmo evento; o padrão
+    do iCalendar é `id@dominio`. Sai de `frontend_url` para que um fork não
+    anuncie eventos com o domínio de outra instalação.
+    """
+    return urlparse(settings.frontend_url).hostname or "pathr.local"
+
+
 def gerar_ics(evento: dict[str, Any]) -> str:
     """Um `.ics` mínimo — sem biblioteca: o formato é texto simples e o app
     só precisa de um evento de dia inteiro, com título, local e descrição."""
@@ -625,7 +636,7 @@ def gerar_ics(evento: dict[str, Any]) -> str:
         "VERSION:2.0",
         "PRODID:-//PathR//Noticias//PT",
         "BEGIN:VEVENT",
-        f"UID:{evento['id']}@pathr.notter.com.br",
+        f"UID:{evento['id']}@{_dominio_do_site()}",
         f"DTSTAMP:{agora}",
         f"DTSTART;VALUE=DATE:{inicio}",
         f"DTEND;VALUE=DATE:{fim}",

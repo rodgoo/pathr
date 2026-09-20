@@ -50,10 +50,11 @@ import nh3
 import trafilatura
 from lxml import etree
 from lxml import html as lxml_html
+from app.config import settings
 
 # Um agente identificado, com endereço de contato. Um raspador anônimo é o
 # tipo de tráfego que sites bloqueiam primeiro, e com razão.
-_AGENTE = "Mozilla/5.0 (compatible; PathR/1.0; +https://pathr.notter.com.br)"
+_AGENTE = f"Mozilla/5.0 (compatible; PathR/1.0; +{settings.frontend_url})"
 
 _TIMEOUT = 25
 _MAX_REDIRECIONAMENTOS = 5

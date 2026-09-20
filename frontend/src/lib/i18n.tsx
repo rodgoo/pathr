@@ -34,6 +34,7 @@ import {
   type ReactNode,
 } from "react";
 import pt from "@/i18n/pt.json";
+import { EMAIL_CONTATO, OPERADOR } from "@/lib/operador";
 
 export const IDIOMAS = [
   { codigo: "pt", nome: "Português", nomeLocal: "Português (Brasil)" },
@@ -109,10 +110,20 @@ function buscar(dicionario: Dicionario, chave: string): unknown {
   }, dicionario);
 }
 
+/**
+ * Valores que TODA chave pode usar, sem quem chama precisar passá-los.
+ *
+ * `{operador}` e `{contato}` aparecem espalhados pelos textos legais, em cinco
+ * idiomas. Exigir que cada uma das 258 chamadas os repassasse seria garantir
+ * que alguém esqueceria numa — e a frase sairia com a chave crua na tela de
+ * termos de uso.
+ */
+const SEMPRE: Record<string, string> = { operador: OPERADOR, contato: EMAIL_CONTATO };
+
 function aplicar(texto: string, valores?: Record<string, string | number>): string {
-  if (!valores) return texto;
+  const todos = valores ? { ...SEMPRE, ...valores } : SEMPRE;
   return texto.replace(/\{(\w+)\}/g, (inteiro, nome: string) =>
-    nome in valores ? String(valores[nome]) : inteiro,
+    nome in todos ? String(todos[nome]) : inteiro,
   );
 }
 

@@ -6,6 +6,27 @@ import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 
 /**
+ * O domínio das metatags (canonical, Open Graph, JSON-LD) sai do ambiente.
+ *
+ * O `index.html` guarda o endereço de produção como padrão — assim o build
+ * normal não depende de variável nenhuma. Quem sobe um fork exporta
+ * `SITE_URL` e as metatags apontam para o site dele, em vez de mandarem o
+ * Google para a instalação original.
+ */
+function dominioDoSite() {
+  const site = process.env.SITE_URL ?? PADRAO_DO_SITE;
+  return {
+    name: "pathr-dominio-do-site",
+    transformIndexHtml(html: string) {
+      return site === PADRAO_DO_SITE ? html : html.split(PADRAO_DO_SITE).join(site);
+    },
+  };
+}
+
+const PADRAO_DO_SITE = "https://pathr.notter.com.br";
+
+
+/**
  * O Vite substitui `import.meta.env.VITE_*` em tempo de build: num arquivo
  * estático servido por CDN não há como ler variável de ambiente depois. Se a
  * URL da API faltar, o cliente cai no default de desenvolvimento e o bundle
@@ -94,7 +115,7 @@ function geraServiceWorker() {
 }
 
 export default defineConfig({
-  plugins: [react(), exigeUrlDaApi(), geraServiceWorker()],
+  plugins: [dominioDoSite(), react(), exigeUrlDaApi(), geraServiceWorker()],
   resolve: {
     alias: { "@": fileURLToPath(new URL("./src", import.meta.url)) },
   },

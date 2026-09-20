@@ -63,10 +63,15 @@ class Settings(BaseSettings):
     report_bucket: str = "pathr-reports"
     # Quem modera os relatos, pelo e-mail da conta. Lista para caber mais de
     # um moderador sem mudar código; comparado sem distinção de caixa.
-    moderator_emails: list[str] = ["rodgoocode@hotmail.com"]
+    #
+    # VAZIO por padrão, e é importante que seja: com um e-mail fixo aqui, toda
+    # instalação nova — inclusive um fork — nasceria dando moderação e
+    # administração ao dono da instalação ORIGINAL. Quem opera declara os seus
+    # em MODERATOR_EMAILS / SUPER_ADMIN_EMAILS.
+    moderator_emails: list[str] = []
     # Quem administra CONTAS (ver a lista de usuários, banir). Separado de
     # moderar: responder relatos não deve dar o poder de tirar alguém do app.
-    super_admin_emails: list[str] = ["rodgoocode@hotmail.com"]
+    super_admin_emails: list[str] = []
 
     # --- Origens e cookies ---
     # O app vive em pathr.notter.com.br e a API em api.pathr.notter.com.br:
