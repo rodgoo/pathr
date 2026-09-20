@@ -189,6 +189,12 @@ export function ListeningPlayer({
   /** O caminho antigo: o sintetizador do próprio navegador. */
   function tocarComSintese() {
     if (!temSintese) {
+      // Nem voz do servidor, nem sintetizador: não há como tocar nada. O
+      // estado precisa mudar MESMO assim, porque é dele que depende o aviso
+      // logo abaixo — sem isto a tela ficava muda, e "apertei ouvir e não
+      // aconteceu nada" é o pior jeito possível de falhar: quem está do outro
+      // lado não sabe se o defeito é do app, do som do computador ou dele.
+      setNaVozDoNavegador(true);
       terminou();
       return;
     }

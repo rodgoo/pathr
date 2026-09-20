@@ -274,8 +274,8 @@ class _ClienteFalso:
     async def __aexit__(self, *_a):
         return False
 
-    async def post(self, url, params=None, json=None):
-        type(self).enviado = {"url": url, "params": params, "json": json}
+    async def post(self, url, params=None, headers=None, json=None):
+        type(self).enviado = {"url": url, "params": params, "headers": headers, "json": json}
         return self._resposta
 
 
@@ -417,3 +417,24 @@ async def test_rotaciona_para_a_segunda_chave_quando_a_primeira_falha(monkeypatc
 
     assert tentadas == ["k1", "k2"]
     assert audio.startswith(b"RIFF")
+
+
+@pytest.mark.asyncio
+async def test_a_chave_vai_no_cabecalho_e_nunca_na_url(monkeypatch):
+    """Chave em `?key=...` vaza em todo lugar que registra endereço.
+
+    Aconteceu numa depuração: com o log do httpx em INFO, a chave inteira saiu
+    impressa no terminal. No cabeçalho ela fica fora do que se costuma
+    registrar — e este teste existe para que ninguém a devolva para a URL por
+    conveniência.
+    """
+    pcm = base64.b64encode(bytes([0, 1]) * 10).decode("ascii")
+    cliente = _ClienteFalso(_resposta({"candidates": [{"content": {"parts": [{"inlineData": {"data": pcm}}]}}]}))
+    monkeypatch.setattr(tts.httpx, "AsyncClient", cliente)
+
+    await tts._via_generate_content("Hello.", "en", None, "chave-secreta")
+
+    enviado = _ClienteFalso.enviado
+    assert enviado["headers"] == {"x-goog-api-key": "chave-secreta"}
+    assert "chave-secreta" not in enviado["url"]
+    assert not enviado["params"]

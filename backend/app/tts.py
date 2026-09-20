@@ -60,7 +60,7 @@ from typing import Optional
 
 import httpx
 
-from app.ai_providers import AiProviderError, _classify, _keys
+from app.ai_providers import AUTH, AiProviderError, _classify, _keys
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -114,6 +114,29 @@ _TIMEOUT = 60
 # Áudio é lento de gerar e o pedido sai de um clique em "ouvir". Sem teto, um
 # texto colado por engano viraria minutos de síntese cobrada.
 _LIMITE_DE_CARACTERES = 1200
+
+# Quantas rodadas antes de desistir, e a espera entre elas.
+#
+# O TTS do Gemini recusa pedido simultâneo com 429 mesmo dentro da cota: um
+# diálogo de quatro falas pedidas juntas voltava com uma delas falhando, e uma
+# falha derruba o diálogo inteiro (é tudo ou nada, para o timbre não trocar no
+# meio). Sem repetir, isso virava "o áudio não sai" na tela — que foi
+# exatamente o relato.
+#
+# A espera respeita o `Retry-After` quando o provedor manda um; sem ele, dobra
+# a cada rodada. O teto existe porque a pessoa está esperando para ouvir: mais
+# que alguns segundos e é melhor cair para a voz do navegador.
+_TENTATIVAS = 3
+_ESPERA_BASE_S = 1.5
+_ESPERA_MAXIMA_S = 6.0
+
+
+def _espera(erro: Optional[Exception], tentativa: int) -> float:
+    """Quanto esperar antes da próxima rodada."""
+    pedida = getattr(erro, "retry_after", None)
+    if pedida:
+        return min(float(pedida), _ESPERA_MAXIMA_S)
+    return min(_ESPERA_BASE_S * (2**tentativa), _ESPERA_MAXIMA_S)
 
 # O que o PCM do Gemini é, segundo a documentação: 24 kHz, mono, 16 bits.
 # Fixo de propósito — a resposta não descreve o formato, então ler daqui é
@@ -317,6 +340,18 @@ def _audio_ou_erro(bruto: Optional[str]) -> bytes:
     return _wav(base64.b64decode(bruto))
 
 
+def _cabecalho(api_key: str) -> dict[str, str]:
+    """A chave vai no CABEÇALHO, nunca na URL.
+
+    Como `?key=...`, ela aparece em todo lugar que registra endereço: o log de
+    requisição do httpx (basta alguém subir o nível para INFO), o log de um
+    proxy, um traceback de rede. Já aconteceu aqui: uma depuração com log em
+    INFO imprimiu a chave inteira na saída do terminal. No cabeçalho, ela fica
+    fora do que se costuma registrar.
+    """
+    return {"x-goog-api-key": api_key}
+
+
 async def _via_interactions(texto: str, idioma: str, voz: Optional[int], api_key: str) -> bytes:
     """O dialeto que o guia de TTS publica hoje.
 
@@ -331,7 +366,7 @@ async def _via_interactions(texto: str, idioma: str, voz: Optional[int], api_key
         "generation_config": {"speech_config": _vozes_achatadas(texto, voz)},
     }
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
-        resposta = await client.post(_URL_INTERACTIONS, params={"key": api_key}, json=corpo)
+        resposta = await client.post(_URL_INTERACTIONS, headers=_cabecalho(api_key), json=corpo)
     if resposta.status_code in (400, 404, 405):
         raise _DialetoRecusado(f"interactions recusou o pedido (HTTP {resposta.status_code})")
     if resposta.status_code != 200:
@@ -352,7 +387,7 @@ async def _via_generate_content(texto: str, idioma: str, voz: Optional[int], api
     }
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
         resposta = await client.post(
-            _URL_GENERATE.format(modelo=_MODELO_GENERATE), params={"key": api_key}, json=corpo
+            _URL_GENERATE.format(modelo=_MODELO_GENERATE), headers=_cabecalho(api_key), json=corpo
         )
     if resposta.status_code in (400, 404, 405):
         raise _DialetoRecusado(f"generateContent recusou o pedido (HTTP {resposta.status_code})")
@@ -433,14 +468,22 @@ async def narrar(texto: str, idioma: str = "en", voz: Optional[int] = None) -> b
         raise AiProviderError("nenhuma chave de Gemini configurada")
 
     ultima: Optional[Exception] = None
-    for api_key in api_keys:
-        try:
-            audio = await _pede_ao_gemini(texto, idioma, voz, api_key)
-        except AiProviderError:
-            raise
-        except Exception as erro:  # falha de rede ou recusa desta chave
-            ultima = erro
-            continue
-        await _grava_no_cache(chave, audio)
-        return audio
+    for tentativa in range(_TENTATIVAS):
+        for api_key in api_keys:
+            try:
+                audio = await _pede_ao_gemini(texto, idioma, voz, api_key)
+            except AiProviderError:
+                raise
+            except Exception as erro:  # falha de rede ou recusa desta chave
+                ultima = erro
+                continue
+            await _grava_no_cache(chave, audio)
+            return audio
+
+        # Chave errada não melhora esperando: insistir só atrasa o plano B.
+        if getattr(ultima, "kind", None) == AUTH:
+            break
+        if tentativa < _TENTATIVAS - 1:
+            await asyncio.sleep(_espera(ultima, tentativa))
+
     raise AiProviderError("nenhuma chave de Gemini conseguiu gerar o áudio") from ultima

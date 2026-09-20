@@ -71,22 +71,40 @@ async function urlDaFala(texto: string, idioma: string, voz: number): Promise<st
 }
 
 /**
+ * Quantas falas se pede ao mesmo tempo.
+ *
+ * Era "todas de uma vez", e é por isso que o áudio sumia: o TTS do Gemini
+ * recusa pedido simultâneo com 429 mesmo dentro da cota, então um diálogo de
+ * quatro falas voltava com uma delas falhando — e uma falha derruba o diálogo
+ * inteiro (ver abaixo). Na prática, "ouvir" não produzia som.
+ *
+ * Duas de cada vez: o servidor aguenta, e a espera até a primeira palavra
+ * continua sendo a de duas gerações, não a de quatro.
+ */
+const DE_CADA_VEZ = 2;
+
+/**
  * Os áudios de um diálogo inteiro, na ordem — ou `null`.
  *
  * É tudo ou nada de propósito. Se uma fala viesse do servidor e outra do
  * sintetizador, o timbre trocaria no meio do diálogo, e isso soa como defeito
  * do app, não como recurso degradado.
- *
- * As falas são pedidas em paralelo porque a geração é o passo lento: em
- * série, um diálogo de quatro linhas somaria quatro esperas antes da primeira
- * palavra.
  */
 export async function audiosDasFalas(
   falas: FalaParaNarrar[],
   idioma: string,
 ): Promise<HTMLAudioElement[] | null> {
   if (falas.length === 0) return null;
-  const urls = await Promise.all(falas.map((f) => urlDaFala(f.texto, idioma, f.voz)));
-  if (urls.some((url) => url === null)) return null;
+
+  const urls: (string | null)[] = [];
+  for (let i = 0; i < falas.length; i += DE_CADA_VEZ) {
+    const lote = falas.slice(i, i + DE_CADA_VEZ);
+    const prontos = await Promise.all(lote.map((f) => urlDaFala(f.texto, idioma, f.voz)));
+    // Desiste no primeiro lote que falhar: sem isto, um diálogo longo seguiria
+    // pedindo o resto ao servidor para jogar tudo fora no fim.
+    if (prontos.some((url) => url === null)) return null;
+    urls.push(...prontos);
+  }
+
   return (urls as string[]).map((url) => new Audio(url));
 }
