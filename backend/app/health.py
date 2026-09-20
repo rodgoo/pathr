@@ -35,6 +35,31 @@ router = APIRouter(tags=["operação"])
 _CORE_TABLES = ("pathr_user", "pathr_tag", "pathr_roadmap", "pathr_resume")
 
 
+@router.get("/robots.txt", include_in_schema=False)
+def robots() -> Response:
+    """Pede a todo rastreador que não visite a API.
+
+    A API não é conteúdo — não tem página, não tem texto, e a raiz responde 404
+    porque é a verdade. Só que o Search Console está configurado como
+    propriedade de DOMÍNIO: ele varre todos os subdomínios, pediu
+    api.pathr.notter.com.br/, levou o 404 e registrou "Não encontrado" como
+    erro de indexação. O relatório passa a ter um erro permanente que ninguém
+    pode corrigir, e erro que não se corrige é erro que se aprende a ignorar —
+    junto com o próximo, que talvez importe.
+
+    Sem `Disallow`, não há como dizer "aqui não é para olhar". Com ele, o
+    rastreador não volta. O `X-Robots-Tag: noindex` (seguranca_http.py) cobre
+    o outro lado: o que já foi visitado sai do índice.
+    """
+    return Response(
+        content="User-agent: *\nDisallow: /\n",
+        media_type="text/plain",
+        # Esta resposta pode ser guardada: ela não tem dado de ninguém, e o
+        # padrão da API é `no-store`.
+        headers={"Cache-Control": "public, max-age=86400"},
+    )
+
+
 @router.get("/health")
 def health(response: Response) -> dict[str, Any]:
     """200 quando o app pode atender de verdade; 503 enquanto não pode."""

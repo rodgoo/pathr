@@ -40,6 +40,19 @@ _SEMPRE = [
     (b"x-frame-options", b"DENY"),
     (b"referrer-policy", b"no-referrer"),
     (b"cross-origin-resource-policy", b"same-site"),
+    # A API não é conteúdo: nada aqui deve entrar em buscador.
+    #
+    # O Search Console está configurado como propriedade de DOMÍNIO, então ele
+    # varre todos os subdomínios — inclusive este. O Google pediu
+    # api.pathr.notter.com.br/, recebeu o 404 correto (a API não tem página na
+    # raiz) e registrou um erro de indexação. O erro não machuca o ranqueamento
+    # do site, mas polui o relatório e esconde problema de verdade no meio.
+    #
+    # `noindex` responde a pergunta certa: não é que a página sumiu, é que ela
+    # nunca deveria ser indexada. Vai junto com o robots.txt da API, que pede
+    # para não rastrear — os dois porque fazem coisas diferentes: robots evita
+    # a visita, `noindex` cobre o que já foi visitado.
+    (b"x-robots-tag", b"noindex, nofollow"),
 ]
 
 _PRODUCAO = [
