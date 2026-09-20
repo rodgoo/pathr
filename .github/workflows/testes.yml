@@ -31,8 +31,6 @@ jobs:
       SUPABASE_URL: https://exemplo.supabase.co
       SUPABASE_SECRET_KEY: chave-de-teste
       JWT_SECRET_KEY: chave-de-teste-com-mais-de-trinta-e-dois-bytes
-      MFA_ENCRYPTION_KEY: x4kQ4W8nR2vY7tZ1pL3mJ6bN9cV0sA5dF8gH2jK4lM0=
-      DATA_ENCRYPTION_KEY: x4kQ4W8nR2vY7tZ1pL3mJ6bN9cV0sA5dF8gH2jK4lM0=
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -40,6 +38,18 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: backend/requirements.txt
+      # As chaves de cifra são SORTEADAS a cada execução, em vez de ficarem
+      # escritas aqui. Duas razões: uma chave com cara de chave no repositório
+      # acende todo varredor de segredo (e treina quem lê a ignorar o alarme),
+      # e sorteando fica impossível alguém reaproveitar "a chave do CI" em
+      # algum lugar de verdade.
+      - name: chaves de cifra do teste
+        run: |
+          python - <<'FIM' >> "$GITHUB_ENV"
+          import base64, os
+          for nome in ("MFA_ENCRYPTION_KEY", "DATA_ENCRYPTION_KEY"):
+              print(f"{nome}={base64.urlsafe_b64encode(os.urandom(32)).decode()}")
+          FIM
       - run: pip install -r requirements.txt
       - run: python -m pytest -q
 

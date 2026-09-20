@@ -1,0 +1,46 @@
+# Configuração do gitleaks para o PathR.
+#
+#   gitleaks git .   --log-opts="--all"   # o histórico inteiro
+#   gitleaks dir .                        # o que está no disco agora
+#
+# Existe porque a varredura sem configuração acusa 36 coisas neste repositório
+# e nenhuma é segredo: são dependências (node_modules, .venv), bytecode e
+# fixtures de teste. Uma lista de alarmes que é sempre falsa ensina quem a lê a
+# ignorá-la — e aí o alarme verdadeiro passa junto.
+#
+# Complementa, e não substitui, `backend/scripts/check_secrets.py`: aquele olha
+# o que está prestes a ser versionado (nasceu do dia em que cinco chaves de IA
+# foram parar dentro do `.env.example`); este varre o histórico inteiro com as
+# regras de provedor conhecidas.
+
+title = "PathR"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Dependências, artefatos de build e fixtures de teste"
+
+paths = [
+  # Código de terceiros: o que houver aqui não é nosso e não vai para o repo.
+  '''node_modules''',
+  '''\.venv''',
+  '''__pycache__''',
+  '''\.mypy_cache''',
+  '''dist/''',
+  # Segredos DE VERDADE — e é por isso que este arquivo nunca é versionado
+  # (ver backend/.gitignore). Fica fora da varredura para que o resultado
+  # continue legível na máquina de quem desenvolve.
+  '''\.env\.local''',
+]
+
+regexes = [
+  # Senha de fixture dos testes de login: escrita à mão, sem valor fora deles.
+  '''senha-forte-123''',
+  '''chave-de-teste''',
+  # Chave sintética que ficou no commit 76b741c: era o valor fixo do CI antes
+  # de as chaves passarem a ser sorteadas a cada execução. Nunca cifrou nada,
+  # nunca saiu daquele arquivo — mas continua no histórico, e sem esta linha
+  # toda varredura futura começaria com dois alarmes falsos.
+  '''x4kQ4W8nR2vY7tZ1pL3mJ6bN9cV0sA5dF8gH2jK4lM0=''',
+]
