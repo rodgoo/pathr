@@ -123,6 +123,13 @@ TRANSIENT = "transient"
 _COOLDOWN_BY_KIND = {QUOTA: _QUOTA_COOLDOWN, AUTH: _AUTH_COOLDOWN, TRANSIENT: _TRANSIENT_COOLDOWN}
 
 
+class SaidaBloqueada(AiProviderError):
+    """O modelo respondeu, mas a resposta trazia o prompt de sistema ou uma
+    credencial. Não rotaciona: outro provedor, com o mesmo prompt, faria o
+    mesmo. Sobe como `AiProviderError`, então todo chamador que já trata falha
+    de IA trata este caso sem mudar nada."""
+
+
 class _CandidateFailed(Exception):
     """Um candidato (provedor + chave) falhou. `kind` decide quanto tempo ele
     fica fora da rotação; `detail` é o motivo em pt-BR."""
@@ -379,7 +386,12 @@ async def _call_gemini(
     if schema:
         generation_config["responseSchema"] = schema
     corpo = {
-        "contents": [{"parts": [{"text": f"{system_prompt}\n\n{user_prompt}"}]}],
+        # As regras vão no campo PRÓPRIO de instrução de sistema, e não coladas
+        # ao texto do usuário: num único `text` o modelo não tem como distinguir
+        # o que é regra do que é dado, e uma dúvida que diga "ignore o acima"
+        # concorre em pé de igualdade com o prompt.
+        "systemInstruction": {"parts": [{"text": system_prompt}]},
+        "contents": [{"role": "user", "parts": [{"text": user_prompt}]}],
         "generationConfig": generation_config,
     }
     async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
@@ -421,12 +433,14 @@ async def _call_gemini_with_media(
             _GEMINI_URL,
             params={"key": api_key},
             json={
+                "systemInstruction": {"parts": [{"text": system_prompt}]},
                 "contents": [
                     {
+                        "role": "user",
                         "parts": [
-                            {"text": f"{system_prompt}\n\n{user_prompt}"},
+                            {"text": user_prompt},
                             {"inlineData": {"mimeType": mime_type, "data": encoded}},
-                        ]
+                        ],
                     }
                 ],
                 "generationConfig": generation_config,
@@ -778,9 +792,19 @@ async def _rotate(candidates: list[_Candidate], system_prompt: str, user_prompt:
     # esquecer o limite — e uma pessoa gerando quiz em laço de derrubar a IA
     # de todos. Ver services/limites.py.
     from app.database import get_supabase
+    from app.services import guarda_ia
     from app.services.limites import consumir_ia
 
     consumir_ia(get_supabase)
+
+    # A guarda de prompt injection fica AQUI pelo mesmo motivo do limite acima:
+    # é o único ponto por onde toda chamada ao modelo passa, então uma rota nova
+    # não tem como esquecê-la. Ver services/guarda_ia.py.
+    # Fora do event loop: num currículo grande a varredura de idiomas leva
+    # centenas de milissegundos, e o servidor atende outras pessoas nesse tempo.
+    await run_in_threadpool(guarda_ia.registrar, "ia", user_prompt)
+    user_prompt = guarda_ia.higienizar_entrada(user_prompt)
+    system_prompt = guarda_ia.blindar_sistema(system_prompt)
 
     winner: dict[str, Any] = {}
 
@@ -804,6 +828,10 @@ async def _rotate(candidates: list[_Candidate], system_prompt: str, user_prompt:
 
     if result is not None:
         content, _tokens = result
+        try:
+            content = guarda_ia.filtrar_saida(content, system_prompt)
+        except guarda_ia.VazamentoDetectado:
+            raise SaidaBloqueada(guarda_ia.bloqueada()) from None
         name = winner.get("name", "")
         return AiResult(
             content=content,
