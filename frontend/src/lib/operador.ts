@@ -13,5 +13,10 @@
  * Trocar os dois NÃO basta para publicar um fork: os textos descrevem
  * Supabase, Fly, Brevo e as decisões desta operação. Precisam ser lidos.
  */
-export const OPERADOR = import.meta.env.VITE_OPERADOR ?? "Rodrigo Carvalho";
+// O SERVIÇO, e não uma pessoa. Trocar o nome próprio pelo nome do app é o que
+// se costuma fazer enquanto não há CNPJ — e não muda quem responde: pela LGPD,
+// controlador é quem de fato decide sobre o tratamento (art. 5º, VI), com nome
+// escrito na página ou sem. O que o nome faz é informar quem lê, como o art. 9º
+// exige; some-lo não transfere obrigação nenhuma.
+export const OPERADOR = import.meta.env.VITE_OPERADOR ?? "PathR";
 export const EMAIL_CONTATO = import.meta.env.VITE_EMAIL_CONTATO ?? "privacidade@notter.com.br";

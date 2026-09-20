@@ -12,7 +12,7 @@
  */
 
 import type { Traduzir } from "@/lib/i18n";
-import { EmailContato, Fichas, Forte, LinkDoc, Lista, Nota, P, Subtitulo, type DocumentoLegal } from "./LegalLayout";
+import { EmailContato, Fichas, Forte, LinkDoc, Lista, Nota, P, Subtitulo, type DocumentoLegal, OPERADOR } from "./LegalLayout";
 
 export const CAMINHO_PRIVACIDADE = "/privacidade";
 
@@ -53,7 +53,7 @@ export function privacidade(t: Traduzir): DocumentoLegal {
             <P>
               {t("legal.privacidade.controlador.p1a")} <Forte>pathr.notter.com.br</Forte>
               {t("legal.privacidade.controlador.p1b")} <Forte>api.pathr.notter.com.br</Forte>
-              {t("legal.privacidade.controlador.p1c")} <Forte>Rodrigo Carvalho</Forte>
+              {t("legal.privacidade.controlador.p1c")} <Forte>{OPERADOR}</Forte>
               {t("legal.privacidade.controlador.p1d")}
             </P>
             <P>

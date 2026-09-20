@@ -488,7 +488,7 @@
       ],
       "aceitacao": {
         "titulo": "Acceptance",
-        "p1a": "These terms govern the use of PathR, available at pathr.notter.com.br, operated by {operador}. By creating an account, you acknowledge that you have read and agree to these terms and to the",
+        "p1a": "These terms govern the use of PathR, available at pathr.notter.com.br. By creating an account, you acknowledge that you have read and agree to these terms and to the",
         "p1link": "Privacy Policy",
         "p1b": ", which explains how your data is processed.",
         "p2": "If you don't agree, don't use the app. You can delete your account at any time."
@@ -600,8 +600,8 @@
         "titulo": "Who takes care of your data?",
         "p1a": "PathR is a study plan app for people working in technology, available at",
         "p1b": ", using the API at",
-        "p1c": ". It is developed and operated by",
-        "p1d": ", which is the data controller for the personal data processed in the app, pursuant to Article 5, VI, of the LGPD.",
+        "p1c": ". The data controller for the personal data processed in the app is ",
+        "p1d": ", pursuant to Article 5, VI, of the LGPD.",
         "p2": "For any privacy-related matters—questions, requests for access, correction, or deletion—the contact channel, which also serves as the data protection officer (Art. 41), is",
         "p3": "Although the address is under the notter.com.br domain, PathR is independent: it has its own database, accounts, and credentials. A PathR account does not grant access to other applications, and the reverse is also true."
       },
