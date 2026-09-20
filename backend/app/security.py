@@ -46,6 +46,23 @@ def verify_password(password: str, password_hash: str) -> bool:
     return True
 
 
+# Um hash que não é a senha de ninguém, calculado UMA vez no import (e não na primeira chamada: a primeira
+# resposta seria mais lenta que as outras, e é justamente a diferença de tempo que se quer apagar).
+_HASH_FALSO = _password_hasher.hash("hash-falso-que-nao-e-a-senha-de-ninguem")
+
+
+def gastar_tempo_de_verificacao(password: str) -> None:
+    """Faz, para um e-mail que NÃO existe, o mesmo trabalho que o login faz para um que existe.
+
+    O Argon2 leva dezenas de milissegundos de propósito. Se ele só roda quando a conta existe, o tempo da
+    resposta diz quais e-mails têm conta — mesmo com a mensagem de erro idêntica nos dois casos.
+    """
+    try:
+        _password_hasher.verify(_HASH_FALSO, password)
+    except (VerifyMismatchError, VerificationError):
+        pass
+
+
 def password_problems(password: str) -> list[str]:
     """Regras mínimas, checadas no servidor.
 

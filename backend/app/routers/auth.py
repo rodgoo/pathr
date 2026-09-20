@@ -59,6 +59,7 @@ from app.security import (
     reset_failure_state,
     totp_provisioning_uri,
     totp_qr_code_svg,
+    gastar_tempo_de_verificacao,
     verify_password,
     verify_totp_code,
 )
@@ -503,6 +504,9 @@ def login(
         status_code=status.HTTP_401_UNAUTHORIZED, detail="E-mail ou senha incorretos."
     )
     if not user:
+        # O mesmo trabalho de hash que uma conta real custaria: sem isto o TEMPO da resposta (≈10 ms contra
+        # ≈60 ms) dizia quais e-mails têm conta, mesmo com a mensagem idêntica. Achado do pentest black box.
+        gastar_tempo_de_verificacao(payload.password)
         _log_event(supabase, "login_fail", request=request, detail={"reason": "unknown_email"})
         raise invalid
 
