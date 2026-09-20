@@ -213,11 +213,23 @@ export function LegalLayout({
   useEffect(() => {
     const anterior = document.title;
     document.title = `${documento.titulo} · PathR`;
+
+    // O `canonical` do index.html aponta para a RAIZ — e vale para qualquer
+    // rota do app, porque é o mesmo arquivo servido em todas. Nos documentos
+    // legais isso é uma contradição direta com o sitemap: ele manda o Google
+    // indexar /termos, /privacidade e /seguranca, e a página respondia "meu
+    // canônico é a home". O Google obedece a página, então os três nunca
+    // entravam no índice ("página alternativa com tag canônica adequada").
+    const marca = document.querySelector<HTMLLinkElement>('link[rel="canonical"]');
+    const canonicoAnterior = marca?.href;
+    if (marca) marca.href = new URL(documento.path, window.location.origin).toString();
+
     // Trocar de documento pela aba começa do topo, não da altura em que se
     // estava lendo o anterior.
     if (!window.location.hash) document.documentElement.scrollTop = 0;
     return () => {
       document.title = anterior;
+      if (marca && canonicoAnterior) marca.href = canonicoAnterior;
     };
   }, [documento]);
 

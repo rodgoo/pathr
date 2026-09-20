@@ -107,3 +107,51 @@ it("Voltar ao PathR leva à raiz", async () => {
     expect(screen.queryByRole("heading", { level: 1, name: "Política de privacidade" })).not.toBeInTheDocument(),
   );
 });
+
+// ---------------------------------------------------------------------------
+// O que o buscador lê
+// ---------------------------------------------------------------------------
+//
+// O `index.html` traz um `canonical` apontando para a RAIZ, e ele é o mesmo
+// arquivo servido em toda rota do app. Nos documentos legais isso contradizia
+// o sitemap — que manda indexar /termos, /privacidade e /seguranca — e o
+// Google obedece a página, não o sitemap: os três ficavam de fora do índice.
+
+function canonicalAtual(): string {
+  return document.querySelector<HTMLLinkElement>('link[rel="canonical"]')?.href ?? "";
+}
+
+it.each(PAGINAS)("%s declara a si mesma como canônica", async (path) => {
+  document.head.innerHTML = '<link rel="canonical" href="https://pathr.notter.com.br/" />';
+  abrir(path);
+
+  await screen.findByRole("heading", { level: 1 });
+
+  expect(canonicalAtual()).toContain(path);
+  expect(new URL(canonicalAtual()).pathname).toBe(path);
+});
+
+it("ao sair da página legal, o canônico volta ao que era", async () => {
+  document.head.innerHTML = '<link rel="canonical" href="https://pathr.notter.com.br/" />';
+  const { unmount } = (() => {
+    window.history.pushState({}, "", "/termos");
+    mockServer({ "GET /auth/me": () => ({ status: 401, body: { detail: "Não autenticado." } }) });
+    return render(
+      <AuthProvider>
+        <OfflineProvider>
+          <AppStateProvider>
+            <App />
+          </AppStateProvider>
+        </OfflineProvider>
+      </AuthProvider>,
+    );
+  })();
+
+  await screen.findByRole("heading", { level: 1 });
+  expect(canonicalAtual()).toContain("/termos");
+
+  unmount();
+
+  // Senão a próxima tela herdaria "/termos" como canônico.
+  expect(canonicalAtual()).toBe("https://pathr.notter.com.br/");
+});

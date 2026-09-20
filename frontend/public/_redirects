@@ -1,9 +1,35 @@
 # O roteamento do PathR é feito no cliente (history.pushState), então abrir
-# /roadmap direto — ou só recarregar a página — pede ao servidor um arquivo
-# que não existe no disco. Esta reescrita entrega o index.html com status 200
-# e deixa o JavaScript resolver a rota.
+# /termos direto — ou só recarregar a página — pede ao servidor um arquivo que
+# não existe no disco. As regras abaixo entregam o index.html com status 200 e
+# deixam o JavaScript resolver a rota.
 #
-# É o equivalente, no Cloudflare Pages, do bloco `routes` do render.yaml: o
-# Pages não lê aquele arquivo. Arquivos estáticos que existem de verdade
-# (/assets/*) continuam sendo servidos antes desta regra.
-/*    /index.html   200
+# ## Por que as rotas são LISTADAS, e não um `/*`
+#
+# Havia aqui um `/*  /index.html  200`, e ele respondia 200 para QUALQUER
+# endereço: /pagina-que-nao-existe vinha com a casca do app e status de
+# sucesso. Para o Google isso é "soft 404" — ele pede uma URL inventada,
+# recebe 200 com conteúdo genérico, e passa a desconfiar do site inteiro. Era
+# um dos erros de indexação relatados.
+#
+# Listando, endereço desconhecido cai no 404.html com status 404, que é a
+# verdade. O custo é lembrar de vir aqui ao criar uma rota pública nova — por
+# isso a lista é curta e fica junto do mapa de telas do App.tsx.
+#
+# Arquivos que existem de verdade (/assets/*, /guias/*, /roadmap/*) continuam
+# sendo servidos antes de qualquer regra.
+
+# Quem ainda não entrou
+/entrar           /index.html   200
+/cadastro         /index.html   200
+/recuperar-senha  /index.html   200
+/nova-senha       /index.html   200
+/confirmar-email  /index.html   200
+
+# Texto público, com ou sem sessão
+/termos           /index.html   200
+/privacidade      /index.html   200
+/seguranca        /index.html   200
+
+# O app depois de entrar mora na raiz: a navegação interna troca a tela sem
+# trocar o endereço, então não há rota por tela para listar aqui.
+/                 /index.html   200
