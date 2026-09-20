@@ -56,11 +56,11 @@ import hashlib
 import logging
 import struct
 from collections import OrderedDict
-from typing import Optional
+from typing import Any, Optional
 
 import httpx
 
-from app.ai_providers import AUTH, AiProviderError, _classify, _keys
+from app.ai_providers import AUTH, AiProviderError, _classify, _keys, perto_do_teto
 from app.config import settings
 
 logger = logging.getLogger(__name__)
@@ -444,13 +444,76 @@ async def _pede_ao_gemini(texto: str, idioma: str, voz: Optional[int], api_key: 
     )
 
 
+# ── Groq: o segundo provedor de voz ─────────────────────────────────────────
+#
+# Existe porque cota de um provedor não pode calar o áudio do app. O Gemini
+# continua primeiro (fala qualquer idioma do catálogo e sai mais barato); a
+# Groq entra quando ele recusa — por cota, por chave ou por estar fora.
+#
+# LIMITAÇÃO REAL, e ela importa: o Orpheus fala INGLÊS (e árabe saudita). Para
+# os outros idiomas do treino não há segundo provedor configurado, e a queda é
+# para a voz do navegador. Prometer o contrário no código seria mentir na tela.
+_URL_GROQ = "https://api.groq.com/openai/v1/audio/speech"
+_MODELO_GROQ = "canopylabs/orpheus-v1-english"
+_IDIOMAS_DA_GROQ = frozenset({"en"})
+
+# Uma voz por interlocutor, como no Gemini: o diálogo precisa soar como duas
+# pessoas, não como uma lendo os dois papéis.
+_VOZES_GROQ = ("austin", "hannah", "troy")
+
+
+async def _via_groq(texto: str, idioma: str, voz: Optional[int], api_key: str) -> bytes:
+    """O áudio pela Groq. Devolve WAV pronto — sem remontar cabeçalho."""
+    escolhida = _VOZES_GROQ[(voz or 0) % len(_VOZES_GROQ)]
+    async with httpx.AsyncClient(timeout=_TIMEOUT) as client:
+        resposta = await client.post(
+            _URL_GROQ,
+            headers={"Authorization": f"Bearer {api_key}"},
+            json={
+                "model": _MODELO_GROQ,
+                "input": texto,
+                "voice": escolhida,
+                "response_format": "wav",
+            },
+        )
+    if resposta.status_code >= 400:
+        raise _classify(resposta)
+    conteudo = resposta.content
+    if not conteudo.startswith(b"RIFF"):
+        raise AiProviderError("a Groq não devolveu áudio para este texto")
+    return conteudo
+
+
+async def _provedores(idioma: str) -> list[tuple[str, Any, list[str]]]:
+    """Quem pode falar este idioma, na ordem em que se tenta.
+
+    Perto do teto diário vai para o fim (ver `ai_providers.perto_do_teto`): a
+    troca acontece ANTES de a cota acabar, e não depois do 429 que já custou um
+    pedido — num diálogo, o pedido perdido derruba o diálogo inteiro.
+    """
+    disponiveis: list[tuple[str, Any, list[str]]] = []
+    chaves_gemini = _keys(settings.gemini_api_key)
+    if chaves_gemini:
+        disponiveis.append(("gemini", _pede_ao_gemini, chaves_gemini))
+    chaves_groq = _keys(settings.groq_api_key)
+    if chaves_groq and idioma in _IDIOMAS_DA_GROQ:
+        disponiveis.append(("groq", _via_groq, chaves_groq))
+
+    folgados = [p for p in disponiveis if not perto_do_teto(p[0])]
+    apertados = [p for p in disponiveis if perto_do_teto(p[0])]
+    return folgados + apertados
+
+
 async def narrar(texto: str, idioma: str = "en", voz: Optional[int] = None) -> bytes:
     """O texto falado, em WAV.
 
-    Tenta as chaves de Gemini em ordem e só desiste quando todas falham — é a
-    mesma postura de `ai_providers.generate_json()`, pelo mesmo motivo: com
-    várias chaves configuradas, uma cota estourada não pode ser o que cala o
-    áudio do app.
+    Percorre PROVEDORES, e dentro de cada um as suas chaves. Cota estourada em
+    um não pode calar o áudio: é a mesma postura de `ai_providers`, e foi o
+    relato de "o áudio não sai" que a trouxe para cá.
+
+    Falha transitória (429 de pedido simultâneo, 5xx) é repetida algumas vezes
+    antes de passar adiante; recusa de chave não é repetida, porque esperar não
+    conserta chave errada.
     """
     texto = texto.strip()
     if not texto:
@@ -463,27 +526,38 @@ async def narrar(texto: str, idioma: str = "en", voz: Optional[int] = None) -> b
     if guardado is not None:
         return guardado
 
-    api_keys = _keys(settings.gemini_api_key)
-    if not api_keys:
-        raise AiProviderError("nenhuma chave de Gemini configurada")
+    provedores = await _provedores(idioma)
+    if not provedores:
+        raise AiProviderError("nenhum provedor de voz configurado para este idioma")
 
     ultima: Optional[Exception] = None
-    for tentativa in range(_TENTATIVAS):
-        for api_key in api_keys:
-            try:
-                audio = await _pede_ao_gemini(texto, idioma, voz, api_key)
-            except AiProviderError:
-                raise
-            except Exception as erro:  # falha de rede ou recusa desta chave
-                ultima = erro
-                continue
-            await _grava_no_cache(chave, audio)
-            return audio
+    for nome, falar, api_keys in provedores:
+        for tentativa in range(_TENTATIVAS):
+            for api_key in api_keys:
+                try:
+                    audio = await falar(texto, idioma, voz, api_key)
+                except AiProviderError as erro:
+                    # "não falo este texto" é decisão do modelo sobre o
+                    # conteúdo: outro provedor pode falar, então segue.
+                    ultima = erro
+                    break
+                except Exception as erro:  # rede, cota ou recusa desta chave
+                    ultima = erro
+                    continue
+                await _grava_no_cache(chave, audio)
+                if nome != provedores[0][0]:
+                    logger.info("TTS: %s assumiu depois de %s falhar", nome, provedores[0][0])
+                return audio
 
-        # Chave errada não melhora esperando: insistir só atrasa o plano B.
-        if getattr(ultima, "kind", None) == AUTH:
-            break
-        if tentativa < _TENTATIVAS - 1:
-            await asyncio.sleep(_espera(ultima, tentativa))
+            if getattr(ultima, "kind", None) == AUTH or isinstance(ultima, AiProviderError):
+                break  # não adianta esperar: é chave ou é o texto
+            if tentativa < _TENTATIVAS - 1:
+                await asyncio.sleep(_espera(ultima, tentativa))
 
-    raise AiProviderError("nenhuma chave de Gemini conseguiu gerar o áudio") from ultima
+        logger.info("TTS: %s não conseguiu (%s), tentando o próximo", nome, ultima)
+
+    # A causa vai no texto, e não só no `from`: esta mensagem é o que aparece
+    # no log quando o áudio não sai, e "nenhum provedor conseguiu" sem o porquê
+    # manda quem investiga abrir o código para descobrir se foi cota, chave ou
+    # o texto que o modelo recusou falar.
+    raise AiProviderError(f"nenhum provedor de voz conseguiu gerar o áudio: {ultima}") from ultima

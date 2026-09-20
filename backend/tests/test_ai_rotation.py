@@ -307,3 +307,55 @@ def test_timeout_do_orcamento_e_falha_transitoria():
     falha = ai._as_failure(TimeoutError())
     assert falha is not None
     assert falha.kind == ai.TRANSIENT
+
+# ---------------------------------------------------------------------------
+# Trocar ANTES de estourar
+# ---------------------------------------------------------------------------
+
+
+def test_quem_passou_de_85_por_cento_cede_a_vez(monkeypatch):
+    """O cooldown só aprende que a cota acabou depois do 429 — e esse pedido já
+    foi perdido. Num diálogo de áudio, o pedido perdido derruba o diálogo
+    inteiro. Por isso o roteador antecipa."""
+    monkeypatch.setattr(ai.settings, "ai_limites_diarios", {"gemini": 100}, raising=False)
+    monkeypatch.setattr(ai, "_persistence_enabled", True, raising=False)
+    monkeypatch.setattr(ai, "_uso_de_hoje", {"gemini": 85}, raising=False)
+    monkeypatch.setattr(ai, "_uso_lido_em", ai._now(), raising=False)
+    monkeypatch.setattr(ai, "_avisados", set(), raising=False)
+
+    assert ai.perto_do_teto("Gemini #1") is True
+    assert ai.perto_do_teto("Groq") is False  # sem teto declarado, não dispara
+
+
+def test_abaixo_do_corte_ninguem_e_rebaixado(monkeypatch):
+    monkeypatch.setattr(ai.settings, "ai_limites_diarios", {"gemini": 100}, raising=False)
+    monkeypatch.setattr(ai, "_persistence_enabled", True, raising=False)
+    monkeypatch.setattr(ai, "_uso_de_hoje", {"gemini": 84}, raising=False)
+    monkeypatch.setattr(ai, "_uso_lido_em", ai._now(), raising=False)
+
+    assert ai.perto_do_teto("Gemini #1") is False
+
+
+def test_sem_teto_declarado_a_regra_nao_dispara(monkeypatch):
+    """Nenhum provedor informa quanto resta da cota. Chutar um teto seria pior
+    que não ter: o roteador rebaixaria quem ainda tem folga."""
+    monkeypatch.setattr(ai.settings, "ai_limites_diarios", {}, raising=False)
+    monkeypatch.setattr(ai, "_uso_de_hoje", {"gemini": 99999}, raising=False)
+    monkeypatch.setattr(ai, "_uso_lido_em", ai._now(), raising=False)
+
+    assert ai.perto_do_teto("Gemini #1") is False
+
+
+def test_na_fila_o_apertado_fica_atras_do_folgado_e_na_frente_do_resfriado(monkeypatch):
+    monkeypatch.setattr(ai, "_cooldowns", {}, raising=False)
+    folgado = ai._Candidate("Groq", lambda *_a, **_k: None)
+    apertado = ai._Candidate("Gemini", lambda *_a, **_k: None)
+    resfriado = ai._Candidate("Mistral", lambda *_a, **_k: None)
+    ai._cooldowns["Mistral"] = ai._Cooldown(until=ai._now() + timedelta(minutes=5), reason="429")
+    monkeypatch.setattr(ai, "perto_do_teto", lambda nome: nome == "Gemini")
+
+    ordem = [c.name for c in ai._attempt_order([apertado, resfriado, folgado])]
+
+    # Rebaixado, nunca removido: sendo o único que existe, é melhor gastar os
+    # últimos 15% do que calar a funcionalidade.
+    assert ordem == ["Groq", "Gemini", "Mistral"]

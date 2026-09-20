@@ -386,6 +386,11 @@ async def test_dialeto_recusado_cai_para_o_outro_com_a_mesma_chave(monkeypatch):
 @pytest.mark.asyncio
 async def test_os_dois_dialetos_recusados_falha_dizendo_por_que(monkeypatch):
     monkeypatch.setattr(tts.settings, "gemini_api_key", "k1", raising=False)
+    # Sem Groq: este teste é sobre o Gemini recusar, e sem desligá-la o
+    # resultado passava a depender de quem roda ter (ou não) chave da Groq no
+    # .env.local — teste que muda de resposta conforme a máquina não segura
+    # nada.
+    monkeypatch.setattr(tts.settings, "groq_api_key", "", raising=False)
     tts._cache.clear()
 
     async def recusa(texto, idioma, voz, api_key):
@@ -438,3 +443,52 @@ async def test_a_chave_vai_no_cabecalho_e_nunca_na_url(monkeypatch):
     assert enviado["headers"] == {"x-goog-api-key": "chave-secreta"}
     assert "chave-secreta" not in enviado["url"]
     assert not enviado["params"]
+
+
+# ---------------------------------------------------------------------------
+# Dois provedores: cota de um não pode calar o áudio
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_groq_assume_quando_o_gemini_fica_sem_cota(monkeypatch):
+    """O relato que originou isto: "a cota acabou e o áudio parou de sair"."""
+    monkeypatch.setattr(tts.settings, "gemini_api_key", "k1", raising=False)
+    monkeypatch.setattr(tts.settings, "groq_api_key", "g1", raising=False)
+    monkeypatch.setattr(tts, "_TENTATIVAS", 1)  # sem espera no teste
+    tts._cache.clear()
+
+    async def sem_cota(*_a):
+        raise tts._classify(httpx.Response(429))
+
+    async def groq_fala(texto, idioma, voz, api_key):
+        assert api_key == "g1"
+        return b"RIFF....WAVEfake"
+
+    monkeypatch.setattr(tts, "_pede_ao_gemini", sem_cota)
+    monkeypatch.setattr(tts, "_via_groq", groq_fala)
+
+    assert await tts.narrar("Hello.", "en", 0) == b"RIFF....WAVEfake"
+
+
+@pytest.mark.asyncio
+async def test_idioma_que_a_groq_nao_fala_nao_a_oferece(monkeypatch):
+    """A Groq fala inglês (e árabe). Oferecê-la para francês produziria áudio
+    em inglês com texto francês — pior que não ter áudio."""
+    monkeypatch.setattr(tts.settings, "gemini_api_key", "k1", raising=False)
+    monkeypatch.setattr(tts.settings, "groq_api_key", "g1", raising=False)
+
+    nomes = [nome for nome, _, _ in await tts._provedores("fr")]
+    assert nomes == ["gemini"]
+    assert [nome for nome, _, _ in await tts._provedores("en")] == ["gemini", "groq"]
+
+
+@pytest.mark.asyncio
+async def test_provedor_perto_do_teto_vai_para_o_fim(monkeypatch):
+    """A troca acontece ANTES de a cota acabar: quem passou de 85% do teto do
+    dia cede a vez, em vez de gastar a última fatia e voltar 429."""
+    monkeypatch.setattr(tts.settings, "gemini_api_key", "k1", raising=False)
+    monkeypatch.setattr(tts.settings, "groq_api_key", "g1", raising=False)
+    monkeypatch.setattr(tts, "perto_do_teto", lambda nome: nome == "gemini")
+
+    assert [nome for nome, _, _ in await tts._provedores("en")] == ["groq", "gemini"]

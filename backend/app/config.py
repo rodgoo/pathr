@@ -157,6 +157,14 @@ class Settings(BaseSettings):
     # mudo, depois de a pessoa ter esperado à toa. Ver `_BUDGET` em
     # app/ai_providers.py.
     ai_budget_seconds: int = 50
+    # Teto DIÁRIO de pedidos por provedor de IA, para o roteador trocar antes
+    # de estourar (85% — ver ai_providers.perto_do_teto).
+    #
+    # Vazio por padrão porque nenhum provedor informa a cota restante, e chutar
+    # um número seria pior que não ter: o roteador começaria a rebaixar quem
+    # ainda tinha folga. Quem opera declara o que contratou, por exemplo:
+    # AI_LIMITES_DIARIOS={"gemini": 1400, "groq": 14000, "mistral": 500}
+    ai_limites_diarios: dict[str, int] = {}
 
     # --- Busca de material (biblioteca) ---
     # Alimentam services/resource_search.py. Sem chave, a fonte correspondente

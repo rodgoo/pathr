@@ -69,10 +69,13 @@ from starlette.concurrency import run_in_threadpool
 
 from app.config import settings
 from app.services import idioma as idioma_do_app
+import logging
 
 # Um currículo de duas páginas mandado como PDF é uma requisição bem maior que
 # um chat de texto; 45s dá folga sem deixar a rotação inteira estourar o
 # timeout do cliente no pior caso de vários candidatos em sequência.
+logger = logging.getLogger("pathr.ia")
+
 _TIMEOUT = 45
 
 # O teto da rotação INTEIRA, e não de um candidato só.
@@ -665,14 +668,115 @@ def _media_candidates(media_bytes: bytes, mime_type: str) -> list[_Candidate]:
     return candidates
 
 
-def _attempt_order(candidates: list[_Candidate]) -> list[_Candidate]:
-    """Saudáveis primeiro, na ordem configurada; depois os em cooldown, o que
-    recupera antes na frente. Resfriado é rebaixado, nunca removido."""
-    ready = [c for c in candidates if _cooldown_of(c.name) is None]
-    cooling = [(c, _cooldowns[c.name].until) for c in candidates if _cooldown_of(c.name) is not None]
-    cooling.sort(key=lambda pair: pair[1])
-    return ready + [candidate for candidate, _ in cooling]
+# --------------------------------------------------------------------------
+# Troca ANTES de estourar: o teto diário de cada provedor
+# --------------------------------------------------------------------------
+#
+# O cooldown abaixo é reativo: só aprende que a cota acabou quando um pedido
+# volta 429 — e esse pedido já foi perdido. Num texto isso custa uma tentativa;
+# num áudio de diálogo, custa o diálogo inteiro (é tudo ou nada).
+#
+# Então, além de reagir, o roteador ANTECIPA: quem passou de 85% do teto do dia
+# cai para o fim da fila e o próximo provedor assume enquanto ainda há margem.
+# Rebaixado, nunca removido — se for o único que existe, é melhor gastar os
+# últimos 15% do que calar a funcionalidade.
+#
+# O que se conta é o NOSSO número de pedidos do dia (`pathr_ai_provider_usage`),
+# não uma cota que o provedor informe: nenhum deles expõe "você já usou 85%".
+# Por isso o teto é declarado por quem opera, em AI_LIMITES_DIARIOS — sem
+# declaração não há como saber o que é 85%, e a regra simplesmente não dispara.
 
+_MARGEM = 0.85
+
+# Uma leitura por minuto, no máximo: a tabela muda a cada chamada de IA, e
+# consultá-la antes de cada uma dobraria o número de idas ao banco.
+_INTERVALO_DO_USO = timedelta(seconds=60)
+_uso_de_hoje: dict[str, int] = {}
+_uso_lido_em: Optional[datetime] = None
+_avisados: set[str] = set()
+
+
+def _familia(nome: str) -> str:
+    """"Gemini #2" -> "gemini". O teto é do provedor, não de cada chave."""
+    return nome.split("#")[0].strip().lower()
+
+
+def _teto_diario(familia: str) -> Optional[int]:
+    limites = getattr(settings, "ai_limites_diarios", None) or {}
+    try:
+        teto = int(limites.get(familia) or 0)
+    except (TypeError, ValueError):
+        return None
+    return teto or None
+
+
+def _recarrega_uso() -> None:
+    global _uso_lido_em
+    if not _persistence_enabled:
+        return
+    agora = _now()
+    if _uso_lido_em is not None and agora - _uso_lido_em < _INTERVALO_DO_USO:
+        return
+    _uso_lido_em = agora
+    try:
+        linhas = (
+            _store()
+            .table("pathr_ai_provider_usage")
+            .select("provider,requests")
+            .eq("usage_date", date.today().isoformat())
+            .execute()
+            .data
+            or []
+        )
+    except Exception:  # noqa: BLE001
+        logger.debug("não consegui ler o uso do dia", exc_info=True)
+        return
+    _uso_de_hoje.clear()
+    for linha in linhas:
+        _uso_de_hoje[_familia(str(linha.get("provider") or ""))] = int(linha.get("requests") or 0)
+
+
+def perto_do_teto(nome: str) -> bool:
+    """Este provedor já passou de 85% do que foi declarado para o dia?"""
+    familia = _familia(nome)
+    teto = _teto_diario(familia)
+    if not teto:
+        return False
+    _recarrega_uso()
+    usados = _uso_de_hoje.get(familia, 0)
+    perto = usados >= teto * _MARGEM
+    if perto and familia not in _avisados:
+        _avisados.add(familia)
+        logger.warning(
+            "IA: %s em %d de %d pedidos hoje (%.0f%%) — passando a vez para outro provedor",
+            familia,
+            usados,
+            teto,
+            100 * usados / teto,
+        )
+    return perto
+
+
+def _attempt_order(candidates: list[_Candidate]) -> list[_Candidate]:
+    """Saudáveis primeiro, depois quem está perto do teto, e por fim os em
+    cooldown (o que recupera antes na frente).
+
+    Rebaixar quem está perto do teto é o que evita gastar a última fatia da
+    cota num pedido que o provedor seguinte atenderia de sobra — e evita
+    descobrir o fim da cota do jeito caro: com um 429 no meio de um diálogo.
+    """
+    prontos: list[_Candidate] = []
+    quase: list[_Candidate] = []
+    resfriados: list[tuple[_Candidate, datetime]] = []
+    for c in candidates:
+        if _cooldown_of(c.name) is not None:
+            resfriados.append((c, _cooldowns[c.name].until))
+        elif perto_do_teto(c.name):
+            quase.append(c)
+        else:
+            prontos.append(c)
+    resfriados.sort(key=lambda par: par[1])
+    return prontos + quase + [candidato for candidato, _ in resfriados]
 
 def _as_failure(exc: Exception) -> Optional[_CandidateFailed]:
     """Normaliza toda forma de um candidato falhar em uma decisão de rotação.
