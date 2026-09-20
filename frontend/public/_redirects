@@ -1,35 +1,21 @@
 # O roteamento do PathR é feito no cliente (history.pushState), então abrir
 # /termos direto — ou só recarregar a página — pede ao servidor um arquivo que
-# não existe no disco. As regras abaixo entregam o index.html com status 200 e
-# deixam o JavaScript resolver a rota.
+# não existe no disco. Esta reescrita entrega o index.html com status 200 e
+# deixa o JavaScript resolver a rota.
 #
-# ## Por que as rotas são LISTADAS, e não um `/*`
+# ## Por que voltou a ser `/*`, e o que se perde com isso
 #
-# Havia aqui um `/*  /index.html  200`, e ele respondia 200 para QUALQUER
-# endereço: /pagina-que-nao-existe vinha com a casca do app e status de
-# sucesso. Para o Google isso é "soft 404" — ele pede uma URL inventada,
-# recebe 200 com conteúdo genérico, e passa a desconfiar do site inteiro. Era
-# um dos erros de indexação relatados.
+# Houve uma tentativa de LISTAR as rotas para que endereço desconhecido caísse
+# num 404 de verdade (o `/*` responde 200 a qualquer coisa, e para o Google
+# isso é "soft 404"). Não funciona no Cloudflare Pages: com regra de caminho
+# único, ele normaliza `/index.html` para `/` e a reescrita vira um 308 — na
+# prática /termos e /entrar passaram a REDIRECIONAR para a home, e as páginas
+# legais pararam de abrir. Verificado em produção, revertido em seguida.
 #
-# Listando, endereço desconhecido cai no 404.html com status 404, que é a
-# verdade. O custo é lembrar de vir aqui ao criar uma rota pública nova — por
-# isso a lista é curta e fica junto do mapa de telas do App.tsx.
+# Então o soft 404 continua existindo, conscientemente, até ser resolvido do
+# jeito certo: uma Pages Function que devolve 404 para caminho fora da lista.
+# O `404.html` já está no repositório, esperando por ela.
 #
 # Arquivos que existem de verdade (/assets/*, /guias/*, /roadmap/*) continuam
-# sendo servidos antes de qualquer regra.
-
-# Quem ainda não entrou
-/entrar           /index.html   200
-/cadastro         /index.html   200
-/recuperar-senha  /index.html   200
-/nova-senha       /index.html   200
-/confirmar-email  /index.html   200
-
-# Texto público, com ou sem sessão
-/termos           /index.html   200
-/privacidade      /index.html   200
-/seguranca        /index.html   200
-
-# O app depois de entrar mora na raiz: a navegação interna troca a tela sem
-# trocar o endereço, então não há rota por tela para listar aqui.
-/                 /index.html   200
+# sendo servidos antes desta regra.
+/*    /index.html   200
