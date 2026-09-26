@@ -431,6 +431,31 @@ export interface QuizResult {
   review?: { volta: string[]; aprendido: string[] };
 }
 
+/** Onde a pessoa parou num quiz ainda aberto: a questão e as alternativas já escolhidas. */
+export interface QuizRascunho {
+  index: number;
+  answers: Record<string, number>;
+  updated_at?: string | null;
+}
+
+/** O quiz do módulo que já foi gerado e ainda não foi enviado (`quiz: null` = nenhum). */
+export interface QuizEmAndamento {
+  quiz: Quiz | null;
+  rascunho: QuizRascunho | null;
+}
+
+/** Uma tentativa já enviada, como aparece no histórico do módulo. */
+export interface QuizHistoricoItem {
+  attempt_id: string;
+  quiz_id: string;
+  title: string | null;
+  score: number | null;
+  correct_count: number | null;
+  total: number | null;
+  duration_s: number | null;
+  finished_at: string | null;
+}
+
 /** Uma faixa da prova e o ponto do CEFR que ela representa. */
 export interface ExamBand {
   rotulo: string;

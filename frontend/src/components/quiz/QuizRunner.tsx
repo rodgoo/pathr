@@ -53,10 +53,16 @@ function lerProgresso(quizId: string): Progresso {
 
 export function QuizRunner({
   quiz,
+  progressoInicial,
   onFinished,
   onSubmitted,
 }: {
   quiz: Quiz;
+  /**
+   * Onde a pessoa parou, como o SERVIDOR guardou. Vale mais que a cópia do navegador: é a que sobrevive à
+   * limpeza de dados, à aba anônima e à troca de aparelho. Sem ela, vale a cópia local.
+   */
+  progressoInicial?: { index: number; answers: Record<string, number> };
   onFinished?: () => void;
   /**
    * A tentativa fechou no servidor. Quem guardou o enunciado usa isto para
@@ -67,8 +73,8 @@ export function QuizRunner({
 }) {
   const t = useT();
   // Inicializador preguicoso: le o storage uma vez, na montagem.
-  const [progresso] = useState(() => lerProgresso(quiz.id));
-  const [index, setIndex] = useState(progresso.index);
+  const [progresso] = useState(() => progressoInicial ?? lerProgresso(quiz.id));
+  const [index, setIndex] = useState(() => Math.min(progresso.index, Math.max(quiz.questions.length - 1, 0)));
   const [answers, setAnswers] = useState<Record<string, number>>(progresso.answers);
   const [startedAt] = useState(() => Date.now());
   const [result, setResult] = useState<QuizResult | null>(null);
@@ -86,6 +92,18 @@ export function QuizRunner({
     } catch {
       // Armazenamento bloqueado: o quiz continua, so nao lembra.
     }
+  }, [quiz.id, index, answers, result]);
+
+  // A mesma posição, no servidor — é ela que sobrevive a sair da aba, limpar os dados do navegador ou abrir em
+  // outro aparelho. Com uma folga de 700 ms: cada clique muda o estado, e uma escrita por clique seria ruído.
+  // Sem nada respondido não há o que guardar. Falha calada: é cópia de segurança, e o quiz segue sem ela.
+  useEffect(() => {
+    if (result) return undefined;
+    if (index === 0 && Object.keys(answers).length === 0) return undefined;
+    const espera = window.setTimeout(() => {
+      void quizzesApi.salvarRascunho(quiz.id, { index, answers }).catch(() => undefined);
+    }, 700);
+    return () => window.clearTimeout(espera);
   }, [quiz.id, index, answers, result]);
 
   const submit = useMutation(() =>
@@ -203,7 +221,7 @@ export function QuizRunner({
  * explicação — inclusive as acertadas, porque saber POR QUE acertou é o que
  * separa aprendizado de sorte.
  */
-function Review({
+export function Review({
   quiz,
   result,
   onRestart,

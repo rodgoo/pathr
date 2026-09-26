@@ -793,6 +793,10 @@ class PathrQuiz(SQLModel, table=True):
     question_count: int = Field(default=10)
     time_limit_s: Optional[int] = Field(default=None)
     generated_by: Optional[str] = Field(default=None)
+    # Onde a pessoa parou, enquanto o quiz está aberto: {index, answers: {question_id: alternativa}, updated_at}.
+    # Nulo antes da primeira resposta e depois que a tentativa é enviada. Mora aqui, e não no navegador, para
+    # sair da aba, trocar de aparelho ou limpar os dados não fazer a pessoa recomeçar.
+    draft: Optional[dict[str, Any]] = Field(default=None, sa_column=Column(JSONB, nullable=True))
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
 

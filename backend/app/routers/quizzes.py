@@ -11,6 +11,8 @@ e alternativas, e só vê o gabarito depois de responder. Mandar tudo de uma vez
 transformaria o quiz em decoração.
 """
 
+import logging
+import uuid
 from datetime import datetime, timezone
 from typing import Any, Optional
 
@@ -113,16 +115,16 @@ async def generate_quiz(
     """Gera um quiz sobre as tags pedidas, calibrado pelo nível atual."""
     user_id = str(current_user["id"])
     tag_ids = payload.tag_ids
-    if not tag_ids and payload.node_id:
-        node = (
-            supabase.table("pathr_roadmap_node")
-            .select("tag_ids")
-            .eq("id", payload.node_id)
-            .limit(1)
-            .execute()
-            .data
-        )
-        tag_ids = [str(tag) for tag in ((node[0].get("tag_ids") if node else None) or [])]
+    if payload.node_id:
+        # O módulo é desta pessoa? `pathr_roadmap_node` não tem `user_id` (ele pertence ao roadmap), então a
+        # consulta por `id` sozinha aceitava o módulo de QUALQUER conta: o quiz nascia amarrado ao módulo alheio
+        # e ainda herdava as tecnologias dele. O `node_id` é gravado no quiz, e é por ele que a aba retoma e lista
+        # o histórico — não pode ser um id que a pessoa não possui.
+        from app.routers.roadmap import _owned_node
+
+        node = _owned_node(supabase, payload.node_id, user_id)
+        if not tag_ids:
+            tag_ids = [str(tag) for tag in (node.get("tag_ids") or [])]
     if not tag_ids:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Informe ao menos uma tecnologia."
@@ -306,6 +308,192 @@ def _clean_questions(raw: Any) -> list[dict[str, Any]]:
     return cleaned
 
 
+# O que da questão sai ANTES de a tentativa existir. Filtrado aqui, no código, além do `select` da consulta: o
+# gabarito (`correct`) e a explicação não podem depender de uma projeção de colunas que alguém edite sem perceber.
+_CAMPOS_DA_QUESTAO = ("id", "prompt", "code_snippet", "code_language", "options", "difficulty", "order_index")
+
+
+def _quiz_para_responder(supabase: Client, quiz: dict[str, Any]) -> dict[str, Any]:
+    """O quiz com as questões, SEM gabarito e SEM explicação — e sem o rascunho, que é assunto da rota dele."""
+    linhas = (
+        supabase.table("pathr_question")
+        .select(",".join(_CAMPOS_DA_QUESTAO))
+        .eq("quiz_id", str(quiz["id"]))
+        .order("order_index")
+        .execute()
+        .data
+        or []
+    )
+    questions = [{campo: linha.get(campo) for campo in _CAMPOS_DA_QUESTAO} for linha in linhas]
+    return {**{k: v for k, v in quiz.items() if k != "draft"}, "questions": questions}
+
+
+def _id_valido(valor: str) -> str:
+    try:
+        return str(uuid.UUID(valor))
+    except ValueError:
+        # 404, e não 422: um id que não é UUID nunca existiu, e a resposta não deve distinguir isso de "não é seu".
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Não encontrado.") from None
+
+
+class DraftIn(BaseModel):
+    """Onde a pessoa parou num quiz ainda aberto: a questão e as alternativas já escolhidas."""
+
+    index: int = Field(ge=0, le=100)
+    # question_id -> índice da alternativa. Vem de fora e vai para um jsonb: o tamanho é limitado aqui e as chaves
+    # são conferidas contra as questões do quiz na hora de gravar.
+    answers: dict[str, int] = Field(default_factory=dict, max_length=100)
+
+
+def _rascunho_lido(draft: Any) -> Optional[dict[str, Any]]:
+    if not isinstance(draft, dict) or not isinstance(draft.get("answers"), dict):
+        return None
+    return {"index": int(draft.get("index") or 0), "answers": draft["answers"], "updated_at": draft.get("updated_at")}
+
+
+# As três rotas abaixo têm caminho de UM segmento e ficam ANTES de `/{quiz_id}`: depois dele, "em-andamento" e
+# "historico" seriam lidos como o id de um quiz e devolveriam 404.
+
+
+@router.get("/em-andamento")
+def quiz_em_andamento(
+    node_id: str,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """O quiz deste módulo que foi gerado e ainda não foi enviado, com o que já foi respondido.
+
+    É o que faz sair da aba e voltar continuar de onde parou. O quiz e as respostas moram no SERVIDOR: guardados
+    só no navegador, sumiam com a limpeza de dados, uma aba anônima ou outro aparelho — e a pessoa recomeçava um
+    quiz que a IA já tinha escrito e que ninguém mais ia ler.
+    """
+    user_id = str(current_user["id"])
+    node_id = _id_valido(node_id)
+    quizzes = (
+        supabase.table("pathr_quiz").select("*")
+        .eq("user_id", user_id).eq("node_id", node_id)
+        .order("created_at", desc=True).limit(10).execute().data or []
+    )
+    if not quizzes:
+        return {"quiz": None, "rascunho": None}
+    respondidos = {
+        str(linha["quiz_id"])
+        for linha in (
+            supabase.table("pathr_attempt").select("quiz_id")
+            .eq("user_id", user_id).in_("quiz_id", [str(q["id"]) for q in quizzes]).execute().data or []
+        )
+    }
+    aberto = next((q for q in quizzes if str(q["id"]) not in respondidos), None)
+    if aberto is None:
+        return {"quiz": None, "rascunho": None}
+    return {"quiz": _quiz_para_responder(supabase, aberto), "rascunho": _rascunho_lido(aberto.get("draft"))}
+
+
+@router.get("/historico")
+def historico_do_modulo(
+    node_id: str,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """As tentativas já enviadas neste módulo, da mais recente para a mais antiga."""
+    user_id = str(current_user["id"])
+    node_id = _id_valido(node_id)
+    quizzes = (
+        supabase.table("pathr_quiz").select("id,title,question_count")
+        .eq("user_id", user_id).eq("node_id", node_id)
+        .order("created_at", desc=True).limit(50).execute().data or []
+    )
+    if not quizzes:
+        return []
+    por_id = {str(q["id"]): q for q in quizzes}
+    tentativas = (
+        supabase.table("pathr_attempt")
+        .select("id,quiz_id,score,correct_count,duration_s,finished_at,tag_breakdown")
+        .eq("user_id", user_id).in_("quiz_id", list(por_id))
+        .order("finished_at", desc=True).limit(30).execute().data or []
+    )
+    return [
+        {
+            "attempt_id": str(t["id"]),
+            "quiz_id": str(t["quiz_id"]),
+            "title": por_id[str(t["quiz_id"])].get("title"),
+            "score": t.get("score"),
+            "correct_count": t.get("correct_count"),
+            "total": (t.get("tag_breakdown") or {}).get("total") or por_id[str(t["quiz_id"])].get("question_count"),
+            "duration_s": t.get("duration_s"),
+            "finished_at": t.get("finished_at"),
+        }
+        for t in tentativas
+        if str(t["quiz_id"]) in por_id
+    ]
+
+
+@router.get("/tentativas/{attempt_id}")
+def tentativa(
+    attempt_id: str,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """Uma tentativa já enviada, no formato da correção: as questões e, para cada uma, o que foi respondido, o
+    gabarito e a explicação. O gabarito só sai daqui DEPOIS de a tentativa existir — quem ainda não respondeu não
+    tem um `attempt_id` para pedir."""
+    user_id = str(current_user["id"])
+    linhas = (
+        supabase.table("pathr_attempt").select("*")
+        .eq("id", _id_valido(attempt_id)).eq("user_id", user_id).limit(1).execute().data or []
+    )
+    if not linhas:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Tentativa não encontrada.")
+    tentativa_ = linhas[0]
+    quiz = _owned_quiz(supabase, str(tentativa_["quiz_id"]), user_id)
+    resultados = tentativa_.get("answers") or []
+    return {
+        "quiz": _quiz_para_responder(supabase, quiz),
+        "result": {
+            "attempt_id": str(tentativa_["id"]),
+            "score": tentativa_.get("score"),
+            "correct_count": tentativa_.get("correct_count"),
+            "total": len(resultados),
+            "results": resultados,
+        },
+    }
+
+
+@router.put("/{quiz_id}/rascunho")
+def salvar_rascunho(
+    quiz_id: str,
+    payload: DraftIn,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
+    """Grava onde a pessoa parou. Substitui no lugar: o que importa é a posição atual, não cada clique.
+
+    Nunca falha a tela: o rascunho é uma melhoria, e um erro aqui (coluna ainda sem migrar, banco lento) não pode
+    impedir ninguém de responder o quiz. Devolve `salvo: false` e a tela segue com a cópia do navegador.
+    """
+    user_id = str(current_user["id"])
+    quiz = _owned_quiz(supabase, _id_valido(quiz_id), user_id)
+    ja_enviado = supabase.table("pathr_attempt").select("id").eq("quiz_id", str(quiz["id"])).limit(1).execute().data
+    if ja_enviado:
+        return {"salvo": False}
+    ids = {
+        str(linha["id"])
+        for linha in (supabase.table("pathr_question").select("id").eq("quiz_id", str(quiz["id"])).execute().data or [])
+    }
+    agora = _now().isoformat()
+    rascunho = {
+        "index": min(payload.index, max(len(ids) - 1, 0)),
+        "answers": {q: a for q, a in payload.answers.items() if q in ids and 0 <= a <= 20},
+        "updated_at": agora,
+    }
+    try:
+        supabase.table("pathr_quiz").update({"draft": rascunho}).eq("id", str(quiz["id"])).eq("user_id", user_id).execute()
+    except Exception:  # noqa: BLE001
+        logging.getLogger("pathr.quizzes").warning("rascunho do quiz não gravado", exc_info=True)
+        return {"salvo": False}
+    return {"salvo": True, "updated_at": agora}
+
+
 @router.get("/{quiz_id}")
 def get_quiz(
     quiz_id: str,
@@ -314,16 +502,7 @@ def get_quiz(
 ):
     """O quiz para responder — SEM gabarito e SEM explicação."""
     quiz = _owned_quiz(supabase, quiz_id, str(current_user["id"]))
-    questions = (
-        supabase.table("pathr_question")
-        .select("id,prompt,code_snippet,code_language,options,difficulty,order_index")
-        .eq("quiz_id", quiz_id)
-        .order("order_index")
-        .execute()
-        .data
-        or []
-    )
-    return {**quiz, "questions": questions}
+    return _quiz_para_responder(supabase, quiz)
 
 
 def _owned_quiz(supabase: Client, quiz_id: str, user_id: str) -> dict[str, Any]:
@@ -414,6 +593,13 @@ def submit_quiz(
         .execute()
         .data[0]
     )
+
+    # A tentativa fechou: o rascunho não tem mais o que guardar. Melhor esforço — a linha da tentativa já está
+    # gravada, e uma coluna ainda sem migrar não pode desfazer a correção.
+    try:
+        supabase.table("pathr_quiz").update({"draft": None}).eq("id", quiz_id).eq("user_id", user_id).execute()
+    except Exception:  # noqa: BLE001
+        pass
 
     if primeira_tentativa:
         _apply_result_to_tags(supabase, user_id, tag_ids, score)

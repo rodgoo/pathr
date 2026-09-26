@@ -51,6 +51,8 @@ import type {
   PasskeyOptions,
   Profile,
   Quiz,
+  QuizEmAndamento,
+  QuizHistoricoItem,
   ReaderContent,
   QuizResult,
   Resource,
@@ -504,6 +506,20 @@ export const quizzes = {
   submit: (id: string, answers: Record<string, number>, duration_s = 0) =>
     api.post<QuizResult>(`/quizzes/${id}/submit`, { answers, duration_s }),
   attempts: (id: string) => api.get(`/quizzes/${id}/attempts`),
+  /** O quiz deste módulo que já foi gerado e ainda não foi enviado, com onde a pessoa parou. Vem do servidor:
+   * guardado só no navegador, sumia com a limpeza de dados, uma aba anônima ou outro aparelho. */
+  emAndamento: (nodeId: string) =>
+    api.get<QuizEmAndamento>(`/quizzes/em-andamento?node_id=${encodeURIComponent(nodeId)}`),
+  /** As tentativas já enviadas neste módulo, da mais recente para a mais antiga. */
+  historico: (nodeId: string) =>
+    api.get<QuizHistoricoItem[]>(`/quizzes/historico?node_id=${encodeURIComponent(nodeId)}`),
+  /** Uma tentativa antiga, no formato da correção (questões, o que foi respondido, gabarito e explicação). */
+  tentativa: (attemptId: string) =>
+    api.get<{ quiz: Quiz; result: QuizResult }>(`/quizzes/tentativas/${encodeURIComponent(attemptId)}`),
+  /** Grava onde a pessoa parou. Sem fila offline de propósito: é uma cópia de segurança, e a cópia do navegador
+   * já cobre a falta de rede — enfileirar mandaria, depois, um progresso velho por cima de um novo. */
+  salvarRascunho: (id: string, body: { index: number; answers: Record<string, number> }) =>
+    api.put<{ salvo: boolean }>(`/quizzes/${encodeURIComponent(id)}/rascunho`, body),
 };
 
 export const languages = {
