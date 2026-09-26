@@ -93,20 +93,20 @@ export function ModulePage() {
       </div>
       <h1 style={{ fontSize: 26, margin: "0 0 16.8px" }}>{node.title}</h1>
 
-      {/* Uma coluna no celular, três no desktop (o conteúdo ocupa duas).
-          O `span 2` NÃO pode sobrar na versão estreita: ele obriga a grade a
-          ter duas colunas mesmo quando só cabe uma, e aí o conteúdo fica com
-          a largura inteira enquanto os painéis de baixo ficam com metade —
-          era isso que deixava os cartões desalinhados. */}
+      {/* Duas linhas de grade, e é isso que alinha os cartões: a linha 1 é o cabeçalho da coluna da esquerda
+          (descrição + abas) e a linha 2 é o conteúdo da aba, à esquerda, com os cartões laterais à direita.
+          Antes a coluna da direita nascia no TOPO da grade, acima das abas, e o cartão da pergunta só começava
+          depois delas: "Ao final você consegue" ficava mais alto que o cartão do quiz, em toda aba.
+          No celular tudo empilha numa coluna só (cabeçalho, conteúdo, cartões). */}
       <div
         style={{
           display: "grid",
-          gridTemplateColumns: compacto ? "minmax(0,1fr)" : "repeat(auto-fit,minmax(290px,1fr))",
-          gap: compacto ? 11.2 : 16.8,
+          gridTemplateColumns: compacto ? "minmax(0,1fr)" : "minmax(0,2fr) minmax(260px,1fr)",
+          columnGap: compacto ? 0 : 16.8,
           alignItems: "start",
         }}
       >
-        <div style={{ minWidth: 0, gridColumn: compacto ? "auto" : "span 2" }}>
+        <div style={{ minWidth: 0, gridColumn: 1, gridRow: 1 }}>
           {node.description ? (
             <p style={{ fontSize: 14, color: "rgba(233,233,237,.75)", maxWidth: "68ch" }}>
               {node.description}
@@ -148,13 +148,25 @@ export function ModulePage() {
               );
             })}
           </div>
+        </div>
 
+        <div style={{ minWidth: 0, gridColumn: 1, gridRow: 2 }}>
           {state.moduleTab === "material" ? <MaterialTab node={node} /> : null}
           {state.moduleTab === "quiz" ? <QuizTab node={node} /> : null}
           {state.moduleTab === "atividade" ? <ActivityPanel node={node} /> : null}
         </div>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 11.2, minWidth: 0 }}>
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: 11.2,
+            minWidth: 0,
+            gridColumn: compacto ? 1 : 2,
+            gridRow: compacto ? 3 : 2,
+            marginTop: compacto ? 11.2 : 0,
+          }}
+        >
           <Objectives node={node} />
           <PhaseModules
             modules={phase?.modules ?? []}
