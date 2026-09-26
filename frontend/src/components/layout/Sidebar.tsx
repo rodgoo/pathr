@@ -10,6 +10,7 @@
 import { useState } from "react";
 import { english as englishApi, roadmap as roadmapApi, social } from "@/api/endpoints";
 import { telaLiberada } from "@/lib/features";
+import { formatarMeta } from "@/lib/formatarMeta";
 import { useAppState } from "@/hooks/useAppState";
 import { useT } from "@/lib/i18n";
 import { useAuth } from "@/hooks/useAuth";
@@ -167,8 +168,13 @@ export function Sidebar() {
             }}
           >
             <Kicker style={{ display: "block", marginBottom: 5.6 }}>{t("sidebar.meta")}</Kicker>
-            <div style={{ fontSize: 12.5, lineHeight: 1.4, color: "rgba(233,233,237,.8)" }}>
-              {plan.target_role || plan.title}
+            {/* O que a pessoa digitou no onboarding, apresentado: iniciais em maiúscula, tecnologias com a
+                grafia certa e só os primeiros itens. O texto completo fica na dica ao passar o mouse. */}
+            <div
+              title={formatarMeta(plan.target_role || plan.title).completo}
+              style={{ fontSize: 12.5, lineHeight: 1.4, color: "rgba(233,233,237,.8)" }}
+            >
+              {formatarMeta(plan.target_role || plan.title).texto}
             </div>
             <Meter
               pct={plan.progress_pct}
