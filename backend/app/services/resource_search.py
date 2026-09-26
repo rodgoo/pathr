@@ -40,6 +40,7 @@ import asyncio
 import logging
 import math
 import re
+import unicodedata
 from dataclasses import dataclass, field
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Optional
@@ -84,6 +85,67 @@ _MAX_AI = 4
 _SEARCH_FLOOR = 40
 _AI_SCORE = 38
 assert _AI_SCORE < _SEARCH_FLOOR
+
+# --- O resultado trata do assunto? ------------------------------------------
+#
+# O piso acima dá 40 pontos a QUALQUER resultado de busca, e a única checagem depois dele era "o link abre".
+# Nada perguntava se a página falava do assunto. O buscador semântico devolve o que o índice acha parecido com
+# "Docker tutorial guia em português" — e devolveu guias de investir em criptomoedas, que abrem perfeitamente e
+# foram gravados no catálogo GLOBAL como material de Docker, para todo mundo que estuda Docker.
+
+# Palavras que aparecem no nome de um módulo sem serem o assunto ("Fundamentos de DevOps", "Docker: guia
+# completo"): casar com elas não prova nada, e exigir que o resultado as contenha derrubaria bom material.
+_SEM_VALOR = frozenset(
+    "com para dos das and the with for fundamentos fundamentals basico basics intro introducao introduction "
+    "avancado advanced curso course guia guide tutorial pratica practice conceitos concepts completo complete "
+    "zero iniciantes beginners checkpoint modulo module".split()
+)
+
+
+def _sem_acento(texto: str) -> str:
+    return "".join(c for c in unicodedata.normalize("NFKD", texto) if not unicodedata.combining(c)).lower()
+
+
+def _termos_do_assunto(assunto: str) -> list[str]:
+    """As palavras do assunto que um resultado sobre ele PRECISA ter. Sem acento, minúsculas, 3+ letras."""
+    return sorted({t for t in re.findall(r"[a-z0-9]+", _sem_acento(assunto)) if len(t) >= 3 and t not in _SEM_VALOR})
+
+
+def fala_do_assunto(assunto: str, *partes: Optional[str]) -> bool:
+    """O texto (título, trecho, endereço) trata do `assunto`?
+
+    A regra é a metade das palavras do assunto, no mínimo uma, começando uma palavra do texto: "git" acha
+    "GitHub" (que é a mesma família), mas "net" não acha "internet". Metade, e não todas, porque o nome de uma
+    tecnologia às vezes vem em outro idioma ("Programação Orientada a Objetos" para uma página que diz
+    "programação orientada a objetos em Java"), e exigir tudo recusaria material bom.
+
+    Assunto sem palavra que sirva de âncora (C, C++, R) não tem como ser julgado: devolve True. Recusar tudo por
+    isso apagaria a biblioteca inteira dessas linguagens, que é pior que aceitar um resultado ruim.
+    """
+    termos = _termos_do_assunto(assunto)
+    if not termos:
+        return True
+    texto = _sem_acento(" ".join(p for p in partes if p))
+    achados = sum(1 for termo in termos if re.search(rf"(?<![a-z0-9]){re.escape(termo)}", texto))
+    return achados >= math.ceil(len(termos) / 2)
+
+
+def _so_o_que_fala_do_assunto(candidatos: list["Candidate"], assunto: str) -> list["Candidate"]:
+    """Tira da busca WEB o que não trata do assunto. Vídeo do YouTube e sugestão de IA ficam como estão: o
+    primeiro já vem ordenado por relevância pela própria API, e o segundo foi pedido para aquele assunto."""
+    mantidos, fora = [], []
+    for candidato in candidatos:
+        if candidato.source in ("tavily", "brave") and not fala_do_assunto(
+            assunto, candidato.title, candidato.description, candidato.url
+        ):
+            fora.append(candidato)
+        else:
+            mantidos.append(candidato)
+    if fora:
+        logger.info(
+            "descartados por não tratarem de %r: %s", assunto, "; ".join(c.title[:70] for c in fora[:6])
+        )
+    return mantidos
 
 # Alguns servidores recusam requisição sem User-Agent de navegador. Não é
 # disfarce: é o mínimo para a validação não reprovar um link que abre bem no
@@ -204,6 +266,10 @@ async def search_for_tag(tag: dict[str, Any]) -> list[Candidate]:
             logger.warning("fonte de busca falhou para %r: %s", name, result)
             continue
         candidates.extend(result)
+
+    # ANTES de decidir se a IA entra: uma busca que só trouxe lixo tem de valer como "não achou nada" — senão o
+    # lixo era gravado e a reserva por IA, que sabe indicar a documentação do assunto, nunca chegava a rodar.
+    candidates = _so_o_que_fala_do_assunto(candidates, name)
 
     # A IA entra só para completar o que a busca não cobriu. Se as duas fontes
     # já trouxeram material, gastar uma chamada de LLM aqui seria pagar por um
