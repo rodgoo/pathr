@@ -35,6 +35,7 @@ from __future__ import annotations
 
 import unicodedata
 from typing import Any
+from app.services import textos
 
 # As linguagens oferecidas. `rotulo` é o que aparece na tela; `realce` é o
 # identificador de sintaxe que o bloco de código usa.
@@ -382,9 +383,17 @@ def sugerir(
         objetivo = next(iter(modulo.get("objetivos") or []), "")
         titulo = str(modulo.get("titulo") or "").strip()
         assunto = f"{titulo}: {objetivo.rstrip('.')}" if objetivo else titulo
-        situacao = "Em andamento" if modulo.get("status") == "doing" else "Próximo"
+        situacao = textos.t(
+            "lab.situacao.andamento" if modulo.get("status") == "doing" else "lab.situacao.proximo"
+        )
         nivel = nivel_de.get(linguagem, "iniciante")
-        if acrescenta(linguagem, assunto, nivel, f"{situacao} no seu roadmap: {titulo}", "roadmap"):
+        if acrescenta(
+            linguagem,
+            assunto,
+            nivel,
+            textos.t("lab.noRoadmap", situacao=situacao, titulo=titulo),
+            "roadmap",
+        ):
             do_roadmap += 1
 
     # 2. A trilha de cada linguagem, alternando entre elas. Sobra lugar para
@@ -394,7 +403,7 @@ def sugerir(
         for linguagem in ids:
             if trilhas[linguagem] and len(sugestoes) < limite - len(ids):
                 assunto = trilhas[linguagem].pop(0)
-                acrescenta(linguagem, assunto, nivel_de[linguagem], f"Para o seu nível em {rotulo(linguagem)}", "trilha")
+                acrescenta(linguagem, assunto, nivel_de[linguagem], textos.t("lab.paraSeuNivel", linguagem=rotulo(linguagem)), "trilha")
 
     # 3. Um passo acima em cada linguagem: onde a pessoa chega a seguir.
     for linguagem in ids:
@@ -403,7 +412,7 @@ def sugerir(
             continue
         proximo = NIVEIS[NIVEIS.index(atual) + 1]
         for assunto in (_TRILHAS.get(linguagem) or _TRILHA_GENERICA)[proximo]:
-            if acrescenta(linguagem, assunto, proximo, f"Próximo passo em {rotulo(linguagem)}", "proximo_nivel"):
+            if acrescenta(linguagem, assunto, proximo, textos.t("lab.proximoPasso", linguagem=rotulo(linguagem)), "proximo_nivel"):
                 break
 
     so_do_perfil = [

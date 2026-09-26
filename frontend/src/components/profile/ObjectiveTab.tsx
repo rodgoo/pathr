@@ -30,6 +30,30 @@ import { ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel } from "@/components/ui/primitives";
 import { RegiaoDasVagas } from "./RegiaoDasVagas";
 
+/**
+ * A chave de dicionário de um rótulo, derivada do próprio texto em português.
+ *
+ * As áreas e os títulos de destino continuam escritos em português no código —
+ * de propósito: o TÍTULO é o valor gravado em `target_role`, lido pelo roadmap,
+ * pelas vagas e pelos cursos, e comparado por igualdade para marcar a opção
+ * escolhida. Traduzir o valor faria quem escolheu em português deixar de ver a
+ * própria escolha marcada ao abrir o app em inglês, e gravaria no banco uma
+ * frase diferente por idioma.
+ *
+ * Então o português é a IDENTIDADE e o dicionário traz o RÓTULO. Sem entrada no
+ * dicionário, `t()` devolve a chave — por isso o texto em português entra como
+ * reserva explícita aqui.
+ */
+function chaveDoRotulo(texto: string): string {
+  return texto
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 60);
+}
+
 /** As áreas, na ordem em que aparecem no filtro. */
 const AREAS = [
   "Fullstack",
@@ -119,6 +143,15 @@ function metas(texto: string): string[] {
 
 export function ObjectiveTab() {
   const t = useT();
+
+  // `t()` devolve a própria chave quando a entrada não existe no dicionário.
+  // Aqui a reserva é o texto em português — que é a fonte, não um padrão
+  // arbitrário: um destino novo aparece legível no mesmo dia em que é escrito,
+  // e ganha tradução na próxima passada do `traduzir.mjs`.
+  const rotulo = (chave: string, reserva: string) => {
+    const texto = t(chave);
+    return texto === chave ? reserva : texto;
+  };
   const carregado = useQuery(() => profileApi.get(), []);
   const [perfil, setPerfil] = useState<Profile | null>(null);
   const [contexto, setContexto] = useState("");
@@ -203,7 +236,9 @@ export function ObjectiveTab() {
                   color: ativa ? ACC4 : TEXT.muted,
                 }}
               >
-                {opcao}
+                {opcao === "Todas"
+                  ? t("perfil.objetivo.todasAsAreas")
+                  : rotulo(`objetivo.areas.${chaveDoRotulo(opcao)}`, opcao)}
               </button>
             );
           })}
@@ -256,12 +291,12 @@ export function ObjectiveTab() {
                 />
                 <span style={{ minWidth: 0 }}>
                   <span style={{ display: "block", fontSize: 13.5, lineHeight: 1.35 }}>
-                    {destino.titulo}
+                    {rotulo(`objetivo.destinos.${chaveDoRotulo(destino.titulo)}.titulo`, destino.titulo)}
                   </span>
                   <span
                     style={{ display: "block", fontSize: 11.5, color: TEXT.faint, marginTop: 4 }}
                   >
-                    {destino.detalhe}
+                    {rotulo(`objetivo.destinos.${chaveDoRotulo(destino.titulo)}.detalhe`, destino.detalhe)}
                   </span>
                 </span>
               </button>

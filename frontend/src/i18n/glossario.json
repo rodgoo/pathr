@@ -1,22 +1,123 @@
 {
   "_comentario": "Termos do produto que o DeepL erra por falta de contexto (rótulo de uma palavra). A tradução fixa aqui vence a do DeepL, por igualdade EXATA do valor em português. Aplicado pelo scripts/traduzir.mjs depois de traduzir.",
-  "Revogar": { "en": "Revoke", "es": "Revocar", "fr": "Révoquer", "de": "Widerrufen" },
-  "Desbanir": { "en": "Unban", "es": "Readmitir", "fr": "Réintégrer", "de": "Entsperren" },
-  "Banir": { "en": "Ban", "es": "Expulsar", "fr": "Bannir", "de": "Sperren" },
-  "Todos": { "en": "All", "es": "Todos", "fr": "Tous", "de": "Alle" },
-  "Ativos": { "en": "Active", "es": "Activos", "fr": "Actifs", "de": "Aktive" },
-  "Intermediário": { "en": "Intermediate", "es": "Intermedio", "fr": "Intermédiaire", "de": "Mittelstufe" },
-  "Pleno": { "en": "Mid-level", "es": "Semisenior", "fr": "Confirmé", "de": "Erfahren" },
-  "Trilha": { "en": "Track", "es": "Ruta", "fr": "Parcours", "de": "Pfad" },
-  "dominado": { "en": "mastered", "es": "dominado", "fr": "maîtrisé", "de": "beherrscht" },
-  "Fala": { "en": "Speaking", "es": "Expresión oral", "fr": "Expression orale", "de": "Sprechen" },
-  "Escuta": { "en": "Listening", "es": "Comprensión auditiva", "fr": "Compréhension orale", "de": "Hörverstehen" },
-  "Escrita": { "en": "Writing", "es": "Expresión escrita", "fr": "Expression écrite", "de": "Schreiben" },
-  "Ditado": { "en": "Dictation", "es": "Dictado", "fr": "Dictée", "de": "Diktat" },
-  "Associe": { "en": "Match", "es": "Relaciona", "fr": "Associez", "de": "Zuordnen" },
-  "Certo!": { "en": "Correct!", "es": "¡Correcto!", "fr": "Correct !", "de": "Richtig!" },
-  "melhor dia": { "en": "best day", "es": "mejor día", "fr": "meilleur jour", "de": "bester Tag" },
-  "Seus amigos": { "en": "Your friends", "es": "Tus amigos", "fr": "Vos amis", "de": "Deine Freunde" },
-  "Seus exemplos": { "en": "Your examples", "es": "Tus ejemplos", "fr": "Vos exemples", "de": "Deine Beispiele" },
-  "Seu objetivo": { "en": "Your goal", "es": "Tu objetivo", "fr": "Votre objectif", "de": "Dein Ziel" }
+  "Revogar": {
+    "en": "Revoke",
+    "es": "Revocar",
+    "fr": "Révoquer",
+    "de": "Widerrufen"
+  },
+  "Desbanir": {
+    "en": "Unban",
+    "es": "Readmitir",
+    "fr": "Réintégrer",
+    "de": "Entsperren"
+  },
+  "Banir": {
+    "en": "Ban",
+    "es": "Expulsar",
+    "fr": "Bannir",
+    "de": "Sperren"
+  },
+  "Todos": {
+    "en": "All",
+    "es": "Todos",
+    "fr": "Tous",
+    "de": "Alle"
+  },
+  "Ativos": {
+    "en": "Active",
+    "es": "Activos",
+    "fr": "Actifs",
+    "de": "Aktive"
+  },
+  "Intermediário": {
+    "en": "Intermediate",
+    "es": "Intermedio",
+    "fr": "Intermédiaire",
+    "de": "Mittelstufe"
+  },
+  "Pleno": {
+    "en": "Mid-level",
+    "es": "Semisenior",
+    "fr": "Confirmé",
+    "de": "Erfahren"
+  },
+  "Trilha": {
+    "en": "Track",
+    "es": "Ruta",
+    "fr": "Parcours",
+    "de": "Pfad"
+  },
+  "dominado": {
+    "en": "mastered",
+    "es": "dominado",
+    "fr": "maîtrisé",
+    "de": "beherrscht"
+  },
+  "Fala": {
+    "en": "Speaking",
+    "es": "Expresión oral",
+    "fr": "Expression orale",
+    "de": "Sprechen"
+  },
+  "Escuta": {
+    "en": "Listening",
+    "es": "Comprensión auditiva",
+    "fr": "Compréhension orale",
+    "de": "Hörverstehen"
+  },
+  "Escrita": {
+    "en": "Writing",
+    "es": "Expresión escrita",
+    "fr": "Expression écrite",
+    "de": "Schreiben"
+  },
+  "Ditado": {
+    "en": "Dictation",
+    "es": "Dictado",
+    "fr": "Dictée",
+    "de": "Diktat"
+  },
+  "Associe": {
+    "en": "Match",
+    "es": "Relaciona",
+    "fr": "Associez",
+    "de": "Zuordnen"
+  },
+  "Certo!": {
+    "en": "Correct!",
+    "es": "¡Correcto!",
+    "fr": "Correct !",
+    "de": "Richtig!"
+  },
+  "melhor dia": {
+    "en": "best day",
+    "es": "mejor día",
+    "fr": "meilleur jour",
+    "de": "bester Tag"
+  },
+  "Seus amigos": {
+    "en": "Your friends",
+    "es": "Tus amigos",
+    "fr": "Vos amis",
+    "de": "Deine Freunde"
+  },
+  "Seus exemplos": {
+    "en": "Your examples",
+    "es": "Tus ejemplos",
+    "fr": "Vos exemples",
+    "de": "Deine Beispiele"
+  },
+  "Seu objetivo": {
+    "en": "Your goal",
+    "es": "Tu objetivo",
+    "fr": "Votre objectif",
+    "de": "Dein Ziel"
+  },
+  "Sua constância em {ano}": {
+    "en": "Your consistency in {ano}",
+    "es": "Tu constancia en {ano}",
+    "fr": "Votre régularité en {ano}",
+    "de": "Deine Beständigkeit im Jahr {ano}"
+  }
 }

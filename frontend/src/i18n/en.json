@@ -366,7 +366,7 @@
     "umaAtividade": "{n} activity",
     "atividades": "{n} activities",
     "minutos": "{n} min",
-    "constanciaEm": "His consistency at {ano}",
+    "constanciaEm": "Your consistency in {ano}",
     "mesDoAno": "{mes} by {ano}",
     "estaSemana": "This week",
     "diasAtivosAteHoje": "{ativos} by {total} active days to date",
@@ -1993,7 +1993,9 @@
     },
     "video": {
       "carregando": "Loading the video…",
-      "retomandoDe": "Reposted from {tempo}."
+      "retomandoDe": "Reposted from {tempo}.",
+      "assistirNoYoutube": "Watch on YouTube",
+      "checagemDoYoutube": "If the video asks you to log in to confirm that you're not a robot, it's a YouTube check to bypass your browser's cookie blocking; watch it there and come back—your progress is saved."
     },
     "atividade": {
       "tipoCodigo": "Code",
@@ -2087,7 +2089,15 @@
       "levaCerca": "It takes about 10 minutes.",
       "gerarEtapa1": "Reading the module and its level",
       "gerarEtapa2": "Writing the questions",
-      "gerarEtapa3": "Checking the answer key"
+      "gerarEtapa3": "Checking the answer key",
+      "retomando": "Resuming your quiz…",
+      "continuando": "Picking up where you left off.",
+      "historicoTitulo": "History for this module",
+      "historicoVazio": "You haven't submitted a quiz in this module yet.",
+      "verCorrecao": "See the answers",
+      "abrindoCorrecao": "Opening…",
+      "voltarAoHistorico": "Back to history",
+      "certas": "{n} of {total} correct"
     },
     "quizRunner": {
       "perguntaXdeY": "Question {atual} from {total}",
@@ -2339,7 +2349,8 @@
       "horasDescricao": "The plan is based on this reality, not on an idealized view of the subject. A plan that demands 20 hours from someone who has only 6 hours isn't ambitious—it's a plan that gets abandoned by the third week.",
       "salvando": "Saving…",
       "salvo": "except",
-      "naoSalvou": "didn't save — {mensagem}"
+      "naoSalvou": "didn't save — {mensagem}",
+      "todasAsAreas": "All"
     }
   },
   "curriculo": {
@@ -2698,7 +2709,10 @@
       "titulo": "No events found yet",
       "comCidade": "We haven't found any tech events near you yet. Check back later—the search will run again in a few hours.",
       "semCidade": "Add your city to your profile so the event search knows where to look."
-    }
+    },
+    "procurando": "Looking for new events in your area… this takes a few moments; the list updates automatically.",
+    "googleAgenda": "Add to Google Calendar",
+    "baixarIcs": "Download .ics"
   },
   "extensao": {
     "descricao": "The browser extension reads the job posting and fills it out with what PathR already knows about you—including attaching your resume. For anything it doesn’t know, it asks you right then and there, and your answer is saved for future job postings on any website. You’re still in charge of submitting the application.",
@@ -2932,5 +2946,145 @@
     "erro": "I couldn't retrieve the cities right now. Please try again in a moment.",
     "reconhecida": "Recognized City: {nome} - {uf}",
     "ufJunto": "The UF comes with the selected city."
+  },
+  "objetivo": {
+    "areas": {
+      "fullstack": "Full-Stack",
+      "frontend": "Front End",
+      "backend": "Backend",
+      "mobile": "Mobile",
+      "dados": "Data",
+      "ia-e-ml": "AI and ML",
+      "devops-e-cloud": "DevOps and the Cloud",
+      "qualidade-qa": "Quality (QA)",
+      "seguranca": "Security",
+      "carreira": "Career"
+    },
+    "destinos": {
+      "fullstack-java-pleno-sem-depender-de-ia-para-codar": {
+        "titulo": "Full-stack Java developer, without relying on AI to write code",
+        "detalhe": "emphasis on writing from scratch and revising"
+      },
+      "fullstack-java-pleno-com-foco-em-vagas-internacionais": {
+        "titulo": "Full-stack Java developer with a focus on international job openings",
+        "detalhe": "includes a technical interview in English"
+      },
+      "especialista-backend-java-arquitetura-e-system-design": {
+        "titulo": "Java Backend Specialist, Architecture and System Design",
+        "detalhe": "Less front-end, more system design"
+      },
+      "migrar-de-frontend-para-dados-e-engenharia-de-plataforma": {
+        "titulo": "Transition from front-end to data and platform engineering",
+        "detalhe": "SQL, Pipelines, and Infrastructure"
+      },
+      "sair-de-junior-para-pleno-na-empresa-atual": {
+        "titulo": "Moving from a junior position to a full-time role at my current company",
+        "detalhe": "Focus on writing and reviewing code on my own"
+      },
+      "preparacao-intensiva-para-entrevistas": {
+        "titulo": "Intensive Interview Preparation",
+        "detalhe": "algorithms, system design, and behavioral analysis"
+      },
+      "fundar-um-produto-proprio": {
+        "titulo": "Launch Your Own Product",
+        "detalhe": "From MVP to deployment, with controlled costs"
+      },
+      "ainda-decidindo-quero-um-plano-amplo": {
+        "titulo": "Still deciding—I want a comprehensive plan",
+        "detalhe": "Cover a broad area first, then adjust"
+      },
+      "fullstack-javascript-typescript-com-react-e-node-js": {
+        "titulo": "Full-Stack JavaScript/TypeScript with React and Node.js",
+        "detalhe": "From front to back in a single language"
+      },
+      "fullstack-python-com-django-ou-fastapi-e-react": {
+        "titulo": "Full-Stack Python with Django or FastAPI and React",
+        "detalhe": "Python APIs and a modern interface"
+      },
+      "desenvolvedor-frontend-react-com-typescript": {
+        "titulo": "React Frontend Developer with TypeScript",
+        "detalhe": "components, status, tests, and performance"
+      },
+      "desenvolvedor-frontend-angular-para-sistemas-corporativos": {
+        "titulo": "Angular Front-End Developer for Enterprise Systems",
+        "detalhe": "RxJS, forms, and API integration"
+      },
+      "frontend-com-foco-em-acessibilidade-design-system-e-ux": {
+        "titulo": "Frontend with a focus on accessibility, design systems, and UX",
+        "detalhe": "Semantic HTML, CSS, and reusable components"
+      },
+      "desenvolvedor-backend-node-js-e-typescript-com-apis-e-micros": {
+        "titulo": "Backend developer specializing in Node.js and TypeScript, with experience in APIs and microservices",
+        "detalhe": "NestJS, Queues, Databases, and Observability"
+      },
+      "desenvolvedor-backend-python-com-fastapi-e-dados": {
+        "titulo": "Python Backend Developer with FastAPI and Data",
+        "detalhe": "APIs, SQL, testing, and deployment"
+      },
+      "desenvolvedor-backend-net-e-c-para-empresas": {
+        "titulo": ".NET and C# Backend Developer for Businesses",
+        "detalhe": "ASP.NET, Entity Framework, and Azure"
+      },
+      "desenvolvedor-backend-go-para-sistemas-de-alta-performance": {
+        "titulo": "Go Backend Developer for High-Performance Systems",
+        "detalhe": "concurrency, gRPC, and Kubernetes"
+      },
+      "desenvolvedor-mobile-com-flutter": {
+        "titulo": "Mobile Developer with Flutter",
+        "detalhe": "Android and iOS with a single codebase"
+      },
+      "desenvolvedor-mobile-react-native": {
+        "titulo": "React Native Mobile Developer",
+        "detalhe": "Take advantage of JavaScript and React on mobile devices"
+      },
+      "desenvolvedor-android-nativo-com-kotlin": {
+        "titulo": "Native Android Developer using Kotlin",
+        "detalhe": "Jetpack Compose and Modern Architecture"
+      },
+      "analista-de-dados-com-sql-python-e-power-bi": {
+        "titulo": "Data Analyst with SQL, Python, and Power BI",
+        "detalhe": "queries, dashboards, and data storytelling"
+      },
+      "engenheiro-de-dados-com-spark-airflow-e-cloud": {
+        "titulo": "Data Engineer with Spark, Airflow, and the cloud",
+        "detalhe": "pipelines, data lakes, and data quality"
+      },
+      "cientista-de-dados-e-machine-learning-com-python": {
+        "titulo": "Data scientist and machine learning specialist using Python",
+        "detalhe": "statistics, models, and evaluation"
+      },
+      "engenheiro-de-ia-com-llms-rag-e-agentes": {
+        "titulo": "AI Engineer specializing in LLMs, RAG, and agents",
+        "detalhe": "integration of models into actual products"
+      },
+      "devops-e-sre-com-docker-kubernetes-e-ci-cd": {
+        "titulo": "DevOps and SRE with Docker, Kubernetes, and CI/CD",
+        "detalhe": "automation, observability, and reliability"
+      },
+      "engenheiro-cloud-aws-com-certificacao": {
+        "titulo": "Certified AWS Cloud Engineer",
+        "detalhe": "Architecture on AWS and Infrastructure as Code"
+      },
+      "qa-e-automacao-de-testes-com-cypress-playwright-e-apis": {
+        "titulo": "QA and Test Automation with Cypress, Playwright, and APIs",
+        "detalhe": "end-to-end, API, and pipeline tests"
+      },
+      "seguranca-da-informacao-e-appsec-para-desenvolvedores": {
+        "titulo": "Information Security and AppSec for Developers",
+        "detalhe": "OWASP, application penetration testing, and secure code"
+      },
+      "primeiro-emprego-em-tecnologia-do-zero": {
+        "titulo": "First Job in Technology, Starting from Scratch",
+        "detalhe": "logic, Git, a programming language, and a portfolio"
+      },
+      "transicao-de-carreira-para-tecnologia": {
+        "titulo": "Career Transition into Technology",
+        "detalhe": "coming from another field, at her own pace"
+      },
+      "tech-lead-lideranca-tecnica-e-arquitetura": {
+        "titulo": "Tech Lead: Technical Leadership and Architecture",
+        "detalhe": "technical decisions, code reviews, and mentoring"
+      }
+    }
   }
 }

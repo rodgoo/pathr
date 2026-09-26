@@ -366,7 +366,7 @@
     "umaAtividade": "{n} Aktivität",
     "atividades": "{n} Aktivitäten",
     "minutos": "{n} min",
-    "constanciaEm": "Seine Beständigkeit unter {ano}",
+    "constanciaEm": "Deine Beständigkeit im Jahr {ano}",
     "mesDoAno": "{mes} von {ano}",
     "estaSemana": "Diese Woche",
     "diasAtivosAteHoje": "{ativos} von {total} aktive Tage bis heute",
@@ -1993,7 +1993,9 @@
     },
     "video": {
       "carregando": "Das Video wird geladen…",
-      "retomandoDe": "Aus: {tempo}."
+      "retomandoDe": "Aus: {tempo}.",
+      "assistirNoYoutube": "Auf YouTube ansehen",
+      "checagemDoYoutube": "Falls das Video eine Anmeldung verlangt, um zu bestätigen, dass du kein Roboter bist, handelt es sich dabei um eine Überprüfung durch YouTube, um die Cookie-Blockierung deines Browsers zu umgehen; schau es dir dort an und kehre dann zurück – dein Fortschritt wird gespeichert."
     },
     "atividade": {
       "tipoCodigo": "Code",
@@ -2087,7 +2089,15 @@
       "levaCerca": "Das dauert etwa 10 Minuten.",
       "gerarEtapa1": "Das Modul und dessen Stufe auslesen",
       "gerarEtapa2": "Das Verfassen der Fragen",
-      "gerarEtapa3": "Die Lösungen überprüfen"
+      "gerarEtapa3": "Die Lösungen überprüfen",
+      "retomando": "Ihr Quiz wird fortgesetzt…",
+      "continuando": "Weiter dort, wo Sie aufgehört haben.",
+      "historicoTitulo": "Verlauf dieses Moduls",
+      "historicoVazio": "Sie haben in diesem Modul noch kein Quiz abgeschickt.",
+      "verCorrecao": "Korrektur ansehen",
+      "abrindoCorrecao": "Wird geöffnet…",
+      "voltarAoHistorico": "Zurück zum Verlauf",
+      "certas": "{n} von {total} richtig"
     },
     "quizRunner": {
       "perguntaXdeY": "Frage {atual} von {total}",
@@ -2339,7 +2349,8 @@
       "horasDescricao": "Der Plan richtet sich danach und nicht nach dem Idealbild des Themas. Ein Plan, der von jemandem, der 6 Stunden Zeit hat, 20 Stunden verlangt, ist nicht ehrgeizig – er wird bereits in der dritten Woche aufgegeben.",
       "salvando": "Wird gespeichert…",
       "salvo": "außer",
-      "naoSalvou": "nicht gespeichert — {mensagem}"
+      "naoSalvou": "nicht gespeichert — {mensagem}",
+      "todasAsAreas": "Alle"
     }
   },
   "curriculo": {
@@ -2698,7 +2709,10 @@
       "titulo": "Es wurden noch keine Veranstaltungen gefunden",
       "comCidade": "Wir haben noch keine Technologieveranstaltungen in Ihrer Nähe gefunden. Schauen Sie später noch einmal vorbei – die Suche wird in einigen Stunden erneut durchgeführt.",
       "semCidade": "Tragen Sie Ihre Stadt in Ihrem Profil ein, damit die Veranstaltungssuche weiß, wo sie suchen soll."
-    }
+    },
+    "procurando": "Auf der Suche nach neuen Veranstaltungen in Ihrer Region … das dauert einen Moment; die Liste aktualisiert sich automatisch.",
+    "googleAgenda": "Zu Google Kalender hinzufügen",
+    "baixarIcs": ".ics herunterladen"
   },
   "extensao": {
     "descricao": "Die Browser-Erweiterung liest das Bewerbungsformular aus und füllt es mit den Daten aus, die PathR bereits über Sie hat – einschließlich des Lebenslaufs als Anhang. Was sie nicht weiß, fragt sie direkt vor Ort nach, und die Antwort gilt dann auch für zukünftige Stellenangebote auf jeder beliebigen Website. Das Absenden bleibt weiterhin Ihre Aufgabe.",
@@ -2932,5 +2946,145 @@
     "erro": "Ich konnte gerade keine Städte abrufen. Versuchen Sie es in wenigen Augenblicken erneut.",
     "reconhecida": "Anerkannte Stadt: {nome} - {uf}",
     "ufJunto": "Die UF gehört zur ausgewählten Stadt dazu."
+  },
+  "objetivo": {
+    "areas": {
+      "fullstack": "Full-Stack",
+      "frontend": "Frontend",
+      "backend": "Backend",
+      "mobile": "Mobil",
+      "dados": "Daten",
+      "ia-e-ml": "KI und ML",
+      "devops-e-cloud": "DevOps und Cloud",
+      "qualidade-qa": "Qualität (QA)",
+      "seguranca": "Sicherheit",
+      "carreira": "Karriere"
+    },
+    "destinos": {
+      "fullstack-java-pleno-sem-depender-de-ia-para-codar": {
+        "titulo": "Vollwertiger Full-Stack-Java-Entwickler, der beim Programmieren nicht auf KI angewiesen ist",
+        "detalhe": "Schwerpunkt auf dem Verfassen von Texten von Grund auf und deren Überarbeitung"
+      },
+      "fullstack-java-pleno-com-foco-em-vagas-internacionais": {
+        "titulo": "Vollzeit-Full-Stack-Java-Entwickler mit Schwerpunkt auf internationalen Stellenangeboten",
+        "detalhe": "beinhaltet ein Fachgespräch auf Englisch"
+      },
+      "especialista-backend-java-arquitetura-e-system-design": {
+        "titulo": "Java-Backend-Spezialist, Architektur und Systemdesign",
+        "detalhe": "Weniger Frontend, mehr Systemdesign"
+      },
+      "migrar-de-frontend-para-dados-e-engenharia-de-plataforma": {
+        "titulo": "Wechsel vom Frontend zu Daten und Plattformentwicklung",
+        "detalhe": "SQL, Pipelines und Infrastruktur"
+      },
+      "sair-de-junior-para-pleno-na-empresa-atual": {
+        "titulo": "Vom Junior- zum Vollzeitmitarbeiter im aktuellen Unternehmen aufsteigen",
+        "detalhe": "Der Schwerpunkt liegt darauf, den Code selbst zu erstellen und zu überprüfen"
+      },
+      "preparacao-intensiva-para-entrevistas": {
+        "titulo": "Intensive Vorbereitung auf Vorstellungsgespräche",
+        "detalhe": "Algorithmen, Systemdesign und Verhaltensanalyse"
+      },
+      "fundar-um-produto-proprio": {
+        "titulo": "Ein eigenes Produkt entwickeln",
+        "detalhe": "vom MVP bis zur Bereitstellung, bei kontrollierten Kosten"
+      },
+      "ainda-decidindo-quero-um-plano-amplo": {
+        "titulo": "Ich bin mir noch nicht sicher – ich möchte einen umfassenden Plan",
+        "detalhe": "deckt zunächst einen großen Bereich ab und passt sich anschließend an"
+      },
+      "fullstack-javascript-typescript-com-react-e-node-js": {
+        "titulo": "Full-Stack-Entwicklung mit JavaScript/TypeScript, React und Node.js",
+        "detalhe": "von vorne bis hinten in einer einzigen Sprache"
+      },
+      "fullstack-python-com-django-ou-fastapi-e-react": {
+        "titulo": "Full-Stack-Python mit Django oder FastAPI und React",
+        "detalhe": "APIs in Python und moderne Schnittstelle"
+      },
+      "desenvolvedor-frontend-react-com-typescript": {
+        "titulo": "React-Frontend-Entwickler mit TypeScript",
+        "detalhe": "Komponenten, Zustand, Tests und Leistung"
+      },
+      "desenvolvedor-frontend-angular-para-sistemas-corporativos": {
+        "titulo": "Angular-Frontend-Entwickler für Unternehmenssysteme",
+        "detalhe": "RxJS, Formulare und API-Integration"
+      },
+      "frontend-com-foco-em-acessibilidade-design-system-e-ux": {
+        "titulo": "Frontend mit Schwerpunkt auf Barrierefreiheit, Designsystem und UX",
+        "detalhe": "Semantisches HTML, CSS und wiederverwendbare Komponenten"
+      },
+      "desenvolvedor-backend-node-js-e-typescript-com-apis-e-micros": {
+        "titulo": "Backend-Entwickler für Node.js und TypeScript mit APIs und Microservices",
+        "detalhe": "NestJS, Warteschlangen, Datenbanken und Observabilität"
+      },
+      "desenvolvedor-backend-python-com-fastapi-e-dados": {
+        "titulo": "Python-Backend-Entwickler mit FastAPI und Daten",
+        "detalhe": "APIs, SQL, Tests und Bereitstellung"
+      },
+      "desenvolvedor-backend-net-e-c-para-empresas": {
+        "titulo": ".NET- und C#-Backend-Entwickler für Unternehmen",
+        "detalhe": "ASP.NET, Entity Framework und Azure"
+      },
+      "desenvolvedor-backend-go-para-sistemas-de-alta-performance": {
+        "titulo": "Go-Backend-Entwickler für Hochleistungssysteme",
+        "detalhe": "Parallelität, gRPC und Kubernetes"
+      },
+      "desenvolvedor-mobile-com-flutter": {
+        "titulo": "Mobile-Entwickler mit Flutter",
+        "detalhe": "Android und iOS mit nur einem Code"
+      },
+      "desenvolvedor-mobile-react-native": {
+        "titulo": "React Native-Entwickler für mobile Anwendungen",
+        "detalhe": "Nutzen Sie JavaScript und React auf dem Handy"
+      },
+      "desenvolvedor-android-nativo-com-kotlin": {
+        "titulo": "Native Android-Entwickler mit Kotlin",
+        "detalhe": "Jetpack Compose und moderne Architektur"
+      },
+      "analista-de-dados-com-sql-python-e-power-bi": {
+        "titulo": "Datenanalyst mit SQL, Python und Power BI",
+        "detalhe": "Abfragen, Dashboards und Datenpräsentation"
+      },
+      "engenheiro-de-dados-com-spark-airflow-e-cloud": {
+        "titulo": "Dateningenieur mit Spark, Airflow und Cloud",
+        "detalhe": "Pipelines, Data Lake und Datenqualität"
+      },
+      "cientista-de-dados-e-machine-learning-com-python": {
+        "titulo": "Datenwissenschaftler und Machine Learning mit Python",
+        "detalhe": "Statistik, Modelle und Auswertung"
+      },
+      "engenheiro-de-ia-com-llms-rag-e-agentes": {
+        "titulo": "KI-Ingenieur mit LLMs, RAG und Agenten",
+        "detalhe": "Integration von Modellen in reale Produkte"
+      },
+      "devops-e-sre-com-docker-kubernetes-e-ci-cd": {
+        "titulo": "DevOps und SRE mit Docker, Kubernetes und CI/CD",
+        "detalhe": "Automatisierung, Beobachtbarkeit und Zuverlässigkeit"
+      },
+      "engenheiro-cloud-aws-com-certificacao": {
+        "titulo": "Zertifizierter AWS-Cloud-Ingenieur",
+        "detalhe": "Architektur auf AWS und Infrastructure as Code"
+      },
+      "qa-e-automacao-de-testes-com-cypress-playwright-e-apis": {
+        "titulo": "QA und Testautomatisierung mit Cypress, Playwright und APIs",
+        "detalhe": "End-to-End-, API- und Pipeline-Tests"
+      },
+      "seguranca-da-informacao-e-appsec-para-desenvolvedores": {
+        "titulo": "Informationssicherheit und AppSec für Entwickler",
+        "detalhe": "OWASP, Penetrationstests für Anwendungen und sicherer Code"
+      },
+      "primeiro-emprego-em-tecnologia-do-zero": {
+        "titulo": "Der erste Job in der IT-Branche – ganz von Null an",
+        "detalhe": "Logik, Git, eine Programmiersprache und ein Portfolio"
+      },
+      "transicao-de-carreira-para-tecnologia": {
+        "titulo": "Beruflicher Wechsel in die Technologiebranche",
+        "detalhe": "aus einem anderen Bereich kommend, in ihrem eigenen Tempo"
+      },
+      "tech-lead-lideranca-tecnica-e-arquitetura": {
+        "titulo": "Tech Lead: Technische Leitung und Architektur",
+        "detalhe": "Technische Entscheidungen, Code-Review und Mentoring"
+      }
+    }
   }
 }

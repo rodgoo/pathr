@@ -35,6 +35,7 @@ from __future__ import annotations
 
 from datetime import date, timedelta
 from typing import Any, Optional
+from app.services import textos
 
 # Minutos estimados por tipo de item. Estimativa, não cronômetro: servem para
 # a lista caber no orçamento, e erram para o lado de sobrar tempo.
@@ -49,41 +50,28 @@ _REVISAO_BASE = 10
 _REVISAO_POR_CONCEITO = 2
 _REVISAO_TETO = 30
 
+# O método por trás de cada tipo de atividade. Guardado como CHAVE e resolvido
+# na hora de montar a resposta: a frase precisa sair no idioma de quem pediu,
+# e um dicionário de módulo é avaliado uma vez só, na importação — quando
+# ninguém ainda pediu nada.
 PILARES = {
-    "revisao": "Repetição espaçada",
-    "material": "Estudo guiado",
-    "quiz": "Recordação ativa",
-    "feynman": "Feynman",
-    "pratica": "Prática deliberada",
-    "desafio": "Prática deliberada",
+    "revisao": "pilar.revisao",
+    "material": "pilar.material",
+    "quiz": "pilar.quiz",
+    "feynman": "pilar.feynman",
+    "pratica": "pilar.pratica",
+    "desafio": "pilar.pratica",
 }
 
 _DETALHES = {
-    "revisao": (
-        "Vem antes do conteúdo novo: revisar no ponto em que se está esquecendo é o "
-        "que consolida. Os conceitos voltam reescritos no próximo quiz."
-    ),
-    "material": (
-        "Um vídeo, artigo ou documentação da Biblioteca. Base antes de teste — sem "
-        "ela, o quiz vira chute."
-    ),
-    "quiz": (
-        "Responder sem consultar é o que fixa. Errar aqui é parte do método: o erro "
-        "volta reescrito na próxima rodada."
-    ),
-    "feynman": (
-        "Escreva como se explicasse para alguém que nunca viu o assunto. Onde o "
-        "texto travar é onde o entendimento acaba."
-    ),
-    "pratica": (
-        "Resolver a atividade do módulo do zero, sem IA. Reconhecer a solução é "
-        "diferente de produzi-la."
-    ),
-    "desafio": (
-        "Você já tem a base. O ganho agora está em aplicar num problema maior, não "
-        "em revisar o que já sabe."
-    ),
+    "revisao": "detalhe.revisao",
+    "material": "detalhe.material",
+    "quiz": "detalhe.quiz",
+    "feynman": "detalhe.feynman",
+    "pratica": "detalhe.pratica",
+    "desafio": "detalhe.desafio",
 }
+
 
 # Quantos módulos a semana carrega no máximo. Mais que isso e a intercalação
 # vira dispersão: três assuntos alternados retêm; seis viram nenhum.
@@ -155,9 +143,12 @@ def _item(tipo: str, titulo: str, node: Optional[dict], nivel: Optional[str], mi
     return {
         "id": f"{tipo}:{node['id']}" if node else tipo,
         "tipo": tipo,
-        "pilar": PILARES[tipo],
+        # Resolvidos AQUI, e não na tabela: o idioma é o de quem está pedindo
+        # agora, e um dicionário de módulo é avaliado uma vez só, na
+        # importação — quando ninguém ainda pediu nada.
+        "pilar": textos.t(PILARES[tipo]),
         "titulo": titulo,
-        "detalhe": _DETALHES[tipo],
+        "detalhe": textos.t(_DETALHES[tipo]),
         "minutos": minutos,
         "node_id": str(node["id"]) if node else None,
         "modulo": node.get("title") if node else None,
@@ -177,19 +168,25 @@ def _itens_do_modulo(node: dict, banda: str) -> tuple[list[dict], list[dict]]:
 
     if banda == "iniciante":
         return (
-            [item("material", f"Estudar o material de {titulo}"), item("quiz", f"Quiz de {titulo}")],
-            [item("feynman", f"Explicar {titulo} com suas palavras")],
+            [
+                item("material", textos.t("atividade.material", titulo=titulo)),
+                item("quiz", textos.t("atividade.quiz", titulo=titulo)),
+            ],
+            [item("feynman", textos.t("atividade.feynman", titulo=titulo))],
         )
     if banda == "intermediario":
         return (
-            [item("quiz", f"Quiz de {titulo}"), item("feynman", f"Explicar {titulo} com suas palavras")],
-            [item("pratica", f"Atividade prática de {titulo}")],
+            [
+                item("quiz", textos.t("atividade.quiz", titulo=titulo)),
+                item("feynman", textos.t("atividade.feynman", titulo=titulo)),
+            ],
+            [item("pratica", textos.t("atividade.pratica", titulo=titulo))],
         )
     # Avançado: sem material e sem quiz básico. Rever o que já se domina é o
     # jeito mais confortável de não progredir.
     return (
         [
-            item("feynman", f"Explicar {titulo} com suas palavras"),
+            item("feynman", textos.t("atividade.feynman", titulo=titulo)),
             item("desafio", f"Desafio aplicado de {titulo}"),
         ],
         [],
@@ -216,9 +213,9 @@ def montar(
     fila: list[dict] = []
     if pendentes > 0:
         texto = (
-            "Revisar 1 conceito pendente"
+            textos.t("atividade.revisaoUm")
             if pendentes == 1
-            else f"Revisar {pendentes} conceitos pendentes"
+            else textos.t("atividade.revisao", quantos=pendentes)
         )
         minutos = min(_REVISAO_TETO, max(_REVISAO_BASE, pendentes * _REVISAO_POR_CONCEITO))
         fila.append(_item("revisao", texto, None, None, minutos))

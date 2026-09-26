@@ -366,7 +366,7 @@
     "umaAtividade": "{n} actividad",
     "atividades": "{n} actividades",
     "minutos": "{n} min",
-    "constanciaEm": "Su constancia en {ano}",
+    "constanciaEm": "Tu constancia en {ano}",
     "mesDoAno": "{mes} de {ano}",
     "estaSemana": "Esta semana",
     "diasAtivosAteHoje": "{ativos} de {total} días activos hasta hoy",
@@ -1993,7 +1993,9 @@
     },
     "video": {
       "carregando": "Cargando el vídeo…",
-      "retomandoDe": "Tomado de {tempo}."
+      "retomandoDe": "Tomado de {tempo}.",
+      "assistirNoYoutube": "Verlo en YouTube",
+      "checagemDoYoutube": "Si el vídeo te pide que inicies sesión para confirmar que no eres un robot, se trata de una comprobación de YouTube para evitar que tu navegador bloquee las cookies; míralo allí y vuelve, tu progreso se ha guardado."
     },
     "atividade": {
       "tipoCodigo": "Código",
@@ -2087,7 +2089,15 @@
       "levaCerca": "Tarda unos 10 minutos.",
       "gerarEtapa1": "Lectura del módulo y su nivel",
       "gerarEtapa2": "Redacción de las preguntas",
-      "gerarEtapa3": "Comprobando la clave de respuestas"
+      "gerarEtapa3": "Comprobando la clave de respuestas",
+      "retomando": "Retomando tu cuestionario…",
+      "continuando": "Continuando donde lo dejaste.",
+      "historicoTitulo": "Historial de este módulo",
+      "historicoVazio": "Aún no has enviado ningún cuestionario en este módulo.",
+      "verCorrecao": "Ver la corrección",
+      "abrindoCorrecao": "Abriendo…",
+      "voltarAoHistorico": "Volver al historial",
+      "certas": "{n} de {total} correctas"
     },
     "quizRunner": {
       "perguntaXdeY": "Pregunta {atual} de {total}",
@@ -2339,7 +2349,8 @@
       "horasDescricao": "El plan se adapta a esto, y no al ideal de la materia. Un plan que exige 20 horas a quien solo dispone de 6 no es ambicioso: es un plan que se abandona en la tercera semana.",
       "salvando": "guardando…",
       "salvo": "salvo",
-      "naoSalvou": "no se ha guardado — {mensagem}"
+      "naoSalvou": "no se ha guardado — {mensagem}",
+      "todasAsAreas": "Todas"
     }
   },
   "curriculo": {
@@ -2698,7 +2709,10 @@
       "titulo": "Aún no se ha encontrado ningún evento",
       "comCidade": "Aún no hemos encontrado eventos tecnológicos cerca de ti. Vuelve más tarde: la búsqueda se volverá a realizar dentro de unas horas.",
       "semCidade": "Añade tu ciudad al perfil para que la búsqueda de eventos sepa dónde buscar."
-    }
+    },
+    "procurando": "Buscando nuevos eventos en tu zona… esto tarda unos instantes; la lista se actualiza automáticamente.",
+    "googleAgenda": "Añadir a Google Calendar",
+    "baixarIcs": "Descargar .ics"
   },
   "extensao": {
     "descricao": "La extensión del navegador lee el formulario de la oferta de empleo y lo rellena con la información que PathR ya tiene sobre ti, incluyendo incluso el currículum. Lo que no sepa, te lo pregunta en ese mismo momento, y la respuesta se aplica a las próximas ofertas de empleo en cualquier página web. El envío sigue estando en tus manos.",
@@ -2932,5 +2946,145 @@
     "erro": "No he podido buscar ciudades ahora mismo. Inténtalo de nuevo en unos instantes.",
     "reconhecida": "Ciudad reconocida: {nome} - {uf}",
     "ufJunto": "La UF viene incluida con la ciudad elegida."
+  },
+  "objetivo": {
+    "areas": {
+      "fullstack": "Full-stack",
+      "frontend": "Frontend",
+      "backend": "Backend",
+      "mobile": "Móvil",
+      "dados": "Datos",
+      "ia-e-ml": "IA y ML",
+      "devops-e-cloud": "DevOps y la nube",
+      "qualidade-qa": "Calidad (QA)",
+      "seguranca": "Seguridad",
+      "carreira": "Trayectoria profesional"
+    },
+    "destinos": {
+      "fullstack-java-pleno-sem-depender-de-ia-para-codar": {
+        "titulo": "Desarrollador Java full-stack, sin depender de la IA para programar",
+        "detalhe": "énfasis en escribir desde cero y revisar"
+      },
+      "fullstack-java-pleno-com-foco-em-vagas-internacionais": {
+        "titulo": "Desarrollador Java full-stack con experiencia, especializado en ofertas de empleo internacionales",
+        "detalhe": "incluye una entrevista técnica en inglés"
+      },
+      "especialista-backend-java-arquitetura-e-system-design": {
+        "titulo": "Especialista en backend Java, arquitectura y diseño de sistemas",
+        "detalhe": "menos front-end, más diseño de sistemas"
+      },
+      "migrar-de-frontend-para-dados-e-engenharia-de-plataforma": {
+        "titulo": "Pasar del front-end a datos e ingeniería de plataforma",
+        "detalhe": "SQL, flujos de trabajo e infraestructura"
+      },
+      "sair-de-junior-para-pleno-na-empresa-atual": {
+        "titulo": "Pasar de ser un empleado junior a un puesto de pleno derecho en la empresa actual",
+        "detalhe": "Me centro en desarrollar por mi cuenta y revisar el código"
+      },
+      "preparacao-intensiva-para-entrevistas": {
+        "titulo": "Preparación intensiva para entrevistas",
+        "detalhe": "algoritmos, diseño de sistemas y comportamiento"
+      },
+      "fundar-um-produto-proprio": {
+        "titulo": "Crear un producto propio",
+        "detalhe": "desde el MVP hasta la implementación, con un coste controlado"
+      },
+      "ainda-decidindo-quero-um-plano-amplo": {
+        "titulo": "Todavía no lo tengo claro: quiero un plan amplio",
+        "detalhe": "cubre una amplia base y luego se ajusta"
+      },
+      "fullstack-javascript-typescript-com-react-e-node-js": {
+        "titulo": "Desarrollador Full Stack de JavaScript/TypeScript con React y Node.js",
+        "detalhe": "de delante a atrás en un solo lenguaje"
+      },
+      "fullstack-python-com-django-ou-fastapi-e-react": {
+        "titulo": "Python full-stack con Django o FastAPI y React",
+        "detalhe": "API en Python e interfaz moderna"
+      },
+      "desenvolvedor-frontend-react-com-typescript": {
+        "titulo": "Desarrollador front-end de React con TypeScript",
+        "detalhe": "componentes, estado, pruebas y rendimiento"
+      },
+      "desenvolvedor-frontend-angular-para-sistemas-corporativos": {
+        "titulo": "Desarrollador front-end de Angular para sistemas corporativos",
+        "detalhe": "RxJS, formularios e integración con API"
+      },
+      "frontend-com-foco-em-acessibilidade-design-system-e-ux": {
+        "titulo": "Frontend centrado en la accesibilidad, el sistema de diseño y la experiencia de usuario (UX)",
+        "detalhe": "HTML semántico, CSS y componentes reutilizables"
+      },
+      "desenvolvedor-backend-node-js-e-typescript-com-apis-e-micros": {
+        "titulo": "Desarrollador de backend en Node.js y TypeScript con API y microservicios",
+        "detalhe": "NestJS, colas, bancos y observabilidad"
+      },
+      "desenvolvedor-backend-python-com-fastapi-e-dados": {
+        "titulo": "Desarrollador de backend en Python con FastAPI y datos",
+        "detalhe": "API, SQL, pruebas e implementación"
+      },
+      "desenvolvedor-backend-net-e-c-para-empresas": {
+        "titulo": "Desarrollador backend de .NET y C# para empresas",
+        "detalhe": "ASP.NET, Entity Framework y Azure"
+      },
+      "desenvolvedor-backend-go-para-sistemas-de-alta-performance": {
+        "titulo": "Desarrollador de backend en Go para sistemas de alto rendimiento",
+        "detalhe": "concurrencia, gRPC y Kubernetes"
+      },
+      "desenvolvedor-mobile-com-flutter": {
+        "titulo": "Desarrollador de aplicaciones móviles con Flutter",
+        "detalhe": "Android e iOS con un único código"
+      },
+      "desenvolvedor-mobile-react-native": {
+        "titulo": "Desarrollador de aplicaciones móviles con React Native",
+        "detalhe": "Aprovecha JavaScript y React en el móvil"
+      },
+      "desenvolvedor-android-nativo-com-kotlin": {
+        "titulo": "Desarrollador de aplicaciones nativas para Android con Kotlin",
+        "detalhe": "Jetpack Compose y la arquitectura moderna"
+      },
+      "analista-de-dados-com-sql-python-e-power-bi": {
+        "titulo": "Analista de datos con SQL, Python y Power BI",
+        "detalhe": "consultas, paneles de control y narración de historias con datos"
+      },
+      "engenheiro-de-dados-com-spark-airflow-e-cloud": {
+        "titulo": "Ingeniero de datos con Spark, Airflow y la nube",
+        "detalhe": "flujos de datos, lago de datos y calidad de los datos"
+      },
+      "cientista-de-dados-e-machine-learning-com-python": {
+        "titulo": "Científico de datos y aprendizaje automático con Python",
+        "detalhe": "estadística, modelos y evaluación"
+      },
+      "engenheiro-de-ia-com-llms-rag-e-agentes": {
+        "titulo": "Ingeniero de IA especializado en modelos de lenguaje a gran escala (LLM), RAG y agentes",
+        "detalhe": "integración de modelos en productos reales"
+      },
+      "devops-e-sre-com-docker-kubernetes-e-ci-cd": {
+        "titulo": "DevOps y SRE con Docker, Kubernetes y CI/CD",
+        "detalhe": "automatización, observabilidad y fiabilidad"
+      },
+      "engenheiro-cloud-aws-com-certificacao": {
+        "titulo": "Ingeniero de AWS en la nube con certificación",
+        "detalhe": "Arquitectura en AWS e infraestructura como código"
+      },
+      "qa-e-automacao-de-testes-com-cypress-playwright-e-apis": {
+        "titulo": "Control de calidad y automatización de pruebas con Cypress, Playwright y API",
+        "detalhe": "pruebas de extremo a extremo, de API y en pipeline"
+      },
+      "seguranca-da-informacao-e-appsec-para-desenvolvedores": {
+        "titulo": "Seguridad de la información y AppSec para desarrolladores",
+        "detalhe": "OWASP, pruebas de penetración de aplicaciones y código seguro"
+      },
+      "primeiro-emprego-em-tecnologia-do-zero": {
+        "titulo": "Primer empleo en el sector tecnológico, partiendo de cero",
+        "detalhe": "lógica, Git, un lenguaje y un portafolio"
+      },
+      "transicao-de-carreira-para-tecnologia": {
+        "titulo": "Reconversión profesional hacia el sector tecnológico",
+        "detalhe": "procedente de otro ámbito, a su propio ritmo"
+      },
+      "tech-lead-lideranca-tecnica-e-arquitetura": {
+        "titulo": "Responsable técnico: liderazgo técnico y arquitectura",
+        "detalhe": "decisiones técnicas, revisión de código y tutoría"
+      }
+    }
   }
 }
