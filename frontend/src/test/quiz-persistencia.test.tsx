@@ -202,4 +202,30 @@ describe("histórico do módulo", () => {
     fireEvent.click(screen.getByRole("button", { name: "Voltar ao histórico" }));
     expect(await screen.findByText("Histórico deste módulo")).toBeInTheDocument();
   });
+
+  it("a correção aparece FORMATADA: uma linha por alternativa, com o veredito em negrito e sem asteriscos crus", async () => {
+    const explicacao =
+      "A ideia central da questão.\n\n**Por que cada alternativa:**\n" +
+      "- **Alternativa 1 — errada.** Copiar tudo invalida o cache a cada mudança.\n" +
+      "- **Alternativa 2 — correta.** Copiar só os manifestos primeiro preserva a camada.\n" +
+      "- **Alternativa 3 — errada.** O ADD não muda a lógica de cache.\n" +
+      "- **Alternativa 4 — errada.** Desligar o cache deixa o build mais lento.";
+    mockServer({
+      "GET /quizzes/em-andamento": () => ({ body: { quiz: null, rascunho: null } }),
+      "GET /quizzes/historico": () => ({ body: historico }),
+      "GET /quizzes/tentativas/att-1": () => ({
+        body: { ...correcao, result: { ...correcao.result, results: [{ ...correcao.result.results[0], explanation: explicacao }] } },
+      }),
+    });
+    montar();
+
+    fireEvent.click(await screen.findByRole("button", { name: "Ver correção" }));
+
+    expect(await screen.findByText("Alternativa 2 — correta.")).toBeInTheDocument();
+    expect(screen.getByText("Alternativa 1 — errada.").tagName).toBe("STRONG");
+    expect(screen.getByText("Por que cada alternativa:").tagName).toBe("STRONG");
+    expect(screen.getAllByRole("listitem")).toHaveLength(4);
+    expect(screen.getByText(/Copiar só os manifestos primeiro/)).toBeInTheDocument();
+    expect(screen.queryByText(/\*\*/)).toBeNull();
+  });
 });

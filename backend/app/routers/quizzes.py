@@ -20,7 +20,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 from supabase import Client
 
-from app.ai_providers import generate_json
+from app.ai_providers import AiProviderError, generate_json
 from app.database import get_supabase
 from app.services import conhecimento
 from app.services.alternativas import numerar_de_um
@@ -29,6 +29,7 @@ from app.services import review
 from app.services.progress import log_activity
 
 router = APIRouter(prefix="/quizzes", tags=["quiz"])
+_log_quiz = logging.getLogger("pathr.quizzes")
 
 QUIZ_SCHEMA: dict[str, Any] = {
     "type": "OBJECT",
@@ -46,6 +47,8 @@ QUIZ_SCHEMA: dict[str, Any] = {
                     "alternativas": {"type": "ARRAY", "items": {"type": "STRING"}},
                     "correta": {"type": "INTEGER"},
                     "explicacao": {"type": "STRING"},
+                    # Um texto por alternativa, na ordem delas: por que está certa ou qual engano ela representa.
+                    "analise": {"type": "ARRAY", "items": {"type": "STRING"}},
                     "dificuldade": {"type": "STRING"},
                 },
                 "required": ["enunciado", "alternativas", "correta", "explicacao"],
@@ -67,8 +70,12 @@ Regras:
    alternativa 1, a última a 4) ou pelo próprio texto delas — nunca pelo índice.
 3. As alternativas erradas precisam ser plausíveis: cada uma deve refletir um
    engano que uma pessoa real comete. Alternativa absurda entrega a resposta.
-4. A explicação diz por que a certa está certa E por que a mais tentadora das
-   erradas está errada. Duas a quatro frases.
+4. Dois campos explicam a questão. `explicacao`: uma ou duas frases com a ideia
+   central que ela testa. `analise`: um array com EXATAMENTE 4 textos, um por
+   alternativa, NA MESMA ORDEM em que as alternativas foram escritas. Cada texto
+   é UMA frase completa que diz por que aquela alternativa está certa — ou qual
+   engano específico ela representa e por que está errada. Nunca cite o número da
+   alternativa dentro do texto dela: a tela já o coloca na frente.
 5. O campo codigo é opcional; quando existir, use o campo linguagem
    (java, python, javascript, sql...). Não coloque a resposta em comentário.
 6. O campo dificuldade: facil, medio ou dificil. Distribua conforme o nível
@@ -83,7 +90,13 @@ Regras:
    outro ângulo de ataque. Repita o conceito, nunca a frase — quem decora o
    texto da pergunta não aprendeu a ideia. Copie o conceito tal como veio, no
    campo conceito, para o sistema reconhecê-lo.
-9. Responda apenas o JSON."""
+9. Devolva EXATAMENTE a quantidade de questões pedida — nem uma a menos. Cada
+   questão precisa ter as 4 alternativas e os 4 textos de `analise`.
+10. Responda apenas o JSON."""
+
+# Abaixo disto o quiz não é evidência de nada: 1 acerto em 1 questão dá 100% e sobe a proficiência da tag. É o
+# mesmo piso que a rota já exige de quem pede (`question_count >= 3`).
+MIN_QUESTOES = 3
 
 
 class GenerateQuiz(BaseModel):
@@ -206,7 +219,7 @@ async def generate_quiz(
     prompt = (
         f"TECNOLOGIAS: {', '.join(names)}\n"
         f"NIVEL ATUAL DA PESSOA: {average:.1f} de 5\n"
-        f"QUANTIDADE DE QUESTOES: {payload.question_count}\n"
+        f"QUANTIDADE DE QUESTOES: {payload.question_count} (devolva exatamente esta quantidade)\n"
         f"DIFICULDADE PEDIDA: {dificuldade}\n"
         f"{ja_viu}"
         f"{revisar}\n"
@@ -214,11 +227,26 @@ async def generate_quiz(
         "mas nao consiga responder por eliminacao."
     )
     result = await generate_json(SYSTEM_PROMPT, prompt, QUIZ_SCHEMA)
-    questions = _clean_questions(result.content.get("questoes"))
-    if not questions:
+    devolvidas = result.content.get("questoes")
+    questions = _sem_repetidas(_clean_questions(devolvidas))
+    pedidas = payload.question_count
+    if len(questions) < pedidas:
+        # Antes o que sobrava da limpeza era gravado como estava: pedidas 6, aproveitada 1, e o quiz saía com UMA
+        # questão — sem log, sem aviso, e com "bom resultado, a proficiência subiu" em cima de um acerto só.
+        _log_quiz.warning(
+            "quiz: %d de %d questões aproveitadas (o modelo devolveu %d) em %s",
+            len(questions), pedidas, len(devolvidas) if isinstance(devolvidas, list) else 0, result.model,
+        )
+        try:
+            questions = _sem_repetidas(questions + await _completar(prompt, questions, pedidas - len(questions)))
+        except (AiProviderError, HTTPException):
+            # Cota do dia, provedor fora do ar: o que já há vale, se for o bastante (abaixo).
+            pass
+    questions = questions[:pedidas]
+    if len(questions) < min(MIN_QUESTOES, pedidas):
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
-            detail="A IA não devolveu questões utilizáveis. Tente de novo.",
+            detail="A IA não devolveu questões suficientes. Tente de novo.",
         )
 
     quiz = (
@@ -268,6 +296,68 @@ async def generate_quiz(
     return get_quiz(str(quiz["id"]), current_user, supabase)
 
 
+async def _completar(prompt: str, ja_escritas: list[dict[str, Any]], faltam: int) -> list[dict[str, Any]]:
+    """Uma segunda chamada, só para o que faltou, dizendo o que já foi escrito para o modelo não repetir.
+
+    Só roda quando a primeira devolveu MENOS que o pedido depois da limpeza. Cada chamada conta na cota diária de
+    IA da pessoa, então não é um laço: uma tentativa, e o que vier junto com o que já há é o que se tem.
+    """
+    temas = "\n".join(f"- {q['conceito'] or q['enunciado'][:90]}" for q in ja_escritas)
+    pedido = (
+        f"{prompt}\n"
+        f"JA ESCRITAS (nao repita estes temas nem estes enunciados):\n{temas or '- (nenhuma)'}\n"
+        f"ESCREVA MAIS {faltam} QUESTOES, DIFERENTES DAS ACIMA.\n"
+    )
+    resultado = await generate_json(SYSTEM_PROMPT, pedido, QUIZ_SCHEMA)
+    return _clean_questions(resultado.content.get("questoes"))
+
+
+def _analise_valida(bruto: Any, quantas: int) -> Optional[list[str]]:
+    """Os textos por alternativa, se vieram completos: um por alternativa e nenhum vazio. Senão None.
+
+    Modelo mais fraco às vezes ignora o campo ou devolve menos textos que alternativas. Um texto faltando não pode
+    ser "adivinhado" nem deixar uma alternativa sem explicação no meio das outras — nesse caso a questão fica só com
+    o resumo, como era antes.
+    """
+    if not isinstance(bruto, list):
+        return None
+    textos = [str(texto).strip() for texto in bruto]
+    if len(textos) != quantas or not all(textos):
+        return None
+    return [texto[:400] for texto in textos]
+
+
+def _explicacao_formatada(resumo: str, analise: Optional[list[str]], correta: int) -> str:
+    """A explicação em Markdown: o resumo e, para CADA alternativa, por que ela está certa ou errada.
+
+    Só dizer por que a certa está certa deixava a pessoa sem saber por que a que ela escolheu estava errada — e é
+    o engano específico de cada alternativa que ensina. Numera de 1, como a tela mostra as opções.
+    Sem `analise` (modelo que a omitiu), fica o resumo sozinho, como antes.
+    """
+    if not analise or len(analise) != 4:
+        return resumo
+    linhas = [
+        f"- **Alternativa {posicao + 1} — {'correta' if posicao == correta else 'errada'}.** {texto}"
+        for posicao, texto in enumerate(analise)
+    ]
+    partes = [resumo] if resumo else []
+    partes.append("**Por que cada alternativa:**\n" + "\n".join(linhas))
+    return "\n\n".join(partes)
+
+
+def _sem_repetidas(questoes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Tira a questão que repete o enunciado de outra já aceita (comparado sem pontuação nem caixa)."""
+    vistos: set[str] = set()
+    unicas = []
+    for questao in questoes:
+        chave = "".join(c for c in questao["enunciado"].lower() if c.isalnum())[:200]
+        if chave in vistos:
+            continue
+        vistos.add(chave)
+        unicas.append(questao)
+    return unicas
+
+
 def _clean_questions(raw: Any) -> list[dict[str, Any]]:
     """Descarta o que não dá para usar em vez de gravar questão quebrada.
 
@@ -287,9 +377,17 @@ def _clean_questions(raw: Any) -> list[dict[str, Any]]:
             correct = int(item.get("correta"))
         except (TypeError, ValueError):
             continue
+        # Alternativa a MAIS não derruba a questão: o gabarito está no intervalo, e cortar para 4 só perde uma
+        # errada. Descartar tudo que não vinha com exatamente 4 era o que deixava um quiz de 6 com 1 questão.
+        # Alternativa a MENOS ainda descarta: falta o que a pessoa escolher.
+        analise = _analise_valida(item.get("analise"), len(options))
+        if len(options) > 4 and 0 <= correct <= 3:
+            options = options[:4]
+            analise = analise[:4] if analise else None
         if not prompt or len(options) != 4 or not 0 <= correct <= 3:
             continue
         difficulty = str(item.get("dificuldade") or "").strip().lower()
+        resumo = str(item.get("explicacao") or "").strip()[:1000]
         cleaned.append(
             {
                 "enunciado": prompt[:2000],
@@ -297,7 +395,7 @@ def _clean_questions(raw: Any) -> list[dict[str, Any]]:
                 "linguagem": str(item.get("linguagem") or "").strip()[:30],
                 "alternativas": options,
                 "correta": correct,
-                "explicacao": str(item.get("explicacao") or "").strip()[:2000],
+                "explicacao": _explicacao_formatada(resumo, analise, correct),
                 "dificuldade": difficulty if difficulty in {"facil", "medio", "dificil"} else "medio",
                 # Pode vir vazio: modelo mais fraco às vezes ignora o campo. A
                 # questão continua utilizável — só não alimenta a revisão, o

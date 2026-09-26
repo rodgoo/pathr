@@ -26,6 +26,7 @@ import { ErrorState } from "@/components/ui/States";
 import { Panel } from "@/components/ui/primitives";
 import { CodeBlock } from "./CodeBlock";
 import { Perguntar } from "@/components/duvidas/Perguntar";
+import { TextoFormatado } from "@/components/duvidas/TextoFormatado";
 
 /**
  * Onde a pessoa parou neste quiz.
@@ -286,8 +287,11 @@ export function Review({
                   {t("modulo.quizRunner.vocEscolheu")} {question.options[item.answer]}
                 </div>
               ) : null}
+              {/* Markdown do servidor: o resumo e, para cada alternativa, por que está certa ou errada. Vai pelo
+                  mesmo `TextoFormatado` do tutor, que monta elementos React e nunca HTML: o texto vem de um
+                  modelo de IA. Explicação antiga, em texto simples, aparece como sempre. */}
               <div style={{ fontSize: 13, color: "rgba(233,233,237,.85)", lineHeight: 1.5 }}>
-                {item.explanation}
+                <TextoFormatado texto={item.explanation} />
               </div>
               <div style={{ marginTop: 8.4 }}>
                 <Perguntar contextoTipo="quiz" contextoRef={item.question_id} rotulo={t("modulo.quizRunner.perguntarQuestao")} />
