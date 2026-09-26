@@ -12,7 +12,9 @@ import { useT } from "@/lib/i18n";
 import { useAppState } from "@/hooks/useAppState";
 import { useIsCompact } from "@/hooks/useMediaQuery";
 import { useMutation, useQuery } from "@/hooks/useApi";
+import { curarModulo } from "@/lib/curadoria";
 import { moduleStatusStyle } from "@/lib/moduleStatus";
+import { proximoModulo } from "@/lib/proximoModulo";
 import { ACC, ACC4, SIZE, TEXT } from "@/lib/tokens";
 import type { ModuleTab } from "@/types";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
@@ -169,7 +171,27 @@ export function ModulePage() {
               className="btn btn-primary btn-block"
               disabled={node.status === "done" || complete.pending}
               onClick={async () => {
-                await complete.run(node.id);
+                const concluido = await complete.run(node.id);
+                // Falhou: fica onde está. Avançar para o próximo assunto sem o estudo registrado
+                // faria a pessoa achar que concluiu e perder o progresso no próximo recarregamento.
+                if (concluido === null) return;
+                // O plano de novo, e não o `plan.data` de antes do clique: o servidor acabou de
+                // promover o próximo módulo a "em andamento", e é essa resposta que diz qual é.
+                const atualizado = await roadmapApi.current().catch(() => null);
+                const proximo = atualizado
+                  ? proximoModulo(
+                      atualizado.phases.flatMap((fase) => fase.modules),
+                      node.id,
+                    )
+                  : null;
+                if (proximo) {
+                  dispatch({ type: "openNode", nodeId: proximo.id });
+                  dispatch({ type: "setModuleTab", tab: "material" });
+                  // A busca sai já, em vez de esperar a aba de material montar e perceber que está
+                  // vazia. `curarModulo` só busca uma vez por módulo na sessão, então a aba não
+                  // repete: quem chegar depois encontra a busca em andamento ou já pronta.
+                  void curarModulo(proximo.id);
+                }
                 plan.reload();
               }}
             >

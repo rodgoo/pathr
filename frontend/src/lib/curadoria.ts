@@ -18,8 +18,16 @@
 import { library as libraryApi } from "@/api/endpoints";
 import { isNetworkError } from "@/api/errors";
 
-/** Módulos já tentados nesta sessão. Zera ao recarregar a página. */
-const tentados = new Set<string>();
+/**
+ * As buscas desta sessão, por módulo — em andamento OU já terminadas. Zera ao recarregar a página.
+ *
+ * Guarda a PROMESSA, e não só "já tentei": quem chega depois precisa do resultado, não de um "false"
+ * imediato. Ao concluir um módulo o app dispara a busca do próximo NA HORA e, um instante depois, a aba de
+ * material do próximo monta e pergunta de novo. Com um `Set`, a segunda pergunta voltava `false` de
+ * imediato: o indicador de "procurando" sumia e, quando a primeira busca terminava, ninguém recarregava a
+ * lista — o material chegava e não aparecia. Devolvendo a mesma promessa, as duas esperam a mesma busca.
+ */
+const buscas = new Map<string, Promise<boolean>>();
 
 /**
  * Procura material para `nodeId`. Devolve `true` quando algo novo entrou.
@@ -28,22 +36,26 @@ const tentados = new Set<string>();
  * tela que a disparou. Quem precisar do erro visível usa o botão manual, que
  * continua existindo em `CurateButton`.
  */
-export async function curarModulo(nodeId: string): Promise<boolean> {
-  if (tentados.has(nodeId)) return false;
-  tentados.add(nodeId);
-  try {
-    const { novos } = await libraryApi.curate(nodeId);
-    return novos > 0;
-  } catch (erro) {
-    // Falta de rede merece outra chance quando ela voltar. Uma recusa do
-    // servidor (cota, "buscamos há pouco") não merece: insistir só repetiria
-    // a mesma resposta.
-    if (isNetworkError(erro)) tentados.delete(nodeId);
-    return false;
-  }
+export function curarModulo(nodeId: string): Promise<boolean> {
+  const existente = buscas.get(nodeId);
+  if (existente) return existente;
+  const busca = (async () => {
+    try {
+      const { novos } = await libraryApi.curate(nodeId);
+      return novos > 0;
+    } catch (erro) {
+      // Falta de rede merece outra chance quando ela voltar. Uma recusa do
+      // servidor (cota, "buscamos há pouco") não merece: insistir só repetiria
+      // a mesma resposta.
+      if (isNetworkError(erro)) buscas.delete(nodeId);
+      return false;
+    }
+  })();
+  buscas.set(nodeId, busca);
+  return busca;
 }
 
 /** Só para os testes: esquece o que já foi tentado. */
 export function resetCuradoriaForTests(): void {
-  tentados.clear();
+  buscas.clear();
 }
