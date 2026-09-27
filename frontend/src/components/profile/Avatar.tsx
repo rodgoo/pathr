@@ -46,6 +46,8 @@ function iniciais(nome: string): string {
 }
 
 const ACEITOS = "image/jpeg,image/png,image/webp";
+/** O teto do servidor (`max_avatar_mb`): recusar aqui poupa subir o arquivo para ouvir "não". */
+const FOTO_MAX_MB = 5;
 
 export function Avatar({ nome, editavel = false }: { nome: string; editavel?: boolean }) {
   const t = useT();
@@ -74,6 +76,15 @@ export function Avatar({ nome, editavel = false }: { nome: string; editavel?: bo
 
   async function enviar(arquivo: File) {
     setErro(null);
+    // `accept` é só sugestão do seletor: "todos os arquivos" e o arraste passam.
+    if (!ACEITOS.split(",").includes(arquivo.type)) {
+      setErro(t("perfil.avatar.formatoInvalido"));
+      return;
+    }
+    if (arquivo.size > FOTO_MAX_MB * 1024 * 1024) {
+      setErro(t("perfil.avatar.fotoGrande", { mb: FOTO_MAX_MB }));
+      return;
+    }
     setOcupado(true);
     try {
       await profileApi.uploadAvatar(arquivo);

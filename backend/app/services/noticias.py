@@ -8,35 +8,31 @@ mais usados no Brasil (Sympla, Eventbrite, Meetup, Even3) e, sem isso, uma
 busca aberta por "eventos de tecnologia em <cidade>". Cada fonte que responde
 é uma fonte a mais no resultado; nenhuma delas sozinha cobre a cidade inteira.
 
-Do resultado da busca (título + trecho) a IA organiza os campos que a tela
-precisa. Ela NUNCA inventa: quando o trecho não diz se é gratuito, ou quando
-não diz o prazo de inscrição, o campo volta vazio — é a extração que decide
-"não sei", não o texto do prompt que sugere um valor plausível.
+## O que é IA e o que é a página
 
-## O prazo de inscrição, em duas tentativas
+A busca só entrega candidatos (URL, título, trecho). A IA faz UMA coisa: numa
+única chamada para a lista inteira, separa o que é evento de tecnologia do
+resto (`somente_tecnologia`).
 
-O texto da busca já traz o prazo, na maioria dos eventos grandes ("inscrições
-de 3/3 a 28/3"). Quando NÃO traz, uma segunda pergunta à IA, focada só nisso,
-tenta achar — e só ela, e não a extração geral, porque um evento sem prazo
-óbvio no primeiro texto pode ainda ter um whitepaper ou uma segunda página que
-a IA "lembra" com mais detalhe. Falhando as duas, os campos ficam `null` no
-banco: é a tela (e não o servidor) que decide mostrar "Datas de inscrição
-ainda não foram definidas" — o texto fixo, exatamente como pedido, nunca uma
-frase gerada.
+Os campos do evento — data, local, cidade, preço, imagem — vêm da PÁGINA dele
+(`_montar` a baixa e lê o JSON-LD/Open Graph via services/evento_da_pagina.py).
+Nada é inventado: página que não abre, sem data explícita, de evento que já
+passou, online ou de outra região, descarta o candidato. O prazo de inscrição
+também é só o que a página disser; sem ele os campos ficam `null` e é a tela
+(não o servidor) que mostra "Datas de inscrição ainda não foram definidas" —
+o texto fixo `SEM_PRAZO_DE_INSCRICAO`, nunca uma frase gerada.
 
-## Por que não WebSocket/scraping de página
+## A varredura
 
-Baixar a página de cada resultado (como o modo leitura faz, services/reader.py)
-multiplicaria por 10-20 o tempo de uma busca só para ler um texto que a própria
-busca já trouxe resumido. `vagas.py` já decidiu por título+trecho sem baixar a
-página; aqui o motivo e o precedente são os mesmos.
+Roda em segundo plano (`varrer_em_fundo`), não dentro da requisição da tela:
+`pathr_news_scan` marca a região antes de começar, e cada evento pronto é
+gravado na hora.
 """
 
 from __future__ import annotations
 
 import asyncio
 import logging
-import re
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta, timezone
 from typing import Any, Optional
@@ -45,9 +41,10 @@ from urllib.parse import urlparse
 import httpx
 from supabase import Client
 
-from app.ai_providers import AiProviderError, generate_json
+from app.ai_providers import generate_json
 from app.config import settings
 from app.services import evento_da_pagina, geo, saida
+from app.services.erros_do_banco import e_violacao_de_unicidade
 
 logger = logging.getLogger("pathr.noticias")
 
@@ -74,9 +71,12 @@ _CONCORRENCIA = 6
 # O raio que define 'perto': o mesmo padrão da tela de Vagas.
 _RAIO_DA_BUSCA_KM = 80.0
 
-# Texto fixo, literal — nunca gerado pela IA. É o que a tela mostra quando as
-# duas tentativas (o texto da busca, depois a pergunta focada) não acham o
-# prazo de inscrição.
+# Teto da listagem e quantas cidades entram numa consulta ao banco.
+_LIMITE_DA_LISTA = 200
+_CIDADES_POR_CONSULTA = 100
+
+# Texto fixo, literal — nunca gerado pela IA. É o que a tela mostra quando a
+# página do evento não traz o prazo de inscrição.
 SEM_PRAZO_DE_INSCRICAO = "Datas de inscrição ainda não foram definidas"
 
 
@@ -169,51 +169,6 @@ async def buscar_bruto(cidade: str, uf: str) -> list[EventoBruto]:
 # Organização dos campos pela IA — nunca inventa, só o que o texto diz
 # ---------------------------------------------------------------------------
 
-_AI_SYSTEM = """Você organiza dados de eventos de tecnologia a partir do título e do trecho
-que uma busca na web trouxe sobre a página do evento.
-
-Regras:
-1. Preencha só o que está EXPLÍCITO no texto dado. Campo que o texto não diz
-   volta `null` — nunca um valor plausível, nunca uma suposição.
-2. `gratuito`: true se o texto diz claramente que é gratuito/sem custo; false
-   se diz que tem ingresso pago; `null` se o texto não fala sobre preço.
-3. Datas no formato AAAA-MM-DD. Sem ano explícito no texto, use o ano mais
-   próximo no futuro a partir de hoje.
-4. `inscricao_inicio`/`inscricao_fim`: só quando o texto falar de PRAZO ou
-   ABERTURA de inscrição — não confundir com a data do evento em si.
-"""
-
-_AI_SCHEMA: dict[str, Any] = {
-    "type": "OBJECT",
-    "properties": {
-        "titulo": {"type": "STRING"},
-        "resumo": {"type": "STRING"},
-        "cidade": {"type": "STRING"},
-        "estado": {"type": "STRING"},
-        "local": {"type": "STRING"},
-        "data_inicio": {"type": "STRING"},
-        "data_fim": {"type": "STRING"},
-        "gratuito": {"type": "BOOLEAN"},
-        "preco_info": {"type": "STRING"},
-        "inscricao_inicio": {"type": "STRING"},
-        "inscricao_fim": {"type": "STRING"},
-    },
-    "required": ["titulo", "resumo"],
-}
-
-_DATA_ISO = re.compile(r"^\d{4}-\d{2}-\d{2}$")
-
-
-def _data_valida(valor: Any) -> Optional[str]:
-    texto = str(valor or "").strip()
-    return texto if _DATA_ISO.match(texto) else None
-
-
-def _texto_ou_none(valor: Any, limite: int) -> Optional[str]:
-    texto = str(valor or "").strip()
-    return texto[:limite] if texto else None
-
-
 async def _montar(
     cliente: httpx.AsyncClient,
     bruto: EventoBruto,
@@ -246,6 +201,11 @@ async def _montar(
         logger.debug("fora da região buscada, descartado: %s", bruto.url)
         return None
     cidade, uf = lugar
+    # O nome oficial (com acento e caixa da base do IBGE): é com ele que a
+    # listagem filtra no banco, então "VITORIA" e "Vitória" precisam virar um só.
+    oficial = geo.achar(cidade, uf)
+    if oficial:
+        cidade = oficial.nome
 
     titulo = (pagina.titulo or bruto.titulo).strip()
     resumo = (pagina.resumo or bruto.trecho).strip()
@@ -548,21 +508,33 @@ def listar_por_regiao(
     devolve os eventos futuros de qualquer lugar — melhor mostrar algo do que
     uma tela vazia por falta de endereço no perfil."""
     hoje = date.today().isoformat()
-    linhas = (
-        supabase.table("pathr_news_event").select("*")
-        .gte("event_start", hoje).order("event_start").limit(200).execute().data
-        or []
-    )
 
-    if cidade:
-        centro = geo.achar(cidade, uf)
-        if centro:
-            proximas = {geo.normaliza(c.nome) for c, _ in geo.no_raio(centro, raio_km)}
-            # Só cidade dentro do raio. Antes valia também "mesmo estado" e
-            # "sem cidade" — e o estado inteiro não é "perto de você": um
-            # evento a 400 km aparecia como se fosse na esquina, junto com
-            # todo evento cuja cidade o pipeline não soube dizer.
-            linhas = [l for l in linhas if geo.normaliza(str(l.get("city") or "")) in proximas]
+    def _consulta():
+        return supabase.table("pathr_news_event").select("*").gte("event_start", hoje)
+
+    centro = geo.achar(cidade, uf) if cidade else None
+    if centro:
+        # Só cidade dentro do raio. Antes valia também "mesmo estado" e
+        # "sem cidade" — e o estado inteiro não é "perto de você": um
+        # evento a 400 km aparecia como se fosse na esquina, junto com
+        # todo evento cuja cidade o pipeline não soube dizer.
+        #
+        # O filtro é do BANCO, e não de Python sobre `limit(200)`: com o limite
+        # antes do filtro, os 200 eventos mais próximos no calendário do país
+        # inteiro podiam ser todos de outra região e a lista sair vazia. Em
+        # pedaços porque um raio grande tem centenas de cidades (URL enorme).
+        nomes = sorted({c.nome for c, _ in geo.no_raio(centro, raio_km)})
+        linhas = []
+        for i in range(0, len(nomes), _CIDADES_POR_CONSULTA):
+            linhas += (
+                _consulta().in_("city", nomes[i : i + _CIDADES_POR_CONSULTA])
+                .order("event_start").limit(_LIMITE_DA_LISTA).execute().data
+                or []
+            )
+        linhas.sort(key=lambda l: str(l.get("event_start") or ""))
+        linhas = linhas[:_LIMITE_DA_LISTA]
+    else:
+        linhas = _consulta().order("event_start").limit(_LIMITE_DA_LISTA).execute().data or []
 
     presencas = {
         str(p["event_id"])
@@ -579,8 +551,12 @@ def confirmar_presenca(supabase: Client, user_id: str, event_id: str) -> None:
         supabase.table("pathr_news_attendance").insert(
             {"user_id": user_id, "event_id": event_id}
         ).execute()
-    except Exception:  # noqa: BLE001
-        pass  # já confirmado — o índice único recusou, e o resultado é o mesmo.
+    except Exception as erro:  # noqa: BLE001
+        # Só a unicidade (23505) é "já confirmado" — o resultado é o mesmo. Rede
+        # fora, permissão negada ou coluna errada NÃO podem virar 204: a tela
+        # mostraria "Eu vou!" sem nada gravado.
+        if not e_violacao_de_unicidade(erro):
+            raise
 
 
 def cancelar_presenca(supabase: Client, user_id: str, event_id: str) -> None:
@@ -629,7 +605,14 @@ def gerar_ics(evento: dict[str, Any]) -> str:
         return f"{campo}:{escapado}"
 
     inicio = str(evento.get("data_inicio") or date.today().isoformat()).replace("-", "")
-    fim = str(evento.get("data_fim") or evento.get("data_inicio") or date.today().isoformat()).replace("-", "")
+    # DTEND de evento de dia inteiro é EXCLUSIVO (RFC 5545): igual ao DTSTART, o
+    # evento teria duração zero e alguns calendários o descartam. Termina no
+    # último dia do evento, então o DTEND é o dia seguinte.
+    ultimo_dia = str(evento.get("data_fim") or evento.get("data_inicio") or date.today().isoformat())
+    try:
+        fim = (date.fromisoformat(ultimo_dia[:10]) + timedelta(days=1)).strftime("%Y%m%d")
+    except ValueError:
+        fim = inicio
     agora = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     linhas = [
         "BEGIN:VCALENDAR",

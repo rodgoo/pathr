@@ -11,14 +11,47 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
+
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
 from supabase import Client
 
 from app.database import get_supabase
 from app.deps import get_current_user
-from app.services import noticias
+from app.services import features, limites, noticias
 
-router = APIRouter(prefix="/noticias", tags=["notícias"])
+# Cada varredura é busca paga (Tavily/Brave) e dezenas de chamadas de IA, e a
+# cidade do perfil é texto livre: sem um teto por conta, trocar a cidade e
+# reabrir a tela dispararia varreduras novas sem parar, driblando o cache de
+# 12 h que é POR cidade.
+BUSCA_DE_EVENTOS = limites.Regra(
+    "busca-eventos",
+    1,
+    timedelta(minutes=30),
+    "Você já buscou eventos há pouco. Tente de novo daqui a alguns minutos.",
+)
+
+
+def recurso_ligado(
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+) -> dict:
+    """Recusa quem não tem o recurso "noticias" ligado — no SERVIDOR, não só na
+    navegação (mesmo padrão de routers/candidaturas.py).
+
+    404 e não 403: para quem não tem o recurso, ele não existe.
+    """
+    if not features.habilitadas_para(current_user, supabase).get("noticias", False):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Recurso indisponível.")
+    return current_user
+
+
+router = APIRouter(
+    prefix="/noticias",
+    tags=["notícias"],
+    # No router, e não em cada rota: rota nova nasce fechada.
+    dependencies=[Depends(recurso_ligado)],
+)
 
 # O mesmo padrão da tela de Vagas (RAIO_PADRAO_KM no frontend): sem escolha
 # própria da pessoa, 50 km é o que separa "perto o bastante para ir" de
@@ -64,6 +97,16 @@ def listar(
     cidade, uf = perfil.get("city"), perfil.get("state")
 
     atualizando = noticias.precisa_buscar(supabase, cidade, uf)
+    if atualizando:
+        # Teto por conta. Estourado, a lista sai igual, só sem disparar outra
+        # varredura: 429 aqui deixaria a tela sem os eventos que já existem.
+        try:
+            limites.consumir(supabase, BUSCA_DE_EVENTOS, user_id)
+        except HTTPException as erro:
+            if erro.status_code != status.HTTP_429_TOO_MANY_REQUESTS:
+                raise
+            atualizando = False
+
     if atualizando:
         # Roda depois da resposta sair, no mesmo processo. `atualizar_regiao`
         # marca a região antes de começar, então duas telas abertas juntas não

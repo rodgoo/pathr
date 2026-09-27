@@ -2324,6 +2324,8 @@
       "capital": "capital"
     },
     "avatar": {
+      "formatoInvalido": "The photo must be a JPG, PNG, or WebP.",
+      "fotoGrande": "The photo is over {mb} MB.",
       "erroEnviar": "I wasn't able to send the image.",
       "erroRemover": "I wasn't able to remove the image.",
       "alt": "{nome}'s profile photo",
@@ -2357,6 +2359,8 @@
     "carregando": "Loading your resumes…",
     "kicker": "Your Plan's Basis",
     "envio": {
+      "formatoInvalido": "Unsupported format. Upload a PDF, DOCX, ODT, RTF, TXT, or MD file.",
+      "arquivoGrande": "The file is over {mb} MB.",
       "titulo": "Submit your resume",
       "descricao": "I read the file, identify the skills listed, assess the level of each one, and put together a roadmap based on what’s missing. You review everything before I generate it.",
       "enviando": "Sending…",

@@ -301,3 +301,19 @@ it("abrir uma habilidade mostra cada tópico com acertos e situação", async ()
   expect(screen.getByText("1 de 4")).toBeInTheDocument();
   expect(screen.getByText("dominado")).toBeInTheDocument();
 });
+
+it("uma frase com duas lacunas mostra todo o texto, sem cortar depois da segunda", () => {
+  const lacunas = item("gap", {
+    enunciado: "Complete",
+    frase: "I ___ to the ___ yesterday and stayed there.",
+    alternativas: ["went", "gone", "goes", "going"],
+  });
+  const { container } = render(
+    <TreinoDoDia inicial={sessao([lacunas])} idioma="en" onSair={semNada} />,
+  );
+
+  const frase = container.querySelector("p[style*='font-size: 18px']") as HTMLElement;
+  expect(frase.textContent).toContain("to the");
+  expect(frase.textContent).toContain("yesterday and stayed there.");
+  expect(screen.getAllByLabelText("lacuna")).toHaveLength(2);
+});

@@ -10,13 +10,13 @@
  * foi mais alto, não o que aconteceu nele.
  */
 
-import { humanMinutes, recentDays, type DayDetail } from "@/lib/dashboard";
+import { humanMinutes, longDate, recentDays, type DayDetail } from "@/lib/dashboard";
 import { C, TEXT } from "@/lib/tokens";
 import { useT, type Traduzir } from "@/lib/i18n";
 import type { Overview } from "@/api/types";
 import { Icon, type IconName } from "@/components/ui/icons";
 import { Panel } from "@/components/ui/primitives";
-import { useDicaDoDia } from "./DicaDoDia";
+import { tempoPorExtenso, useDicaDoDia } from "./DicaDoDia";
 
 interface Kpi {
   label: string;
@@ -126,7 +126,7 @@ export function KpiCards({ overview }: { overview: Overview }) {
           <div style={{ fontSize: 30, lineHeight: 1 }}>{kpi.value}</div>
 
           <div
-            role="img"
+            role="group"
             aria-label={`Últimos ${kpi.series.length} dias`}
             style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 24 }}
           >
@@ -135,6 +135,7 @@ export function KpiCards({ overview }: { overview: Overview }) {
               // dia vazio tem 6% de altura, e mirar nisso seria impossível.
               <span
                 key={barra.date}
+                aria-label={`${longDate(barra.date)} · ${tempoPorExtenso(barra.minutes, t)}`}
                 {...gatilho(barra)}
                 style={{
                   flex: 1,

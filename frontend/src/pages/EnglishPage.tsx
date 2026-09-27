@@ -175,13 +175,19 @@ export function EnglishPage() {
             type="checkbox"
             checked={data.enabled}
             onChange={async () => {
-              profile.set((current) => ({ ...current, enabled: !current.enabled }));
-              await toggle.run(!data.enabled);
+              const antes = data.enabled;
+              profile.set((current) => ({ ...current, enabled: !antes }));
+              const salvo = await toggle.run(!antes);
+              // O servidor recusou (toggle.error mostra o motivo abaixo): o
+              // interruptor volta ao que estava.
+              if (salvo === null) profile.set((current) => ({ ...current, enabled: antes }));
             }}
           />
           {data.enabled ? t("idiomas.ativado") : t("idiomas.desativado")}
         </label>
       </header>
+
+      {toggle.error ? <ErrorState message={toggle.error} /> : null}
 
       {!data.enabled ? (
         <p

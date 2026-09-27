@@ -30,6 +30,7 @@ from supabase import Client
 
 from app.ai_providers import AiProviderError, generate_json
 from app.services import conhecimento
+from app.services.erros_do_banco import e_violacao_de_unicidade
 
 logger = logging.getLogger(__name__)
 
@@ -137,22 +138,7 @@ def _tecnologias(supabase: Client, node: dict[str, Any]) -> list[str]:
         return []
 
 
-def _e_violacao_de_unicidade(erro: BaseException) -> bool:
-    """O banco recusou por índice único (23505)?
-
-    O cliente do Supabase embrulha o erro do PostgREST de formas diferentes
-    conforme a versão — às vezes um objeto com `.code`, às vezes um dicionário,
-    às vezes só a mensagem. Procura-se o código nos três, e por último o texto.
-    """
-    codigo = getattr(erro, "code", None)
-    if codigo is None and getattr(erro, "args", None):
-        primeiro = erro.args[0]
-        if isinstance(primeiro, dict):
-            codigo = primeiro.get("code")
-    if str(codigo) == "23505":
-        return True
-    texto = str(erro).lower()
-    return "23505" in texto or "duplicate key" in texto or "already exists" in texto
+_e_violacao_de_unicidade = e_violacao_de_unicidade  # nome antigo, ainda usado nos testes
 
 
 async def gerar(supabase: Client, user_id: str, node: dict[str, Any]) -> dict[str, Any]:

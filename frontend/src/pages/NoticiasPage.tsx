@@ -9,12 +9,13 @@
  * `inscricao_texto`, nunca inventada na tela.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { noticias as noticiasApi, profile as profileApi } from "@/api/endpoints";
 import type { EventoDeNoticia } from "@/api/types";
 import { useMutation, useQuery } from "@/hooks/useApi";
 import { ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
 import { useT } from "@/lib/i18n";
+import { linkExterno } from "@/lib/linkExterno";
 import { Icon } from "@/components/ui/icons";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
 import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
@@ -30,16 +31,30 @@ export function NoticiasPage() {
   // que havia; daqui a pouco pede de novo, duas vezes, e para. Antes isto era
   // um "Buscando eventos…" que prendia a tela enquanto o servidor lia dezenas
   // de páginas — e que às vezes nunca terminava.
+  //
+  // `useQuery` devolve um objeto novo a cada render; se o efeito dependesse
+  // dele, seria refeito a cada render e o contador voltaria a zero — o teto de
+  // duas tentativas nunca seria alcançado. Por isso o `reload` mora numa ref e
+  // o efeito só depende de `atualizando`.
+  const recarregarRef = useRef(eventos.reload);
+  recarregarRef.current = eventos.reload;
+  const tentativasRef = useRef(0);
   useEffect(() => {
-    if (!atualizando) return;
-    let tentativas = 0;
+    if (!atualizando) {
+      tentativasRef.current = 0;
+      return undefined;
+    }
     const relogio = setInterval(() => {
-      tentativas += 1;
-      eventos.reload();
-      if (tentativas >= 2) clearInterval(relogio);
+      if (tentativasRef.current >= 2) {
+        clearInterval(relogio);
+        return;
+      }
+      tentativasRef.current += 1;
+      recarregarRef.current();
+      if (tentativasRef.current >= 2) clearInterval(relogio);
     }, 20_000);
     return () => clearInterval(relogio);
-  }, [atualizando, eventos]);
+  }, [atualizando]);
 
   return (
     <div style={{ ...SCREEN_IN, display: "flex", flexDirection: "column", gap: 16.8 }}>
@@ -249,7 +264,7 @@ ${evento.url_ingresso}`.trim(),
       <div style={{ display: "flex", gap: 8.4, flexWrap: "wrap", marginTop: 14 }}>
         <a
           className="btn btn-primary"
-          href={evento.url_ingresso}
+          href={linkExterno(evento.url_ingresso)}
           target="_blank"
           rel="noopener noreferrer"
           style={{ textDecoration: "none" }}

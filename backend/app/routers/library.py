@@ -584,7 +584,7 @@ async def curate_library(
         assunto = f"{tag.get('name') or tag.get('slug')} {tema['concept']}"
         candidatos = await resource_search.search_for_tag({**tag, "name": assunto})
         novos += _absorve(supabase, candidatos, str(tag["id"]))
-        conhecimento.marcar_buscado(supabase, str(tema["id"]))
+        conhecimento.marcar_buscado(supabase, user_id, str(tema["id"]))
         temas_buscados.append(assunto)
 
     # Sem `log_activity` aqui, de propósito. Ela não só escreve no feed: ela

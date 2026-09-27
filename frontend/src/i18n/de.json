@@ -2324,6 +2324,8 @@
       "capital": "Hauptstadt"
     },
     "avatar": {
+      "formatoInvalido": "Das Foto muss ein JPG, PNG oder WebP sein.",
+      "fotoGrande": "Das Foto ist größer als {mb} MB.",
       "erroEnviar": "Ich konnte das Bild nicht versenden.",
       "erroRemover": "Ich konnte das Bild nicht entfernen.",
       "alt": "Profilfoto von {nome}",
@@ -2357,6 +2359,8 @@
     "carregando": "Ihre Lebensläufe werden geladen…",
     "kicker": "Grundlage Ihres Plans",
     "envio": {
+      "formatoInvalido": "Format nicht unterstützt. Lade eine PDF-, DOCX-, ODT-, RTF-, TXT- oder MD-Datei hoch.",
+      "arquivoGrande": "Die Datei ist größer als {mb} MB.",
       "titulo": "Senden Sie uns Ihren Lebenslauf",
       "descricao": "Ich lese die Datei, entnehme daraus die Kompetenzen, schätze das Niveau jeder einzelnen ein und erstelle anhand der noch fehlenden Elemente einen Fahrplan. Du überprüfst alles, bevor ich es erstelle.",
       "enviando": "Wird gesendet…",

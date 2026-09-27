@@ -108,6 +108,11 @@ class PathrUser(SQLModel, table=True):
     banned_reason: Optional[str] = Field(default=None)
     banned_by: Optional[uuid.UUID] = Field(default=None, sa_type=PGUUID(as_uuid=True))
 
+    __table_args__ = (
+        # Migração 0020: unicidade do @ sem distinção de caixa.
+        sa.Index("uq_pathr_user_username_lower", sa.text("lower(username)"), unique=True),
+    )
+
 
 class PathrRefreshToken(SQLModel, table=True):
     __tablename__ = "pathr_refresh_token"
@@ -609,6 +614,8 @@ class PathrActivityDraft(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
+    __table_args__ = (sa.UniqueConstraint("user_id", "node_id", name="uq_pathr_activity_draft_user_node"),)
+
 
 class PathrExplanation(SQLModel, table=True):
     """Uma explicação da pessoa, no método Feynman, e o que a correção achou.
@@ -995,6 +1002,17 @@ class PathrEnglishItem(SQLModel, table=True):
     # Fala sem microfone: não é erro e não entra na estimativa de nível.
     skipped: bool = Field(default=False)
 
+    __table_args__ = (
+        # Migração 0017: a mesma posição do treino não é gerada duas vezes.
+        sa.Index(
+            "uq_pathr_english_item_session_order",
+            "session_id",
+            "order_index",
+            unique=True,
+            postgresql_where=sa.text("session_id IS NOT NULL"),
+        ),
+    )
+
 
 class PathrEnglishSession(SQLModel, table=True):
     """Treino conversacional em cenário corporativo (daily, 1:1, entrevista,
@@ -1025,6 +1043,17 @@ class PathrEnglishSession(SQLModel, table=True):
     # mode="treino": o treino diário. Um por idioma por dia (índice único
     # parcial na 0017), para duas abas abertas não gerarem dois treinos.
     practice_day: Optional[date] = Field(default=None, sa_type=sa.Date())
+
+    __table_args__ = (
+        sa.Index(
+            "uq_pathr_english_session_practice_day",
+            "user_id",
+            "language",
+            "practice_day",
+            unique=True,
+            postgresql_where=sa.text("mode = 'treino'"),
+        ),
+    )
 
 
 class PathrEnglishVocab(SQLModel, table=True):
@@ -1284,6 +1313,16 @@ class PathrFriendship(SQLModel, table=True):
     invite_seen_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
     accept_seen_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
 
+    __table_args__ = (
+        # Migração 0020: o par é único em qualquer direção.
+        sa.Index(
+            "uq_pathr_friendship_pair",
+            sa.text("least(requester_id, addressee_id)"),
+            sa.text("greatest(requester_id, addressee_id)"),
+            unique=True,
+        ),
+    )
+
 
 class PathrRateEvent(SQLModel, table=True):
     """Um uso contado por um limite (services/limites.py). Faxina própria."""
@@ -1358,6 +1397,112 @@ class PathrFeatureFlag(SQLModel, table=True):
     state: str = Field(default="todos")  # todos | admin | ninguem
     updated_by: Optional[uuid.UUID] = Field(default=None, sa_type=PGUUID(as_uuid=True))
     updated_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+
+
+# ---------------------------------------------------------------------------
+# Banco de respostas, notícias e chave da extensão (migrações 0039 a 0042)
+# ---------------------------------------------------------------------------
+#
+# Espelham as migrações à risca — tipos, tamanhos, nomes de constraint e de
+# índice —, porque `alembic revision --autogenerate` compara ESTES modelos com
+# o banco: tabela ausente aqui vira DROP TABLE na próxima migração.
+# tests/test_modelos_espelham_migracoes.py confere os nomes.
+
+
+class PathrAnswerBank(SQLModel, table=True):
+    """A resposta que a pessoa já deu a uma pergunta de formulário de vaga.
+    `answer` é cifrada (dado pessoal). Migração 0039."""
+
+    __tablename__ = "pathr_answer_bank"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id", index=False))
+    question_key: str = Field(sa_type=sa.String(length=80))
+    question: str = Field(sa_type=sa.Text())
+    answer: str = Field(sa_type=sa.Text())
+    source: str = Field(default="pessoa", sa_type=sa.String(length=20))  # pessoa|perfil|curriculo
+    used_count: int = Field(default=0)
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+    updated_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+
+    __table_args__ = (sa.UniqueConstraint("user_id", "question_key", name="uq_pathr_answer_bank_pergunta"),)
+
+
+class PathrExtensionToken(SQLModel, table=True):
+    """A chave da extensão do navegador — só o hash é guardado. Migração 0041."""
+
+    __tablename__ = "pathr_extension_token"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id", index=False))
+    token_hash: str = Field(sa_column=Column(sa.String(length=64), nullable=False, unique=True))
+    name: str = Field(default="Extensão", sa_type=sa.String(length=80))
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+    last_used_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
+    revoked_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
+
+    __table_args__ = (sa.Index("ix_pathr_extension_token_user", "user_id"),)
+
+
+class PathrNewsEvent(SQLModel, table=True):
+    """Um evento de tecnologia achado pela busca. `source_url` é único: é o
+    `on_conflict` do upsert de services/noticias._gravar. Migrações 0040/0042."""
+
+    __tablename__ = "pathr_news_event"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    title: str = Field(sa_type=sa.Text())
+    summary: str = Field(sa_type=sa.Text())
+    venue: Optional[str] = Field(default=None, sa_type=sa.String(length=200))
+    city: Optional[str] = Field(default=None, sa_type=sa.String(length=120))
+    state: Optional[str] = Field(default=None, sa_type=sa.String(length=2))
+    event_start: date = Field(sa_type=sa.Date())
+    event_end: Optional[date] = Field(default=None, sa_type=sa.Date())
+    # null = não deu para saber se é gratuito ou pago.
+    is_free: Optional[bool] = Field(default=None)
+    price_info: Optional[str] = Field(default=None, sa_type=sa.Text())
+    registration_start: Optional[date] = Field(default=None, sa_type=sa.Date())
+    registration_end: Optional[date] = Field(default=None, sa_type=sa.Date())
+    ticket_url: str = Field(sa_type=sa.Text())
+    source: str = Field(default="busca", sa_type=sa.String(length=20))
+    source_url: str = Field(sa_type=sa.Text())
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+    updated_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+    image_url: Optional[str] = Field(default=None, sa_type=sa.Text())
+
+    __table_args__ = (
+        sa.UniqueConstraint("source_url", name="uq_pathr_news_event_source_url"),
+        sa.Index("ix_pathr_news_event_regiao", "state", "city", "event_start"),
+    )
+
+
+class PathrNewsAttendance(SQLModel, table=True):
+    """O "Eu vou!": uma linha por pessoa por evento. Migração 0040."""
+
+    __tablename__ = "pathr_news_attendance"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id", index=False))
+    event_id: uuid.UUID = Field(sa_column=_fk("pathr_news_event.id", index=False))
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+
+    __table_args__ = (
+        sa.UniqueConstraint("user_id", "event_id", name="uq_pathr_news_attendance_pessoa_evento"),
+    )
+
+
+class PathrNewsScan(SQLModel, table=True):
+    """A marca de "esta região já foi varrida, e quando". Migração 0042."""
+
+    __tablename__ = "pathr_news_scan"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    city: str = Field(sa_type=sa.String(length=120))
+    state: str = Field(sa_type=sa.String(length=2))
+    scanned_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+    found: int = Field(default=0)
+
+    __table_args__ = (sa.UniqueConstraint("city", "state", name="uq_pathr_news_scan_regiao"),)
 
 
 _mirror_defaults_to_database()

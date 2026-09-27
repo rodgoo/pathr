@@ -126,6 +126,13 @@ def _imagem(valor: Any, base: str) -> Optional[str]:
     return endereco[:1000] if endereco.startswith(("http://", "https://")) else None
 
 
+def _sigla_do_estado(estado: Optional[str]) -> Optional[str]:
+    """Nome por extenso ou sigla viram a UF certa; texto irreconhecível vira `None`."""
+    from app.services.geo import uf_de
+
+    return uf_de(estado)
+
+
 def _lugar(no: dict[str, Any]) -> tuple[Optional[str], Optional[str], Optional[str], bool]:
     """Devolve `(local, cidade, estado, online)` do campo `location`."""
     lugar = no.get("location")
@@ -148,7 +155,7 @@ def _lugar(no: dict[str, Any]) -> tuple[Optional[str], Optional[str], Optional[s
     return (
         _texto(lugar.get("name"), 200),
         _texto(endereco.get("addressLocality"), 120),
-        (estado[:2].upper() if estado else None),
+        _sigla_do_estado(estado),
         False,
     )
 

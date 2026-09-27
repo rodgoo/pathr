@@ -2335,6 +2335,8 @@
       "capital": "capital"
     },
     "avatar": {
+      "formatoInvalido": "A foto precisa ser JPG, PNG ou WebP.",
+      "fotoGrande": "A foto passa de {mb} MB.",
       "erroEnviar": "Não consegui enviar a imagem.",
       "erroRemover": "Não consegui remover a imagem.",
       "alt": "Foto de perfil de {nome}",
@@ -2368,6 +2370,8 @@
     "carregando": "Carregando seus currículos…",
     "kicker": "Base do seu plano",
     "envio": {
+      "formatoInvalido": "Formato não aceito. Envie PDF, DOCX, ODT, RTF, TXT ou MD.",
+      "arquivoGrande": "O arquivo passa de {mb} MB.",
       "titulo": "Envie seu currículo",
       "descricao": "Leio o arquivo, extraio suas competências, estimo o nível de cada uma e monto o roadmap a partir do que falta. Você revisa tudo antes de eu gerar.",
       "enviando": "Enviando…",

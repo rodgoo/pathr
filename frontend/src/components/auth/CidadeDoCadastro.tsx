@@ -22,10 +22,13 @@ import { Icon } from "@/components/ui/icons";
 import { useT } from "@/lib/i18n";
 import { C, TEXT } from "@/lib/tokens";
 
-function normaliza(texto: string): string {
+export function normaliza(texto: string): string {
   return texto
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    // Depois do NFD, cada acento vira um caractere combinante à parte, todos no
+    // bloco "Combining Diacritical Marks" (U+0300 a U+036F). Escrito como
+    // escape para ser legível em diff e sobreviver a qualquer formatador.
+    .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, " ")
     .trim();

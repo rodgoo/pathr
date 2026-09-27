@@ -14,7 +14,11 @@
 #
 # Então o soft 404 continua existindo, conscientemente, até ser resolvido do
 # jeito certo: uma Pages Function que devolve 404 para caminho fora da lista.
-# O `404.html` já está no repositório, esperando por ela.
+# Essa função AINDA NÃO EXISTE. Também não há `404.html` no repositório: ele
+# foi criado e removido, porque um arquivo com esse nome tem precedência sobre
+# o `/*` e quebrava /termos e /entrar. Quem for resolver: escreva a função
+# (ela deve montar o corpo do 404 por conta própria) e não recoloque um
+# `404.html` em `public/`.
 #
 # Arquivos que existem de verdade (/assets/*, /guias/*, /roadmap/*) continuam
 # sendo servidos antes desta regra.

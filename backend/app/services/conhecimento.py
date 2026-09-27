@@ -176,8 +176,14 @@ def pendentes(
     return escolhidas[:limite]
 
 
-def marcar_buscado(supabase: Client, item_id: str) -> None:
+def marcar_buscado(supabase: Client, user_id: str, item_id: str) -> None:
     try:
-        supabase.table("pathr_knowledge_item").update({"searched_at": _agora()}).eq("id", item_id).execute()
+        (
+            supabase.table("pathr_knowledge_item")
+            .update({"searched_at": _agora()})
+            .eq("id", item_id)
+            .eq("user_id", user_id)
+            .execute()
+        )
     except Exception:  # noqa: BLE001
         logger.warning("base de conhecimento: não marquei a busca", exc_info=True)

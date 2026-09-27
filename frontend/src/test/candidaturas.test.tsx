@@ -140,4 +140,34 @@ describe("candidaturas", () => {
     // Sem e-mail: nada é mandado para ninguém, só fica registrado.
     expect(envio?.body).toEqual({});
   });
+
+  it("a linha do tempo acompanha a fila recarregada, sem apagar o que a pessoa digitou", async () => {
+    const { user, servidor } = monta();
+    await user.click(await screen.findByRole("button", { name: /Escrever carta/ }));
+    const campo = await screen.findByLabelText(/Carta de apresentação/);
+    await user.type(campo, " Editado.");
+
+    // A partir de agora o servidor devolve o item com passos novos (como após
+    // um envio automático) e uma carta diferente da que a pessoa está editando.
+    servidor.on("GET /candidaturas", () => ({
+      body: {
+        hoje: HOJE,
+        por_dia: 5,
+        enviadas: 0,
+        resumo: { hoje: 0, ontem: 0, ultimos7: 0 },
+        candidaturas: [
+          {
+            ...vaga,
+            letter: "Carta reescrita pelo servidor",
+            steps: [{ passo: "envio", situacao: "feito", detalhe: "Enviada pelo Gupy às 12h", em: "" }],
+          },
+        ],
+      },
+    }));
+    await user.click(screen.getByRole("button", { name: /Já me candidatei/ }));
+
+    expect(await screen.findByText("Enviada pelo Gupy às 12h")).toBeInTheDocument();
+    // A carta em edição não é sobrescrita.
+    expect(screen.getByLabelText(/Carta de apresentação/)).toHaveValue("Trabalho com Java há três anos... Editado.");
+  });
 });

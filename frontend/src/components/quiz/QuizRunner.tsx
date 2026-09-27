@@ -34,11 +34,56 @@ import { TextoFormatado } from "@/components/duvidas/TextoFormatado";
  * Por quiz, e nao global: dois quizzes abertos em abas diferentes sao duas
  * posicoes independentes, e uma chave so faria um sobrescrever o outro.
  */
-const chaveDoProgresso = (quizId: string) => `pathr:quiz:${quizId}`;
+const chaveDoProgresso = (quizId: string) => `${PREFIXO_DO_PROGRESSO}${quizId}`;
 
 interface Progresso {
   index: number;
   answers: Record<string, number>;
+  /** Quando foi gravado (ms). Sem ele a entrada nunca poderia expirar. */
+  at?: number;
+}
+
+const PREFIXO_DO_PROGRESSO = "pathr:quiz:";
+/** Quem abandona um quiz raramente volta depois de um mês; o servidor guarda o rascunho de qualquer forma. */
+const VALIDADE_DO_PROGRESSO_MS = 30 * 24 * 60 * 60 * 1000;
+/** Teto de segurança para quem gera muitos quizzes num mês: fica só o mais recente. */
+const MAX_PROGRESSOS_GUARDADOS = 20;
+
+/**
+ * Apaga o progresso de quizzes abandonados.
+ *
+ * Cada quiz grava o seu andamento sob `pathr:quiz:<id>` e só o envio remove a
+ * entrada. Quem gera muitos quizzes e larga a maioria no meio acumulava uma
+ * chave por quiz para sempre. Aqui saem as que passaram da validade e, do que
+ * sobrar, tudo além das mais recentes. Entrada de versão antiga (sem `at`) ganha
+ * a data de agora, e expira daqui a um mês como as outras.
+ */
+export function limparProgressosAntigos(agora: number = Date.now()): void {
+  try {
+    const guardados: { chave: string; at: number }[] = [];
+    for (let i = 0; i < window.localStorage.length; i += 1) {
+      const chave = window.localStorage.key(i);
+      if (!chave?.startsWith(PREFIXO_DO_PROGRESSO)) continue;
+      let dado: Partial<Progresso> = {};
+      try {
+        dado = JSON.parse(window.localStorage.getItem(chave) ?? "{}") as Partial<Progresso>;
+      } catch {
+        // Ilegível: sem data, entra como se fosse de agora — e expira.
+      }
+      guardados.push({ chave, at: typeof dado.at === "number" ? dado.at : agora });
+      if (typeof dado.at !== "number") {
+        window.localStorage.setItem(chave, JSON.stringify({ ...dado, at: agora }));
+      }
+    }
+    guardados.sort((a, b) => b.at - a.at);
+    guardados.forEach(({ chave, at }, posicao) => {
+      if (agora - at > VALIDADE_DO_PROGRESSO_MS || posicao >= MAX_PROGRESSOS_GUARDADOS) {
+        window.localStorage.removeItem(chave);
+      }
+    });
+  } catch {
+    // Armazenamento bloqueado: não há o que limpar.
+  }
 }
 
 function lerProgresso(quizId: string): Progresso {
@@ -80,6 +125,11 @@ export function QuizRunner({
   const [startedAt] = useState(() => Date.now());
   const [result, setResult] = useState<QuizResult | null>(null);
 
+  // Uma vez por abertura: tira do navegador o andamento de quizzes largados.
+  useEffect(() => {
+    limparProgressosAntigos();
+  }, []);
+
   // Grava a cada resposta e a cada avanco. Sair da tela no meio de um quiz de
   // dez questoes e comum -- consultar o material e o objetivo do produto -- e
   // voltar para a questao 1 com tudo em branco faz a pessoa desistir.
@@ -88,7 +138,7 @@ export function QuizRunner({
     try {
       window.localStorage.setItem(
         chaveDoProgresso(quiz.id),
-        JSON.stringify({ index, answers }),
+        JSON.stringify({ index, answers, at: Date.now() }),
       );
     } catch {
       // Armazenamento bloqueado: o quiz continua, so nao lembra.

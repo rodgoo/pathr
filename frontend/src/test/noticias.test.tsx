@@ -11,8 +11,8 @@
  *   navegador. O `.ics` continua disponível, como segunda opção.
  */
 
-import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { act, render, screen } from "@testing-library/react";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { AppStateProvider } from "@/hooks/useAppState";
 import { NoticiasPage } from "@/pages/NoticiasPage";
 import { mockServer } from "./server";
@@ -37,15 +37,18 @@ const evento = {
 };
 
 function monta(corpo: { eventos: unknown[]; atualizando: boolean }) {
-  mockServer({
+  const servidor = mockServer({
     "GET /profile": () => ({ body: { user_id: "u1", city: "Vitória", state: "ES" } }),
     "GET /noticias": () => ({ body: corpo }),
   });
-  return render(
-    <AppStateProvider>
-      <NoticiasPage />
-    </AppStateProvider>,
-  );
+  return {
+    servidor,
+    ...render(
+      <AppStateProvider>
+        <NoticiasPage />
+      </AppStateProvider>,
+    ),
+  };
 }
 
 describe("notícias", () => {
@@ -108,5 +111,41 @@ describe("notícias", () => {
     monta({ eventos: [], atualizando: false });
 
     expect(await screen.findByText(/Nenhum evento/i)).toBeInTheDocument();
+  });
+
+  it("um ingresso com esquema perigoso vira botão sem href", async () => {
+    monta({
+      eventos: [{ ...evento, url_ingresso: "javascript:alert(document.cookie)" }],
+      atualizando: false,
+    });
+
+    await screen.findByText("Meetup de Python");
+    const botao = screen.getByText(/ingresso/i).closest("a");
+    expect(botao).not.toBeNull();
+    expect(botao?.hasAttribute("href")).toBe(false);
+  });
+
+  describe("reconsulta enquanto o servidor procura", () => {
+    afterEach(() => {
+      vi.useRealTimers();
+    });
+
+    it("pede de novo no máximo duas vezes e para", async () => {
+      vi.useFakeTimers({ shouldAdvanceTime: true });
+      const { servidor } = monta({ eventos: [evento], atualizando: true });
+      await screen.findByText("Meetup de Python");
+      const pedidos = () => servidor.calls.filter((c) => c.url.startsWith("/noticias")).length;
+      expect(pedidos()).toBe(1);
+
+      // Cada reconsulta re-renderiza a tela; antes disso reiniciava o relógio
+      // e o teto nunca era alcançado.
+      for (let i = 0; i < 6; i++) {
+        await act(async () => {
+          await vi.advanceTimersByTimeAsync(20_000);
+        });
+      }
+
+      expect(pedidos()).toBe(3);
+    });
   });
 });

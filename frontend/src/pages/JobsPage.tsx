@@ -36,7 +36,7 @@ import type {
 import { useAppState } from "@/hooks/useAppState";
 import { messageFor, useMutation, useQuery } from "@/hooks/useApi";
 import { useIdioma, useT, type Traduzir } from "@/lib/i18n";
-import { vagasGuardadas } from "@/lib/vagasGuardadas";
+import { analisesGuardadas, vagasGuardadas } from "@/lib/vagasGuardadas";
 import { ACC, ACC4, C, HAIRLINE, SIZE, TEXT, tint } from "@/lib/tokens";
 import { Icon } from "@/components/ui/icons";
 import { Segmented } from "@/components/ui/Segmented";
@@ -351,7 +351,10 @@ function CartaoDaVaga({ vaga, cursos }: { vaga: Job; cursos: Record<string, JobC
   const [aberta, setAberta] = useState(false);
   const [descricao, setDescricao] = useState(false);
   const analise = useMutation(() => jobsApi.analyze({ vaga_id: vaga.id }));
-  const [resultado, setResultado] = useState<JobAnalysis | null>(null);
+  // Volta com a leitura que já foi feita: sair da vaga e voltar não gasta IA de novo.
+  const [resultado, setResultado] = useState<JobAnalysis | null>(
+    () => analisesGuardadas.get(vaga.id) ?? null,
+  );
   const { tem, parcial, falta } = vaga.compatibilidade;
   const lido = !vaga.so_link && !vaga.so_trecho;
   const nota = vaga.combina ?? vaga.compatibilidade.nota;
@@ -364,7 +367,10 @@ function CartaoDaVaga({ vaga, cursos }: { vaga: Job; cursos: Record<string, JobC
     setAberta(true);
     if (!resultado) {
       const achado = await analise.run();
-      if (achado) setResultado(achado);
+      if (achado) {
+        analisesGuardadas.set(vaga.id, achado);
+        setResultado(achado);
+      }
     }
   }
 
@@ -786,8 +792,17 @@ function AnalisarVaga() {
   async function analisar(evento: FormEvent) {
     evento.preventDefault();
     setResultado(null);
-    const achado = await analise.run(entrada.trim());
-    if (achado) setResultado(achado);
+    const valor = entrada.trim();
+    const guardada = analisesGuardadas.get(valor);
+    if (guardada) {
+      setResultado(guardada);
+      return;
+    }
+    const achado = await analise.run(valor);
+    if (achado) {
+      analisesGuardadas.set(valor, achado);
+      setResultado(achado);
+    }
   }
 
   return (

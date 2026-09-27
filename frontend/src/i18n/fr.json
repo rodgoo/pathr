@@ -2324,6 +2324,8 @@
       "capital": "capital"
     },
     "avatar": {
+      "formatoInvalido": "La photo doit être au format JPG, PNG ou WebP.",
+      "fotoGrande": "La photo dépasse {mb} Mo.",
       "erroEnviar": "Je n'ai pas réussi à envoyer l'image.",
       "erroRemover": "Je n'ai pas réussi à supprimer l'image.",
       "alt": "Photo de profil d'{nome}",
@@ -2357,6 +2359,8 @@
     "carregando": "Chargement de vos CV…",
     "kicker": "Base de votre forfait",
     "envio": {
+      "formatoInvalido": "Format non pris en charge. Envoyez un PDF, DOCX, ODT, RTF, TXT ou MD.",
+      "arquivoGrande": "Le fichier dépasse {mb} Mo.",
       "titulo": "Envoyez-nous votre CV",
       "descricao": "Je lis le dossier, j'en extrais les compétences, j'évalue le niveau de chacune et j'élabore la feuille de route en fonction des lacunes. Vous relisez le tout avant que je ne la génère.",
       "enviando": "Envoi en cours…",

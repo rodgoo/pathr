@@ -154,11 +154,9 @@ def email_confiavel(email: Optional[str], empresa: Optional[str], url: Optional[
         return True
     if not nome:
         return False
-    # Igualdade exata da raiz não precisa de piso de tamanho — "Boa" bater com
-    # "boa.com" não é coincidência, é o nome inteiro. O piso vale só para a
-    # inclusão por substring: um nome de 2-3 letras apareceria por acaso dentro
-    # de qualquer domínio grande o bastante.
-    return raiz == nome or (len(nome) >= 4 and nome in dominio.replace(".", ""))
+    # Igualdade de RÓTULO, nunca substring: "nubank-carreiras.io" contém "nubank"
+    # mas é um domínio sósia; "carreiras.nubank.com.br" tem o rótulo "nubank".
+    return raiz == nome or nome in dominio.split(".")
 
 CARTA_SCHEMA: dict[str, Any] = {
     "type": "OBJECT",

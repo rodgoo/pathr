@@ -169,7 +169,25 @@ def _endereco_publico(host: str) -> bool:
     return True
 
 
+_CGNAT = ipaddress.ip_network("100.64.0.0/10")
+_NAT64 = ipaddress.ip_network("64:ff9b::/96")
+_NAT64_LOCAL = ipaddress.ip_network("64:ff9b:1::/48")
+
+
 def _ip_interno(ip: "ipaddress._BaseAddress") -> bool:
+    if isinstance(ip, ipaddress.IPv6Address):
+        # IPv4 embutido: revalida o IPv4 com a mesma regra.
+        embutidos = [ip.ipv4_mapped, ip.sixtofour]
+        if ip.teredo:
+            embutidos.extend(ip.teredo)
+        if ip in _NAT64 or ip in _NAT64_LOCAL:
+            embutidos.append(ipaddress.IPv4Address(int(ip) & 0xFFFFFFFF))
+        if any(v4 is not None and _ip_interno(v4) for v4 in embutidos):
+            return True
+        if ip in _NAT64 or ip in _NAT64_LOCAL:
+            return True  # tradutor NAT64 não é destino de leitura pública
+    elif ip in _CGNAT:
+        return True
     return bool(
         ip.is_private
         or ip.is_loopback

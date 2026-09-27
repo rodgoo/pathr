@@ -16,7 +16,7 @@
  * gabarito nunca chega antes — a correção é do servidor.
  */
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type { PracticeAnswer, PracticeAnswerResult, PracticeItem } from "@/api/types";
 import { useT, type Traduzir } from "@/lib/i18n";
 import { ACC, ACC3, C, HAIRLINE, PANEL, TEXT } from "@/lib/tokens";
@@ -142,22 +142,29 @@ function Escolha({ item, idioma, travado, resultado, onResponder }: ExercicioPro
 
 function FraseComLacuna({ frase }: { frase: string }) {
   const t = useT();
-  const [antes, depois] = frase.split("___");
+  // Todos os pedaços, e não só os dois primeiros: uma frase com duas lacunas
+  // ("I ___ to the ___ yesterday") perdia o texto depois da segunda em silêncio.
+  const pedacos = frase.split("___");
   return (
     <p style={{ fontSize: 18, lineHeight: 1.5, margin: "0 0 16px", color: TEXT.full }}>
-      {antes}
-      <span
-        aria-label={t("idiomas.exercicio.lacunaAria")}
-        style={{
-          display: "inline-block",
-          minWidth: 64,
-          borderBottom: `2px solid ${ACC}`,
-          margin: "0 4px",
-        }}
-      >
-        &nbsp;
-      </span>
-      {depois}
+      {pedacos.map((pedaco, indice) => (
+        <Fragment key={indice}>
+          {indice > 0 ? (
+            <span
+              aria-label={t("idiomas.exercicio.lacunaAria")}
+              style={{
+                display: "inline-block",
+                minWidth: 64,
+                borderBottom: `2px solid ${ACC}`,
+                margin: "0 4px",
+              }}
+            >
+              &nbsp;
+            </span>
+          ) : null}
+          {pedaco}
+        </Fragment>
+      ))}
     </p>
   );
 }

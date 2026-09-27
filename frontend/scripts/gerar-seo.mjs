@@ -25,6 +25,7 @@ import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Resvg } from "@resvg/resvg-js";
+import { esc, jsonSeguro } from "./escape-html.mjs";
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const PUBLIC = join(AQUI, "..", "public");
@@ -562,7 +563,6 @@ const TOPICOS = [
 
 // ---------------------------------------------------------------------------
 
-const esc = (s) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 const urlDe = (t) => `${BASE}/${PASTA[t.tipo]}/${t.slug}/`;
 
 const CSS = `
@@ -664,7 +664,7 @@ function pagina(t) {
   <meta name="twitter:description" content="${esc(t.metaDesc)}" />
   <meta name="twitter:image" content="${OG_CARD}" />
   <script type="application/ld+json">
-${JSON.stringify(jsonLd(t), null, 2)}
+${jsonSeguro(jsonLd(t))}
   </script>
   <style>${CSS}</style>
 </head>
@@ -772,7 +772,7 @@ function hub(tipo) {
   <meta property="og:image:height" content="630" />
   <meta property="og:locale" content="pt_BR" />
   <script type="application/ld+json">
-${JSON.stringify(ld, null, 2)}
+${jsonSeguro(ld)}
   </script>
   <style>${CSS}</style>
 </head>

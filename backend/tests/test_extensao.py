@@ -151,3 +151,10 @@ def test_resposta_sensivel_nao_entra_no_banco_nem_pela_extensao(monkeypatch):
     assert resultado["guardadas"] == 1
     guardadas = banco.table("pathr_answer_bank").select("*").execute().data
     assert [linha["question_key"] for linha in guardadas] == ["cidade"]
+
+
+def test_chave_de_conta_banida_nao_vale():
+    banido = {**EU, "banned_at": "2026-09-01T00:00:00+00:00"}
+    banco = FakeSupabase(pathr_extension_token=[], pathr_rate_event=[], pathr_user=[banido, OUTRA])
+    chave, _ = servico.criar(banco, EU["id"])
+    assert servico.dono(banco, chave) is None

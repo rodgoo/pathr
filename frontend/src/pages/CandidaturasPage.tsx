@@ -22,7 +22,7 @@
  *   procurando emprego.
  */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   candidaturas as candidaturasApi,
   extensao as extensaoApi,
@@ -543,6 +543,30 @@ function Cartao({
 
   const [passos, setPassos] = useState<PassoDaCandidatura[]>(item.steps ?? []);
   const [pendentes, setPendentes] = useState<PerguntaPendente[]>(item.pending ?? []);
+
+  // A fila é recarregada depois de cada ação (envio automático incluso) e o
+  // cartão mantém a mesma `key`: sem isto, a linha do tempo e as respostas
+  // ficavam com o valor da montagem, e só o rótulo de status atualizava.
+  useEffect(() => {
+    setPassos(item.steps ?? []);
+    setPendentes(item.pending ?? []);
+    setRespostas(item.answers ?? []);
+  }, [item.steps, item.pending, item.answers]);
+
+  // Carta e e-mail são campos editáveis: o valor novo do servidor só entra se
+  // a pessoa não mexeu neles (o que está na tela ainda é o que veio antes).
+  const cartaDoServidor = useRef(item.letter ?? "");
+  useEffect(() => {
+    const anterior = cartaDoServidor.current;
+    cartaDoServidor.current = item.letter ?? "";
+    setCarta((atual) => (atual === anterior ? (item.letter ?? "") : atual));
+  }, [item.letter]);
+  const emailDoServidor = useRef(item.to_email ?? "");
+  useEffect(() => {
+    const anterior = emailDoServidor.current;
+    emailDoServidor.current = item.to_email ?? "";
+    setEmail((atual) => (atual === anterior ? (item.to_email ?? "") : atual));
+  }, [item.to_email]);
 
   const escrever = useMutation(() => candidaturasApi.carta(item.id));
   const prepararRespostas = useMutation(() => candidaturasApi.respostas(item.id));

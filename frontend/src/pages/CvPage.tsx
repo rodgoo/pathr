@@ -67,14 +67,41 @@ export function CvPage() {
 }
 
 
+/** O que o servidor aceita (routers/resumes.py) — o mesmo do `accept` do input. */
+const EXTENSOES_ACEITAS = ["pdf", "docx", "odt", "rtf", "txt", "md"];
+const LIMITE_MB = 10;
+
+/** `null` quando o arquivo pode subir. Só a extensão, como o servidor faz. */
+function problemaDoArquivo(file: File): "formato" | "tamanho" | null {
+  const extensao = file.name.includes(".") ? file.name.split(".").pop()!.toLowerCase() : "";
+  const porTipo = file.type === "application/pdf";
+  if (!EXTENSOES_ACEITAS.includes(extensao) && !porTipo) return "formato";
+  if (file.size > LIMITE_MB * 1024 * 1024) return "tamanho";
+  return null;
+}
+
 /** Passo 1: o arquivo. */
 function Upload({ onUploaded }: { onUploaded: (resume: Resume) => void }) {
   const t = useT();
   const upload = useMutation((file: File) => resumesApi.upload(file));
   const [dragging, setDragging] = useState(false);
+  const [recusa, setRecusa] = useState<string | null>(null);
 
   async function send(file: File | undefined) {
     if (!file) return;
+    // `accept` do input só filtra o seletor nativo; um arquivo solto por
+    // arraste chega aqui de qualquer tipo e tamanho. O servidor confere de
+    // novo, mas recusar antes poupa subir o arquivo inteiro para ouvir "não".
+    const problema = problemaDoArquivo(file);
+    if (problema === "formato") {
+      setRecusa(t("curriculo.envio.formatoInvalido"));
+      return;
+    }
+    if (problema === "tamanho") {
+      setRecusa(t("curriculo.envio.arquivoGrande", { mb: LIMITE_MB }));
+      return;
+    }
+    setRecusa(null);
     const result = await upload.run(file);
     if (result) onUploaded(result);
   }
@@ -86,7 +113,8 @@ function Upload({ onUploaded }: { onUploaded: (resume: Resume) => void }) {
         {t("curriculo.envio.descricao")}
       </p>
 
-      {upload.error ? <ErrorState message={upload.error} /> : null}
+      {recusa ? <ErrorState message={recusa} /> : null}
+      {upload.error && !recusa ? <ErrorState message={upload.error} /> : null}
 
       <label
         onDragOver={(event) => {

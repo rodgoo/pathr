@@ -38,6 +38,8 @@ from typing import Any, Optional
 
 from supabase import Client
 
+from app.services.moderacao import esta_banido
+
 logger = logging.getLogger(__name__)
 
 # O prefixo serve para reconhecimento: colada no lugar errado, dá para ver o
@@ -156,7 +158,7 @@ def dono(supabase: Client, chave: Optional[str]) -> Optional[dict[str, Any]]:
     except Exception:  # noqa: BLE001
         logger.warning("não consegui carregar o dono da chave", exc_info=True)
         return None
-    if not pessoas:
+    if not pessoas or esta_banido(pessoas[0]):
         return None
 
     try:

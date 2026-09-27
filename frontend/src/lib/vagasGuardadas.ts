@@ -11,7 +11,7 @@
  * tem as fontes em cache, então é rápido.
  */
 
-import type { JobList } from "@/api/types";
+import type { JobAnalysis, JobList } from "@/api/types";
 
 const guardadas = new Map<string, JobList>();
 
@@ -20,6 +20,22 @@ export const vagasGuardadas = {
   set: (termo: string, lista: JobList) => void guardadas.set(termo, lista),
 };
 
+/**
+ * A análise por IA de cada vaga (ou texto colado), pela mesma razão: ler o
+ * anúncio gasta cota e leva segundos, e sair da vaga e voltar não é pedir uma
+ * leitura nova. A chave é o id da vaga, ou o texto/endereço digitado.
+ *
+ * Cai junto com a lista: a análise compara a vaga com o perfil e o currículo,
+ * então mudar qualquer um dos dois a invalida.
+ */
+const analises = new Map<string, JobAnalysis>();
+
+export const analisesGuardadas = {
+  get: (chave: string) => analises.get(chave),
+  set: (chave: string, analise: JobAnalysis) => void analises.set(chave, analise),
+};
+
 export function esquecerVagas(): void {
   guardadas.clear();
+  analises.clear();
 }

@@ -187,6 +187,18 @@ describe("vagas", () => {
     expect(servidor.calls.find((c) => c.url === "/vagas/analise")?.body).toEqual({ vaga_id: "busca:2" });
   });
 
+  it("sair da vaga e voltar não refaz a leitura pela IA", async () => {
+    const { user, servidor, arvore, unmount } = monta();
+    await user.click(await screen.findByRole("button", { name: "Ler o anúncio completo" }));
+    await screen.findByRole("region", { name: "Análise completa da vaga" });
+    unmount();
+
+    render(arvore());
+    await user.click(await screen.findByRole("button", { name: "Ler o anúncio completo" }));
+    expect(await screen.findByRole("region", { name: "Análise completa da vaga" })).toBeInTheDocument();
+    expect(servidor.calls.filter((c) => c.url === "/vagas/analise")).toHaveLength(1);
+  });
+
   it("analisa uma vaga colada pelo link", async () => {
     const { user, servidor } = monta();
     await user.type(await screen.findByLabelText("Link ou texto da vaga"), "https://www.vagas.com.br/vagas/v123");

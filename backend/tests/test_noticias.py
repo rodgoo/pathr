@@ -18,6 +18,7 @@ from types import SimpleNamespace
 
 import httpx
 
+from app.ai_providers import AiProviderError
 from app.services import evento_da_pagina, noticias
 from tests.fake_supabase import FakeSupabase
 
@@ -207,7 +208,7 @@ def test_ia_fora_do_ar_nao_esvazia_a_aba(monkeypatch):
     aba vazia é pior do que uma aba com um evento a mais."""
 
     async def quebra(*_args):
-        raise noticias.AiProviderError("sem provedor")
+        raise AiProviderError("sem provedor")
 
     monkeypatch.setattr(noticias, "generate_json", quebra)
     candidatos = [_bruto()]

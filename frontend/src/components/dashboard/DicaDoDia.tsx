@@ -90,7 +90,14 @@ export function useDicaDoDia() {
     setAlvo({ dia, x: caixa.left + caixa.width / 2, topo: caixa.top, base: caixa.bottom });
   }
 
+  // `tabIndex` e `role` é que fazem o balão existir para quem não usa mouse:
+  // sem eles o elemento nunca entra na ordem de tabulação, `onFocus` nunca
+  // dispara, e o detalhe do dia só aparece para quem passa o cursor. O papel
+  // "img" (com o `aria-label` de quem usa o gatilho) descreve o que o quadrado
+  // é: um ponto de um gráfico, não um botão que faz algo ao ser ativado.
   const gatilho = (dia: DayDetail) => ({
+    tabIndex: 0,
+    role: "img" as const,
     onMouseEnter: (evento: MouseEvent) => mostrar(dia, evento.currentTarget),
     onMouseLeave: () => setAlvo(null),
     onFocus: (evento: FocusEvent) => mostrar(dia, evento.currentTarget),

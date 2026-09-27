@@ -89,7 +89,9 @@ def test_pendentes_filtram_por_tecnologia_e_ordenam_pelo_peso():
     assert temas == ["private vs protected", "git push"]
     assert conhecimento.pendentes(banco, EU["id"], tag_ids=["t-java"], so_nao_buscados=True)
     item = conhecimento.pendentes(banco, EU["id"], tag_ids=["t-java"])[0]
-    conhecimento.marcar_buscado(banco, str(item["id"]))
+    conhecimento.marcar_buscado(banco, "outra-pessoa", str(item["id"]))
+    assert conhecimento.pendentes(banco, EU["id"], tag_ids=["t-java"], so_nao_buscados=True), "outra conta não marca"
+    conhecimento.marcar_buscado(banco, EU["id"], str(item["id"]))
     assert conhecimento.pendentes(banco, EU["id"], tag_ids=["t-java"], so_nao_buscados=True) == []
 
 

@@ -181,8 +181,14 @@ def _from_rtf(data: bytes) -> Extraction:
     corrido de um currículo, não fidelidade de formatação.
     """
     raw = data.decode("latin-1", errors="ignore")
-    raw = re.sub(r"\\*\[a-z]+\d*[^{}]*", "", raw)
-    raw = re.sub(r"\[a-z]+-?\d*\s?", " ", raw)
+    # Destinos ignoráveis ({\*\generator ...}, {\fonttbl ...}, {\colortbl ...}).
+    raw = re.sub(r"\{\\\*[^{}]*\}", "", raw)
+    raw = re.sub(r"\{\\(?:fonttbl|colortbl|stylesheet|info)[^{}]*(?:\{[^{}]*\}[^{}]*)*\}", "", raw)
+    # Escapes hex (\'e7 = ç) antes das palavras de controle.
+    raw = re.sub(r"\\'([0-9a-fA-F]{2})", lambda m: bytes.fromhex(m.group(1)).decode("cp1252", "ignore"), raw)
+    raw = re.sub(r"\\par[d]?(?![a-z])\s?", "\n", raw)
+    raw = re.sub(r"\\[a-z]+-?\d*\s?", " ", raw)
+    raw = re.sub(r"\\([\\{}])", r"\1", raw)
     raw = raw.replace("{", "").replace("}", "")
     return Extraction(_clean(raw), 0)
 

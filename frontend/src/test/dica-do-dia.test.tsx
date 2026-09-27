@@ -7,9 +7,12 @@
  * estimado pelo tamanho do texto, em vez de fingir que foi cronometrado.
  */
 
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import { act, fireEvent, render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { ConsistencyPanel } from "@/components/dashboard/ConsistencyPanel";
+import { KpiCards } from "@/components/dashboard/KpiCards";
+import { anOverview } from "./server";
 import { nomeDaAtividade, tempoPorExtenso } from "@/components/dashboard/DicaDoDia";
 import { INITIAL_STATE } from "@/hooks/appState";
 import { AppStateProvider } from "@/hooks/useAppState";
@@ -106,4 +109,36 @@ it("renderiza o balão fora da árvore do gráfico, direto no body", () => {
   montar("ano");
   fireEvent.mouseEnter(screen.getByLabelText(/^11 de setembro/));
   expect(screen.getByRole("tooltip").parentElement).toBe(document.body);
+});
+
+/**
+ * O balão também abre por teclado: o dia precisa estar na ordem de tabulação
+ * (`tabIndex`), senão `onFocus` nunca dispara e o detalhe só existe para quem
+ * usa mouse.
+ */
+it.each(["ano", "mes", "semana"] as const)("no recorte %s, o dia recebe foco e abre o balão", (view) => {
+  montar(view);
+  const dia =
+    view === "semana" ? screen.getByLabelText(/^Sex ·/) : screen.getByLabelText(/^11 de setembro/);
+  expect(dia).toHaveAttribute("tabindex", "0");
+
+  act(() => dia.focus());
+  expect(within(screen.getByRole("tooltip")).getByText("Learn to Use GitHub Actions")).toBeInTheDocument();
+
+  act(() => dia.blur());
+  expect(screen.queryByRole("tooltip")).not.toBeInTheDocument();
+});
+
+it("as barras dos cartões do topo entram na ordem de tabulação e abrem o balão", async () => {
+  const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+  render(
+    <AppStateProvider>
+      <KpiCards overview={anOverview({ activity: atividade })} />
+    </AppStateProvider>,
+  );
+  const barras = screen.getAllByRole("img").filter((el) => el.getAttribute("tabindex") === "0");
+  expect(barras.length).toBeGreaterThan(0);
+  await user.tab();
+  expect(document.activeElement).toBe(barras[0]);
+  expect(screen.getByRole("tooltip")).toBeInTheDocument();
 });

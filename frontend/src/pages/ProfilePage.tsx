@@ -7,12 +7,12 @@
  * e isso muda o roadmap na próxima geração.
  */
 
-import type { CSSProperties } from "react";
+import { useState, type CSSProperties } from "react";
 import { courses as coursesApi, profile as profileApi, tags as tagsApi } from "@/api/endpoints";
 import type { OwnedCourse, UserTag } from "@/api/types";
 import { useAppState } from "@/hooks/useAppState";
 import { useAuth } from "@/hooks/useAuth";
-import { useQuery } from "@/hooks/useApi";
+import { messageFor, useQuery } from "@/hooks/useApi";
 import { useT } from "@/lib/i18n";
 import { ACC, ACC4, C, HAIRLINE, TEXT } from "@/lib/tokens";
 import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
@@ -32,6 +32,7 @@ export function ProfilePage() {
   const overview = useQuery((signal) => profileApi.overview(signal), []);
   const tags = useQuery(() => tagsApi.mine(), []);
   const certificados = useQuery(() => coursesApi.mine(), []);
+  const [erroMeta, setErroMeta] = useState<string | null>(null);
 
   if (overview.loading || tags.loading) return <Loading label={t("perfil.carregando")} />;
   if (overview.error) return <ErrorState message={overview.error} onRetry={overview.reload} />;
@@ -59,10 +60,19 @@ export function ProfilePage() {
     // Atualiza a tela antes da resposta: a escrita é pequena e previsível, e
     // esperar o servidor para pintar um botão já clicado faz a interface
     // parecer travada.
-    tags.set((current) =>
-      current.map((tag) => (tag.id === tagId ? { ...tag, is_target: next } : tag)),
-    );
-    await tagsApi.update(tagId, { is_target: next });
+    setErroMeta(null);
+    const mudar = (valor: boolean) =>
+      tags.set((current) =>
+        current.map((tag) => (tag.id === tagId ? { ...tag, is_target: valor } : tag)),
+      );
+    mudar(next);
+    try {
+      await tagsApi.update(tagId, { is_target: next });
+    } catch (caught) {
+      // O servidor recusou: o botão não pode continuar marcado como salvo.
+      mudar(!next);
+      setErroMeta(messageFor(caught));
+    }
   };
 
   return (
@@ -105,6 +115,7 @@ export function ProfilePage() {
         />
       ) : (
         <Panel pad={16.8}>
+          {erroMeta ? <ErrorState message={erroMeta} /> : null}
           <TagGroup
             title={t("perfil.grupos.voceDomina", { n: dominadas.length })}
             hint={t("perfil.grupos.voceDominaDica")}

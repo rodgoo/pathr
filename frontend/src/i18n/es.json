@@ -2324,6 +2324,8 @@
       "capital": "capital"
     },
     "avatar": {
+      "formatoInvalido": "La foto debe ser JPG, PNG o WebP.",
+      "fotoGrande": "La foto supera los {mb} MB.",
       "erroEnviar": "No he podido enviar la imagen.",
       "erroRemover": "No he podido eliminar la imagen.",
       "alt": "Foto de perfil de {nome}",
@@ -2357,6 +2359,8 @@
     "carregando": "Cargando sus currículos…",
     "kicker": "Base de su plan",
     "envio": {
+      "formatoInvalido": "Formato no aceptado. Sube un PDF, DOCX, ODT, RTF, TXT o MD.",
+      "arquivoGrande": "El archivo supera los {mb} MB.",
       "titulo": "Envía tu currículum",
       "descricao": "Leo el archivo, extraigo tus competencias, evalúo el nivel de cada una y elaboro la hoja de ruta en función de lo que falta. Tú lo revisas todo antes de que yo lo genere.",
       "enviando": "Enviando…",

@@ -49,9 +49,11 @@ declare global {
 export function idDoYoutube(url: string): string | null {
   try {
     const endereco = new URL(url);
-    const host = endereco.hostname.replace("www.", "");
+    const host = endereco.hostname.toLowerCase().replace(/^www\./, "");
     if (host === "youtu.be") return endereco.pathname.slice(1) || null;
-    if (!host.endsWith("youtube.com")) return null;
+    // O ponto antes do sufixo importa: só `youtube.com` e seus subdomínios
+    // (m., music.). Sem ele, `fake-youtube.com` também passava.
+    if (host !== "youtube.com" && !host.endsWith(".youtube.com")) return null;
     if (endereco.pathname.startsWith("/embed/")) return endereco.pathname.slice(7) || null;
     if (endereco.pathname.startsWith("/shorts/")) return endereco.pathname.slice(8) || null;
     return endereco.searchParams.get("v");
