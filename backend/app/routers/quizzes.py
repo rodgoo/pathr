@@ -12,6 +12,8 @@ transformaria o quiz em decoração.
 """
 
 import logging
+import re
+import secrets
 import uuid
 from datetime import datetime, timezone
 from typing import Any, Optional
@@ -66,10 +68,18 @@ Regras:
    cenários (um trecho de código com um problema, uma decisão de projeto a
    tomar) a perguntas do tipo o que significa X.
 2. Exatamente 4 alternativas. O campo correta é o índice de 0 a 3 (uso interno).
-   Na explicação, cite as alternativas contando a partir de 1 (a primeira é a
-   alternativa 1, a última a 4) ou pelo próprio texto delas — nunca pelo índice.
+   Na explicação e na análise, refira-se às alternativas pelo próprio texto
+   delas — NUNCA por número ou letra: a ordem é embaralhada depois de escrita.
 3. As alternativas erradas precisam ser plausíveis: cada uma deve refletir um
    engano que uma pessoa real comete. Alternativa absurda entrega a resposta.
+   As 4 alternativas têm o MESMO formato, o mesmo tamanho (diferença de no
+   máximo 10% em caracteres) e o mesmo nível de detalhe técnico. A certa NÃO pode
+   ser a mais longa, a mais específica nem a mais bem escrita: quem responde tende
+   a marcar, sem perceber, a alternativa que parece mais elaborada. Dê às erradas o
+   mesmo tipo de detalhe que a certa tem (nomes de comandos, termos técnicos,
+   condições) e enxugue a certa se ela ficou maior. Não use "sempre", "nunca" ou
+   "apenas" só nas erradas — a pessoa precisa SABER a resposta para acertar, e não
+   poder deduzi-la pela forma.
 4. Dois campos explicam a questão. `explicacao`: uma ou duas frases com a ideia
    central que ela testa. `analise`: um array com EXATAMENTE 4 textos, um por
    alternativa, NA MESMA ORDEM em que as alternativas foram escritas. Cada texto
@@ -248,6 +258,8 @@ async def generate_quiz(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail="A IA não devolveu questões suficientes. Tente de novo.",
         )
+    # Só o quiz que vai ser gravado é conferido: a certa não pode ser a maior alternativa.
+    questions = await _equilibrar(questions)
 
     quiz = (
         supabase.table("pathr_quiz")
@@ -294,6 +306,144 @@ async def generate_quiz(
     ).execute()
 
     return get_quiz(str(quiz["id"]), current_user, supabase)
+
+
+# --- A certa não pode se denunciar -------------------------------------------
+#
+# Quem responde escolhe, sem perceber, a alternativa que parece mais elaborada — e um modelo de IA escreve a certa
+# mais longa e mais bem explicada quase sempre, porque é a que ele "sabe". O quiz virava um teste de "qual é a
+# maior", e não de conhecimento. Três defesas, da mais barata para a mais cara: o prompt pede alternativas do mesmo
+# tamanho; a ordem é sorteada (a certa não fica sempre no mesmo lugar); e o que ainda sair desequilibrado é reescrito.
+
+# Sorteio do SO (`SystemRandom`), e não `random`: a posição da certa não pode ser previsível entre quizzes.
+_ALEATORIO = secrets.SystemRandom()
+
+
+def _misturar(itens: list) -> None:
+    """Embaralha no lugar. Função à parte para os testes poderem trocar o sorteio por uma ordem conhecida."""
+    _ALEATORIO.shuffle(itens)
+
+
+# "a alternativa 2", "opção B", "letra C": o texto depende da ORDEM das alternativas, e embaralhar o deixaria errado.
+_CITA_ALTERNATIVA = re.compile(
+    r"\b(?:alternativas?|op[cç](?:ão|ao|ões|oes)|itens?|letras?|options?|choices?)\s*\(?\s*(?:[0-9]|[A-Da-d]\b)",
+    re.IGNORECASE,
+)
+
+
+def _embaralhar(
+    options: list[str], correct: int, analise: Optional[list[str]], resumo: str
+) -> tuple[list[str], int, Optional[list[str]]]:
+    """Sorteia a ordem das alternativas; o gabarito e o texto de cada uma acompanham a troca.
+
+    Se o resumo ou a análise citam uma alternativa por número/letra, a ordem fica como veio: embaralhar faria o
+    texto apontar para a alternativa errada, e uma explicação que contradiz o gabarito é pior que uma certa fixa.
+    """
+    if any(_CITA_ALTERNATIVA.search(texto) for texto in [resumo, *(analise or [])]):
+        return options, correct, analise
+    ordem = list(range(len(options)))
+    _misturar(ordem)
+    return (
+        [options[i] for i in ordem],
+        ordem.index(correct),
+        [analise[i] for i in ordem] if analise else None,
+    )
+
+
+# Quanto a certa pode passar da maior das erradas, em tamanho, antes de a questão ser reescrita.
+_TOLERANCIA_DE_TAMANHO = 1.10
+
+
+def _razao_de_tamanho(questao: dict[str, Any]) -> float:
+    """Tamanho da certa dividido pelo da MAIOR errada. Acima de 1 ela é a mais longa."""
+    alternativas, correta = questao["alternativas"], questao["correta"]
+    maior_errada = max(len(t) for i, t in enumerate(alternativas) if i != correta)
+    return len(alternativas[correta]) / max(maior_errada, 1)
+
+
+def _destoa(questao: dict[str, Any]) -> bool:
+    return _razao_de_tamanho(questao) > _TOLERANCIA_DE_TAMANHO
+
+
+EQUILIBRIO_PROMPT = """Você revisa as alternativas de questões de múltipla escolha para que a resposta certa não se denuncie.
+
+Em cada questão a alternativa CERTA ficou mais longa e mais elaborada que as erradas, e quem responde tende a marcar
+justamente a que parece mais bem escrita. Reescreva as 4 alternativas de cada questão de modo que:
+
+1. Tenham praticamente o MESMO tamanho (diferença de no máximo 10% em caracteres), o mesmo formato e o mesmo nível de
+   detalhe técnico.
+2. Nenhum sentido mude: a certa continua certa, e cada errada continua errada pelo MESMO engano. Não troque a resposta.
+3. A certa NÃO seja a mais longa nem a mais específica. Enxugue a certa e dê às erradas o mesmo tipo de detalhe
+   (nomes de comandos, termos técnicos, condições) — sem torná-las corretas.
+4. Nunca cite número ou letra de alternativa nos textos.
+
+Devolva as questões na MESMA ORDEM e a MESMA QUANTIDADE recebidas. Cada uma com `alternativas` (4 textos, na mesma
+ordem em que vieram) e `analise` (4 textos, um por alternativa, na mesma ordem: uma frase dizendo por que está certa ou
+errada). Responda apenas o JSON."""
+
+EQUILIBRIO_SCHEMA: dict[str, Any] = {
+    "type": "OBJECT",
+    "properties": {
+        "questoes": {
+            "type": "ARRAY",
+            "items": {
+                "type": "OBJECT",
+                "properties": {
+                    "alternativas": {"type": "ARRAY", "items": {"type": "STRING"}},
+                    "analise": {"type": "ARRAY", "items": {"type": "STRING"}},
+                },
+                "required": ["alternativas"],
+            },
+        }
+    },
+    "required": ["questoes"],
+}
+
+
+async def _equilibrar(questoes: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Reescreve, numa ÚNICA chamada, as questões em que a certa é a mais longa. As outras não são tocadas.
+
+    Nunca piora nem derruba o quiz: se a IA falhar, devolver algo inválido ou não melhorar o tamanho, a questão
+    original fica como estava. Só roda quando há questão desequilibrada, e conta uma vez na cota diária de IA.
+    """
+    indices = [i for i, q in enumerate(questoes) if _destoa(q)]
+    if not indices:
+        return questoes
+    blocos = []
+    for n, i in enumerate(indices, 1):
+        q = questoes[i]
+        alternativas = "\n".join(f"{k + 1}. {texto}" for k, texto in enumerate(q["alternativas"]))
+        blocos.append(f"QUESTAO {n}\nEnunciado: {q['enunciado']}\nAlternativas:\n{alternativas}\nCORRETA: {q['correta'] + 1}\n")
+    try:
+        resultado = await generate_json(EQUILIBRIO_PROMPT, "\n".join(blocos), EQUILIBRIO_SCHEMA)
+    except (AiProviderError, HTTPException):
+        _log_quiz.warning("quiz: %d questão(ões) com a certa mais longa ficaram como vieram (IA indisponível)", len(indices))
+        return questoes
+    novas = resultado.content.get("questoes")
+    if not isinstance(novas, list) or len(novas) != len(indices):
+        _log_quiz.warning("quiz: o equilíbrio das alternativas voltou com o formato errado; questões mantidas")
+        return questoes
+
+    saida = list(questoes)
+    reescritas = 0
+    for i, nova in zip(indices, novas):
+        antiga = questoes[i]
+        alternativas = [str(t).strip() for t in (nova.get("alternativas") or [])] if isinstance(nova, dict) else []
+        if len(alternativas) != 4 or not all(alternativas):
+            continue
+        analise = _analise_valida(nova.get("analise"), 4) or antiga.get("analise")
+        candidata = {
+            **antiga,
+            "alternativas": alternativas,
+            "analise": analise,
+            "explicacao": _explicacao_formatada(antiga.get("resumo", ""), analise, antiga["correta"]),
+        }
+        if _razao_de_tamanho(candidata) > _razao_de_tamanho(antiga):
+            continue  # a reescrita deixou a certa ainda mais destacada: fica a original
+        saida[i] = candidata
+        reescritas += 1
+    _log_quiz.info("quiz: %d de %d questão(ões) desequilibradas foram reescritas", reescritas, len(indices))
+    return saida
 
 
 async def _completar(prompt: str, ja_escritas: list[dict[str, Any]], faltam: int) -> list[dict[str, Any]]:
@@ -388,6 +538,7 @@ def _clean_questions(raw: Any) -> list[dict[str, Any]]:
             continue
         difficulty = str(item.get("dificuldade") or "").strip().lower()
         resumo = str(item.get("explicacao") or "").strip()[:1000]
+        options, correct, analise = _embaralhar(options, correct, analise, resumo)
         cleaned.append(
             {
                 "enunciado": prompt[:2000],
@@ -395,6 +546,9 @@ def _clean_questions(raw: Any) -> list[dict[str, Any]]:
                 "linguagem": str(item.get("linguagem") or "").strip()[:30],
                 "alternativas": options,
                 "correta": correct,
+                # `resumo` e `analise` ficam junto: reescrever as alternativas (`_equilibrar`) refaz a explicação.
+                "resumo": resumo,
+                "analise": analise,
                 "explicacao": _explicacao_formatada(resumo, analise, correct),
                 "dificuldade": difficulty if difficulty in {"facil", "medio", "dificil"} else "medio",
                 # Pode vir vazio: modelo mais fraco às vezes ignora o campo. A

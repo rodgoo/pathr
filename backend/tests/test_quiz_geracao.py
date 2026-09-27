@@ -19,6 +19,14 @@ from tests.fake_supabase import FakeSupabase
 EU = {"id": str(uuid.uuid4()), "email": "ana@exemplo.com", "timezone_name": "America/Sao_Paulo"}
 
 
+@pytest.fixture(autouse=True)
+def sem_sorteio(monkeypatch):
+    """A ordem das alternativas é sorteada de verdade em produção; aqui ela fica como veio, para o gabarito ser
+    previsível. (O sorteio tem os testes dele em test_quiz_equilibrio.py.) Sem isto, estes testes só passavam
+    porque o texto de `analise` cita "alternativa 0", o que desliga o sorteio por acaso."""
+    monkeypatch.setattr(quizzes, "_misturar", lambda itens: None)
+
+
 def _q(i: int, opcoes: int = 4, analise: bool = True, correta: int = 1, **extra) -> dict:
     """Uma questão como o modelo a devolve."""
     q = {

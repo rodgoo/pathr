@@ -27,7 +27,9 @@ def test_texto_que_ja_conta_de_um_nao_muda():
 
 
 def test_prompts_pedem_contagem_a_partir_de_um():
-    assert "a partir de 1" in quizzes.SYSTEM_PROMPT
+    # O quiz não pede mais "contar a partir de 1": a ordem das alternativas é sorteada DEPOIS de escrita, então o
+    # prompt proíbe citar por número ou letra (o que também impede o "alternativa 0"). O de idioma segue contando.
+    assert "NUNCA por número ou letra" in quizzes.SYSTEM_PROMPT
     fonte = open(language_practice.__file__, encoding="utf-8").read()
     assert "cite alternativas a partir de 1" in fonte
 
