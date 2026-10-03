@@ -25,7 +25,7 @@ from app.database import get_supabase
 from app.services import conhecimento
 from app.services.alternativas import numerar_de_um
 from app.deps import get_current_user
-from app.services import languages, review, traducao
+from app.services import languages, limites, review, traducao
 from app.services import treino_idioma as treino
 from app.services.progress import log_activity
 
@@ -1266,7 +1266,11 @@ class NarracaoIn(BaseModel):
 
 
 @router.post("/tts")
-async def narrar(corpo: NarracaoIn, _current_user: dict = Depends(get_current_user)):
+async def narrar(
+    corpo: NarracaoIn,
+    current_user: dict = Depends(get_current_user),
+    supabase: Client = Depends(get_supabase),
+):
     """O texto de um item, falado por voz neural.
 
     Responde o WAV inteiro, e não um link: o áudio é gerado sob demanda e
@@ -1278,7 +1282,15 @@ async def narrar(corpo: NarracaoIn, _current_user: dict = Depends(get_current_us
     503 é a resposta certa para toda falha de geração: diz ao front "hoje
     não", que é exatamente a condição em que ele deve voltar para o
     `speechSynthesis`. Um 500 sugeriria defeito e um 200 vazio calaria a tela.
+
+    A cota diária de IA (150/dia por conta, IA_POR_USUARIO) vale aqui também:
+    diferente das outras rotas de IA, `tts.narrar` não passa por
+    `generate_json`/`consumir_ia` (fala direto com o provedor por `httpx`), e
+    o cache de `tts` é por hash do texto — variar 1 caractere força geração
+    nova. Sem este teto, uma conta autenticada podia chamar em loop com textos
+    distintos e gerar custo de Gemini/Groq sem limite.
     """
+    limites.consumir(supabase, limites.IA_POR_USUARIO, str(current_user["id"]))
     codigo = _idioma_valido(corpo.language)
     try:
         audio = await tts.narrar(corpo.text, codigo, corpo.voice)

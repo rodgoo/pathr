@@ -97,3 +97,39 @@ def test_colunas_das_tabelas_novas_batem_com_as_migrations():
     }
     for tabela, colunas in esperadas.items():
         assert {c.name for c in SQLModel.metadata.tables[tabela].columns} == colunas, tabela
+
+
+def test_toda_coluna_de_add_column_em_tabela_existente_esta_no_metadata():
+    """`op.add_column` em tabela que já existia (ao contrário de `create_table`,
+    coberto acima) é o caso que passava despercebido: a migration adiciona a
+    coluna ao banco, e se models.py não a declarar, `alembic revision
+    --autogenerate` compara o metadata (sem a coluna) com o banco (com ela) e
+    propõe um DROP COLUNA na próxima migração gerada — apagando dado de
+    produção se alguém não revisar o diff com cuidado. Caso real: as três
+    colunas abaixo (0039 e 0040).
+
+    Varre TODAS as migrations, não só 0039-0042: nome de tabela e de coluna
+    literais (não geradas em laço com variável, caso de 0007/0017, que exige
+    leitura humana), para a regressão valer no futuro também.
+    """
+    padrao = re.compile(r'op\.add_column\(\s*"(pathr_\w+)"\s*,\s*sa\.Column\(\s*"(\w+)"', re.DOTALL)
+    faltando: set[str] = set()
+    for texto in _migrations().values():
+        for tabela, coluna in padrao.findall(texto):
+            if tabela not in SQLModel.metadata.tables:
+                continue  # tabela removida ou renomeada depois; fora do escopo deste teste
+            colunas_no_metadata = {c.name for c in SQLModel.metadata.tables[tabela].columns}
+            if coluna not in colunas_no_metadata:
+                faltando.add(f"{tabela}.{coluna}")
+    assert not faltando, f"colunas adicionadas por add_column e ausentes de models.py: {sorted(faltando)}"
+    # As três que a revisão apontou, explicitamente — para a intenção do teste
+    # não se perder se a varredura genérica mudar de forma no futuro.
+    adicionadas_literalmente: set[str] = set()
+    for texto in _migrations().values():
+        for tabela, coluna in padrao.findall(texto):
+            adicionadas_literalmente.add(f"{tabela}.{coluna}")
+    assert {
+        "pathr_application.steps",
+        "pathr_application.pending",
+        "pathr_profile.show_attendance",
+    } <= adicionadas_literalmente

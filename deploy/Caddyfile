@@ -36,6 +36,24 @@
 	root * /srv/pathr
 	encode gzip zstd
 
+	# Mesmos cabeçalhos de segurança de frontend/public/_headers (que só o
+	# Cloudflare Pages honra) — o Caddy não lê aquele arquivo, é uma convenção
+	# específica do Pages. Sem isto, quem sobe o PathR via self-host perde a
+	# camada toda: sem frame-ancestors/X-Frame-Options a tela de "excluir
+	# conta" pode ser enquadrada por outro site (clickjacking); sem CSP um XSS
+	# que escape da sanitização nh3 do modo leitura roda sem contenção; sem
+	# HSTS o primeiro acesso HTTP não é forçado a HTTPS. Mantenha as duas
+	# listas em sincronia — mesmas origens, mesmo motivo por origem, só a
+	# sintaxe muda.
+	header {
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		X-Frame-Options "DENY"
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()"
+		Content-Security-Policy "default-src 'self'; script-src 'self' https://www.youtube.com https://challenges.cloudflare.com; frame-src https://www.youtube.com https://www.youtube-nocookie.com https://challenges.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' https://api.pathr.notter.com.br; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; media-src 'self' blob: data:; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; upgrade-insecure-requests"
+	}
+
 	# Os assets com hash no nome nunca mudam de conteúdo — podem ser
 	# cacheados para sempre.
 	@assets path /assets/*

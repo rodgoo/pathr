@@ -187,7 +187,7 @@ def _itens_do_modulo(node: dict, banda: str) -> tuple[list[dict], list[dict]]:
     return (
         [
             item("feynman", textos.t("atividade.feynman", titulo=titulo)),
-            item("desafio", f"Desafio aplicado de {titulo}"),
+            item("desafio", textos.t("atividade.desafio", titulo=titulo)),
         ],
         [],
     )

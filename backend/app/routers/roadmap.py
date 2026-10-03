@@ -6,6 +6,7 @@ o anterior: o histórico é o que permite voltar atrás depois de uma mudança d
 rumo que não deu certo.
 """
 
+import uuid
 from datetime import datetime, timezone
 from typing import Any, Optional
 
@@ -202,6 +203,14 @@ def _persist(
     por `kind` e ligados por `parent_id`. Uma tabela em vez de duas porque
     fase e módulo têm exatamente os mesmos campos de progresso, e a árvore
     pode ganhar um terceiro nível sem migração.
+
+    As linhas de fase e módulo são geradas com `uuid.uuid4()` AQUI, no Python,
+    e não esperam o INSERT para saber o próprio id. Antes, `depends_on` do
+    módulo N precisava do id (gerado pelo banco) do módulo N-1, e isso forçava
+    um INSERT por linha — 20 a 40 round-trips sequenciais ao PostgREST num
+    plano de 12 semanas, depois da chamada de IA (já lenta) ter terminado.
+    Gerando o id antes, `depends_on` fica pronto sem rodada nenhuma, e todo o
+    roadmap (fases e módulos) sai num único INSERT em lote.
     """
     supabase.table("pathr_roadmap").update({"is_primary": False}).eq("user_id", user_id).execute()
 
@@ -212,68 +221,66 @@ def _persist(
         .data[0]
     )
 
+    linhas: list[dict[str, Any]] = []
     order = 0
     # O módulo anterior da trilha, em ordem de estudo. É ele que vira o
     # pré-requisito do próximo — ver `_ordem_de_estudo`.
     anterior: Optional[str] = None
 
     for phase in plan["fases"]:
-        phase_row = (
-            supabase.table("pathr_roadmap_node")
-            .insert(
-                {
-                    "roadmap_id": roadmap["id"],
-                    "title": phase["titulo"],
-                    "description": phase["objetivo"],
-                    "kind": "phase",
-                    "order_index": order,
-                    "week_start": phase["semana_inicio"] or None,
-                    "week_end": phase["semana_fim"] or None,
-                    "status": "todo",
-                }
-            )
-            .execute()
-            .data[0]
+        phase_id = str(uuid.uuid4())
+        linhas.append(
+            {
+                "id": phase_id,
+                "roadmap_id": roadmap["id"],
+                "title": phase["titulo"],
+                "description": phase["objetivo"],
+                "kind": "phase",
+                "order_index": order,
+                "week_start": phase["semana_inicio"] or None,
+                "week_end": phase["semana_fim"] or None,
+                "status": "todo",
+            }
         )
         order += 1
 
         for module in _ordem_de_estudo(phase["modulos"]):
             tag_ids = [str(catalog.resolve(name)["id"]) for name in module["tags"]]
-            criado = (
-                supabase.table("pathr_roadmap_node")
-                .insert(
-                    {
-                        "roadmap_id": roadmap["id"],
-                        "parent_id": phase_row["id"],
-                        "title": module["titulo"],
-                        "description": module["descricao"],
-                        "kind": module["tipo"],
-                        "tag_ids": tag_ids,
-                        "order_index": order,
-                        "level": module["nivel"],
-                        "estimated_hours": module["horas"],
-                        "week_start": module["semana_inicio"] or None,
-                        "week_end": module["semana_fim"] or None,
-                        # A cadeia de pré-requisitos, enfim preenchida. O campo
-                        # existia no modelo desde o começo, com a docstring
-                        # dizendo que era o que "trava/destrava um nó", e
-                        # ninguém escrevia nele — então a trilha não tinha
-                        # ordem nenhuma: vinte módulos abertos ao mesmo tempo,
-                        # e nada dizendo por onde ir.
-                        "depends_on": [anterior] if anterior else [],
-                        # Só o primeiro está aberto. O resto TRAVA até o
-                        # anterior ser concluído: é isso que faz a trilha ir do
-                        # mais fácil para o mais difícil de verdade, em vez de
-                        # só sugerir uma ordem que nada sustenta.
-                        "status": "doing" if anterior is None else "locked",
-                        "objectives": module["objetivos"],
-                    }
-                )
-                .execute()
-                .data[0]
+            modulo_id = str(uuid.uuid4())
+            linhas.append(
+                {
+                    "id": modulo_id,
+                    "roadmap_id": roadmap["id"],
+                    "parent_id": phase_id,
+                    "title": module["titulo"],
+                    "description": module["descricao"],
+                    "kind": module["tipo"],
+                    "tag_ids": tag_ids,
+                    "order_index": order,
+                    "level": module["nivel"],
+                    "estimated_hours": module["horas"],
+                    "week_start": module["semana_inicio"] or None,
+                    "week_end": module["semana_fim"] or None,
+                    # A cadeia de pré-requisitos, enfim preenchida. O campo
+                    # existia no modelo desde o começo, com a docstring
+                    # dizendo que era o que "trava/destrava um nó", e
+                    # ninguém escrevia nele — então a trilha não tinha
+                    # ordem nenhuma: vinte módulos abertos ao mesmo tempo,
+                    # e nada dizendo por onde ir.
+                    "depends_on": [anterior] if anterior else [],
+                    # Só o primeiro está aberto. O resto TRAVA até o
+                    # anterior ser concluído: é isso que faz a trilha ir do
+                    # mais fácil para o mais difícil de verdade, em vez de
+                    # só sugerir uma ordem que nada sustenta.
+                    "status": "doing" if anterior is None else "locked",
+                    "objectives": module["objetivos"],
+                }
             )
-            anterior = str(criado["id"])
+            anterior = modulo_id
             order += 1
+
+    if linhas:
+        supabase.table("pathr_roadmap_node").insert(linhas).execute()
 
     return roadmap
 

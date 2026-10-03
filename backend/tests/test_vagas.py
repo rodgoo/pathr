@@ -42,6 +42,21 @@ def sem_estado(monkeypatch):
 # ── Casamento de tecnologias no texto ──────────────────────────────────────
 
 
+def test_cache_de_requisitos_tem_teto_e_descarta_o_mais_antigo():
+    """Sem teto, uma conta mandando textos distintos em laço cresceria o
+    dict até o processo reiniciar (DoS de memória). O cache precisa agir
+    como o de TTS (app/tts.py): LRU com tamanho máximo."""
+    assert router._CACHE_MAXIMO > 0
+    for i in range(router._CACHE_MAXIMO + 5):
+        asyncio.run(router._grava_requisitos_no_cache(f"chave{i}", {"requisitos": [str(i)]}))
+    assert len(router._requisitos_por_texto) == router._CACHE_MAXIMO
+    # As cinco primeiras (mais antigas) caíram fora; as últimas continuam.
+    for i in range(5):
+        assert asyncio.run(router._le_requisitos_do_cache(f"chave{i}")) is None
+    ultima = router._CACHE_MAXIMO + 4
+    assert asyncio.run(router._le_requisitos_do_cache(f"chave{ultima}")) == {"requisitos": [str(ultima)]}
+
+
 def test_casa_nome_e_apelido_por_palavra_inteira():
     citadas = V.tags_citadas("Experiência com Java, Spring Boot, postgres e k8s.", CATALOGO)
     assert {"java", "spring-boot", "postgresql", "kubernetes"} <= set(citadas)

@@ -40,6 +40,7 @@ from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import HTTPException, status
 from supabase import Client
+from tld import get_fld
 
 from app.ai_providers import AiProviderError, generate_json
 from app.services import cifra, perguntas, vagas
@@ -149,14 +150,23 @@ def email_confiavel(email: Optional[str], empresa: Optional[str], url: Optional[
 
         host = (urlparse(url).hostname or "").lower().removeprefix("www.")
     nome = re.sub(r"[^a-z0-9]", "", (empresa or "").lower())
-    raiz = dominio.split(".")[0]
     if host and (dominio == host or host.endswith(f".{dominio}") or dominio.endswith(f".{host}")):
         return True
     if not nome:
         return False
-    # Igualdade de RÓTULO, nunca substring: "nubank-carreiras.io" contém "nubank"
-    # mas é um domínio sósia; "carreiras.nubank.com.br" tem o rótulo "nubank".
-    return raiz == nome or nome in dominio.split(".")
+    # Igualdade de RÓTULO contra o domínio REGISTRÁVEL (eTLD+1), nunca
+    # substring nem rótulo em qualquer posição da cadeia: "nubank-carreiras.io"
+    # contém "nubank" mas é um domínio sósia (rótulo "nubank-carreiras");
+    # "carreiras.nubank.com.br" tem domínio registrável "nubank.com.br" (rótulo
+    # "nubank"); e "nubank.dominio-do-atacante.com" tem domínio registrável
+    # "dominio-do-atacante.com" (rótulo "dominio-do-atacante") — "nubank" aí é
+    # só um SUBdomínio escolhido pelo atacante, não a raiz registrável, e por
+    # isso não deve bater.
+    try:
+        registravel = get_fld(dominio, fix_protocol=True)
+    except Exception:  # noqa: BLE001 — domínio sem sufixo público reconhecido
+        registravel = dominio
+    return nome == registravel.split(".")[0]
 
 CARTA_SCHEMA: dict[str, Any] = {
     "type": "OBJECT",

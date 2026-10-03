@@ -101,6 +101,13 @@ _TEXTOS: dict[str, dict[str, str]] = {
         "fr": "Activité pratique sur {titulo}",
         "de": "Praktische Übung zu {titulo}",
     },
+    "atividade.desafio": {
+        "pt": "Desafio aplicado de {titulo}",
+        "en": "{titulo} applied challenge",
+        "es": "Desafío aplicado de {titulo}",
+        "fr": "Défi appliqué sur {titulo}",
+        "de": "Angewandte Herausforderung zu {titulo}",
+    },
     "atividade.revisao": {
         "pt": "Revisar {quantos} conceitos pendentes",
         "en": "Review {quantos} pending concepts",

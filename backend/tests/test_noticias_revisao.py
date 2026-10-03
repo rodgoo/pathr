@@ -133,6 +133,48 @@ def test_evento_da_regiao_nao_some_atras_de_200_de_outras():
     assert [e["titulo"] for e in lista] == ["Perto"]
 
 
+# --- id malformado é 404 limpo, não erro do PostgREST não tratado ----------
+
+
+def test_confirmar_com_id_malformado_e_404_limpo():
+    banco = _banco()
+    with pytest.raises(HTTPException) as erro:
+        rotas.confirmar("nao-e-um-uuid", EU, banco)
+    assert erro.value.status_code == 404
+
+
+def test_calendario_com_id_malformado_e_404_limpo():
+    banco = _banco()
+    with pytest.raises(HTTPException) as erro:
+        rotas.calendario("nao-e-um-uuid", EU, banco)
+    assert erro.value.status_code == 404
+
+
+def test_desfazer_com_id_malformado_e_404_limpo():
+    """`desfazer` nem chamava `_evento_da_pessoa` — a validação de UUID faltava
+    por dois caminhos diferentes aqui."""
+    banco = _banco()
+    with pytest.raises(HTTPException) as erro:
+        rotas.desfazer("nao-e-um-uuid", EU, banco)
+    assert erro.value.status_code == 404
+
+
+def test_evento_de_verdade_continua_passando_pela_validacao_de_id():
+    evento = {
+        "id": "22222222-2222-2222-2222-222222222222",
+        "title": "Meetup",
+        "summary": None,
+        "venue": None,
+        "event_start": "2099-01-01",
+        "event_end": None,
+        "ticket_url": None,
+    }
+    banco = _banco(pathr_news_event=[evento])
+    rotas.confirmar(evento["id"], EU, banco)  # não levanta
+    rotas.desfazer(evento["id"], EU, banco)  # não levanta
+    assert "BEGIN:VCALENDAR" in rotas.calendario(evento["id"], EU, banco).body.decode()
+
+
 # --- código morto fora -------------------------------------------------------
 
 

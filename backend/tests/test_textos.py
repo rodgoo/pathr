@@ -77,6 +77,44 @@ def test_nenhum_pilar_ou_detalhe_ficou_como_texto_fixo():
             assert textos.formas(valor), f"{valor!r} não é uma chave de textos.py"
 
 
+def test_titulo_do_desafio_da_semana_tambem_e_traduzido():
+    """O título da atividade "Desafio" (banda avançada) era montado com
+    `f"Desafio aplicado de {titulo}"` fixo em português — diferente dos
+    outros títulos de _itens_do_modulo, que já passavam por textos.t(). Com o
+    app em outro idioma, só este título ficava sempre em português."""
+    no = {"id": "n1", "title": "Docker"}
+    idioma.idioma_da_requisicao.set("en")
+    essenciais, _ = weekly_plan._itens_do_modulo(no, "avancado")
+    desafio = next(i for i in essenciais if i["tipo"] == "desafio")
+    assert desafio["titulo"] == "Docker applied challenge"
+    assert "Desafio" not in desafio["titulo"]
+
+    idioma.idioma_da_requisicao.set("es")
+    essenciais, _ = weekly_plan._itens_do_modulo(no, "avancado")
+    desafio = next(i for i in essenciais if i["tipo"] == "desafio")
+    assert desafio["titulo"] == "Desafío aplicado de Docker"
+
+
+def test_nenhum_titulo_de_itens_do_modulo_ficou_como_texto_fixo():
+    """`test_nenhum_pilar_ou_detalhe_ficou_como_texto_fixo` só varria PILARES e
+    _DETALHES — não os títulos montados em `_itens_do_modulo`, que foi
+    exatamente onde o título do "Desafio" escapou sem chave em textos.py.
+    Varre as três bandas e confere que todo item tem textos.t() de verdade
+    (chave conhecida), não português fixo."""
+    no = {"id": "n1", "title": "Docker"}
+    for banda in ("iniciante", "intermediario", "avancado"):
+        # O título é resolvido NA CHAMADA (ver docstring de `_item`), então o
+        # idioma precisa estar ajustado ANTES de montar os itens — não depois.
+        idioma.idioma_da_requisicao.set("en")
+        em_ingles = {i["tipo"]: i["titulo"] for i in sum(weekly_plan._itens_do_modulo(no, banda), [])}
+        idioma.idioma_da_requisicao.set("pt")
+        em_portugues = {i["tipo"]: i["titulo"] for i in sum(weekly_plan._itens_do_modulo(no, banda), [])}
+        for tipo, titulo_en in em_ingles.items():
+            assert titulo_en != em_portugues[tipo], (
+                f"título do tipo {tipo!r} não muda com o idioma: {titulo_en!r}"
+            )
+
+
 def test_a_sugestao_do_laboratorio_nao_tem_portugues_fixo():
     """`code_lab` montava "Em andamento no seu roadmap: X" com f-string."""
     caminho = (code_lab.__file__ or "").replace(".pyc", ".py")

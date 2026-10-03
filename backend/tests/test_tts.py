@@ -11,12 +11,17 @@ O que não se testa: a voz em si. Isso é do provedor.
 import base64
 import io
 import wave
+from unittest.mock import AsyncMock
 
 import httpx
 import pytest
+from fastapi import HTTPException
 
 from app import tts
 from app.ai_providers import AiProviderError
+from app.routers import languages as languages_router
+from app.services import limites
+from tests.fake_supabase import FakeSupabase
 
 
 # ── O container ──────────────────────────────────────────────────────────────
@@ -492,3 +497,38 @@ async def test_provedor_perto_do_teto_vai_para_o_fim(monkeypatch):
     monkeypatch.setattr(tts, "perto_do_teto", lambda nome: nome == "gemini")
 
     assert [nome for nome, _, _ in await tts._provedores("en")] == ["groq", "gemini"]
+
+
+# ── Cota diária de IA na rota /languages/tts ────────────────────────────────
+#
+# Diferente de outras rotas de IA do app (que passam por
+# generate_json/consumir_ia), narrar() fala direto com o provedor via httpx —
+# sem este teto na rota, uma conta autenticada podia chamar em loop com textos
+# distintos (o cache de tts é por hash do texto) e gerar custo sem limite.
+
+
+async def test_rota_tts_aplica_a_cota_diaria_de_ia(monkeypatch):
+    monkeypatch.setattr(
+        limites, "IA_POR_USUARIO",
+        limites.Regra("ia", 1, limites.IA_POR_USUARIO.janela, limites.IA_POR_USUARIO.mensagem),
+    )
+    monkeypatch.setattr(languages_router.tts, "narrar", AsyncMock(return_value=b"RIFF....WAVEfake"))
+
+    supabase = FakeSupabase()
+    corpo = languages_router.NarracaoIn(text="Hello.", language="en")
+    usuario = {"id": "u1"}
+
+    primeira = await languages_router.narrar(corpo, usuario, supabase)
+    assert primeira.status_code == 200
+
+    with pytest.raises(HTTPException) as erro:
+        await languages_router.narrar(corpo, usuario, supabase)
+    assert erro.value.status_code == 429
+
+
+async def test_rota_tts_conta_a_cota_por_pessoa_nao_compartilhada():
+    """Duas contas distintas não disputam a mesma cota — cada uma tem a sua."""
+    supabase = FakeSupabase()
+    for conta in ("u1", "u2"):
+        for _ in range(3):
+            limites.consumir(supabase, limites.IA_POR_USUARIO, conta)  # não deve recusar

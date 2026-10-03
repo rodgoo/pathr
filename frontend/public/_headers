@@ -1,5 +1,8 @@
-# Mesmos cabeçalhos declarados no render.yaml, para o site se comportar igual
-# nos dois hosts enquanto a migração não termina.
+# Mesmos cabeçalhos declarados no bloco {$DOMAIN_APP} do deploy/Caddyfile
+# (self-host via VPS), para o site se comportar igual nos dois hosts — o
+# backend já migrou do Render para a Fly (ver backend/fly.toml) e o Caddy não
+# lê este arquivo (é convenção específica do Cloudflare Pages), então as duas
+# listas precisam ser mantidas em sincronia manualmente.
 #
 # Content-Security-Policy: a segunda barreira contra XSS. O app mostra HTML
 # de artigo de terceiro (limpo no servidor com nh3); se algum dia a limpeza

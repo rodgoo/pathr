@@ -271,6 +271,13 @@ class PathrApplication(SQLModel, table=True):
     status: str = Field(default="sugerida")
     sent_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
     created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+    # O passo a passo do envio ([{passo, situacao, detalhe, em}]) — o que a
+    # tela mostra acontecendo, e o que explica depois por que uma candidatura
+    # parou no meio. Ver migração 0039.
+    steps: list[Any] = Field(default_factory=list, sa_column=_jsonb("[]"))
+    # As perguntas que faltaram, para a pessoa responder uma vez (o app não
+    # inventa resposta em nome de ninguém). Ver migração 0039.
+    pending: list[Any] = Field(default_factory=list, sa_column=_jsonb("[]"))
 
 
 class PathrEmailLog(SQLModel, table=True):
@@ -377,6 +384,9 @@ class PathrProfile(SQLModel, table=True):
     # chaves válidas vivem em routers/profile.py (AVISOS); o que não estiver lá
     # é ignorado na escrita, então remover um aviso não deixa lixo para trás.
     notifications: dict[str, Any] = Field(default_factory=dict, sa_column=_jsonb())
+    # Se a presença em evento ("Eu vou!") aparece no cartão que outras contas
+    # veem — mesmo padrão de `discoverable`. Ligado por padrão. Ver migração 0040.
+    show_attendance: bool = Field(default=True)
     updated_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
 
 
@@ -420,7 +430,18 @@ class PathrTag(SQLModel, table=True):
     # categoria ∈ linguagem | framework | banco | cloud | devops | dados | ia |
     #             arquitetura | testes | seguranca | mobile | frontend |
     #             backend | ferramenta | metodologia | soft-skill | idioma
-    parent_id: Optional[uuid.UUID] = Field(default=None, sa_type=PGUUID(as_uuid=True), index=True)
+    # Auto-relacionamento (sempre pathr_tag, nunca referência polimórfica como
+    # PathrActivity.ref_id) — SET NULL e não CASCADE: apagar a tag-pai não
+    # deveria apagar as tags-filhas da hierarquia, só soltá-las da árvore.
+    parent_id: Optional[uuid.UUID] = Field(
+        default=None,
+        sa_column=Column(
+            PGUUID(as_uuid=True),
+            sa.ForeignKey("pathr_tag.id", ondelete="SET NULL"),
+            nullable=True,
+            index=True,
+        ),
+    )
     description: Optional[str] = Field(default=None)
     color: Optional[str] = Field(default=None)  # hex; default deriva da categoria
     icon: Optional[str] = Field(default=None)  # slug simple-icons
@@ -490,7 +511,17 @@ class PathrRoadmapNode(SQLModel, table=True):
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     roadmap_id: uuid.UUID = Field(sa_column=_fk("pathr_roadmap.id"))
-    parent_id: Optional[uuid.UUID] = Field(default=None, sa_type=PGUUID(as_uuid=True), index=True)
+    # Auto-relacionamento (sempre pathr_roadmap_node) — SET NULL e não CASCADE:
+    # apagar a fase não deveria apagar os módulos dela, só soltá-los da árvore.
+    parent_id: Optional[uuid.UUID] = Field(
+        default=None,
+        sa_column=Column(
+            PGUUID(as_uuid=True),
+            sa.ForeignKey("pathr_roadmap_node.id", ondelete="SET NULL"),
+            nullable=True,
+            index=True,
+        ),
+    )
     title: str
     description: Optional[str] = Field(default=None)
     kind: str = Field(default="skill")  # phase|skill|project|checkpoint|reading

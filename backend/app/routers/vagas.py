@@ -10,6 +10,7 @@ e-mails (routers/jobs.py).
 
 import asyncio
 import hashlib
+from collections import OrderedDict
 from datetime import datetime, timezone
 from typing import Any, Optional
 
@@ -34,7 +35,31 @@ _TEXTO_MINIMO = 400
 
 # Os requisitos que a IA extraiu, por texto do anúncio. Não dependem de quem
 # pergunta — duas pessoas analisando a mesma vaga pagam uma chamada só.
-_requisitos_por_texto: dict[str, dict[str, Any]] = {}
+#
+# Em memória, por processo — mesmo padrão do cache de TTS (app/tts.py). Sem
+# teto, uma conta autenticada mandando textos/URLs distintos (chave =
+# sha256(texto), controlado pelo cliente) cresceria o dict indefinidamente até
+# o processo reiniciar: DoS de memória. OrderedDict + move_to_end dá o
+# LRU: o menos recém-usado cai primeiro quando passa de _CACHE_MAXIMO.
+_CACHE_MAXIMO = 256
+_requisitos_por_texto: "OrderedDict[str, dict[str, Any]]" = OrderedDict()
+_trava_requisitos = asyncio.Lock()
+
+
+async def _le_requisitos_do_cache(chave: str) -> Optional[dict[str, Any]]:
+    async with _trava_requisitos:
+        extraido = _requisitos_por_texto.get(chave)
+        if extraido is not None:
+            _requisitos_por_texto.move_to_end(chave)
+        return extraido
+
+
+async def _grava_requisitos_no_cache(chave: str, extraido: dict[str, Any]) -> None:
+    async with _trava_requisitos:
+        _requisitos_por_texto[chave] = extraido
+        _requisitos_por_texto.move_to_end(chave)
+        while len(_requisitos_por_texto) > _CACHE_MAXIMO:
+            _requisitos_por_texto.popitem(last=False)
 
 
 def _perfil(supabase: Client, user_id: str) -> dict[str, Any]:
@@ -203,7 +228,7 @@ async def analisar_vaga(
         )
 
     chave = hashlib.sha256(texto.encode()).hexdigest()
-    extraido = _requisitos_por_texto.get(chave)
+    extraido = await _le_requisitos_do_cache(chave)
     usou_ia = True
     if extraido is None:
         try:
@@ -212,7 +237,7 @@ async def analisar_vaga(
             )
             extraido = resultado.content or {}
             if extraido.get("requisitos"):
-                _requisitos_por_texto[chave] = extraido
+                await _grava_requisitos_no_cache(chave, extraido)
         except AiProviderError:
             # Sem IA a análise continua: as tecnologias citadas no texto, todas
             # como obrigatórias. Menos fina, mas não some.

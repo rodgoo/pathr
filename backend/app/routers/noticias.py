@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import uuid
 from datetime import timedelta
 
 from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Response, status
@@ -59,9 +60,20 @@ router = APIRouter(
 _RAIO_PADRAO_KM = 50.0
 
 
+def _id_valido(event_id: str) -> None:
+    """id malformado não pode virar erro do PostgREST não tratado (500
+    genérico pelo middleware) — mesmo padrão de quizzes.py._id_valido,
+    relatos.py._id_valido e social.py._convite_de."""
+    try:
+        uuid.UUID(event_id)
+    except ValueError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Evento não encontrado.")
+
+
 def _evento_da_pessoa(supabase: Client, user_id: str, event_id: str) -> dict:
     """O evento futuro, se existir — 404 e não 403: um id adivinhado não pode
     confirmar que o evento existe."""
+    _id_valido(event_id)
     linhas = (
         supabase.table("pathr_news_event").select("*").eq("id", event_id).limit(1).execute().data or []
     )
@@ -136,6 +148,7 @@ def desfazer(
     current_user: dict = Depends(get_current_user),
     supabase: Client = Depends(get_supabase),
 ):
+    _id_valido(event_id)
     noticias.cancelar_presenca(supabase, str(current_user["id"]), event_id)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
 
