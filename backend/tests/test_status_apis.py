@@ -132,6 +132,35 @@ def test_resumo_conta_por_estado():
     assert S.resumo(itens) == {"ok": 2, "degradada": 0, "erro": 1, "nao_configurada": 1, "sem_verificacao": 0}
 
 
+def test_rota_so_para_super_admin(monkeypatch):
+    """/status/apis é detalhe de infra (quais serviços têm chave, cota,
+    latência) — não é para qualquer conta ver, só o super admin."""
+    from fastapi.testclient import TestClient
+
+    from app.database import get_supabase
+    from app.deps import get_current_user
+    from app.main import app
+    from tests.fake_supabase import FakeSupabase
+
+    monkeypatch.setattr(settings, "super_admin_emails", ["chefe@exemplo.com"])
+    ana = {"id": "22222222-0000-0000-0000-000000000002", "email": "ana@exemplo.com", "name": "Ana"}
+    chefe = {"id": "11111111-0000-0000-0000-000000000001", "email": "chefe@exemplo.com", "name": "Chefe"}
+    banco = FakeSupabase()
+    _rede(monkeypatch, {})
+
+    app.dependency_overrides[get_supabase] = lambda: banco
+    try:
+        app.dependency_overrides[get_current_user] = lambda: ana
+        cliente = TestClient(app)
+        assert cliente.get("/status/apis").status_code == 404
+
+        app.dependency_overrides[get_current_user] = lambda: chefe
+        cliente = TestClient(app)
+        assert cliente.get("/status/apis").status_code == 200
+    finally:
+        app.dependency_overrides.clear()
+
+
 def test_busca_de_vagas_registra_o_ultimo_uso(monkeypatch):
     async def gupy(_termo, _regiao=None):
         return []

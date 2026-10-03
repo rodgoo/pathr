@@ -31,7 +31,6 @@ const ABAS: readonly { value: SettingsTab; label: string; icon: IconName }[] = [
   { value: "skills", label: "config.abas.skills", icon: "code" },
   { value: "idiomas", label: "config.abas.idiomas", icon: "globe" },
   { value: "avisos", label: "config.abas.avisos", icon: "cog" },
-  { value: "integracoes", label: "config.abas.integracoes", icon: "server" },
 ];
 
 /**
@@ -42,6 +41,11 @@ const ABAS: readonly { value: SettingsTab; label: string; icon: IconName }[] = [
 const ABA_MODERACAO = { value: "moderacao" as const, label: "config.abas.moderacao", icon: "flag" as IconName };
 // Recursos (feature flags) — só o super admin liga/desliga funcionalidades.
 const ABA_RECURSOS = { value: "recursos" as const, label: "config.abas.recursos", icon: "cog" as IconName };
+// Integrações (status das APIs) — detalhe de infra (quais serviços têm chave,
+// cota, latência): não é para qualquer conta ver, só o super admin. O
+// servidor já responde 404 em /status/apis para quem não é (ver
+// routers/status_apis.py); esconder a aba é só não anunciar que ela existe.
+const ABA_INTEGRACOES = { value: "integracoes" as const, label: "config.abas.integracoes", icon: "server" as IconName };
 
 export function SettingsPage() {
   const { state, dispatch } = useAppState();
@@ -50,7 +54,7 @@ export function SettingsPage() {
   const TABS = [
     ...ABAS,
     ...(user?.is_moderator || user?.is_super_admin ? [ABA_MODERACAO] : []),
-    ...(user?.is_super_admin ? [ABA_RECURSOS] : []),
+    ...(user?.is_super_admin ? [ABA_RECURSOS, ABA_INTEGRACOES] : []),
   ];
   // As cinco abas do desenho têm tela. "objetivo" e "avisos" ficaram meses
   // caindo aqui em "conta" por não terem uma — era por isso que a pessoa
@@ -96,7 +100,7 @@ export function SettingsPage() {
       {tab === "skills" ? <SkillsTab /> : null}
       {tab === "idiomas" ? <LanguageSettings /> : null}
       {tab === "avisos" ? <NoticesTab /> : null}
-      {tab === "integracoes" ? <ApiStatusTab /> : null}
+      {tab === "integracoes" && user?.is_super_admin ? <ApiStatusTab /> : null}
       {/* Contas primeiro (só o super admin), relatos depois (quem modera). */}
       {tab === "moderacao" && user?.is_super_admin ? <ModeracaoUsuarios /> : null}
       {tab === "moderacao" && user?.is_moderator ? <ModeracaoRelatos /> : null}
