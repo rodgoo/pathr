@@ -19,10 +19,25 @@ Cai-se no `og:` (Open Graph), que quase toda página tem: `og:image` resolve a
 imagem, e `og:title`/`og:description` melhoram título e resumo. Data, não —
 sem data explícita o evento NÃO entra, porque faltar um evento é melhor do que
 mandar alguém para a data errada.
+
+## A Sympla parou de publicar JSON-LD
+
+Foi o que zerou a varredura inteira: nenhuma página de evento da Sympla (a
+maior fonte de `SITES_DE_EVENTO`) tem mais `<script type="application/ld+json">`
+— só Open Graph, sem data. A busca achava dezenas de candidatos reais
+(confirmado em produção) e `_montar` descartava TODOS por falta de data.
+
+A data continua lá, só que em `<script id="__NEXT_DATA__">` — o payload de
+hidratação do Next.js, não um formato pensado para terceiros lerem, mas a
+única fonte de data/local/preço que a página ainda expõe sem rodar
+JavaScript. `_evento_da_sympla` lê dali como alternativa ao JSON-LD; se a
+Sympla também tirar isto um dia, a varredura volta a zerar PARA ELA — não
+para Eventbrite/Meetup/Even3, que continuam no caminho de JSON-LD.
 """
 
 from __future__ import annotations
 
+import html
 import json
 import logging
 import re
@@ -45,6 +60,12 @@ _META = re.compile(
 _META_INVERTIDA = re.compile(
     r'<meta[^>]+content=["\']([^"\']*)["\'][^>]+(?:property|name)=["\'](og:[a-z:]+)["\']',
     re.IGNORECASE,
+)
+# O payload de hidratação do Next.js que a Sympla embute na página — ver o
+# cabeçalho do arquivo. `id="__NEXT_DATA__"` é o nome fixo que o framework usa.
+_NEXT_DATA = re.compile(
+    r'<script[^>]+id=["\']__NEXT_DATA__["\'][^>]*>(.*?)</script>',
+    re.IGNORECASE | re.DOTALL,
 )
 
 
@@ -109,7 +130,10 @@ def _data(valor: Any) -> Optional[str]:
 def _texto(valor: Any, limite: int) -> Optional[str]:
     if isinstance(valor, dict):
         valor = valor.get("name") or valor.get("@value")
-    texto = re.sub(r"\s+", " ", str(valor or "")).strip()
+    # `html.unescape` porque tanto o `content` de uma meta tag quanto o JSON da
+    # Sympla chegam com entidade crua ("&amp;", "&nbsp;") — sem isto a tela
+    # mostrava "Data &amp; AI Meetup" em vez de "Data & AI Meetup".
+    texto = re.sub(r"\s+", " ", html.unescape(str(valor or ""))).strip()
     return texto[:limite] if texto else None
 
 
@@ -186,11 +210,27 @@ def _open_graph(html: str) -> dict[str, str]:
     return marcas
 
 
-def extrair(html: str, url: str) -> DadosDaPagina:
+def _evento_da_sympla(html: str) -> Optional[dict[str, Any]]:
+    """O evento, lido do `__NEXT_DATA__` — ver "A Sympla parou de publicar
+    JSON-LD" no cabeçalho do arquivo. `None` quando a página não é da Sympla
+    ou o formato mudou de novo: cada passo aqui pode falhar sozinho, e uma
+    estrutura inesperada não pode virar exceção no meio da varredura."""
+    bloco = _NEXT_DATA.search(html)
+    if not bloco:
+        return None
+    try:
+        dados = json.loads(bloco.group(1))
+        evento = dados["props"]["pageProps"]["hydrationData"]["eventHydration"]["event"]
+    except (ValueError, TypeError, KeyError):
+        return None
+    return evento if isinstance(evento, dict) else None
+
+
+def extrair(html_: str, url: str) -> DadosDaPagina:
     """Lê a página uma vez e devolve o que ela afirma sobre o evento."""
     dados = DadosDaPagina()
 
-    for bloco in _blocos_json(html or ""):
+    for bloco in _blocos_json(html_ or ""):
         for no in _achatar(bloco):
             if not _e_evento(no):
                 continue
@@ -209,7 +249,32 @@ def extrair(html: str, url: str) -> DadosDaPagina:
                 dados.gratuito = gratuito
             dados.preco_info = dados.preco_info or preco
 
-    marcas = _open_graph(html or "")
+    # Só tenta a Sympla se o JSON-LD não deu data: ele continua sendo a fonte
+    # certa quando existe (Eventbrite, Meetup, Even3), e o `__NEXT_DATA__` é
+    # dado de hidratação, não um formato pensado para ser lido por fora.
+    if not dados.data_inicio:
+        sympla = _evento_da_sympla(html_ or "")
+        if sympla:
+            dados.titulo = dados.titulo or _texto(sympla.get("name"), 300)
+            dados.resumo = dados.resumo or _texto(sympla.get("strippedDetail") or sympla.get("detail"), 2000)
+            dados.data_inicio = dados.data_inicio or _data(sympla.get("startDate"))
+            dados.data_fim = dados.data_fim or _data(sympla.get("endDate"))
+            endereco = sympla.get("eventsAddress")
+            if isinstance(endereco, dict):
+                dados.local = dados.local or _texto(endereco.get("name"), 200)
+                dados.cidade = dados.cidade or _texto(endereco.get("city"), 120)
+                dados.estado = dados.estado or _sigla_do_estado(_texto(endereco.get("state"), 40))
+            # Presença da chave, e não um booleano: é assim que a Sympla marca
+            # evento online na página mesma sem publicar nada em JSON-LD.
+            if sympla.get("onlineInfo"):
+                dados.online = True
+            imagens = sympla.get("images")
+            if isinstance(imagens, dict):
+                dados.imagem = dados.imagem or _imagem(
+                    imagens.get("logoCover") or imagens.get("logoLarge") or imagens.get("logoUrl"), url
+                )
+
+    marcas = _open_graph(html_ or "")
     dados.imagem = dados.imagem or _imagem(marcas.get("og:image"), url)
     dados.titulo = dados.titulo or _texto(marcas.get("og:title"), 300)
     dados.resumo = dados.resumo or _texto(marcas.get("og:description"), 2000)
