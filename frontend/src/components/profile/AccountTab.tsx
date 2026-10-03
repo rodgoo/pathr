@@ -58,7 +58,6 @@ export function AccountTab() {
   });
 
   const save = useMutation(async () => {
-    await authApi.me();
     await profileApi.updateAccount({ name: name.trim() });
     const novoUsername = username.trim().replace(/^@+/, "").toLowerCase();
     // Só quando mudou: regravar o mesmo @ gastaria uma consulta e, se outra

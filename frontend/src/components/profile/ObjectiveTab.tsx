@@ -162,6 +162,13 @@ export function ObjectiveTab() {
   // O filtro de área dos destinos. Abre na área do destino já escolhido.
   const [area, setArea] = useState<Area | "Todas">("Todas");
   const temporizador = useRef<number | undefined>(undefined);
+  // Conta os PUTs de `goals` em ordem de disparo (mesmo padrão de
+  // CampoUsername.tsx). `salvar` é assíncrono e fecha sobre o estado do
+  // render em que foi criado: sem este contador, dois atalhos clicados em
+  // sequência podiam ter as respostas chegando fora de ordem, e a mais
+  // antiga sobrescreveria `contextoSalvo` (e a confirmação "salvo") por
+  // cima do que já tinha avançado.
+  const pedidoContexto = useRef(0);
 
   useEffect(() => {
     if (!carregado.data) return;
@@ -185,14 +192,25 @@ export function ObjectiveTab() {
     // Um salvamento novo cancela o "salvo" do anterior — sem isso, o timer
     // antigo apagaria a confirmação deste antes da hora.
     window.clearTimeout(temporizador.current);
+    // Só PUTs de `goals` entram na corrida: é o único campo que pode disparar
+    // duas vezes sem esperar a resposta da primeira (atalho e blur, ou dois
+    // atalhos em sequência).
+    const numero = mudanca.goals ? ++pedidoContexto.current : null;
     setSalvamento({ campo, estado: "salvando" });
     setPerfil((atual) => (atual ? { ...atual, ...mudanca } : atual));
     try {
       await profileApi.update(mudanca);
-      if (mudanca.goals) setContextoSalvo(metas(contexto).join("\n"));
+      // Uma resposta antiga chegando depois de uma mais nova: descarta. Sem
+      // isto, `contextoSalvo` voltaria para o texto de um PUT que o servidor
+      // já recebeu por cima na sequência correta.
+      if (numero !== null && numero !== pedidoContexto.current) return;
+      // O valor efetivamente enviado nesta chamada, não o `contexto` do
+      // render atual — ele já pode ter avançado para o próximo clique.
+      if (mudanca.goals) setContextoSalvo(mudanca.goals.join("\n"));
       setSalvamento({ campo, estado: "salvo" });
       temporizador.current = window.setTimeout(() => setSalvamento(null), 2500);
     } catch (caught) {
+      if (numero !== null && numero !== pedidoContexto.current) return;
       setSalvamento({
         campo,
         estado: "erro",

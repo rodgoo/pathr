@@ -249,7 +249,11 @@ export const resumes = {
   /** Importa as competências REVISADAS. Sem corpo, importa o que a IA leu. */
   apply: (id: string, body?: { tecnologias?: unknown[]; aplicar_perfil?: boolean }) =>
     api.post<{ imported: number; tags: unknown[] }>(`/resumes/${id}/apply`, body ?? {}).then(depoisDeMudarOPerfil),
-  remove: (id: string) => api.del<void>(`/resumes/${id}`),
+  // Some do que a pessoa tinha, e com ele a leitura de compatibilidade que
+  // a IA calculou usando ESTE currículo: sem invalidar, a vaga guardada
+  // continuaria mostrando uma análise feita com um currículo que não existe
+  // mais.
+  remove: (id: string) => api.del<void>(`/resumes/${id}`).then(depoisDeMudarOPerfil),
 };
 
 /**

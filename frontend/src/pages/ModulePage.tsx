@@ -204,7 +204,12 @@ export function ModulePage() {
                   // repete: quem chegar depois encontra a busca em andamento ou já pronta.
                   void curarModulo(proximo.id);
                 }
-                plan.reload();
+                // Reaproveita a resposta que já chegou em vez de pedir o MESMO
+                // roadmap de novo ao servidor. Só recorre a `reload` quando a
+                // busca acima falhou e a tela precisa de uma chance nova de
+                // buscar o plano atualizado.
+                if (atualizado) plan.set(() => atualizado);
+                else plan.reload();
               }}
             >
               {node.status === "done"

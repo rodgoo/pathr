@@ -127,7 +127,7 @@ export function KpiCards({ overview }: { overview: Overview }) {
 
           <div
             role="group"
-            aria-label={`Últimos ${kpi.series.length} dias`}
+            aria-label={t("kpi.ultimosDias", { n: kpi.series.length })}
             style={{ display: "flex", alignItems: "flex-end", gap: 2, height: 24 }}
           >
             {kpi.series.map((barra, index) => (

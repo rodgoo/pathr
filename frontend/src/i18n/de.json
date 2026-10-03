@@ -388,7 +388,8 @@
     "concluidos": "Abgeschlossen",
     "noPlano": "Auf dem Plan",
     "tempo": "Lernzeit",
-    "ingles": "Englisch"
+    "ingles": "Englisch",
+    "ultimosDias": "Letzte {n} Tage"
   },
   "constancia": {
     "ano": "Jahr",

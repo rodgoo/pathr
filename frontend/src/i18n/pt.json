@@ -372,7 +372,8 @@
     "concluidos": "Concluídos",
     "noPlano": "No plano",
     "tempo": "Tempo de estudo",
-    "ingles": "Inglês"
+    "ingles": "Inglês",
+    "ultimosDias": "Últimos {n} dias"
   },
   "constancia": {
     "ano": "Ano",
