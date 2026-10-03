@@ -483,6 +483,13 @@ def vaga_guardada(vaga_id: str) -> Optional[Vaga]:
 # Fonte que respondeu 429 descansa: insistir a cada listagem só estende o
 # bloqueio, e cada tentativa atrasa a tela.
 _PAUSA_APOS_LIMITE_S = 600
+# 404/5xx é outra coisa: não é "aguarde e tente de novo em breve", é "o
+# endpoint mudou ou caiu" (foi o que aconteceu com a Gupy quando a API aberta
+# saiu do ar). Martelar isso a cada busca só soma 12s de timeout por fonte sem
+# chance nenhuma de dar certo; a pausa é mais longa, mas ainda tenta de novo de
+# tempos em tempos — se a fonte voltar, a listagem volta a usá-la sozinha, sem
+# precisar de deploy.
+_PAUSA_APOS_ERRO_S = 6 * 3600
 _pausada_ate: dict[str, float] = {}
 
 # "Atualizar" ignora a validade, mas não martela a fonte: dois cliques seguidos
@@ -776,6 +783,11 @@ async def buscar(
             logger.warning("fonte de vagas %s falhou: %s %s", fonte, type(resposta).__name__, codigo or "")
             if codigo == 429:
                 _pausada_ate[fonte] = time.monotonic() + _PAUSA_APOS_LIMITE_S
+            elif codigo == 404 or (codigo is not None and codigo >= 500):
+                # Endpoint sumiu ou mudou (ex.: a API aberta da Gupy saindo do
+                # ar) — pausa mais longa, e as outras fontes cobrem enquanto
+                # isso (Remotive, Adzuna, busca em sites).
+                _pausada_ate[fonte] = time.monotonic() + _PAUSA_APOS_ERRO_S
             estado[fonte] = "erro"
             ultimo_estado[fonte] = ("erro", agora)
             continue

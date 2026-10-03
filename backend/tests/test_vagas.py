@@ -8,6 +8,7 @@ esconder o curso que fecha a lacuna.
 
 import asyncio
 
+import httpx
 import pytest
 
 from app.config import settings
@@ -119,6 +120,38 @@ def test_fonte_fora_do_ar_nao_derruba_as_outras(monkeypatch):
     vagas, estado = asyncio.run(V.buscar(["Java"]))
     assert [v.id for v in vagas] == ["gupy:1"]
     assert estado == {"gupy": "ok", "remotive": "erro", "adzuna": "sem_chave", "busca": "sem_chave"}
+
+
+def test_fonte_com_404_pausa_e_nao_martela_na_proxima_busca(monkeypatch):
+    """Simula o que aconteceu com a Gupy: endpoint sumiu (404), não é "aguarde
+    e tente de novo já" como o 429 — a fonte descansa mais, e as outras
+    (aqui, a Remotive) seguem respondendo normalmente a cada busca."""
+    chamadas_gupy = []
+
+    async def gupy(_termo, _regiao=None):
+        chamadas_gupy.append(1)
+        pedido = httpx.Request("GET", "https://employability-portal.gupy.io/api/v1/jobs")
+        resposta = httpx.Response(404, request=pedido)
+        raise httpx.HTTPStatusError("não encontrado", request=pedido, response=resposta)
+
+    async def remotive(_termo, _regiao=None):
+        return [_vaga("remotive:1", "Dev Java remoto", "Java")]
+
+    monkeypatch.setattr(V, "_gupy", gupy)
+    monkeypatch.setattr(V, "_remotive", remotive)
+
+    vagas, estado = asyncio.run(V.buscar(["Java"]))
+    assert estado["gupy"] == "erro"
+    assert [v.id for v in vagas] == ["remotive:1"]
+    assert len(chamadas_gupy) == 1
+
+    # Segunda busca, outro termo (sem limpar o cache — `limpar_cache()` também
+    # zeraria a pausa, que é exatamente o que este teste verifica): a Gupy
+    # está pausada e nem é chamada — só as outras fontes correm.
+    vagas2, estado2 = asyncio.run(V.buscar(["Spring"]))
+    assert estado2["gupy"] == "erro"
+    assert [v.id for v in vagas2] == ["remotive:1"]
+    assert len(chamadas_gupy) == 1  # não cresceu: a Gupy não foi chamada de novo.
 
 
 def test_mesma_vaga_por_dois_termos_aparece_uma_vez_e_cache_evita_nova_chamada(monkeypatch):
