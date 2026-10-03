@@ -117,7 +117,15 @@ export function ListeningPlayer({
   const [naVozDoNavegador, setNaVozDoNavegador] = useState(false);
   const [atual, setAtual] = useState(-1);
   const [mostrarTexto, setMostrarTexto] = useState(false);
-  const cancelado = useRef(false);
+  // Um contador, e não um `cancelado` booleano: um `tocar()` em voo precisa
+  // saber se foi ELE que foi cancelado, não só "alguém cancelou algo". Com um
+  // booleano só, um segundo clique em "Ouvir" — depois de trocar de pergunta,
+  // mas antes do primeiro pedido (atrasado) responder — reabria a corrida:
+  // o novo `tocar()` zerava o booleano para começar, e o pedido antigo, ao
+  // voltar, lia esse mesmo booleano e achava que não tinha sido cancelado.
+  // Cada chamada de `tocar()`/`parar()` soma 1; quem confere o valor
+  // depois do `await` só segue se ele continuar igual ao que capturou.
+  const execucao = useRef(0);
   // O áudio em curso, para poder pará-lo. A síntese do navegador é global e
   // se cancela sozinha; um `<audio>` é um objeto, e sem guardá-lo aqui o
   // botão "Parar" não teria o que parar.
@@ -138,15 +146,20 @@ export function ListeningPlayer({
   // global do navegador e não morre com o componente.
   useEffect(() => {
     return () => {
-      cancelado.current = true;
+      execucao.current += 1;
       calar();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Item novo, áudio novo: sem isto, avançar a pergunta manteria a fala
-  // anterior tocando por cima da próxima.
+  // anterior tocando por cima da próxima. Precisa invalidar a GERAÇÃO, e não
+  // só chamar `calar()`: era só o `<audio>`/sintetizador ATUAL que parava,
+  // mas um `tocar()` ainda preparando o áudio do diálogo anterior não sabia
+  // que devia desistir — ele terminava de baixar e tocava por cima do
+  // diálogo novo. Era a voz de uma pergunta tocando em cima da próxima.
   useEffect(() => {
+    execucao.current += 1;
     calar();
     setTocando(false);
     setPreparando(false);
@@ -161,8 +174,11 @@ export function ListeningPlayer({
     return Math.max(0, nomes.indexOf(quem));
   }
 
-  function terminou() {
-    if (cancelado.current) return;
+  /** `minha` é a geração que pediu para tocar — só mexe no estado se ainda
+   * for a atual. Uma chamada antiga, que chega depois de cancelada (ou depois
+   * de uma nova ter começado), termina aqui sem efeito nenhum. */
+  function terminou(minha: number) {
+    if (execucao.current !== minha) return;
     tocador.current = null;
     setTocando(false);
     setAtual(-1);
@@ -172,22 +188,22 @@ export function ListeningPlayer({
    *
    * Um de cada vez, e não todos de uma vez: é o encadeamento por `onended`
    * que mantém o destaque da linha em curso e a ordem das falas. */
-  function tocarEmSequencia(audios: HTMLAudioElement[], indice: number) {
-    if (cancelado.current || indice >= audios.length) {
-      terminou();
+  function tocarEmSequencia(audios: HTMLAudioElement[], indice: number, minha: number) {
+    if (execucao.current !== minha || indice >= audios.length) {
+      terminou(minha);
       return;
     }
     const audio = audios[indice];
     tocador.current = audio;
     setAtual(indice);
-    audio.onended = () => tocarEmSequencia(audios, indice + 1);
+    audio.onended = () => tocarEmSequencia(audios, indice + 1, minha);
     // Um `play()` recusado (autoplay, aba em segundo plano) não pode deixar o
     // botão preso em "Parar": trata como fim.
-    audio.play().catch(() => terminou());
+    audio.play().catch(() => terminou(minha));
   }
 
   /** O caminho antigo: o sintetizador do próprio navegador. */
-  function tocarComSintese() {
+  function tocarComSintese(minha: number) {
     if (!temSintese) {
       // Nem voz do servidor, nem sintetizador: não há como tocar nada. O
       // estado precisa mudar MESMO assim, porque é dele que depende o aviso
@@ -195,7 +211,7 @@ export function ListeningPlayer({
       // aconteceu nada" é o pior jeito possível de falhar: quem está do outro
       // lado não sabe se o defeito é do app, do som do computador ou dele.
       setNaVozDoNavegador(true);
-      terminou();
+      terminou(minha);
       return;
     }
     setNaVozDoNavegador(true);
@@ -209,8 +225,8 @@ export function ListeningPlayer({
       // estrangeira, e a velocidade nativa do sintetizador atropela quem
       // ainda está aprendendo.
       fase.rate = 0.92;
-      fase.onstart = () => !cancelado.current && setAtual(indice);
-      if (indice === falas.length - 1) fase.onend = terminou;
+      fase.onstart = () => execucao.current === minha && setAtual(indice);
+      if (indice === falas.length - 1) fase.onend = () => terminou(minha);
       window.speechSynthesis.speak(fase);
     });
   }
@@ -218,7 +234,10 @@ export function ListeningPlayer({
   async function tocar() {
     if (falas.length === 0) return;
     calar();
-    cancelado.current = false;
+    // Soma 1 e guarda a própria geração: é o que invalida qualquer `tocar()`
+    // anterior ainda em voo (inclusive um pedido de voz neural que só
+    // responde depois deste clique) sem depender de quem chegou primeiro.
+    const minha = (execucao.current += 1);
     setTocando(true);
     setPreparando(true);
 
@@ -230,24 +249,24 @@ export function ListeningPlayer({
       idioma,
     );
 
-    // Parar durante a espera: a pessoa desistiu, e o áudio que acabou de
-    // chegar não pode começar a tocar depois disso.
-    if (cancelado.current) {
-      setPreparando(false);
-      return;
-    }
+    // Outra geração começou enquanto este pedido estava no ar — "Parar",
+    // outro clique em "Ouvir" ou a troca de pergunta. O áudio que acabou de
+    // chegar não pode mexer no estado nem começar a tocar: nem o seu
+    // "preparando" pode ser desligado, porque a geração atual pode muito bem
+    // estar com o dela ainda ligado.
+    if (execucao.current !== minha) return;
     setPreparando(false);
 
     if (audios) {
       setNaVozDoNavegador(false);
-      tocarEmSequencia(audios, 0);
+      tocarEmSequencia(audios, 0, minha);
       return;
     }
-    tocarComSintese();
+    tocarComSintese(minha);
   }
 
   function parar() {
-    cancelado.current = true;
+    execucao.current += 1;
     calar();
     setTocando(false);
     setPreparando(false);
@@ -289,6 +308,17 @@ export function ListeningPlayer({
           color={ACC3}
           onClick={() => setMostrarTexto((atual) => !atual)}
         />
+
+        {/* O botão já diz "Preparando o áudio…" no aria-label/title, mas isso
+            só aparece ao passar o mouse ou para quem usa leitor de tela — e a
+            espera (gerar voz neural no servidor) é longa o bastante para
+            parecer que o clique não funcionou. Por isso o mesmo aviso
+            também fica visível na tela, como o "Corrigindo…" do nivelamento. */}
+        {preparando ? (
+          <span style={{ fontSize: 11, color: TEXT.faint }} role="status">
+            {t("idiomas.listening.preparandoAudio")}
+          </span>
+        ) : null}
 
         <span style={{ fontSize: 11, color: TEXT.faint, marginLeft: "auto" }}>
           {falas.length === 1
