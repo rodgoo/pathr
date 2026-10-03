@@ -20,6 +20,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from app.ai_providers import AiProviderError
 from app.config import settings
 from app.limite_corpo import LimiteDeCorpo
+from app.limite_requisicoes import LimiteDeRequisicoes
 from app.middleware_usuario import UsuarioDaRequisicao
 from app.seguranca_http import CabecalhosDeSeguranca
 from app.services import eventos
@@ -163,6 +164,12 @@ app.add_middleware(UsuarioDaRequisicao)
 # Corpo grande demais é recusado antes de qualquer leitura. Por dentro dos
 # cabeçalhos de segurança e do CORS, para o 413 chegar legível à tela.
 app.add_middleware(LimiteDeCorpo, maximo_bytes=settings.max_request_mb * 1024 * 1024)
+# Teto geral por IP — a API não fica atrás da Cloudflare (ver
+# app/limite_requisicoes.py), então esta é a única barreira contra
+# inundação. O mais externo dos middlewares "baratos" (por dentro só de
+# CabecalhosDeSeguranca/CORS), para recusar sem pagar o custo de GZip,
+# UsuarioDaRequisicao ou LimiteDeCorpo.
+app.add_middleware(LimiteDeRequisicoes)
 # Cabeçalhos de segurança em TODA resposta, inclusive erro e 429 — por isso
 # por fora dos middlewares que respondem sozinhos. Ver app/seguranca_http.py.
 app.add_middleware(CabecalhosDeSeguranca)
