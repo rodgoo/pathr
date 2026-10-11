@@ -3094,96 +3094,209 @@
     }
   },
   "newsletter": {
-    "titulo": "Newsletter",
-    "explica": "Real tech news, curated from the web based on the topics you choose, delivered straight to your email on the days and at the times you set.",
-    "avisoPausada": "The newsletter is currently paused. Nothing will be sent until it is reactivated.",
-    "avisoSemFonte": "No search source has been configured (TAVILY_API_KEY or BRAVE_API_KEY). Without it, nothing is found.",
+    "kicker": "Newsletter",
+    "heroVazio": "Create your tech newsletter",
+    "heroVazioSub": "Choose what you want to follow and when you want to receive updates. The articles will be sent directly to your email.",
+    "heroFrase": "{quando}, at {hora}, you'll receive {combos} in your email.",
+    "heroFraseSub": "Real news from the web, with photos and links. None of it is written by AI.",
+    "ativa": "Active",
+    "pausada": "Leisurely",
+    "statProximo": "Next shipment",
+    "statUltimo": "Latest edition",
+    "statDestino": "Arrives at",
+    "nunca": "not yet sent",
+    "nenhum": "none scheduled",
+    "avisoPausada": "Sending is paused in the Operations dashboard. Nothing will be sent until you resume it there.",
+    "avisoSemFonte": "No search source configured (TAVILY_API_KEY or BRAVE_API_KEY): without it, nothing is found.",
     "avisoSemEmail": "Email (Brevo) is not configured in this environment: the message does not reach the inbox.",
-    "tecnologias": "Technologies",
-    "tecnologiasAjuda": "Languages and subjects. Add as many as you like, up t{max}s.",
-    "adicionarRotulo": "Add technology",
-    "adicionarPlaceholder": "Examples: Java, Rust, Kubernetes…",
-    "adicionar": "Add",
-    "remover": "Remove {nome}",
-    "sugestoes": "Suggestions",
-    "angulos": "What to watch",
-    "angulosAjuda": "Each angle complements each technology, and they build on one another.",
+    "tecnologias": {
+      "titulo": "What's it about?",
+      "sub": "Languages, frameworks, or topics you want to follow.",
+      "placeholder": "Type in a technology and press Enter",
+      "rotulo": "Add technology",
+      "adicionar": "Add",
+      "remover": "Remove {nome}",
+      "sugestoes": "Suggestions",
+      "vazio": "No technology yet. Enter one above or tap a suggestion.",
+      "limite": "You have reached the limit for {max} technologies."
+    },
+    "angulos": {
+      "titulo": "What should I pair it with?",
+      "sub": "Check as many as you like: each one is compatible with every technology."
+    },
     "angulo": {
-      "noticias": "General News",
-      "novidades": "What's New",
-      "trabalhos": "Jobs",
-      "polemicas": "Controversies"
+      "noticias": {
+        "nome": "News",
+        "desc": "What's going on, in general."
+      },
+      "novidades": {
+        "nome": "What's New",
+        "desc": "New releases, versions, and announcements."
+      },
+      "trabalhos": {
+        "nome": "Jobs",
+        "desc": "Job openings, salaries, and the job market."
+      },
+      "polemicas": {
+        "nome": "Controversies",
+        "desc": "Community debates and controversies."
+      }
     },
-    "combinacoes": "Combinations",
-    "combinacoesAjuda": "This is what we will be aiming for. Each one already embodies the technology ecosystem—not just its name.",
-    "combinacoesVazio": "Select at least one technology to view the combinations.",
-    "combinacoesTotal": "{n} {max} combinations",
-    "combinacoesDemais": "Too many combinations: remove some technology or angle.",
-    "inclui": "includes {termos}",
-    "ecossistemaDescoberto": "The ecosystem is discovered during the search",
-    "quando": "When",
-    "frequencia": "Frequency",
-    "frequenciaOpcao": {
+    "combinacoes": {
+      "titulo": "What will be picked up",
+      "sub": "Each technology intersects with every angle and already brings its own ecosystem with it—not just its name.",
+      "vazio": "Choose a technology and a perspective to see the combinations here.",
+      "inclui": "Includes",
+      "descoberto": "ecosystem discovered during the search",
+      "uma": "1 combination",
+      "varias": "{n} combinations",
+      "total": "{n} by {max}",
+      "demais": "Too many combinations. Remove one technology or one angle."
+    },
+    "quando": {
+      "titulo": "When you receive it",
+      "sub": "Choose the frequency, days, and time.",
+      "frequencia": "Frequency",
+      "dias": "Days of the week",
+      "diaFixo": "This shortcut already sets the days.",
+      "diaDoMes": "Day of the month",
+      "diaDoMesNota": "Until the 28th, which occurs every month.",
+      "horario": "Schedule",
+      "horarioNota": "On the hour, in the {fuso} time zone.",
+      "outroHorario": "A different time",
+      "quantidade": "Subjects by Combination",
+      "quantidadeNota": "From 1 to {max}. More articles, longer email.",
+      "menos": "One less",
+      "mais": "One more"
+    },
+    "freq": {
+      "diaria": {
+        "nome": "Every day",
+        "desc": "Monday through Sunday"
+      },
+      "dias_uteis": {
+        "nome": "Business days",
+        "desc": "Monday through Friday"
+      },
+      "fim_de_semana": {
+        "nome": "Weekend",
+        "desc": "Saturday and Sunday"
+      },
+      "semanal": {
+        "nome": "Weekly",
+        "desc": "One day a week"
+      },
+      "mensal": {
+        "nome": "Monthly",
+        "desc": "One day a month"
+      },
+      "personalizada": {
+        "nome": "Customized",
+        "desc": "The days you choose"
+      }
+    },
+    "frase": {
       "diaria": "Every day",
-      "dias_uteis": "Business days",
-      "fim_de_semana": "Weekend",
-      "semanal": "Once a week",
-      "mensal": "Once a month",
-      "personalizada": "Days I Choose"
+      "dias_uteis": "Monday through Friday",
+      "fim_de_semana": "On Saturdays and Sundays",
+      "mensal": "On day {dia} of every month",
+      "e": "and",
+      "personalizada": "On {dias}"
     },
-    "diasDaSemana": "Days of the Week",
-    "dia": [
-      "Mon",
-      "To have",
+    "diaCurto": {
+      "0": "M",
+      "1": "T",
+      "2": "W",
+      "3": "T",
+      "4": "F",
+      "5": "S",
+      "6": "S"
+    },
+    "diaSigla": [
+      "Tue",
+      "to have",
       "Wed",
       "Thu",
-      "Sex",
+      "Fri",
       "Sat",
       "Sun"
     ],
-    "diaDoMes": "Day of the month",
-    "diaDoMesNota": "It runs through the 28th: There aren't any 29th or 31st days in every month.",
-    "horario": "Schedule",
-    "horarioNota": "It arrives around {hora}, during the {fuso} time slot. Shipments are made on the hour.",
-    "porCombinacao": "Subjects by Combination",
-    "envio": "Automatic shipping",
-    "ligada": "On",
-    "pausada": "Paused",
-    "proximo": "Next issue: {data}",
-    "semProximo": "No scheduled shipments.",
-    "ultimo": "Last updated: {data}",
-    "naoSalvo": "There are unsaved changes.",
-    "salvar": "Save",
-    "salvando": "Saving…",
-    "salvo": "Saved.",
-    "erroSalvar": "I couldn't save it. Please check the fields.",
-    "procurar": "Search Now",
-    "procurando": "Searching…",
-    "resultados": "{n} articles from the past {dias} days",
-    "semResultados": "No new results found for these combinations.",
-    "marcarTodas": "Select all",
-    "enviarSelecionadas": "Send {n} to {destino}",
-    "enviarAgora": "Submit the edit now",
-    "enviarAgoraAjuda": "Search and send using the saved settings.",
-    "enviando": "Sending…",
-    "enviada": "Sent: {assunto}",
-    "naoEnviada": "Not sent: {motivo}",
+    "diaNome": [
+      "Monday",
+      "Tuesday",
+      "Wednesday",
+      "Thursday",
+      "Friday",
+      "Saturday",
+      "Sunday"
+    ],
+    "diaToda": [
+      "Every Monday",
+      "Every Tuesday",
+      "Every Wednesday",
+      "Every Thursday",
+      "Every Friday",
+      "Every Saturday",
+      "Every Sunday"
+    ],
+    "acoes": {
+      "salvar": "Save changes",
+      "salvando": "Saving…",
+      "descartar": "Discard",
+      "procurar": "View news now",
+      "procurando": "Searching…",
+      "enviar": "Submit the edit now",
+      "enviarAjuda": "Search and send now, with the settings saved.",
+      "enviando": "Sending…",
+      "alteracoes": "Unsaved changes",
+      "tudoSalvo": "All saved"
+    },
+    "resultados": {
+      "titulo": "Search Preview",
+      "resumo": "{n} Articles from the past {dias} days",
+      "selecionadas": "{n} selected",
+      "todas": "Select all",
+      "nenhuma": "Clear Selection",
+      "enviar": "Send \"{n}\" to my email",
+      "vazio": "Nothing new for these combinations over the past {dias} days.",
+      "selecionar": "Select: {titulo}"
+    },
+    "aviso": {
+      "salvo": "Changes saved.",
+      "erroSalvar": "I couldn't save it. Please check the fields.",
+      "enviada": "Submitted version: {assunto}",
+      "naoEnviada": "Not sent: {motivo}"
+    },
     "via": "via {termo}",
-    "historico": "Submitted editions",
-    "historicoVazio": "No edits have been submitted yet.",
-    "abrirArquivo": "Open full file",
-    "materias": "{n} articles",
-    "tipo": {
+    "historico": {
+      "titulo": "Submitted editions",
+      "sub": "The latest ones that arrived in your email.",
+      "vazio": "No edits have been submitted yet.",
+      "abrir": "Open file",
       "agendada": "scheduled",
       "manual": "manual"
     },
+    "materias": {
+      "uma": "1 article",
+      "varias": "{n} articles"
+    },
     "pagina": {
       "titulo": "Newsletter",
-      "subtitulo": "The issues sent to your email, with the articles and links.",
+      "sub": "The issues sent to your email, with the articles and links.",
       "voltar": "Back to PathR",
+      "configurar": "Configure",
       "carregando": "Loading issues…",
-      "vazio": "No issues have been submitted yet. Set it up and submit your first one under Settings › Newsletter.",
-      "configurar": "Set up a newsletter"
+      "vazioTitulo": "No editions yet",
+      "vazioTexto": "Configure the themes and send the first issue in Settings › Newsletter."
+    },
+    "diaPlural": {
+      "0": "Mondays",
+      "1": "Tuesdays",
+      "2": "Wednesdays",
+      "3": "Thursdays",
+      "4": "Fridays",
+      "5": "Saturdays",
+      "6": "Sundays"
     }
   }
 }

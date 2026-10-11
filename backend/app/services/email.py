@@ -768,17 +768,30 @@ _ANGULO_ROTULO = {
     "trabalhos": "Empregos",
     "polemicas": "Polêmicas",
 }
+# A mesma cor de cada ângulo que o app usa (NewsletterCard.tsx): roxo para
+# notícias, azul para novidades, verde para empregos, âmbar para polêmicas.
+_AZUL = "#6aa6de"
+_ANGULO_COR = {
+    "noticias": _ROXO_CLARO,
+    "novidades": _AZUL,
+    "trabalhos": _VERDE,
+    "polemicas": _AMBAR,
+}
 
 
 def _materia(item: dict[str, Any]) -> str:
-    """Uma notícia: etiqueta, título-link, trecho da própria fonte, veículo e data.
+    """Uma notícia como cartão: foto, etiqueta, título, trecho, origem e "Ler".
 
-    Tudo escapado: título e trecho vêm de página de terceiro.
+    Tudo escapado: título e trecho vêm de página de terceiro. Em tabela e com
+    estilo inline, pelos motivos do cabeçalho deste módulo; a foto fica no
+    topo, sem recuo, e o texto abaixo continua legível com a imagem bloqueada.
     """
     url = str(item.get("url") or "")
     if not url.startswith(("http://", "https://")):
         return ""
-    etiqueta = f"{item.get('topico', '')} + {_ANGULO_ROTULO.get(str(item.get('categoria')), 'Notícias')}"
+    angulo = str(item.get("categoria") or "noticias")
+    cor = _ANGULO_COR.get(angulo, _ROXO_CLARO)
+    etiqueta = f"{item.get('topico', '')} + {_ANGULO_ROTULO.get(angulo, 'Notícias')}"
     publicado = str(item.get("publicado_em") or "")
     try:
         data = datetime.fromisoformat(publicado).strftime("%d/%m") if publicado else ""
@@ -788,39 +801,44 @@ def _materia(item: dict[str, Any]) -> str:
     # puro da tecnologia, quem lê entende por que "Java" trouxe isso.
     termo = str(item.get("termo") or "")
     via = f"via {termo}" if termo and termo.lower() != str(item.get("topico") or "").lower() else ""
-    origem = " · ".join(p for p in (str(item.get("fonte") or ""), data, via) if p)
+    origem = " &middot; ".join(escape(p) for p in (str(item.get("fonte") or ""), data, via) if p)
     trecho = str(item.get("resumo") or "")
-    # A foto da matéria, clicável como o título. Só https (a política do
-    # `limpar_selecao` já filtra; aqui é a segunda trava, porque este é o ponto
-    # que escreve no HTML). Com imagem bloqueada pelo cliente, o título logo
-    # abaixo carrega a matéria sozinho: a foto é acréscimo, nunca o conteúdo.
-    imagem = str(item.get("imagem") or "")
-    foto = (
-        f'<a href="{escape(url, quote=True)}" style="display:block;padding-top:10px">'
-        f'<img src="{escape(imagem, quote=True)}" alt="" width="504" '
-        f'style="display:block;width:100%;max-width:504px;height:auto;max-height:260px;'
-        f'border:1px solid {_LINHA};border-radius:8px" /></a>'
-        if imagem.startswith("https://")
-        else ""
-    )
     corpo_trecho = (
         f'<div style="font-family:{_FONTE};font-size:14px;line-height:1.6;color:{_TINTA_SUAVE};'
-        f'padding-top:6px">{_nitido(escape(trecho))}</div>'
+        f'padding-top:8px">{_nitido(escape(trecho))}</div>'
         if trecho
+        else ""
+    )
+    href = escape(url, quote=True)
+    # A foto, clicável como o título. Só https (o `limpar_selecao` já filtra;
+    # aqui é a segunda trava, porque este é o ponto que escreve no HTML). Com a
+    # imagem bloqueada pelo cliente, o título logo abaixo carrega a matéria: a
+    # foto é acréscimo, nunca o conteúdo.
+    imagem = str(item.get("imagem") or "")
+    foto = (
+        f'<tr><td style="font-size:0;line-height:0"><a href="{href}" style="display:block">'
+        f'<img src="{escape(imagem, quote=True)}" alt="" width="504" '
+        f'style="display:block;width:100%;max-width:504px;height:auto;border:0;'
+        f'border-radius:12px 12px 0 0" /></a></td></tr>'
+        if imagem.startswith("https://")
         else ""
     )
     return f"""
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
-       style="margin:16px 0 0">
-  <tr><td style="border-top:1px solid {_LINHA};padding-top:14px">
-    <div style="font-family:{_FONTE};font-size:11px;font-weight:600;letter-spacing:.08em;
-                text-transform:uppercase;color:{_ROXO}">{_nitido(escape(etiqueta))}</div>
-    {foto}
-    <a href="{escape(url, quote=True)}"
-       style="font-family:{_FONTE};font-size:16px;line-height:1.4;font-weight:600;
-              color:{_TINTA};text-decoration:none;display:block;padding-top:4px">{_nitido(escape(str(item.get("titulo") or url)))}</a>
+       bgcolor="{_SUPERFICIE}"
+       style="margin:14px 0 0;{_preto(_SUPERFICIE)};border:1px solid {_LINHA};border-radius:12px">
+  {foto}
+  <tr><td style="padding:14px 16px 16px">
+    <div style="font-family:{_FONTE};font-size:11px;font-weight:700;letter-spacing:.08em;
+                text-transform:uppercase;color:{cor}">{_nitido("&#9679; " + escape(etiqueta))}</div>
+    <a href="{href}"
+       style="font-family:{_FONTE};font-size:17px;line-height:1.4;font-weight:600;
+              color:{_TINTA};text-decoration:none;display:block;padding-top:6px">{_nitido(escape(str(item.get("titulo") or url)))}</a>
     {corpo_trecho}
-    <div style="font-family:{_FONTE};font-size:12px;color:{_TINTA_FRACA};padding-top:6px">{_nitido(escape(origem))}</div>
+    <div style="font-family:{_FONTE};font-size:12px;color:{_TINTA_FRACA};padding-top:10px">{_nitido(origem)}</div>
+    <a href="{href}"
+       style="font-family:{_FONTE};font-size:13px;font-weight:600;color:{cor};
+              text-decoration:none;display:inline-block;padding-top:10px">{_nitido("Ler mat&eacute;ria &rarr;")}</a>
   </td></tr>
 </table>""".strip()
 
@@ -828,24 +846,28 @@ def _materia(item: dict[str, Any]) -> str:
 def send_newsletter(
     to_email: str, to_name: str, assunto: str, grupos: list[tuple[str, list[dict[str, Any]]]]
 ) -> bool:
-    """A edição: um bloco por tecnologia, as matérias dentro."""
+    """A edição: um bloco por tecnologia, as matérias dentro como cartões."""
     total = sum(len(itens) for _, itens in grupos)
     if not total:
         return False
     nome = _primeiro_nome(to_name)
     blocos = "".join(
-        f'<div style="font-family:{_FONTE};font-size:18px;font-weight:600;letter-spacing:-.01em;'
-        f'color:{_TINTA};padding:26px 0 0">{_nitido(escape(tema))}</div>'
+        f'<div style="font-family:{_FONTE};font-size:19px;font-weight:600;letter-spacing:-.01em;'
+        f'color:{_TINTA};padding:30px 0 0;border-top:1px solid {_LINHA};margin-top:26px">'
+        f'{_nitido(escape(tema))} '
+        f'<span style="font-size:12px;font-weight:400;color:{_TINTA_FRACA}">'
+        f'{_nitido(_plural(len(itens), "matéria", "matérias"))}</span></div>'
         + "".join(_materia(item) for item in itens)
         for tema, itens in grupos
     )
     cor = _ROXO
+    temas = ", ".join(tema for tema, _ in grupos[:4])
     miolo = (
         _cabecalho(cor)
-        + _titulo("Newsletter", f"Suas notícias{', ' + nome if nome else ''}.", cor)
+        + _titulo("Newsletter", f"Suas notícias de tecnologia{', ' + nome if nome else ''}.", cor)
         + _texto(
-            f'<b style="color:{_TINTA}">{total} {"matéria" if total == 1 else "matérias"}</b> '
-            "reais de busca, nos temas e dias que você escolheu."
+            f'<b style="color:{_TINTA}">{_plural(total, "matéria", "matérias")}</b> '
+            f"sobre {escape(temas)}, escolhidas pelos temas e dias que você definiu."
         )
         + blocos
         + _botao("Ajustar temas e dias", settings.frontend_url, cor)
@@ -855,7 +877,7 @@ def send_newsletter(
         to_email,
         to_name,
         assunto,
-        _pagina(", ".join(tema for tema, _ in grupos[:4]), miolo),
+        _pagina(f"{_plural(total, 'matéria', 'matérias')}: {temas}", miolo),
     )
 
 

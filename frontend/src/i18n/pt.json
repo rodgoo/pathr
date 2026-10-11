@@ -2855,96 +2855,209 @@
     "notaRemover": "Remover aqui desliga a chave no PathR. O aparelho pode continuar guardando-a — apague-a também no gerenciador de senhas se quiser."
   },
   "newsletter": {
-    "titulo": "Newsletter",
-    "explica": "Notícias reais de tecnologia, buscadas na web pelos temas que você escolher, chegam só no seu e-mail, nos dias e na hora que você definir.",
-    "avisoPausada": "A newsletter está pausada em Operação. Nada é enviado até religar.",
-    "avisoSemFonte": "Nenhuma fonte de busca configurada (TAVILY_API_KEY ou BRAVE_API_KEY). Sem ela, nada é encontrado.",
+    "kicker": "Newsletter",
+    "heroVazio": "Monte sua newsletter de tecnologia",
+    "heroVazioSub": "Escolha o que acompanhar e quando receber. As matérias chegam só no seu e-mail.",
+    "heroFrase": "{quando}, às {hora}, você recebe {combos} no seu e-mail.",
+    "heroFraseSub": "Notícias reais da web, com foto e link. Nada é escrito por IA.",
+    "ativa": "Ativa",
+    "pausada": "Pausada",
+    "statProximo": "Próximo envio",
+    "statUltimo": "Última edição",
+    "statDestino": "Chega em",
+    "nunca": "ainda não enviada",
+    "nenhum": "nenhum programado",
+    "avisoPausada": "O envio está pausado no painel de Operação. Nada sai até religar lá.",
+    "avisoSemFonte": "Nenhuma fonte de busca configurada (TAVILY_API_KEY ou BRAVE_API_KEY): sem ela, nada é encontrado.",
     "avisoSemEmail": "O e-mail (Brevo) não está configurado neste ambiente: a edição não chega à caixa de entrada.",
-    "tecnologias": "Tecnologias",
-    "tecnologiasAjuda": "Linguagens e assuntos. Some quantas quiser, até {max}.",
-    "adicionarRotulo": "Adicionar tecnologia",
-    "adicionarPlaceholder": "Ex.: Java, Rust, Kubernetes…",
-    "adicionar": "Adicionar",
-    "remover": "Remover {nome}",
-    "sugestoes": "Sugestões",
-    "angulos": "O que acompanhar",
-    "angulosAjuda": "Cada ângulo se combina com cada tecnologia, e eles se acumulam.",
+    "tecnologias": {
+      "titulo": "Sobre o quê?",
+      "sub": "Linguagens, frameworks ou assuntos que você quer acompanhar.",
+      "placeholder": "Digite uma tecnologia e tecle Enter",
+      "rotulo": "Adicionar tecnologia",
+      "adicionar": "Adicionar",
+      "remover": "Remover {nome}",
+      "sugestoes": "Sugestões",
+      "vazio": "Nenhuma tecnologia ainda. Digite uma acima ou toque numa sugestão.",
+      "limite": "Você chegou ao limite de {max} tecnologias."
+    },
+    "angulos": {
+      "titulo": "O que acompanhar?",
+      "sub": "Marque quantos quiser: cada um se combina com cada tecnologia."
+    },
     "angulo": {
-      "noticias": "Notícias em geral",
-      "novidades": "Novidades",
-      "trabalhos": "Empregos",
-      "polemicas": "Polêmicas"
+      "noticias": {
+        "nome": "Notícias",
+        "desc": "O que está acontecendo, em geral."
+      },
+      "novidades": {
+        "nome": "Novidades",
+        "desc": "Lançamentos, versões e anúncios."
+      },
+      "trabalhos": {
+        "nome": "Empregos",
+        "desc": "Vagas, salários e mercado de trabalho."
+      },
+      "polemicas": {
+        "nome": "Polêmicas",
+        "desc": "Debates e controvérsias da comunidade."
+      }
     },
-    "combinacoes": "Combinações",
-    "combinacoesAjuda": "É isto que será buscado. Cada uma já traz o ecossistema da tecnologia, não só o nome dela.",
-    "combinacoesVazio": "Escolha ao menos uma tecnologia para ver as combinações.",
-    "combinacoesTotal": "{n} de {max} combinações",
-    "combinacoesDemais": "Combinações demais: tire alguma tecnologia ou ângulo.",
-    "inclui": "inclui {termos}",
-    "ecossistemaDescoberto": "o ecossistema é descoberto na busca",
-    "quando": "Quando",
-    "frequencia": "Frequência",
-    "frequenciaOpcao": {
+    "combinacoes": {
+      "titulo": "O que vai ser buscado",
+      "sub": "Cada tecnologia se cruza com cada ângulo, e já traz o ecossistema dela, não só o nome.",
+      "vazio": "Escolha uma tecnologia e um ângulo para ver as combinações aqui.",
+      "inclui": "Inclui",
+      "descoberto": "ecossistema descoberto na hora da busca",
+      "uma": "1 combinação",
+      "varias": "{n} combinações",
+      "total": "{n} de {max}",
+      "demais": "Combinações demais. Tire uma tecnologia ou um ângulo."
+    },
+    "quando": {
+      "titulo": "Quando receber",
+      "sub": "Escolha a frequência, os dias e o horário.",
+      "frequencia": "Frequência",
+      "dias": "Dias da semana",
+      "diaFixo": "Este atalho já define os dias.",
+      "diaDoMes": "Dia do mês",
+      "diaDoMesNota": "Até o dia 28, que existe em todo mês.",
+      "horario": "Horário",
+      "horarioNota": "Em ponto, no horário de {fuso}.",
+      "outroHorario": "Outro horário",
+      "quantidade": "Matérias por combinação",
+      "quantidadeNota": "De 1 a {max}. Mais matérias, e-mail mais longo.",
+      "menos": "Menos uma",
+      "mais": "Mais uma"
+    },
+    "freq": {
+      "diaria": {
+        "nome": "Todo dia",
+        "desc": "Segunda a domingo"
+      },
+      "dias_uteis": {
+        "nome": "Dias úteis",
+        "desc": "Segunda a sexta"
+      },
+      "fim_de_semana": {
+        "nome": "Fim de semana",
+        "desc": "Sábado e domingo"
+      },
+      "semanal": {
+        "nome": "Semanal",
+        "desc": "Um dia por semana"
+      },
+      "mensal": {
+        "nome": "Mensal",
+        "desc": "Um dia por mês"
+      },
+      "personalizada": {
+        "nome": "Personalizada",
+        "desc": "Os dias que escolher"
+      }
+    },
+    "frase": {
       "diaria": "Todo dia",
-      "dias_uteis": "Dias úteis",
-      "fim_de_semana": "Fim de semana",
-      "semanal": "Uma vez por semana",
-      "mensal": "Uma vez por mês",
-      "personalizada": "Dias que eu escolher"
+      "dias_uteis": "De segunda a sexta",
+      "fim_de_semana": "Aos sábados e domingos",
+      "mensal": "Todo dia {dia} do mês",
+      "e": "e",
+      "personalizada": "Às {dias}"
     },
-    "diasDaSemana": "Dias da semana",
-    "dia": {
-      "0": "Seg",
-      "1": "Ter",
-      "2": "Qua",
-      "3": "Qui",
-      "4": "Sex",
-      "5": "Sáb",
-      "6": "Dom"
+    "diaCurto": {
+      "0": "S",
+      "1": "T",
+      "2": "Q",
+      "3": "Q",
+      "4": "S",
+      "5": "S",
+      "6": "D"
     },
-    "diaDoMes": "Dia do mês",
-    "diaDoMesNota": "Vai até o dia 28: 29 a 31 não existem em todo mês.",
-    "horario": "Horário",
-    "horarioNota": "Chega por volta de {hora}, no horário de {fuso}. O envio é por hora cheia.",
-    "porCombinacao": "Matérias por combinação",
-    "envio": "Envio automático",
-    "ligada": "Ligado",
-    "pausada": "Pausado",
-    "proximo": "Próximo envio: {data}",
-    "semProximo": "Nenhum envio programado.",
-    "ultimo": "Última edição: {data}",
-    "naoSalvo": "Há alterações não salvas.",
-    "salvar": "Salvar",
-    "salvando": "Salvando…",
-    "salvo": "Salvo.",
-    "erroSalvar": "Não consegui salvar. Confira os campos.",
-    "procurar": "Procurar agora",
-    "procurando": "Procurando…",
-    "resultados": "{n} matérias nos últimos {dias} dias",
-    "semResultados": "Nada novo encontrado para estas combinações.",
-    "marcarTodas": "Marcar todas",
-    "enviarSelecionadas": "Enviar {n} para {destino}",
-    "enviarAgora": "Enviar edição agora",
-    "enviarAgoraAjuda": "Busca e envia com a configuração salva.",
-    "enviando": "Enviando…",
-    "enviada": "Enviada: {assunto}",
-    "naoEnviada": "Não enviada: {motivo}",
+    "diaSigla": {
+      "0": "seg",
+      "1": "ter",
+      "2": "qua",
+      "3": "qui",
+      "4": "sex",
+      "5": "sáb",
+      "6": "dom"
+    },
+    "diaNome": {
+      "0": "Segunda-feira",
+      "1": "Terça-feira",
+      "2": "Quarta-feira",
+      "3": "Quinta-feira",
+      "4": "Sexta-feira",
+      "5": "Sábado",
+      "6": "Domingo"
+    },
+    "diaToda": {
+      "0": "Toda segunda-feira",
+      "1": "Toda terça-feira",
+      "2": "Toda quarta-feira",
+      "3": "Toda quinta-feira",
+      "4": "Toda sexta-feira",
+      "5": "Todo sábado",
+      "6": "Todo domingo"
+    },
+    "acoes": {
+      "salvar": "Salvar alterações",
+      "salvando": "Salvando…",
+      "descartar": "Descartar",
+      "procurar": "Ver notícias agora",
+      "procurando": "Procurando…",
+      "enviar": "Enviar edição agora",
+      "enviarAjuda": "Busca e envia agora, com a configuração salva.",
+      "enviando": "Enviando…",
+      "alteracoes": "Alterações não salvas",
+      "tudoSalvo": "Tudo salvo"
+    },
+    "resultados": {
+      "titulo": "Prévia da busca",
+      "resumo": "{n} matérias dos últimos {dias} dias",
+      "selecionadas": "{n} selecionadas",
+      "todas": "Selecionar todas",
+      "nenhuma": "Limpar seleção",
+      "enviar": "Enviar {n} para meu e-mail",
+      "vazio": "Nada novo para essas combinações nos últimos {dias} dias.",
+      "selecionar": "Selecionar: {titulo}"
+    },
+    "aviso": {
+      "salvo": "Alterações salvas.",
+      "erroSalvar": "Não consegui salvar. Confira os campos.",
+      "enviada": "Edição enviada: {assunto}",
+      "naoEnviada": "Não foi enviada: {motivo}"
+    },
     "via": "via {termo}",
-    "historico": "Edições enviadas",
-    "historicoVazio": "Nenhuma edição enviada ainda.",
-    "abrirArquivo": "Abrir arquivo completo",
-    "materias": "{n} matérias",
-    "tipo": {
+    "historico": {
+      "titulo": "Edições enviadas",
+      "sub": "As últimas que chegaram ao seu e-mail.",
+      "vazio": "Nenhuma edição enviada ainda.",
+      "abrir": "Abrir arquivo",
       "agendada": "agendada",
       "manual": "manual"
     },
+    "materias": {
+      "uma": "1 matéria",
+      "varias": "{n} matérias"
+    },
     "pagina": {
       "titulo": "Newsletter",
-      "subtitulo": "As edições que saíram para o seu e-mail, com as matérias e os links.",
+      "sub": "As edições que saíram para o seu e-mail, com as matérias e os links.",
       "voltar": "Voltar ao PathR",
+      "configurar": "Configurar",
       "carregando": "Carregando edições…",
-      "vazio": "Nenhuma edição enviada ainda. Configure e envie a primeira em Configurações › Newsletter.",
-      "configurar": "Configurar newsletter"
+      "vazioTitulo": "Nenhuma edição ainda",
+      "vazioTexto": "Configure os temas e envie a primeira edição em Configurações › Newsletter."
+    },
+    "diaPlural": {
+      "0": "segundas",
+      "1": "terças",
+      "2": "quartas",
+      "3": "quintas",
+      "4": "sextas",
+      "5": "sábados",
+      "6": "domingos"
     }
   },
   "recursos": {

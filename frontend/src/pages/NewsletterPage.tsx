@@ -3,28 +3,34 @@
  *
  * O e-mail some na caixa de entrada; isto não. Lê `GET /newsletter`, que só
  * o super admin alcança (404 para as outras contas), e mostra cada edição
- * agrupada por tecnologia, como chegou. A página existe fora das Configurações
- * porque é leitura, e quem lê não quer a tela de ajustes no caminho.
+ * como chegou: agrupada por tecnologia, com a foto e o link de cada matéria.
+ * Existe fora das Configurações porque é leitura, e quem lê não quer a tela
+ * de ajustes no caminho.
  *
- * O link de cada matéria passa por `linkExterno`: o endereço veio de uma
- * busca na web e só http/https vira `href`.
+ * O link de cada matéria e a foto passam por `linkExterno` (em
+ * NewsletterCard): o endereço veio de uma busca na web, e só http/https vira
+ * `href`.
  */
 
 import { newsletter, type EdicaoNewsletter, type MateriaNewsletter } from "@/api/endpoints";
 import { useQuery } from "@/hooks/useApi";
 import { useT } from "@/lib/i18n";
-import { linkExterno } from "@/lib/linkExterno";
-import { ErrorState, Loading } from "@/components/ui/States";
-import { Kicker, Panel, SCREEN_IN } from "@/components/ui/primitives";
-import { ACC, ACC4, TEXT } from "@/lib/tokens";
+import { Icon } from "@/components/ui/icons";
+import { EmptyState, ErrorState, Loading } from "@/components/ui/States";
+import { MateriaCard } from "@/components/admin/NewsletterCard";
+import "@/styles/newsletter.css";
 
 interface Props {
   onNavigate: (path: string) => void;
 }
 
-function dataLegivel(iso: string): string {
+function partesDaData(iso: string): { dia: string; mes: string } {
   const d = new Date(iso.length === 10 ? `${iso}T12:00:00` : iso);
-  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString();
+  if (Number.isNaN(d.getTime())) return { dia: "·", mes: "" };
+  return {
+    dia: String(d.getDate()).padStart(2, "0"),
+    mes: d.toLocaleDateString(undefined, { month: "short" }).replace(".", ""),
+  };
 }
 
 function agrupar(itens: MateriaNewsletter[]): [string, MateriaNewsletter[]][] {
@@ -35,101 +41,83 @@ function agrupar(itens: MateriaNewsletter[]): [string, MateriaNewsletter[]][] {
 
 function Edicao({ edicao }: { edicao: EdicaoNewsletter }) {
   const t = useT();
+  const { dia, mes } = partesDaData(edicao.enviada_em);
   return (
-    <Panel pad={16.8} style={{ marginBottom: 14 }}>
-      <Kicker tone="muted" style={{ display: "block", marginBottom: 4 }}>
-        {dataLegivel(edicao.enviada_em)} · {t(`newsletter.tipo.${edicao.tipo}`)} ·{" "}
-        {t("newsletter.materias", { n: edicao.quantidade })}
-      </Kicker>
-      <h2 style={{ margin: "0 0 6px", fontSize: 18 }}>{edicao.assunto}</h2>
+    <article className="nl-card nl-edition" aria-label={edicao.assunto}>
+      <header className="nl-edition-head">
+        <span className="nl-date" aria-hidden="true">
+          <b>{dia}</b>
+          <span>{mes}</span>
+        </span>
+        <div style={{ minWidth: 0 }}>
+          <h2 className="nl-edition-title">{edicao.assunto}</h2>
+          <p className="nl-edition-meta">
+            {edicao.quantidade === 1
+              ? t("newsletter.materias.uma")
+              : t("newsletter.materias.varias", { n: edicao.quantidade })}{" "}
+            · {t(`newsletter.historico.${edicao.tipo}`)}
+          </p>
+        </div>
+      </header>
+
       {agrupar(edicao.itens).map(([tema, itens]) => (
-        <section key={tema} style={{ marginTop: 14 }}>
-          <h3 style={{ margin: 0, fontSize: 15, color: TEXT.full }}>{tema}</h3>
-          <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-            {itens.map((item) => {
-              const via =
-                item.termo && item.termo.toLowerCase() !== item.topico.toLowerCase() ? item.termo : "";
-              const foto = linkExterno(item.imagem)?.startsWith("https://") ? linkExterno(item.imagem) : undefined;
-              return (
-                <li key={item.url} style={{ padding: "10px 0", borderTop: "1px solid rgba(233,233,237,.08)" }}>
-                  {foto ? (
-                    <img
-                      src={foto}
-                      alt=""
-                      loading="lazy"
-                      referrerPolicy="no-referrer"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                      }}
-                      style={{
-                        display: "block",
-                        width: "100%",
-                        maxWidth: 480,
-                        maxHeight: 240,
-                        objectFit: "cover",
-                        borderRadius: 8,
-                        marginBottom: 8,
-                        border: "1px solid rgba(233,233,237,.12)",
-                      }}
-                    />
-                  ) : null}
-                  <div style={{ fontSize: 11, letterSpacing: ".06em", textTransform: "uppercase", color: ACC4 }}>
-                    {item.topico} + {t(`newsletter.angulo.${item.categoria}`)}
-                    {via ? <span style={{ color: TEXT.faint }}> · {t("newsletter.via", { termo: via })}</span> : null}
-                  </div>
-                  <a
-                    href={linkExterno(item.url)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ display: "block", fontSize: 15, color: TEXT.full, textDecoration: "none", marginTop: 2 }}
-                  >
-                    {item.titulo}
-                  </a>
-                  {item.resumo ? (
-                    <p style={{ margin: "4px 0 0", fontSize: 13, color: TEXT.muted, lineHeight: 1.55 }}>
-                      {item.resumo}
-                    </p>
-                  ) : null}
-                  <div style={{ fontSize: 11.5, color: TEXT.faint, marginTop: 4 }}>
-                    {[item.fonte, item.publicado_em ? dataLegivel(item.publicado_em) : ""].filter(Boolean).join(" · ")}
-                  </div>
-                </li>
-              );
-            })}
+        <section key={tema} className="nl-tech" aria-label={tema}>
+          <h3 className="nl-tech-head">
+            {tema}
+            <span className="nl-tech-count">
+              {itens.length === 1
+                ? t("newsletter.materias.uma")
+                : t("newsletter.materias.varias", { n: itens.length })}
+            </span>
+          </h3>
+          <ul className="nl-grid">
+            {itens.map((item) => (
+              <MateriaCard key={item.url} item={item} />
+            ))}
           </ul>
         </section>
       ))}
-    </Panel>
+    </article>
   );
 }
 
 export function NewsletterPage({ onNavigate }: Props) {
   const t = useT();
   const edicoes = useQuery(() => newsletter.edicoes(), []);
+  const lista = edicoes.data?.edicoes ?? [];
 
   return (
-    <main style={{ maxWidth: 760, margin: "0 auto", padding: "28px 16px 56px", ...SCREEN_IN }}>
-      <div style={{ display: "flex", flexWrap: "wrap", gap: 12, alignItems: "baseline", marginBottom: 6 }}>
-        <h1 style={{ fontSize: 28, margin: 0 }}>{t("newsletter.pagina.titulo")}</h1>
-        <button type="button" className="btn btn-ghost" onClick={() => onNavigate("/")}>
-          {t("newsletter.pagina.voltar")}
-        </button>
-      </div>
-      <p style={{ margin: "0 0 18px", fontSize: 13.5, color: TEXT.muted, maxWidth: "62ch" }}>
-        {t("newsletter.pagina.subtitulo")}
+    <main className="nl-page">
+      <header className="nl-page-head">
+        <span className="nl-hero-icon">
+          <Icon name="mail" size={22} />
+        </span>
+        <div style={{ minWidth: 0 }}>
+          <p className="nl-kicker">{t("newsletter.kicker")}</p>
+          <h1>{t("newsletter.pagina.titulo")}</h1>
+        </div>
+        <div className="nl-page-actions">
+          <button type="button" className="btn btn-secondary" onClick={() => onNavigate("/")}>
+            <Icon name="arrowLeft" size={15} />
+            {t("newsletter.pagina.voltar")}
+          </button>
+        </div>
+      </header>
+      <p className="nl-hero-sub" style={{ marginTop: -8 }}>
+        {t("newsletter.pagina.sub")}
       </p>
 
-      {edicoes.loading ? <Loading label={t("newsletter.pagina.carregando")} /> : null}
+      {edicoes.loading && !edicoes.data ? <Loading label={t("newsletter.pagina.carregando")} /> : null}
       {edicoes.error ? <ErrorState message={edicoes.error} onRetry={edicoes.reload} /> : null}
-      {edicoes.data && edicoes.data.edicoes.length === 0 ? (
-        <p style={{ fontSize: 13.5, color: TEXT.muted }}>
-          {t("newsletter.pagina.vazio")}{" "}
-          <a href="/" style={{ color: ACC }}>
-            {t("newsletter.pagina.configurar")}
-          </a>
-        </p>
+      {edicoes.data && lista.length === 0 ? (
+        <EmptyState
+          title={t("newsletter.pagina.vazioTitulo")}
+          description={t("newsletter.pagina.vazioTexto")}
+        />
       ) : null}
-      {edicoes.data?.edicoes.map((edicao) => <Edicao key={edicao.id} edicao={edicao} />)}
+      {lista.map((edicao) => (
+        <Edicao key={edicao.id} edicao={edicao} />
+      ))}
     </main>
   );
 }

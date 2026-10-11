@@ -3094,96 +3094,209 @@
     }
   },
   "newsletter": {
-    "titulo": "Lettre d'information",
-    "explica": "Des actualités technologiques fiables, sélectionnées sur le Web en fonction des thèmes de votre choix, vous sont envoyées directement par e-mail, aux jours et à l'heure que vous aurez définis.",
-    "avisoPausada": "La newsletter est actuellement suspendue. Aucun message ne sera envoyé tant qu'elle ne sera pas réactivée.",
-    "avisoSemFonte": "Aucune source de recherche n'est configurée (TAVILY_API_KEY ou BRAVE_API_KEY). Sans celle-ci, aucun résultat n'est trouvé.",
+    "kicker": "Lettre d'information",
+    "heroVazio": "Créez votre newsletter sur la technologie",
+    "heroVazioSub": "Choisissez les sujets que vous souhaitez suivre et la fréquence de réception. Les articles vous seront envoyés directement par e-mail.",
+    "heroFrase": "{quando}, à l'adresse {hora}, vous recevrez {combos} dans votre boîte mail.",
+    "heroFraseSub": "De vraies actualités tirées du web, avec photo et lien. Aucun article n'est rédigé par une IA.",
+    "ativa": "Active",
+    "pausada": "Lente",
+    "statProximo": "Prochaine livraison",
+    "statUltimo": "Dernière édition",
+    "statDestino": "Arrive à",
+    "nunca": "pas encore envoyée",
+    "nenhum": "aucun prévu",
+    "avisoPausada": "L'envoi est suspendu dans le tableau de bord « Opérations ». Aucun envoi n'aura lieu tant que cette fonction n'aura pas été réactivée.",
+    "avisoSemFonte": "Aucune source de recherche n'est configurée (TAVILY_API_KEY ou BRAVE_API_KEY) : sans celle-ci, aucun résultat n'est trouvé.",
     "avisoSemEmail": "La messagerie électronique (Brevo) n'est pas configurée dans cet environnement : le message n'arrive pas dans la boîte de réception.",
-    "tecnologias": "Technologies",
-    "tecnologiasAjuda": "Langues et matières. Ajoutez-en autant que vous le souhaitez, jusqu’à {max}.",
-    "adicionarRotulo": "Ajouter de la technologie",
-    "adicionarPlaceholder": "Ex. : Java, Rust, Kubernetes…",
-    "adicionar": "Ajouter",
-    "remover": "Supprimer {nome}",
-    "sugestoes": "Suggestions",
-    "angulos": "À suivre",
-    "angulosAjuda": "Chaque aspect s'associe à chaque technologie, et ils se cumulent.",
+    "tecnologias": {
+      "titulo": "À propos de quoi ?",
+      "sub": "Langages, frameworks ou sujets que vous souhaitez suivre.",
+      "placeholder": "Saisissez une technologie et appuyez sur Entrée",
+      "rotulo": "Ajouter de la technologie",
+      "adicionar": "Ajouter",
+      "remover": "Supprimer {nome}",
+      "sugestoes": "Suggestions",
+      "vazio": "Aucune technologie pour l'instant. Saisissez-en une ci-dessus ou appuyez sur une suggestion.",
+      "limite": "Vous avez atteint la limite de {max} technologies."
+    },
+    "angulos": {
+      "titulo": "Avec quoi l'accompagner ?",
+      "sub": "Cochez-en autant que vous le souhaitez : chacun est compatible avec chaque technologie."
+    },
     "angulo": {
-      "noticias": "Actualités générales",
-      "novidades": "Actualités",
-      "trabalhos": "Offres d'emploi",
-      "polemicas": "Polémiques"
+      "noticias": {
+        "nome": "Actualités",
+        "desc": "Ce qui se passe, en général."
+      },
+      "novidades": {
+        "nome": "Actualités",
+        "desc": "Nouveautés, versions et annonces."
+      },
+      "trabalhos": {
+        "nome": "Offres d'emploi",
+        "desc": "Offres d'emploi, salaires et marché du travail."
+      },
+      "polemicas": {
+        "nome": "Polémiques",
+        "desc": "Débats et controverses au sein de la communauté."
+      }
     },
-    "combinacoes": "Combinaisons",
-    "combinacoesAjuda": "C'est ce que nous allons rechercher. Chacune d'entre elles incarne déjà l'écosystème de cette technologie, et pas seulement son nom.",
-    "combinacoesVazio": "Sélectionnez au moins une technologie pour voir les combinaisons possibles.",
-    "combinacoesTotal": "{n} {max} combinaisons",
-    "combinacoesDemais": "Trop de combinaisons : retirez une technologie ou un angle.",
-    "inclui": "parmi lesquels {termos}",
-    "ecossistemaDescoberto": "l'écosystème est découvert lors de la recherche",
-    "quando": "Quand",
-    "frequencia": "Fréquence",
-    "frequenciaOpcao": {
+    "combinacoes": {
+      "titulo": "Ce qui va être récupéré",
+      "sub": "Chaque technologie recoupe chaque aspect et s'accompagne déjà de son propre écosystème, et pas seulement de son nom.",
+      "vazio": "Choisissez une technologie et un angle pour découvrir les combinaisons ici.",
+      "inclui": "Comprend",
+      "descoberto": "écosystème découvert au cours de la recherche",
+      "uma": "1 combinaison",
+      "varias": "{n} combinaisons",
+      "total": "{n} par {max}",
+      "demais": "Trop de combinaisons. Supprimez une technologie ou un angle."
+    },
+    "quando": {
+      "titulo": "Lorsque vous recevrez",
+      "sub": "Choisissez la fréquence, les jours et les horaires.",
+      "frequencia": "Fréquence",
+      "dias": "Jours de la semaine",
+      "diaFixo": "Ce raccourci définit déjà les jours.",
+      "diaDoMes": "Jour du mois",
+      "diaDoMesNota": "Jusqu'au 28, qui existe chaque mois.",
+      "horario": "Horaires",
+      "horarioNota": "À l’heure pile, fuseau {fuso}.",
+      "outroHorario": "Un autre horaire",
+      "quantidade": "Matières par combinaison",
+      "quantidadeNota": "De 1 à {max}. Plus d'articles, e-mail plus long.",
+      "menos": "Une de moins",
+      "mais": "Encore une"
+    },
+    "freq": {
+      "diaria": {
+        "nome": "Tous les jours",
+        "desc": "Du lundi au dimanche"
+      },
+      "dias_uteis": {
+        "nome": "Jours ouvrables",
+        "desc": "Du lundi au vendredi"
+      },
+      "fim_de_semana": {
+        "nome": "Week-end",
+        "desc": "Samedi et dimanche"
+      },
+      "semanal": {
+        "nome": "Hebdomadaire",
+        "desc": "Un jour par semaine"
+      },
+      "mensal": {
+        "nome": "Mensuel",
+        "desc": "Un jour par mois"
+      },
+      "personalizada": {
+        "nome": "Personnalisée",
+        "desc": "Les jours que tu choisiras"
+      }
+    },
+    "frase": {
       "diaria": "Tous les jours",
-      "dias_uteis": "Jours ouvrables",
-      "fim_de_semana": "Week-end",
-      "semanal": "Une fois par semaine",
-      "mensal": "Une fois par mois",
-      "personalizada": "Les jours que je choisis"
+      "dias_uteis": "Du lundi au vendredi",
+      "fim_de_semana": "Les samedis et dimanches",
+      "mensal": "Le {dia} de chaque mois",
+      "e": "et",
+      "personalizada": "Les {dias}"
     },
-    "diasDaSemana": "Jours de la semaine",
-    "dia": [
-      "Lun",
-      "Avoir",
+    "diaCurto": {
+      "0": "L",
+      "1": "M",
+      "2": "M",
+      "3": "J",
+      "4": "V",
+      "5": "S",
+      "6": "D"
+    },
+    "diaSigla": [
+      "mardi",
+      "avoir",
+      "mercredi",
+      "ici",
+      "sexe",
+      "samedi",
+      "dimanche"
+    ],
+    "diaNome": [
+      "Lundi",
+      "Mardi",
       "Mercredi",
-      "Jeu",
-      "Sexe",
+      "Jeudi",
+      "Vendredi",
       "Samedi",
       "Dimanche"
     ],
-    "diaDoMes": "Jour du mois",
-    "diaDoMesNota": "Ça dure jusqu'au 28 : les 29 et 31 n'existent pas tous les mois.",
-    "horario": "Horaires",
-    "horarioNota": "Il arrive vers {hora}, aux horaires indiqués sur {fuso}. Les départs ont lieu toutes les heures.",
-    "porCombinacao": "Matières par combinaison",
-    "envio": "Envoi automatique",
-    "ligada": "Allumé",
-    "pausada": "En pause",
-    "proximo": "Prochaine diffusion : {data}",
-    "semProximo": "Aucune expédition prévue.",
-    "ultimo": "Dernière mise à jour : {data}",
-    "naoSalvo": "Il y a des modifications non enregistrées.",
-    "salvar": "Enregistrer",
-    "salvando": "Enregistrement en cours…",
-    "salvo": "Enregistré.",
-    "erroSalvar": "Je n'ai pas réussi à enregistrer. Vérifiez les champs.",
-    "procurar": "Rechercher maintenant",
-    "procurando": "Recherche…",
-    "resultados": "{n} articles publiés au cours des derniers {dias} jours",
-    "semResultados": "Aucun résultat nouveau n'a été trouvé pour ces combinaisons.",
-    "marcarTodas": "Tout sélectionner",
-    "enviarSelecionadas": "Envoyer {n} à {destino}",
-    "enviarAgora": "Envoyer la modification maintenant",
-    "enviarAgoraAjuda": "Rechercher et envoyer avec la configuration enregistrée.",
-    "enviando": "Envoi en cours…",
-    "enviada": "Envoyé le : {assunto}",
-    "naoEnviada": "Non envoyée : {motivo}",
+    "diaToda": [
+      "Tous les lundis",
+      "Tous les mardis",
+      "Tous les mercredis",
+      "Tous les jeudis",
+      "Tous les vendredis",
+      "Tous les samedis",
+      "Tous les dimanches"
+    ],
+    "acoes": {
+      "salvar": "Enregistrer les modifications",
+      "salvando": "Enregistrement en cours…",
+      "descartar": "Ignorer",
+      "procurar": "Voir les actualités maintenant",
+      "procurando": "Recherche…",
+      "enviar": "Envoyer la modification maintenant",
+      "enviarAjuda": "Recherchez et envoyez dès maintenant, avec la configuration enregistrée.",
+      "enviando": "Envoi en cours…",
+      "alteracoes": "Modifications non enregistrées",
+      "tudoSalvo": "Tout est sauvegardé"
+    },
+    "resultados": {
+      "titulo": "Aperçu de la recherche",
+      "resumo": "{n} articles des derniers {dias} jours",
+      "selecionadas": "{n} sélectionnées",
+      "todas": "Tout sélectionner",
+      "nenhuma": "Effacer la sélection",
+      "enviar": "Envoyer {n} à mon adresse e-mail",
+      "vazio": "Rien de nouveau concernant ces combinaisons ces derniers jours {dias}.",
+      "selecionar": "Sélectionner : {titulo}"
+    },
+    "aviso": {
+      "salvo": "Modifications enregistrées.",
+      "erroSalvar": "Je n'ai pas réussi à enregistrer. Vérifiez les champs.",
+      "enviada": "Fichier envoyé : {assunto}",
+      "naoEnviada": "N'a pas été envoyée : {motivo}"
+    },
     "via": "via {termo}",
-    "historico": "Éditions envoyées",
-    "historicoVazio": "Aucune édition n'a encore été envoyée.",
-    "abrirArquivo": "Ouvrir le fichier complet",
-    "materias": "{n} sujets",
-    "tipo": {
+    "historico": {
+      "titulo": "Éditions envoyées",
+      "sub": "Les derniers messages reçus dans votre boîte mail.",
+      "vazio": "Aucune édition n'a encore été envoyée.",
+      "abrir": "Ouvrir le fichier",
       "agendada": "programmée",
       "manual": "manuel"
     },
+    "materias": {
+      "uma": "1 article",
+      "varias": "{n} sujets"
+    },
     "pagina": {
       "titulo": "Lettre d'information",
-      "subtitulo": "Les éditions qui vous ont été envoyées par e-mail, avec les articles et les liens.",
+      "sub": "Les éditions qui vous ont été envoyées par e-mail, avec les articles et les liens.",
       "voltar": "Retour à PathR",
+      "configurar": "Configurer",
       "carregando": "Chargement des éditions…",
-      "vazio": "Aucune édition n'a encore été envoyée. Configurez-la et envoyez la première dans Paramètres › Newsletter.",
-      "configurar": "Configurer la newsletter"
+      "vazioTitulo": "Aucune édition pour l'instant",
+      "vazioTexto": "Configurez les thèmes et envoyez le premier numéro dans Paramètres › Newsletter."
+    },
+    "diaPlural": {
+      "0": "lundis",
+      "1": "mardis",
+      "2": "mercredis",
+      "3": "jeudis",
+      "4": "vendredis",
+      "5": "samedis",
+      "6": "dimanches"
     }
   }
 }

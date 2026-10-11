@@ -1,17 +1,23 @@
 /**
- * Newsletter: escolher tecnologias, ângulos, dias e hora; procurar e enviar.
+ * Newsletter: montar, agendar, conferir e enviar.
  *
  * Só o super admin (o SettingsPage decide se mostra a aba; o servidor responde
  * 404 para qualquer outra conta). Tudo é decidido no servidor — esta tela lê
  * `GET /admin/newsletter`, grava em `PUT /admin/newsletter/config` e dispara
  * `buscar` / `enviar`.
  *
+ * ## A ordem da tela é a ordem da decisão
+ *
+ * Um resumo em frase no topo ("Toda segunda-feira, às 08:00, você recebe 4
+ * combinações…"), que muda enquanto se escolhe; depois sobre o quê, o que
+ * acompanhar, o que isso vira (as combinações), quando receber. A barra fixa
+ * no pé guarda as ações, para salvar nunca exigir rolar de volta.
+ *
  * ## O campo "Combinações"
  *
- * "Java + Empregos": a tecnologia e o ângulo que a busca vai cruzar. A lista
- * é montada AQUI, ao vivo, a partir do que está escolhido — a pessoa vê o
- * resultado do que marcou antes de salvar. O ecossistema que cada uma traz
- * ("inclui Spring Boot, JVM, Kotlin") vem do servidor, que é quem o conhece.
+ * "Java + Empregos": a tecnologia e o ângulo que a busca vai cruzar, montados
+ * AQUI, ao vivo, do que está marcado. O ecossistema de cada uma ("Inclui
+ * Spring Boot, JVM, Kotlin") vem do servidor, que é quem o conhece.
  *
  * ## Dois estados de configuração
  *
@@ -33,13 +39,11 @@ import {
 } from "@/api/endpoints";
 import { useMutation, useQuery } from "@/hooks/useApi";
 import { useT } from "@/lib/i18n";
-import { linkExterno } from "@/lib/linkExterno";
-import { Chip } from "@/components/ui/Chip";
-import { Segmented, type SegmentedOption } from "@/components/ui/Segmented";
+import { Icon, type IconName } from "@/components/ui/icons";
 import { Select, type SelectOption } from "@/components/ui/Select";
 import { ErrorState, Loading } from "@/components/ui/States";
-import { Kicker, Panel } from "@/components/ui/primitives";
-import { ACC, ACC4, C, TEXT, tint } from "@/lib/tokens";
+import { ANGULO, MateriaCard, estiloDoAngulo } from "@/components/admin/NewsletterCard";
+import "@/styles/newsletter.css";
 
 const SUGESTOES = [
   "Java",
@@ -65,15 +69,24 @@ const FREQUENCIAS: readonly FrequenciaNewsletter[] = [
   "personalizada",
 ];
 const DIAS = [0, 1, 2, 3, 4, 5, 6] as const;
+const HORARIOS_RAPIDOS = [7, 8, 12, 18, 20] as const;
+/** Os dias que cada atalho decide sozinho (0 = segunda). */
+const DIAS_DO_ATALHO: Partial<Record<FrequenciaNewsletter, readonly number[]>> = {
+  diaria: [0, 1, 2, 3, 4, 5, 6],
+  dias_uteis: [0, 1, 2, 3, 4],
+  fim_de_semana: [5, 6],
+};
 
-const SUB: CSSProperties = { margin: "0 0 8px", fontSize: 12.5, color: TEXT.muted, maxWidth: "64ch" };
-const SECAO: CSSProperties = { padding: "16px 0", borderTop: "1px solid rgba(233,233,237,.1)" };
+function hhmm(hora: number): string {
+  return `${String(hora).padStart(2, "0")}:00`;
+}
 
-function dataLegivel(iso: string | null | undefined): string {
+function dataLonga(iso: string | null | undefined): string {
   if (!iso) return "";
-  // `YYYY-MM-DD` vira meio-dia local: meia-noite UTC cairia no dia anterior.
   const d = new Date(iso.length === 10 ? `${iso}T12:00:00` : iso);
-  return Number.isNaN(d.getTime()) ? iso : d.toLocaleDateString();
+  return Number.isNaN(d.getTime())
+    ? iso
+    : d.toLocaleDateString(undefined, { weekday: "short", day: "2-digit", month: "short" });
 }
 
 function ordenado<T>(lista: T[]): string {
@@ -107,71 +120,44 @@ function configDe(painel: PainelNewsletter): ConfigNewsletter {
   };
 }
 
-/** tema (minúsculas) → termos do ecossistema, como o servidor devolveu. */
+/** tecnologia (minúsculas) → termos do ecossistema, como o servidor devolveu. */
 function ecoDe(combos: CombinacaoNewsletter[]): Record<string, string[]> {
   const mapa: Record<string, string[]> = {};
   for (const c of combos) mapa[c.topico.toLowerCase()] = c.ecossistema;
   return mapa;
 }
 
-function Materia({ item, marcada, onMarcar }: { item: MateriaNewsletter; marcada: boolean; onMarcar: () => void }) {
-  const t = useT();
-  const href = linkExterno(item.url);
-  // A foto também passa por `linkExterno`, e só https é exibida.
-  const foto = linkExterno(item.imagem)?.startsWith("https://") ? linkExterno(item.imagem) : undefined;
-  const via = item.termo && item.termo.toLowerCase() !== item.topico.toLowerCase() ? item.termo : "";
+function CabecalhoDoCartao({
+  icon,
+  tom,
+  titulo,
+  sub,
+  contador,
+  alerta,
+}: {
+  icon: IconName;
+  tom?: string;
+  titulo: string;
+  sub?: string;
+  contador?: string;
+  alerta?: boolean;
+}) {
+  const estilo = tom ? ({ ["--tone" as string]: tom } as CSSProperties) : undefined;
   return (
-    <li style={{ display: "flex", gap: 10, padding: "10px 0", borderTop: "1px solid rgba(233,233,237,.08)" }}>
-      <input
-        type="checkbox"
-        checked={marcada}
-        onChange={onMarcar}
-        aria-label={item.titulo}
-        style={{ marginTop: 4, accentColor: ACC }}
-      />
+    <div className="nl-card-head">
+      <span className="nl-card-icon" style={estilo}>
+        <Icon name={icon} size={18} />
+      </span>
       <div style={{ minWidth: 0 }}>
-        {foto ? (
-          <img
-            src={foto}
-            alt=""
-            loading="lazy"
-            referrerPolicy="no-referrer"
-            onError={(e) => {
-              // Foto que não abre some: o título abaixo carrega a matéria.
-              e.currentTarget.style.display = "none";
-            }}
-            style={{
-              display: "block",
-              width: "100%",
-              maxWidth: 360,
-              maxHeight: 180,
-              objectFit: "cover",
-              borderRadius: 8,
-              marginBottom: 6,
-              border: "1px solid rgba(233,233,237,.12)",
-            }}
-          />
-        ) : null}
-        <div style={{ fontSize: 11, letterSpacing: ".06em", textTransform: "uppercase", color: ACC4 }}>
-          {item.topico} + {t(`newsletter.angulo.${item.categoria}`)}
-          {via ? <span style={{ color: TEXT.faint }}> · {t("newsletter.via", { termo: via })}</span> : null}
-        </div>
-        <a
-          href={href}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{ display: "block", fontSize: 14.5, color: TEXT.full, textDecoration: "none", marginTop: 2 }}
-        >
-          {item.titulo}
-        </a>
-        {item.resumo ? (
-          <p style={{ margin: "4px 0 0", fontSize: 12.5, color: TEXT.muted, lineHeight: 1.5 }}>{item.resumo}</p>
-        ) : null}
-        <div style={{ fontSize: 11.5, color: TEXT.faint, marginTop: 4 }}>
-          {[item.fonte, dataLegivel(item.publicado_em)].filter(Boolean).join(" · ")}
-        </div>
+        <h3 className="nl-card-title">{titulo}</h3>
+        {sub ? <p className="nl-card-sub">{sub}</p> : null}
       </div>
-    </li>
+      {contador ? (
+        <span className="nl-card-count" data-alert={alerta ? "true" : undefined}>
+          {contador}
+        </span>
+      ) : null}
+    </div>
   );
 }
 
@@ -197,11 +183,19 @@ function Formulario({ dados, onSalvo }: { dados: PainelNewsletter; onSalvo: () =
   const sujo = !mesmoConfig(form, salvo);
   const total = form.topics.length * form.angles.length;
   const demais = total > limites.max_consultas;
+  const cheio = form.topics.length >= limites.max_temas;
+  const atalho = DIAS_DO_ATALHO[form.frequency];
+  const diasMarcados = atalho ?? form.weekdays;
+
+  // ---- ações sobre o formulário ----
 
   function adicionar(bruto: string) {
     const tema = bruto.replace(/\s+/g, " ").trim().slice(0, 60);
-    if (!tema || form.topics.length >= limites.max_temas) return;
-    if (form.topics.some((x) => x.toLowerCase() === tema.toLowerCase())) return;
+    if (!tema || cheio) return;
+    if (form.topics.some((x) => x.toLowerCase() === tema.toLowerCase())) {
+      setNovoTema("");
+      return;
+    }
     setForm({ ...form, topics: [...form.topics, tema] });
     setNovoTema("");
   }
@@ -234,10 +228,10 @@ function Formulario({ dados, onSalvo }: { dados: PainelNewsletter; onSalvo: () =
     if (r) {
       setSalvo(form);
       setEcossistema((atual) => ({ ...atual, ...ecoDe(r.combinacoes) }));
-      setAviso({ tom: "ok", texto: t("newsletter.salvo") });
+      setAviso({ tom: "ok", texto: t("newsletter.aviso.salvo") });
       onSalvo();
     } else {
-      setAviso({ tom: "erro", texto: salvar.error ?? t("newsletter.erroSalvar") });
+      setAviso({ tom: "erro", texto: salvar.error ?? t("newsletter.aviso.erroSalvar") });
     }
   }
 
@@ -245,7 +239,7 @@ function Formulario({ dados, onSalvo }: { dados: PainelNewsletter; onSalvo: () =
     setAviso(null);
     const r = await buscar.run(form);
     if (!r) {
-      setAviso({ tom: "erro", texto: buscar.error ?? t("newsletter.erroSalvar") });
+      setAviso({ tom: "erro", texto: buscar.error ?? t("newsletter.aviso.erroSalvar") });
       return;
     }
     setAchadas(r.itens);
@@ -258,342 +252,476 @@ function Formulario({ dados, onSalvo }: { dados: PainelNewsletter; onSalvo: () =
     setAviso(null);
     const r = await enviar.run(itens);
     if (!r) {
-      setAviso({ tom: "erro", texto: enviar.error ?? t("newsletter.erroSalvar") });
+      setAviso({ tom: "erro", texto: enviar.error ?? t("newsletter.aviso.erroSalvar") });
       return;
     }
     setAviso(
       r.enviado
-        ? { tom: "ok", texto: t("newsletter.enviada", { assunto: r.assunto ?? "" }) }
-        : { tom: "erro", texto: t("newsletter.naoEnviada", { motivo: r.motivo ?? "" }) },
+        ? { tom: "ok", texto: t("newsletter.aviso.enviada", { assunto: r.assunto ?? "" }) }
+        : { tom: "erro", texto: t("newsletter.aviso.naoEnviada", { motivo: r.motivo ?? "" }) },
     );
     if (r.enviado) onSalvo();
   }
 
-  const opcoesFrequencia: readonly SelectOption<FrequenciaNewsletter>[] = FREQUENCIAS.map((f) => ({
-    value: f,
-    label: t(`newsletter.frequenciaOpcao.${f}`),
-  }));
+  // ---- textos derivados ----
+
+  function listaEm(nomes: string[]): string {
+    if (nomes.length <= 1) return nomes.join("");
+    return `${nomes.slice(0, -1).join(", ")} ${t("newsletter.frase.e")} ${nomes[nomes.length - 1]}`;
+  }
+
+  function quandoTexto(): string {
+    switch (form.frequency) {
+      case "semanal":
+        return t(`newsletter.diaToda.${form.weekdays[0] ?? 0}`);
+      case "mensal":
+        return t("newsletter.frase.mensal", { dia: form.month_day });
+      case "personalizada":
+        return t("newsletter.frase.personalizada", {
+          dias: listaEm([...form.weekdays].sort().map((d) => t(`newsletter.diaPlural.${d}`))),
+        });
+      default:
+        return t(`newsletter.frase.${form.frequency}`);
+    }
+  }
+
+  const combosTexto = total === 1 ? t("newsletter.combinacoes.uma") : t("newsletter.combinacoes.varias", { n: total });
+  const hora = hhmm(form.send_hour);
+  const proximo = dados.config.next_send_on;
+  const ultimo = dados.config.last_sent_on;
+
   const opcoesHora: readonly SelectOption<string>[] = Array.from({ length: 24 }, (_, h) => ({
     value: String(h),
-    label: `${String(h).padStart(2, "0")}:00`,
+    label: hhmm(h),
   }));
-  const opcoesDiaDoMes: readonly SelectOption<string>[] = Array.from({ length: 28 }, (_, i) => ({
-    value: String(i + 1),
-    label: String(i + 1),
-  }));
-  const opcoesQuantidade: readonly SelectOption<string>[] = Array.from(
-    { length: limites.max_itens_por_busca },
-    (_, i) => ({ value: String(i + 1), label: String(i + 1) }),
-  );
-  const opcoesLigado: readonly SegmentedOption<"ligada" | "pausada">[] = [
-    { value: "ligada", label: t("newsletter.ligada") },
-    { value: "pausada", label: t("newsletter.pausada") },
-  ];
-
-  const hora = `${String(form.send_hour).padStart(2, "0")}:00`;
-  const proximo = dados.config.next_send_on;
+  const horaForaDosRapidos = !(HORARIOS_RAPIDOS as readonly number[]).includes(form.send_hour);
 
   return (
-    <div>
+    <div className="nl">
+      {/* ---- Topo: resumo em frase + interruptor ---- */}
+      <section className="nl-hero" aria-labelledby="nl-hero-titulo">
+        <div className="nl-hero-top">
+          <span className="nl-hero-icon">
+            <Icon name="mail" size={22} />
+          </span>
+          <div className="nl-hero-copy">
+            <p className="nl-kicker">{t("newsletter.kicker")}</p>
+            <h2 id="nl-hero-titulo" className="nl-hero-title">
+              {total > 0
+                ? t("newsletter.heroFrase", { quando: quandoTexto(), hora, combos: combosTexto })
+                : t("newsletter.heroVazio")}
+            </h2>
+            <p className="nl-hero-sub">
+              {total > 0 ? t("newsletter.heroFraseSub") : t("newsletter.heroVazioSub")}
+            </p>
+          </div>
+          <button
+            type="button"
+            role="switch"
+            aria-checked={form.enabled}
+            className="nl-switch"
+            onClick={() => setForm({ ...form, enabled: !form.enabled })}
+          >
+            <span className="nl-switch-track" aria-hidden="true" />
+            {form.enabled ? t("newsletter.ativa") : t("newsletter.pausada")}
+          </button>
+        </div>
+        <div className="nl-stats">
+          <span className="nl-stat">
+            <Icon name="clock" size={15} />
+            <span className="nl-stat-label">{t("newsletter.statProximo")}</span>
+            <span className="nl-stat-value">
+              {form.enabled && proximo ? dataLonga(proximo) : t("newsletter.nenhum")}
+            </span>
+          </span>
+          <span className="nl-stat">
+            <Icon name="send" size={15} />
+            <span className="nl-stat-label">{t("newsletter.statUltimo")}</span>
+            <span className="nl-stat-value">{ultimo ? dataLonga(ultimo) : t("newsletter.nunca")}</span>
+          </span>
+          <span className="nl-stat">
+            <Icon name="mail" size={15} />
+            <span className="nl-stat-label">{t("newsletter.statDestino")}</span>
+            <span className="nl-stat-value">{dados.destino}</span>
+          </span>
+        </div>
+      </section>
+
+      {/* ---- Avisos de ambiente ---- */}
       {!dados.ativa ? (
-        <p role="status" style={{ ...SUB, color: C.ambar }}>
+        <div className="nl-banner" role="status">
+          <Icon name="info" size={16} />
           {t("newsletter.avisoPausada")}
-        </p>
+        </div>
       ) : null}
       {!dados.fontes.tavily && !dados.fontes.brave ? (
-        <p role="status" style={{ ...SUB, color: C.ambar }}>
+        <div className="nl-banner" role="status">
+          <Icon name="info" size={16} />
           {t("newsletter.avisoSemFonte")}
-        </p>
+        </div>
       ) : null}
       {!dados.email_configurado ? (
-        <p role="status" style={{ ...SUB, color: C.ambar }}>
+        <div className="nl-banner" role="status">
+          <Icon name="info" size={16} />
           {t("newsletter.avisoSemEmail")}
-        </p>
+        </div>
       ) : null}
 
-      {/* Tecnologias */}
-      <section style={SECAO}>
-        <Kicker tone="muted" style={{ display: "block", marginBottom: 4 }}>
-          {t("newsletter.tecnologias")}
-        </Kicker>
-        <p style={SUB}>{t("newsletter.tecnologiasAjuda", { max: limites.max_temas })}</p>
+      {/* ---- Sobre o quê ---- */}
+      <section className="nl-card" aria-labelledby="nl-tec">
+        <CabecalhoDoCartao
+          icon="code"
+          titulo={t("newsletter.tecnologias.titulo")}
+          sub={t("newsletter.tecnologias.sub")}
+          contador={`${form.topics.length}/${limites.max_temas}`}
+        />
+        <span id="nl-tec" hidden>
+          {t("newsletter.tecnologias.titulo")}
+        </span>
         <form
+          className="nl-add"
           onSubmit={(e) => {
             e.preventDefault();
             adicionar(novoTema);
           }}
-          style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}
         >
-          <input
-            className="input"
-            value={novoTema}
-            onChange={(e) => setNovoTema(e.target.value)}
-            placeholder={t("newsletter.adicionarPlaceholder")}
-            aria-label={t("newsletter.adicionarRotulo")}
-            maxLength={60}
-            style={{ flex: "1 1 220px", minWidth: 0 }}
-          />
-          <button
-            type="submit"
-            className="btn btn-ghost"
-            disabled={!novoTema.trim() || form.topics.length >= limites.max_temas}
-          >
-            {t("newsletter.adicionar")}
+          <label className="nl-add-field">
+            <Icon name="search" size={16} />
+            <input
+              id="nl-novo-tema"
+              className="input"
+              value={novoTema}
+              onChange={(e) => setNovoTema(e.target.value)}
+              placeholder={t("newsletter.tecnologias.placeholder")}
+              aria-label={t("newsletter.tecnologias.rotulo")}
+              maxLength={60}
+              disabled={cheio}
+              autoComplete="off"
+            />
+          </label>
+          <button type="submit" className="btn btn-primary" disabled={!novoTema.trim() || cheio}>
+            <Icon name="plus" size={15} />
+            {t("newsletter.tecnologias.adicionar")}
           </button>
         </form>
+
         {form.topics.length ? (
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+          <div className="nl-chips" role="list">
             {form.topics.map((tema) => (
-              <Chip
+              <button
                 key={tema}
-                active
-                title={t("newsletter.remover", { nome: tema })}
+                type="button"
+                role="listitem"
+                className="nl-chip"
+                title={t("newsletter.tecnologias.remover", { nome: tema })}
+                aria-label={t("newsletter.tecnologias.remover", { nome: tema })}
                 onClick={() => setForm({ ...form, topics: form.topics.filter((x) => x !== tema) })}
               >
-                {tema} ×
-              </Chip>
+                {tema}
+                <span className="nl-chip-x">
+                  <Icon name="x" size={12} />
+                </span>
+              </button>
             ))}
           </div>
-        ) : null}
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
-          <span style={{ fontSize: 12, color: TEXT.faint }}>{t("newsletter.sugestoes")}:</span>
-          {SUGESTOES.filter((s) => !form.topics.some((x) => x.toLowerCase() === s.toLowerCase())).map((s) => (
-            <Chip key={s} dashed active={false} onClick={() => adicionar(s)}>
-              + {s}
-            </Chip>
-          ))}
-        </div>
-      </section>
-
-      {/* Ângulos */}
-      <section style={SECAO}>
-        <Kicker tone="muted" style={{ display: "block", marginBottom: 4 }}>
-          {t("newsletter.angulos")}
-        </Kicker>
-        <p style={SUB}>{t("newsletter.angulosAjuda")}</p>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-          {ANGULOS.map((a) => (
-            <Chip key={a} active={form.angles.includes(a)} onClick={() => alternarAngulo(a)}>
-              {t(`newsletter.angulo.${a}`)}
-            </Chip>
-          ))}
-        </div>
-      </section>
-
-      {/* O campo das combinações: "Java + Empregos" */}
-      <section style={SECAO} aria-live="polite">
-        <Kicker tone="muted" style={{ display: "block", marginBottom: 4 }}>
-          {t("newsletter.combinacoes")}
-        </Kicker>
-        <p style={SUB}>{t("newsletter.combinacoesAjuda")}</p>
-        {total === 0 ? (
-          <p style={{ ...SUB, color: TEXT.faint }}>{t("newsletter.combinacoesVazio")}</p>
         ) : (
-          <ul style={{ listStyle: "none", margin: 0, padding: 0, display: "grid", gap: 6 }}>
+          <div className="nl-empty">
+            <Icon name="search" size={22} />
+            {t("newsletter.tecnologias.vazio")}
+          </div>
+        )}
+
+        {cheio ? <p className="nl-hint">{t("newsletter.tecnologias.limite", { max: limites.max_temas })}</p> : null}
+
+        <div>
+          <span className="nl-field-label">{t("newsletter.tecnologias.sugestoes")}</span>
+          <div className="nl-chips">
+            {SUGESTOES.filter((s) => !form.topics.some((x) => x.toLowerCase() === s.toLowerCase())).map((s) => (
+              <button key={s} type="button" className="nl-suggest" disabled={cheio} onClick={() => adicionar(s)}>
+                <Icon name="plus" size={13} />
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ---- O que acompanhar ---- */}
+      <section className="nl-card" aria-label={t("newsletter.angulos.titulo")}>
+        <CabecalhoDoCartao
+          icon="flag"
+          titulo={t("newsletter.angulos.titulo")}
+          sub={t("newsletter.angulos.sub")}
+          contador={`${form.angles.length}/${ANGULOS.length}`}
+        />
+        <div className="nl-tiles">
+          {ANGULOS.map((a) => (
+            <button
+              key={a}
+              type="button"
+              className="nl-tile"
+              style={estiloDoAngulo(a)}
+              aria-pressed={form.angles.includes(a)}
+              onClick={() => alternarAngulo(a)}
+            >
+              <span className="nl-tile-icon">
+                <Icon name={ANGULO[a].icon} size={19} />
+              </span>
+              <span className="nl-tile-title">{t(`newsletter.angulo.${a}.nome`)}</span>
+              <span className="nl-tile-desc">{t(`newsletter.angulo.${a}.desc`)}</span>
+              <span className="nl-tile-check" aria-hidden="true">
+                <Icon name="check" size={12} />
+              </span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      {/* ---- As combinações: "Java + Empregos" ---- */}
+      <section className="nl-card" aria-label={t("newsletter.combinacoes.titulo")} aria-live="polite">
+        <CabecalhoDoCartao
+          icon="search"
+          tom="#6aa6de"
+          titulo={t("newsletter.combinacoes.titulo")}
+          sub={t("newsletter.combinacoes.sub")}
+          contador={total > 0 ? t("newsletter.combinacoes.total", { n: total, max: limites.max_consultas }) : undefined}
+          alerta={demais}
+        />
+        {total === 0 ? (
+          <div className="nl-empty">
+            <Icon name="plus" size={22} />
+            {t("newsletter.combinacoes.vazio")}
+          </div>
+        ) : (
+          <ul className="nl-combos">
             {form.topics.flatMap((tema) =>
               form.angles.map((a) => {
                 const eco = ecossistema[tema.toLowerCase()];
                 return (
-                  <li
-                    key={`${tema}|${a}`}
-                    style={{
-                      padding: "8px 10px",
-                      borderRadius: 8,
-                      background: tint(ACC, 10),
-                      border: "1px solid rgba(145,132,217,.28)",
-                    }}
-                  >
-                    <span style={{ fontSize: 14, color: TEXT.full }}>
-                      {tema} + {t(`newsletter.angulo.${a}`)}
-                    </span>
-                    <span style={{ display: "block", fontSize: 12, color: TEXT.faint, marginTop: 2 }}>
-                      {eco && eco.length
-                        ? t("newsletter.inclui", { termos: eco.join(", ") })
-                        : t("newsletter.ecossistemaDescoberto")}
-                    </span>
+                  <li key={`${tema}|${a}`} className="nl-combo" style={estiloDoAngulo(a)}>
+                    <div className="nl-combo-line">
+                      <span className="nl-combo-tech">{tema}</span>
+                      <span className="nl-combo-plus" aria-hidden="true">
+                        +
+                      </span>
+                      <span className="nl-pill">
+                        <Icon name={ANGULO[a].icon} size={13} />
+                        {t(`newsletter.angulo.${a}.nome`)}
+                      </span>
+                    </div>
+                    <div className="nl-eco">
+                      {eco && eco.length ? (
+                        <>
+                          <span className="nl-eco-label">{t("newsletter.combinacoes.inclui")}</span>
+                          {eco.map((termo) => (
+                            <span key={termo} className="nl-tag">
+                              {termo}
+                            </span>
+                          ))}
+                        </>
+                      ) : (
+                        <span className="nl-tag" data-pending="true">
+                          {t("newsletter.combinacoes.descoberto")}
+                        </span>
+                      )}
+                    </div>
                   </li>
                 );
               }),
             )}
           </ul>
         )}
-        <p style={{ ...SUB, margin: "8px 0 0", color: demais ? C.ambar : TEXT.faint }}>
-          {demais
-            ? t("newsletter.combinacoesDemais")
-            : t("newsletter.combinacoesTotal", { n: total, max: limites.max_consultas })}
-        </p>
-      </section>
-
-      {/* Quando: frequência, dias e hora */}
-      <section style={SECAO}>
-        <Kicker tone="muted" style={{ display: "block", marginBottom: 8 }}>
-          {t("newsletter.quando")}
-        </Kicker>
-        <div style={{ display: "grid", gap: 14 }}>
-          <div>
-            <label htmlFor="nl-frequencia" style={{ ...SUB, display: "block" }}>
-              {t("newsletter.frequencia")}
-            </label>
-            <Select
-              id="nl-frequencia"
-              options={opcoesFrequencia}
-              value={form.frequency}
-              onChange={trocarFrequencia}
-              style={{ maxWidth: 300 }}
-            />
+        {demais ? (
+          <div className="nl-banner" role="alert">
+            <Icon name="info" size={16} />
+            {t("newsletter.combinacoes.demais")}
           </div>
-
-          {form.frequency === "semanal" || form.frequency === "personalizada" ? (
-            <div role="group" aria-label={t("newsletter.diasDaSemana")}>
-              <span style={{ ...SUB, display: "block" }}>{t("newsletter.diasDaSemana")}</span>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
-                {DIAS.map((d) => (
-                  <Chip key={d} active={form.weekdays.includes(d)} onClick={() => alternarDia(d)}>
-                    {t(`newsletter.dia.${d}`)}
-                  </Chip>
-                ))}
-              </div>
-            </div>
-          ) : null}
-
-          {form.frequency === "mensal" ? (
-            <div>
-              <label htmlFor="nl-dia-mes" style={{ ...SUB, display: "block" }}>
-                {t("newsletter.diaDoMes")}
-              </label>
-              <Select
-                id="nl-dia-mes"
-                options={opcoesDiaDoMes}
-                value={String(form.month_day)}
-                onChange={(v) => setForm({ ...form, month_day: Number(v) })}
-                style={{ maxWidth: 120 }}
-              />
-              <p style={{ ...SUB, margin: "6px 0 0", color: TEXT.faint }}>{t("newsletter.diaDoMesNota")}</p>
-            </div>
-          ) : null}
-
-          <div>
-            <label htmlFor="nl-hora" style={{ ...SUB, display: "block" }}>
-              {t("newsletter.horario")}
-            </label>
-            <Select
-              id="nl-hora"
-              options={opcoesHora}
-              value={String(form.send_hour)}
-              onChange={(v) => setForm({ ...form, send_hour: Number(v) })}
-              style={{ maxWidth: 140 }}
-            />
-            <p style={{ ...SUB, margin: "6px 0 0", color: TEXT.faint }}>
-              {t("newsletter.horarioNota", { hora, fuso: dados.fuso })}
-            </p>
-          </div>
-
-          <div>
-            <label htmlFor="nl-quantidade" style={{ ...SUB, display: "block" }}>
-              {t("newsletter.porCombinacao")}
-            </label>
-            <Select
-              id="nl-quantidade"
-              options={opcoesQuantidade}
-              value={String(form.items_per_topic)}
-              onChange={(v) => setForm({ ...form, items_per_topic: Number(v) })}
-              style={{ maxWidth: 120 }}
-            />
-          </div>
-
-          <div>
-            <span style={{ ...SUB, display: "block" }}>{t("newsletter.envio")}</span>
-            <Segmented
-              name="nl-ligada"
-              label={t("newsletter.envio")}
-              options={opcoesLigado}
-              value={form.enabled ? "ligada" : "pausada"}
-              onChange={(v) => setForm({ ...form, enabled: v === "ligada" })}
-              style={{ maxWidth: 260 }}
-            />
-          </div>
-        </div>
-
-        <p style={{ ...SUB, margin: "14px 0 0" }}>
-          {proximo ? t("newsletter.proximo", { data: dataLegivel(proximo) }) : t("newsletter.semProximo")}
-          {dados.config.last_sent_on
-            ? ` · ${t("newsletter.ultimo", { data: dataLegivel(dados.config.last_sent_on) })}`
-            : ""}
-        </p>
-      </section>
-
-      {/* Ações */}
-      <section style={{ ...SECAO, display: "flex", flexWrap: "wrap", gap: 8, alignItems: "center" }}>
-        <button
-          type="button"
-          className="btn btn-primary"
-          disabled={salvar.pending || demais}
-          onClick={() => void aoSalvar()}
-        >
-          {salvar.pending ? t("newsletter.salvando") : t("newsletter.salvar")}
-        </button>
-        <button
-          type="button"
-          className="btn btn-ghost"
-          disabled={buscar.pending || form.topics.length === 0 || demais}
-          onClick={() => void aoBuscar()}
-        >
-          {buscar.pending ? t("newsletter.procurando") : t("newsletter.procurar")}
-        </button>
-        <button
-          type="button"
-          className="btn btn-ghost"
-          disabled={enviar.pending || sujo || salvo.topics.length === 0}
-          title={t("newsletter.enviarAgoraAjuda")}
-          onClick={() => void aoEnviar()}
-        >
-          {enviar.pending ? t("newsletter.enviando") : t("newsletter.enviarAgora")}
-        </button>
-        {sujo ? <span style={{ fontSize: 12, color: C.ambar }}>{t("newsletter.naoSalvo")}</span> : null}
-        {aviso ? (
-          <span
-            role={aviso.tom === "erro" ? "alert" : "status"}
-            style={{ fontSize: 12.5, color: aviso.tom === "erro" ? C.ambar : C.verde }}
-          >
-            {aviso.texto}
-          </span>
         ) : null}
       </section>
 
-      {/* O que a busca achou */}
+      {/* ---- Quando receber ---- */}
+      <section className="nl-card" aria-label={t("newsletter.quando.titulo")}>
+        <CabecalhoDoCartao
+          icon="clock"
+          tom="#cfa25e"
+          titulo={t("newsletter.quando.titulo")}
+          sub={t("newsletter.quando.sub")}
+        />
+
+        <div>
+          <span className="nl-field-label" id="nl-freq-rotulo">
+            {t("newsletter.quando.frequencia")}
+          </span>
+          <div className="nl-freq" role="radiogroup" aria-labelledby="nl-freq-rotulo">
+            {FREQUENCIAS.map((f) => (
+              <button
+                key={f}
+                type="button"
+                role="radio"
+                aria-checked={form.frequency === f}
+                className="nl-freq-opt"
+                onClick={() => trocarFrequencia(f)}
+              >
+                <span className="nl-freq-title">{t(`newsletter.freq.${f}.nome`)}</span>
+                <span className="nl-freq-desc">{t(`newsletter.freq.${f}.desc`)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {form.frequency === "mensal" ? (
+          <div>
+            <span className="nl-field-label" id="nl-mes-rotulo">
+              {t("newsletter.quando.diaDoMes")}
+            </span>
+            <div className="nl-month" role="group" aria-labelledby="nl-mes-rotulo">
+              {Array.from({ length: 28 }, (_, i) => i + 1).map((dia) => (
+                <button
+                  key={dia}
+                  type="button"
+                  className="nl-day"
+                  aria-pressed={form.month_day === dia}
+                  onClick={() => setForm({ ...form, month_day: dia })}
+                >
+                  {dia}
+                </button>
+              ))}
+            </div>
+            <p className="nl-hint">{t("newsletter.quando.diaDoMesNota")}</p>
+          </div>
+        ) : (
+          <div>
+            <span className="nl-field-label" id="nl-dias-rotulo">
+              {t("newsletter.quando.dias")}
+            </span>
+            <div className="nl-week" role="group" aria-labelledby="nl-dias-rotulo">
+              {DIAS.map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  className="nl-day"
+                  aria-pressed={diasMarcados.includes(d)}
+                  aria-label={t(`newsletter.diaNome.${d}`)}
+                  title={t(`newsletter.diaNome.${d}`)}
+                  disabled={Boolean(atalho)}
+                  onClick={() => alternarDia(d)}
+                >
+                  {t(`newsletter.diaCurto.${d}`)}
+                </button>
+              ))}
+            </div>
+            {atalho ? <p className="nl-hint">{t("newsletter.quando.diaFixo")}</p> : null}
+          </div>
+        )}
+
+        <div className="nl-two">
+          <div>
+            <span className="nl-field-label" id="nl-hora-rotulo">
+              {t("newsletter.quando.horario")}
+            </span>
+            <div className="nl-time" role="group" aria-labelledby="nl-hora-rotulo">
+              {HORARIOS_RAPIDOS.map((h) => (
+                <button
+                  key={h}
+                  type="button"
+                  className="nl-time-chip"
+                  aria-pressed={form.send_hour === h}
+                  onClick={() => setForm({ ...form, send_hour: h })}
+                >
+                  {hhmm(h)}
+                </button>
+              ))}
+              <Select
+                id="nl-hora"
+                options={opcoesHora}
+                value={horaForaDosRapidos ? String(form.send_hour) : ""}
+                placeholder={t("newsletter.quando.outroHorario")}
+                label={t("newsletter.quando.outroHorario")}
+                onChange={(v) => setForm({ ...form, send_hour: Number(v) })}
+                style={{ width: 150 }}
+              />
+            </div>
+            <p className="nl-hint">{t("newsletter.quando.horarioNota", { fuso: dados.fuso })}</p>
+          </div>
+
+          <div>
+            <span className="nl-field-label" id="nl-qtd-rotulo">
+              {t("newsletter.quando.quantidade")}
+            </span>
+            <div className="nl-stepper" role="group" aria-labelledby="nl-qtd-rotulo">
+              <button
+                type="button"
+                aria-label={t("newsletter.quando.menos")}
+                disabled={form.items_per_topic <= 1}
+                onClick={() => setForm({ ...form, items_per_topic: form.items_per_topic - 1 })}
+              >
+                −
+              </button>
+              <output aria-live="polite">{form.items_per_topic}</output>
+              <button
+                type="button"
+                aria-label={t("newsletter.quando.mais")}
+                disabled={form.items_per_topic >= limites.max_itens_por_busca}
+                onClick={() => setForm({ ...form, items_per_topic: form.items_per_topic + 1 })}
+              >
+                +
+              </button>
+            </div>
+            <p className="nl-hint">{t("newsletter.quando.quantidadeNota", { max: limites.max_itens_por_busca })}</p>
+          </div>
+        </div>
+      </section>
+
+      {/* ---- Prévia da busca ---- */}
       {achadas ? (
-        <section style={SECAO}>
+        <section className="nl-card" aria-label={t("newsletter.resultados.titulo")}>
+          <CabecalhoDoCartao
+            icon="eye"
+            tom="#63b48f"
+            titulo={t("newsletter.resultados.titulo")}
+            sub={
+              achadas.length
+                ? t("newsletter.resultados.resumo", { n: achadas.length, dias: diasBuscados })
+                : undefined
+            }
+          />
           {achadas.length === 0 ? (
-            <p style={SUB}>{t("newsletter.semResultados")}</p>
+            <div className="nl-empty">
+              <Icon name="search" size={22} />
+              {t("newsletter.resultados.vazio", { dias: diasBuscados })}
+            </div>
           ) : (
             <>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 10, alignItems: "center", marginBottom: 6 }}>
-                <span style={{ fontSize: 13.5, color: TEXT.full }}>
-                  {t("newsletter.resultados", { n: achadas.length, dias: diasBuscados })}
-                </span>
+              <div className="nl-results-head">
+                <span className="nl-tag">{t("newsletter.resultados.selecionadas", { n: marcadas.size })}</span>
                 <button
                   type="button"
-                  className="btn btn-ghost"
+                  className="btn btn-secondary"
                   onClick={() => setMarcadas(new Set(achadas.map((i) => i.url)))}
                 >
-                  {t("newsletter.marcarTodas")}
+                  {t("newsletter.resultados.todas")}
+                </button>
+                <button type="button" className="btn btn-secondary" onClick={() => setMarcadas(new Set())}>
+                  {t("newsletter.resultados.nenhuma")}
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn nl-btn-solid"
+                  style={{ marginLeft: "auto" }}
                   disabled={enviar.pending || marcadas.size === 0}
                   onClick={() => void aoEnviar(achadas.filter((i) => marcadas.has(i.url)))}
                 >
-                  {t("newsletter.enviarSelecionadas", { n: marcadas.size, destino: dados.destino })}
+                  <Icon name="send" size={15} />
+                  {t("newsletter.resultados.enviar", { n: marcadas.size })}
                 </button>
               </div>
-              <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
+              <ul className="nl-grid">
                 {achadas.map((item) => (
-                  <Materia
+                  <MateriaCard
                     key={item.url}
                     item={item}
-                    marcada={marcadas.has(item.url)}
-                    onMarcar={() =>
+                    selecionada={marcadas.has(item.url)}
+                    onAlternar={() =>
                       setMarcadas((atual) => {
                         const novo = new Set(atual);
                         if (novo.has(item.url)) novo.delete(item.url);
@@ -609,27 +737,94 @@ function Formulario({ dados, onSalvo }: { dados: PainelNewsletter; onSalvo: () =
         </section>
       ) : null}
 
-      {/* Histórico */}
-      <section style={SECAO}>
-        <Kicker tone="muted" style={{ display: "block", marginBottom: 6 }}>
-          {t("newsletter.historico")}
-        </Kicker>
+      {/* ---- Histórico ---- */}
+      <section className="nl-card" aria-label={t("newsletter.historico.titulo")}>
+        <CabecalhoDoCartao
+          icon="mail"
+          titulo={t("newsletter.historico.titulo")}
+          sub={t("newsletter.historico.sub")}
+        />
         {dados.edicoes.length === 0 ? (
-          <p style={SUB}>{t("newsletter.historicoVazio")}</p>
+          <div className="nl-empty">
+            <Icon name="mail" size={22} />
+            {t("newsletter.historico.vazio")}
+          </div>
         ) : (
-          <ul style={{ listStyle: "none", margin: 0, padding: 0 }}>
-            {dados.edicoes.slice(0, 5).map((e) => (
-              <li key={e.id} style={{ padding: "6px 0", fontSize: 13, color: TEXT.muted }}>
-                <span style={{ color: TEXT.full }}>{e.assunto}</span> · {dataLegivel(e.enviada_em)} ·{" "}
-                {t("newsletter.materias", { n: e.quantidade })} · {t(`newsletter.tipo.${e.tipo}`)}
-              </li>
-            ))}
-          </ul>
+          <>
+            <ul className="nl-history">
+              {dados.edicoes.slice(0, 5).map((e) => (
+                <li key={e.id}>
+                  <span className="nl-history-icon">
+                    <Icon name="mail" size={16} />
+                  </span>
+                  <div style={{ minWidth: 0 }}>
+                    <div className="nl-history-title">{e.assunto}</div>
+                    <div className="nl-history-meta">
+                      {dataLonga(e.enviada_em)} ·{" "}
+                      {e.quantidade === 1
+                        ? t("newsletter.materias.uma")
+                        : t("newsletter.materias.varias", { n: e.quantidade })}{" "}
+                      · {t(`newsletter.historico.${e.tipo}`)}
+                    </div>
+                  </div>
+                  <a className="nl-link" href="/newsletter" target="_blank" rel="noopener">
+                    {t("newsletter.historico.abrir")}
+                    <Icon name="externalLink" size={13} />
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
-        <a href="/newsletter" target="_blank" rel="noopener" style={{ fontSize: 12.5, color: ACC }}>
-          {t("newsletter.abrirArquivo")}
-        </a>
       </section>
+
+      {/* ---- Barra de ações fixa ---- */}
+      <div className="nl-bar" role="region" aria-label={t("newsletter.kicker")}>
+        <span className="nl-bar-status" role="status">
+          <span className="nl-dot" data-on={aviso?.tom === "erro" ? "dirty" : sujo ? "dirty" : "ok"} />
+          {aviso
+            ? aviso.texto
+            : sujo
+              ? t("newsletter.acoes.alteracoes")
+              : t("newsletter.acoes.tudoSalvo")}
+        </span>
+        <div className="nl-bar-actions">
+          {sujo ? (
+            <button type="button" className="btn btn-secondary" onClick={() => setForm(salvo)}>
+              <Icon name="undo" size={15} />
+              {t("newsletter.acoes.descartar")}
+            </button>
+          ) : null}
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={buscar.pending || form.topics.length === 0 || demais}
+            onClick={() => void aoBuscar()}
+          >
+            <Icon name="search" size={15} />
+            {buscar.pending ? t("newsletter.acoes.procurando") : t("newsletter.acoes.procurar")}
+          </button>
+          <button
+            type="button"
+            className="btn btn-secondary"
+            disabled={enviar.pending || sujo || salvo.topics.length === 0}
+            title={t("newsletter.acoes.enviarAjuda")}
+            onClick={() => void aoEnviar()}
+          >
+            <Icon name="send" size={15} />
+            {enviar.pending ? t("newsletter.acoes.enviando") : t("newsletter.acoes.enviar")}
+          </button>
+          <button
+            type="button"
+            className="btn nl-btn-solid"
+            disabled={salvar.pending || demais || !sujo}
+            onClick={() => void aoSalvar()}
+          >
+            <Icon name="check" size={15} />
+            {salvar.pending ? t("newsletter.acoes.salvando") : t("newsletter.acoes.salvar")}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
@@ -639,14 +834,10 @@ export function NewsletterAdmin() {
   const painel = useQuery(() => newsletter.painel(), []);
 
   return (
-    <Panel pad={16.8}>
-      <Kicker tone="muted" style={{ display: "block", marginBottom: 4 }}>
-        {t("newsletter.titulo")}
-      </Kicker>
-      <p style={SUB}>{t("newsletter.explica")}</p>
-      {painel.loading ? <Loading label={t("newsletter.pagina.carregando")} /> : null}
+    <>
+      {painel.loading && !painel.data ? <Loading label={t("newsletter.pagina.carregando")} /> : null}
       {painel.error ? <ErrorState message={painel.error} onRetry={painel.reload} /> : null}
       {painel.data ? <Formulario dados={painel.data} onSalvo={painel.reload} /> : null}
-    </Panel>
+    </>
   );
 }
