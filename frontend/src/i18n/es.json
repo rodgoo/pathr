@@ -1455,7 +1455,8 @@
       "avisos": "Avisos y política de privacidad",
       "integracoes": "Estado de las API",
       "moderacao": "Moderación",
-      "recursos": "Recursos"
+      "recursos": "Recursos",
+      "newsletter": "Boletín informativo"
     },
     "legaisAria": "Documentos legales",
     "legais": {
@@ -3090,6 +3091,99 @@
         "titulo": "Responsable técnico: liderazgo técnico y arquitectura",
         "detalhe": "decisiones técnicas, revisión de código y tutoría"
       }
+    }
+  },
+  "newsletter": {
+    "titulo": "Boletín informativo",
+    "explica": "Noticias reales sobre tecnología, seleccionadas en Internet según los temas que elijas, que recibirás directamente en tu correo electrónico, los días y a la hora que tú elijas.",
+    "avisoPausada": "El boletín está en pausa. No se enviará nada hasta que se reanude.",
+    "avisoSemFonte": "No hay ninguna fuente de búsqueda configurada (TAVILY_API_KEY o BRAVE_API_KEY). Sin ella, no se encuentra nada.",
+    "avisoSemEmail": "El correo electrónico (Brevo) no está configurado en este entorno: el mensaje no llega a la bandeja de entrada.",
+    "tecnologias": "Tecnologías",
+    "tecnologiasAjuda": "Lenguajes y temas. Añade tantos como quieras, hasta «{max}».",
+    "adicionarRotulo": "Incorporar tecnología",
+    "adicionarPlaceholder": "Ej.: Java, Rust, Kubernetes…",
+    "adicionar": "Añadir",
+    "remover": "Eliminar «{nome}»",
+    "sugestoes": "Sugerencias",
+    "angulos": "Qué acompañarlo",
+    "angulosAjuda": "Cada perspectiva se combina con cada tecnología, y ambas se complementan.",
+    "angulo": {
+      "noticias": "Noticias generales",
+      "novidades": "Novedades",
+      "trabalhos": "Empleos",
+      "polemicas": "Polémicas"
+    },
+    "combinacoes": "Combinaciones",
+    "combinacoesAjuda": "Esto es lo que se buscará. Cada una de ellas ya cuenta con el ecosistema tecnológico, no solo con su nombre.",
+    "combinacoesVazio": "Elige al menos una tecnología para ver las combinaciones.",
+    "combinacoesTotal": "{n} {max}s combinaciones",
+    "combinacoesDemais": "Demasiadas combinaciones: elimina alguna tecnología o algún enfoque.",
+    "inclui": "incluye {termos}",
+    "ecossistemaDescoberto": "El ecosistema se descubre en la búsqueda",
+    "quando": "Cuando",
+    "frequencia": "Frecuencia",
+    "frequenciaOpcao": {
+      "diaria": "Todos los días",
+      "dias_uteis": "Días laborables",
+      "fim_de_semana": "Fin de semana",
+      "semanal": "Una vez a la semana",
+      "mensal": "Una vez al mes",
+      "personalizada": "Los días que yo elija"
+    },
+    "diasDaSemana": "Días de la semana",
+    "dia": [
+      "Mar",
+      "Tener",
+      "Mié",
+      "Jue",
+      "Sexo",
+      "Sábado",
+      "Dom"
+    ],
+    "diaDoMes": "Día del mes",
+    "diaDoMesNota": "Dura hasta el día 28: los días 29 y 31 no existen en todos los meses.",
+    "horario": "Horario",
+    "horarioNota": "Llega sobre las {hora}, en el horario de {fuso}. El envío se realiza por horas completas.",
+    "porCombinacao": "Materias por combinación",
+    "envio": "Envío automático",
+    "ligada": "Conectado",
+    "pausada": "En pausa",
+    "proximo": "Próximo envío: {data}",
+    "semProximo": "No hay ningún envío programado.",
+    "ultimo": "Última edición: {data}",
+    "naoSalvo": "Hay cambios sin guardar.",
+    "salvar": "Guardar",
+    "salvando": "Guardando…",
+    "salvo": "Guardado.",
+    "erroSalvar": "No he podido guardarlo. Comprueba los campos.",
+    "procurar": "Buscar ahora",
+    "procurando": "Buscando…",
+    "resultados": "{n} noticias de los últimos {dias} días",
+    "semResultados": "No se ha encontrado nada nuevo para estas combinaciones.",
+    "marcarTodas": "Seleccionar todo",
+    "enviarSelecionadas": "Envía {n} a {destino}",
+    "enviarAgora": "Enviar la edición ahora",
+    "enviarAgoraAjuda": "Busca y envía con la configuración guardada.",
+    "enviando": "Enviando…",
+    "enviada": "Enviado: {assunto}",
+    "naoEnviada": "No enviada: {motivo}",
+    "via": "fuente: {termo}",
+    "historico": "Ediciones enviadas",
+    "historicoVazio": "Aún no se ha enviado ninguna edición.",
+    "abrirArquivo": "Abrir el archivo completo",
+    "materias": "{n} temas",
+    "tipo": {
+      "agendada": "programada",
+      "manual": "manual"
+    },
+    "pagina": {
+      "titulo": "Boletín informativo",
+      "subtitulo": "Las ediciones que se han enviado a tu correo electrónico, con los artículos y los enlaces.",
+      "voltar": "Volver a PathR",
+      "carregando": "Cargando ediciones…",
+      "vazio": "Aún no se ha enviado ninguna edición. Configúrala y envía la primera en «Configuración» › «Boletín informativo».",
+      "configurar": "Configurar el boletín informativo"
     }
   }
 }

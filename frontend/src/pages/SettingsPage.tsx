@@ -22,6 +22,7 @@ import { SkillsTab } from "@/components/profile/SkillsTab";
 import { ModeracaoRelatos } from "@/components/relatos/ModeracaoRelatos";
 import { ModeracaoUsuarios } from "@/components/moderacao/ModeracaoUsuarios";
 import { RecursosFlags } from "@/components/admin/RecursosFlags";
+import { NewsletterAdmin } from "@/components/admin/NewsletterAdmin";
 import { useAuth } from "@/hooks/useAuth";
 
 // `label` guarda a chave de tradução; o texto sai no render com `t()`.
@@ -46,6 +47,9 @@ const ABA_RECURSOS = { value: "recursos" as const, label: "config.abas.recursos"
 // servidor já responde 404 em /status/apis para quem não é (ver
 // routers/status_apis.py); esconder a aba é só não anunciar que ela existe.
 const ABA_INTEGRACOES = { value: "integracoes" as const, label: "config.abas.integracoes", icon: "server" as IconName };
+// Newsletter — notícias por tema no e-mail do admin. O servidor responde 404
+// para qualquer outra conta (routers/newsletter.py).
+const ABA_NEWSLETTER = { value: "newsletter" as const, label: "config.abas.newsletter", icon: "globe" as IconName };
 
 export function SettingsPage() {
   const { state, dispatch } = useAppState();
@@ -54,7 +58,7 @@ export function SettingsPage() {
   const TABS = [
     ...ABAS,
     ...(user?.is_moderator || user?.is_super_admin ? [ABA_MODERACAO] : []),
-    ...(user?.is_super_admin ? [ABA_RECURSOS, ABA_INTEGRACOES] : []),
+    ...(user?.is_super_admin ? [ABA_RECURSOS, ABA_NEWSLETTER, ABA_INTEGRACOES] : []),
   ];
   // As cinco abas do desenho têm tela. "objetivo" e "avisos" ficaram meses
   // caindo aqui em "conta" por não terem uma — era por isso que a pessoa
@@ -105,6 +109,7 @@ export function SettingsPage() {
       {tab === "moderacao" && user?.is_super_admin ? <ModeracaoUsuarios /> : null}
       {tab === "moderacao" && user?.is_moderator ? <ModeracaoRelatos /> : null}
       {tab === "recursos" && user?.is_super_admin ? <RecursosFlags /> : null}
+      {tab === "newsletter" && user?.is_super_admin ? <NewsletterAdmin /> : null}
 
       {/* Em aba nova: o documento é longo, e voltar dele não deve custar a
           posição em que a pessoa estava nas configurações. */}

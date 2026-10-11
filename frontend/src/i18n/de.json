@@ -1455,7 +1455,8 @@
       "avisos": "Hinweise und Datenschutz",
       "integracoes": "Status der APIs",
       "moderacao": "Moderation",
-      "recursos": "Ressourcen"
+      "recursos": "Ressourcen",
+      "newsletter": "Newsletter"
     },
     "legaisAria": "Rechtliche Dokumente",
     "legais": {
@@ -3090,6 +3091,99 @@
         "titulo": "Tech Lead: Technische Leitung und Architektur",
         "detalhe": "Technische Entscheidungen, Code-Review und Mentoring"
       }
+    }
+  },
+  "newsletter": {
+    "titulo": "Newsletter",
+    "explica": "Aktuelle Technologie-Nachrichten, die im Internet nach den von Ihnen gewählten Themen gesucht werden, erhalten Sie direkt per E-Mail – an den Tagen und zu den Uhrzeiten, die Sie festlegen.",
+    "avisoPausada": "Der Newsletter ist derzeit deaktiviert. Bis zur Reaktivierung werden keine E-Mails versendet.",
+    "avisoSemFonte": "Es ist keine Suchquelle konfiguriert (TAVILY_API_KEY oder BRAVE_API_KEY). Ohne diese wird nichts gefunden.",
+    "avisoSemEmail": "E-Mail (Brevo) ist in dieser Umgebung nicht eingerichtet: Die Nachricht gelangt nicht in den Posteingang.",
+    "tecnologias": "Technologien",
+    "tecnologiasAjuda": "Sprachen und Themen. Fügen Sie so viele hinzu, wie Sie möchten, bis zu {max}.",
+    "adicionarRotulo": "Technologie hinzufügen",
+    "adicionarPlaceholder": "Beispiele: Java, Rust, Kubernetes…",
+    "adicionar": "Hinzufügen",
+    "remover": "{nome} entfernen",
+    "sugestoes": "Vorschläge",
+    "angulos": "Was man sich ansehen sollte",
+    "angulosAjuda": "Jeder Aspekt lässt sich mit jeder Technologie kombinieren, und sie ergänzen sich gegenseitig.",
+    "angulo": {
+      "noticias": "Allgemeine Nachrichten",
+      "novidades": "Neuigkeiten",
+      "trabalhos": "Stellenangebote",
+      "polemicas": "Kontroversen"
+    },
+    "combinacoes": "Kombinationen",
+    "combinacoesAjuda": "Genau das wird angestrebt. Jede von ihnen bringt bereits das gesamte Technologie-Ökosystem mit sich, nicht nur den Namen.",
+    "combinacoesVazio": "Wählen Sie mindestens eine Technologie aus, um die Kombinationen anzuzeigen.",
+    "combinacoesTotal": "{n} {max}-Kombinationen",
+    "combinacoesDemais": "Zu viele Kombinationen: Lass eine Technologie oder einen Blickwinkel weg.",
+    "inclui": "darunter {termos}",
+    "ecossistemaDescoberto": "Das Ökosystem wird bei der Suche entdeckt",
+    "quando": "Wann",
+    "frequencia": "Häufigkeit",
+    "frequenciaOpcao": {
+      "diaria": "Jeden Tag",
+      "dias_uteis": "Werktage",
+      "fim_de_semana": "Wochenende",
+      "semanal": "Einmal pro Woche",
+      "mensal": "Einmal im Monat",
+      "personalizada": "Tage, die ich mir aussuche"
+    },
+    "diasDaSemana": "Wochentage",
+    "dia": [
+      "Mo",
+      "Haben",
+      "Mi",
+      "Do",
+      "Sex",
+      "Sa",
+      "Sonntag"
+    ],
+    "diaDoMes": "Tag des Monats",
+    "diaDoMesNota": "Es läuft bis zum 28.: Die Tage 29 bis 31 gibt es nicht in jedem Monat.",
+    "horario": "Zeitplan",
+    "horarioNota": "Die Ankunft erfolgt gegen {hora}, zu den Zeiten von {fuso}. Die Abfahrt erfolgt zu jeder vollen Stunde.",
+    "porCombinacao": "Fächer nach Kombination",
+    "envio": "Automatischer Versand",
+    "ligada": "Eingeschaltet",
+    "pausada": "Pausiert",
+    "proximo": "Nächster Versand: {data}",
+    "semProximo": "Es sind keine Sendungen geplant.",
+    "ultimo": "Letzte Ausgabe: {data}",
+    "naoSalvo": "Es gibt nicht gespeicherte Änderungen.",
+    "salvar": "Speichern",
+    "salvando": "Wird gespeichert…",
+    "salvo": "Gespeichert.",
+    "erroSalvar": "Das Speichern ist fehlgeschlagen. Bitte überprüfen Sie die Felder.",
+    "procurar": "Jetzt suchen",
+    "procurando": "Suche…",
+    "resultados": "{n} Beiträge der letzten {dias} Tage",
+    "semResultados": "Zu diesen Kombinationen wurden keine neuen Ergebnisse gefunden.",
+    "marcarTodas": "Alle markieren",
+    "enviarSelecionadas": "{n} an {destino} senden",
+    "enviarAgora": "Bearbeitung jetzt senden",
+    "enviarAgoraAjuda": "Suchen und senden mit der gespeicherten Konfiguration.",
+    "enviando": "Wird gesendet…",
+    "enviada": "Gesendet von: {assunto}",
+    "naoEnviada": "Nicht gesendet: {motivo}",
+    "via": "Quelle: {termo}",
+    "historico": "Eingesandte Ausgaben",
+    "historicoVazio": "Es wurde noch keine Ausgabe eingereicht.",
+    "abrirArquivo": "Vollständige Datei öffnen",
+    "materias": "{n} Themen",
+    "tipo": {
+      "agendada": "geplant",
+      "manual": "Handbuch"
+    },
+    "pagina": {
+      "titulo": "Newsletter",
+      "subtitulo": "Die Ausgaben, die an Ihre E-Mail-Adresse gesendet wurden, mit den Artikeln und Links.",
+      "voltar": "Zurück zu PathR",
+      "carregando": "Ausgaben werden geladen…",
+      "vazio": "Es wurde noch keine Ausgabe gesendet. Richten Sie die erste Ausgabe unter „Einstellungen“ › „Newsletter“ ein und versenden Sie sie.",
+      "configurar": "Newsletter einrichten"
     }
   }
 }

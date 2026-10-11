@@ -105,9 +105,12 @@ class _Consulta:
         self._payload = payload
         return self
 
-    def upsert(self, payload: Any, **_kwargs: Any) -> "_Consulta":
+    def upsert(self, payload: Any, **kwargs: Any) -> "_Consulta":
         self._operacao = "insert"
         self._payload = payload
+        # `on_conflict` com uma coluna: a linha antiga com a mesma chave sai,
+        # como no Postgres (a nova a substitui em vez de duplicar).
+        self._conflito = kwargs.get("on_conflict")
         return self
 
     def update(self, payload: dict) -> "_Consulta":
@@ -190,6 +193,9 @@ class _Consulta:
                 # código que lê created["id"] logo após o insert quebraria só
                 # no teste — um falso positivo ao contrário.
                 nova = dict(nova)
+                conflito = getattr(self, "_conflito", None)
+                if conflito and conflito in nova:
+                    linhas[:] = [l for l in linhas if l.get(conflito) != nova[conflito]]
                 nova.setdefault("id", str(uuid.uuid4()))
                 nova.setdefault("created_at", datetime.now(timezone.utc).isoformat())
                 linhas.append(nova)

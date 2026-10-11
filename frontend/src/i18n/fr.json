@@ -1455,7 +1455,8 @@
       "avisos": "Mentions légales et confidentialité",
       "integracoes": "État des API",
       "moderacao": "Modération",
-      "recursos": "Ressources"
+      "recursos": "Ressources",
+      "newsletter": "Lettre d'information"
     },
     "legaisAria": "Documents juridiques",
     "legais": {
@@ -3090,6 +3091,99 @@
         "titulo": "Responsable technique : direction technique et architecture",
         "detalhe": "décisions techniques, révision du code et accompagnement"
       }
+    }
+  },
+  "newsletter": {
+    "titulo": "Lettre d'information",
+    "explica": "Des actualités technologiques fiables, sélectionnées sur le Web en fonction des thèmes de votre choix, vous sont envoyées directement par e-mail, aux jours et à l'heure que vous aurez définis.",
+    "avisoPausada": "La newsletter est actuellement suspendue. Aucun message ne sera envoyé tant qu'elle ne sera pas réactivée.",
+    "avisoSemFonte": "Aucune source de recherche n'est configurée (TAVILY_API_KEY ou BRAVE_API_KEY). Sans celle-ci, aucun résultat n'est trouvé.",
+    "avisoSemEmail": "La messagerie électronique (Brevo) n'est pas configurée dans cet environnement : le message n'arrive pas dans la boîte de réception.",
+    "tecnologias": "Technologies",
+    "tecnologiasAjuda": "Langues et matières. Ajoutez-en autant que vous le souhaitez, jusqu’à {max}.",
+    "adicionarRotulo": "Ajouter de la technologie",
+    "adicionarPlaceholder": "Ex. : Java, Rust, Kubernetes…",
+    "adicionar": "Ajouter",
+    "remover": "Supprimer {nome}",
+    "sugestoes": "Suggestions",
+    "angulos": "À suivre",
+    "angulosAjuda": "Chaque aspect s'associe à chaque technologie, et ils se cumulent.",
+    "angulo": {
+      "noticias": "Actualités générales",
+      "novidades": "Actualités",
+      "trabalhos": "Offres d'emploi",
+      "polemicas": "Polémiques"
+    },
+    "combinacoes": "Combinaisons",
+    "combinacoesAjuda": "C'est ce que nous allons rechercher. Chacune d'entre elles incarne déjà l'écosystème de cette technologie, et pas seulement son nom.",
+    "combinacoesVazio": "Sélectionnez au moins une technologie pour voir les combinaisons possibles.",
+    "combinacoesTotal": "{n} {max} combinaisons",
+    "combinacoesDemais": "Trop de combinaisons : retirez une technologie ou un angle.",
+    "inclui": "parmi lesquels {termos}",
+    "ecossistemaDescoberto": "l'écosystème est découvert lors de la recherche",
+    "quando": "Quand",
+    "frequencia": "Fréquence",
+    "frequenciaOpcao": {
+      "diaria": "Tous les jours",
+      "dias_uteis": "Jours ouvrables",
+      "fim_de_semana": "Week-end",
+      "semanal": "Une fois par semaine",
+      "mensal": "Une fois par mois",
+      "personalizada": "Les jours que je choisis"
+    },
+    "diasDaSemana": "Jours de la semaine",
+    "dia": [
+      "Lun",
+      "Avoir",
+      "Mercredi",
+      "Jeu",
+      "Sexe",
+      "Samedi",
+      "Dimanche"
+    ],
+    "diaDoMes": "Jour du mois",
+    "diaDoMesNota": "Ça dure jusqu'au 28 : les 29 et 31 n'existent pas tous les mois.",
+    "horario": "Horaires",
+    "horarioNota": "Il arrive vers {hora}, aux horaires indiqués sur {fuso}. Les départs ont lieu toutes les heures.",
+    "porCombinacao": "Matières par combinaison",
+    "envio": "Envoi automatique",
+    "ligada": "Allumé",
+    "pausada": "En pause",
+    "proximo": "Prochaine diffusion : {data}",
+    "semProximo": "Aucune expédition prévue.",
+    "ultimo": "Dernière mise à jour : {data}",
+    "naoSalvo": "Il y a des modifications non enregistrées.",
+    "salvar": "Enregistrer",
+    "salvando": "Enregistrement en cours…",
+    "salvo": "Enregistré.",
+    "erroSalvar": "Je n'ai pas réussi à enregistrer. Vérifiez les champs.",
+    "procurar": "Rechercher maintenant",
+    "procurando": "Recherche…",
+    "resultados": "{n} articles publiés au cours des derniers {dias} jours",
+    "semResultados": "Aucun résultat nouveau n'a été trouvé pour ces combinaisons.",
+    "marcarTodas": "Tout sélectionner",
+    "enviarSelecionadas": "Envoyer {n} à {destino}",
+    "enviarAgora": "Envoyer la modification maintenant",
+    "enviarAgoraAjuda": "Rechercher et envoyer avec la configuration enregistrée.",
+    "enviando": "Envoi en cours…",
+    "enviada": "Envoyé le : {assunto}",
+    "naoEnviada": "Non envoyée : {motivo}",
+    "via": "via {termo}",
+    "historico": "Éditions envoyées",
+    "historicoVazio": "Aucune édition n'a encore été envoyée.",
+    "abrirArquivo": "Ouvrir le fichier complet",
+    "materias": "{n} sujets",
+    "tipo": {
+      "agendada": "programmée",
+      "manual": "manuel"
+    },
+    "pagina": {
+      "titulo": "Lettre d'information",
+      "subtitulo": "Les éditions qui vous ont été envoyées par e-mail, avec les articles et les liens.",
+      "voltar": "Retour à PathR",
+      "carregando": "Chargement des éditions…",
+      "vazio": "Aucune édition n'a encore été envoyée. Configurez-la et envoyez la première dans Paramètres › Newsletter.",
+      "configurar": "Configurer la newsletter"
     }
   }
 }

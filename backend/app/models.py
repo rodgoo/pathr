@@ -1536,4 +1536,46 @@ class PathrNewsScan(SQLModel, table=True):
     __table_args__ = (sa.UniqueConstraint("city", "state", name="uq_pathr_news_scan_regiao"),)
 
 
+class PathrNewsletterConfig(SQLModel, table=True):
+    """A newsletter do admin: temas, dias e hora do envio. Uma linha por admin.
+    Migração 0046; a regra de agenda está em services/newsletter.py."""
+
+    __tablename__ = "pathr_newsletter_config"
+
+    user_id: uuid.UUID = Field(
+        sa_column=Column(
+            PGUUID(as_uuid=True), sa.ForeignKey("pathr_user.id", ondelete="CASCADE"), primary_key=True
+        )
+    )
+    enabled: bool = Field(default=False)
+    topics: list[str] = Field(default_factory=list, sa_column=_jsonb("[]"))
+    angles: list[str] = Field(default_factory=lambda: ["noticias"], sa_column=_jsonb('["noticias"]'))
+    frequency: str = Field(default="semanal", sa_type=sa.String(length=20))
+    weekdays: list[int] = Field(default_factory=lambda: [0], sa_column=_jsonb("[0]"))
+    month_day: int = Field(default=1)
+    send_hour: int = Field(default=8)
+    items_per_topic: int = Field(default=2)
+    last_sent_on: Optional[date] = Field(default=None, sa_type=sa.Date())
+    last_attempt_at: Optional[datetime] = Field(default=None, sa_type=sa.DateTime(timezone=True))
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+    updated_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+
+
+class PathrNewsletterIssue(SQLModel, table=True):
+    """Uma edição enviada. `items` é de onde sai a lista de links já mandados.
+    Migração 0046."""
+
+    __tablename__ = "pathr_newsletter_issue"
+
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(sa_column=_fk("pathr_user.id", index=False))
+    subject: str = Field(sa_type=sa.Text())
+    kind: str = Field(default="agendada", sa_type=sa.String(length=12))
+    items: list[dict[str, Any]] = Field(default_factory=list, sa_column=_jsonb("[]"))
+    sent_on: date = Field(sa_type=sa.Date())
+    created_at: datetime = Field(default_factory=utcnow, sa_type=sa.DateTime(timezone=True))
+
+    __table_args__ = (sa.Index("ix_pathr_newsletter_issue_user", "user_id", "created_at"),)
+
+
 _mirror_defaults_to_database()

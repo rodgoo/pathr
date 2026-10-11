@@ -54,7 +54,7 @@ garante que uma falha de e-mail nunca derrube o cadastro em si.
 import logging
 from datetime import datetime
 from html import escape
-from typing import Optional
+from typing import Any, Optional
 from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
@@ -751,6 +751,112 @@ def send_scan_summary(to_email: str, numeros: dict, destaques: list[str], notion
         f'{_plural(numeros["erros"], "erro", "erros")} · {_plural(total_relatos, "relato", "relatos")}'
     )
     return _send(to_email, "Moderação PathR", assunto, _pagina(relatos_txt, miolo))
+
+
+# ---------------------------------------------------------------------------
+# Newsletter do admin
+#
+# Notícias reais de busca (services/newsletter.py), agrupadas por tecnologia.
+# Cada matéria leva a etiqueta da combinação que a trouxe ("Java + Trabalhos"),
+# o veículo e a data: quem lê sabe por que ela veio e onde vai cair o clique.
+# Só o admin recebe, então não há "preferências" no rodapé.
+# ---------------------------------------------------------------------------
+
+_ANGULO_ROTULO = {
+    "noticias": "Notícias",
+    "novidades": "Novidades",
+    "trabalhos": "Empregos",
+    "polemicas": "Polêmicas",
+}
+
+
+def _materia(item: dict[str, Any]) -> str:
+    """Uma notícia: etiqueta, título-link, trecho da própria fonte, veículo e data.
+
+    Tudo escapado: título e trecho vêm de página de terceiro.
+    """
+    url = str(item.get("url") or "")
+    if not url.startswith(("http://", "https://")):
+        return ""
+    etiqueta = f"{item.get('topico', '')} + {_ANGULO_ROTULO.get(str(item.get('categoria')), 'Notícias')}"
+    publicado = str(item.get("publicado_em") or "")
+    try:
+        data = datetime.fromisoformat(publicado).strftime("%d/%m") if publicado else ""
+    except ValueError:
+        data = ""
+    # "via Spring Boot": quando a matéria veio do ecossistema e não do nome
+    # puro da tecnologia, quem lê entende por que "Java" trouxe isso.
+    termo = str(item.get("termo") or "")
+    via = f"via {termo}" if termo and termo.lower() != str(item.get("topico") or "").lower() else ""
+    origem = " · ".join(p for p in (str(item.get("fonte") or ""), data, via) if p)
+    trecho = str(item.get("resumo") or "")
+    # A foto da matéria, clicável como o título. Só https (a política do
+    # `limpar_selecao` já filtra; aqui é a segunda trava, porque este é o ponto
+    # que escreve no HTML). Com imagem bloqueada pelo cliente, o título logo
+    # abaixo carrega a matéria sozinho: a foto é acréscimo, nunca o conteúdo.
+    imagem = str(item.get("imagem") or "")
+    foto = (
+        f'<a href="{escape(url, quote=True)}" style="display:block;padding-top:10px">'
+        f'<img src="{escape(imagem, quote=True)}" alt="" width="504" '
+        f'style="display:block;width:100%;max-width:504px;height:auto;max-height:260px;'
+        f'border:1px solid {_LINHA};border-radius:8px" /></a>'
+        if imagem.startswith("https://")
+        else ""
+    )
+    corpo_trecho = (
+        f'<div style="font-family:{_FONTE};font-size:14px;line-height:1.6;color:{_TINTA_SUAVE};'
+        f'padding-top:6px">{_nitido(escape(trecho))}</div>'
+        if trecho
+        else ""
+    )
+    return f"""
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%"
+       style="margin:16px 0 0">
+  <tr><td style="border-top:1px solid {_LINHA};padding-top:14px">
+    <div style="font-family:{_FONTE};font-size:11px;font-weight:600;letter-spacing:.08em;
+                text-transform:uppercase;color:{_ROXO}">{_nitido(escape(etiqueta))}</div>
+    {foto}
+    <a href="{escape(url, quote=True)}"
+       style="font-family:{_FONTE};font-size:16px;line-height:1.4;font-weight:600;
+              color:{_TINTA};text-decoration:none;display:block;padding-top:4px">{_nitido(escape(str(item.get("titulo") or url)))}</a>
+    {corpo_trecho}
+    <div style="font-family:{_FONTE};font-size:12px;color:{_TINTA_FRACA};padding-top:6px">{_nitido(escape(origem))}</div>
+  </td></tr>
+</table>""".strip()
+
+
+def send_newsletter(
+    to_email: str, to_name: str, assunto: str, grupos: list[tuple[str, list[dict[str, Any]]]]
+) -> bool:
+    """A edição: um bloco por tecnologia, as matérias dentro."""
+    total = sum(len(itens) for _, itens in grupos)
+    if not total:
+        return False
+    nome = _primeiro_nome(to_name)
+    blocos = "".join(
+        f'<div style="font-family:{_FONTE};font-size:18px;font-weight:600;letter-spacing:-.01em;'
+        f'color:{_TINTA};padding:26px 0 0">{_nitido(escape(tema))}</div>'
+        + "".join(_materia(item) for item in itens)
+        for tema, itens in grupos
+    )
+    cor = _ROXO
+    miolo = (
+        _cabecalho(cor)
+        + _titulo("Newsletter", f"Suas notícias{', ' + nome if nome else ''}.", cor)
+        + _texto(
+            f'<b style="color:{_TINTA}">{total} {"matéria" if total == 1 else "matérias"}</b> '
+            "reais de busca, nos temas e dias que você escolheu."
+        )
+        + blocos
+        + _botao("Ajustar temas e dias", settings.frontend_url, cor)
+        + _rodape(mostrar_preferencias=False)
+    )
+    return _send(
+        to_email,
+        to_name,
+        assunto,
+        _pagina(", ".join(tema for tema, _ in grupos[:4]), miolo),
+    )
 
 
 # ---------------------------------------------------------------------------

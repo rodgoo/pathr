@@ -233,6 +233,7 @@ from app.routers import (  # noqa: E402
     language_practice,
     languages,
     library,
+    newsletter,
     noticias,
     passkeys,
     plan,
@@ -296,3 +297,4 @@ app.include_router(varredura.router)
 app.include_router(recursos.router)
 app.include_router(walkthroughs.router)
 app.include_router(noticias.router)
+app.include_router(newsletter.router)

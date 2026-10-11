@@ -28,3 +28,15 @@ jobs:
             -X POST "https://api.pathr.notter.com.br/jobs/emails" \
             -H "X-Pathr-Jobs-Secret: ${{ secrets.PATHR_JOBS_SECRET }}")
           echo "$resposta"
+
+      # A newsletter do admin (backend/app/services/newsletter.py). No mesmo
+      # cron de hora em hora: quem decide se a edição sai agora são os dias e a
+      # hora que o admin escolheu, e o servidor guarda a trava de "uma por dia".
+      # Roda mesmo se o passo acima falhar — são rotinas independentes.
+      - name: Chamar o disparo da newsletter
+        if: always()
+        run: |
+          resposta=$(curl --silent --show-error --fail-with-body --max-time 180 \
+            -X POST "https://api.pathr.notter.com.br/jobs/newsletter" \
+            -H "X-Pathr-Jobs-Secret: ${{ secrets.PATHR_JOBS_SECRET }}")
+          echo "$resposta"

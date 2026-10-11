@@ -38,6 +38,7 @@ import { ResourcePage } from "@/pages/ResourcePage";
 import { RoadmapPage } from "@/pages/RoadmapPage";
 import { SettingsPage } from "@/pages/SettingsPage";
 import { ManualPage } from "@/pages/ManualPage";
+import { NewsletterPage } from "@/pages/NewsletterPage";
 
 // As telas podem devolver null enquanto os dados chegam, então o tipo
 // precisa admitir isso — um Record<Screen, () => JSX.Element> obrigaria cada
@@ -71,7 +72,7 @@ const SCREENS: Record<Screen, () => JSX.Element | null> = {
 const ENDERECOS_DE_VISITANTE = new Set(["/entrar", "/cadastro", "/recuperar-senha"]);
 
 export function App() {
-  const { status } = useAuth();
+  const { status, user } = useAuth();
   const [location, navigate, replace] = useLocation();
 
   // Entrar não troca de endereço: o login acontece no lugar, o `status` vira
@@ -109,6 +110,13 @@ export function App() {
     // ver a vitrine a cada abertura seria um passo a mais até o login.
     if (location.path === "/" && !abertoComoAppInstalado()) return <LandingPage onNavigate={navigate} />;
     return <LoginPage onNavigate={navigate} />;
+  }
+
+  // O arquivo da newsletter: leitura das edições enviadas, só do super admin.
+  // Para qualquer outra conta o endereço cai no app normal (e o servidor
+  // responderia 404 de qualquer jeito).
+  if (location.path === "/newsletter" && user?.is_super_admin) {
+    return <NewsletterPage onNavigate={navigate} />;
   }
 
   return <AuthenticatedApp />;

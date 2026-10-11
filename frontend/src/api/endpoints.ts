@@ -108,6 +108,95 @@ export const admin = {
     api.post<UsuarioAdmin>(`/admin/usuarios/${encodeURIComponent(id)}/desbanir`, corpo),
 };
 
+/**
+ * Newsletter do admin (só super admin): temas × ângulos, dias e hora, e as
+ * edições enviadas. Não pede a chave de acesso — o destino é o e-mail do
+ * próprio admin. `getSemCache`: a leitura é do servidor, nunca do cache offline.
+ */
+export type AnguloNewsletter = "noticias" | "novidades" | "trabalhos" | "polemicas";
+export type FrequenciaNewsletter =
+  | "diaria"
+  | "dias_uteis"
+  | "fim_de_semana"
+  | "semanal"
+  | "mensal"
+  | "personalizada";
+
+export interface ConfigNewsletter {
+  enabled: boolean;
+  topics: string[];
+  angles: AnguloNewsletter[];
+  frequency: FrequenciaNewsletter;
+  /** 0 = segunda … 6 = domingo. */
+  weekdays: number[];
+  month_day: number;
+  send_hour: number;
+  items_per_topic: number;
+}
+export interface MateriaNewsletter {
+  titulo: string;
+  url: string;
+  fonte: string;
+  resumo: string;
+  /** A foto da matéria (https), quando a fonte ou a página tem uma. */
+  imagem?: string | null;
+  publicado_em: string | null;
+  topico: string;
+  categoria: AnguloNewsletter;
+  /** O termo do ecossistema que achou a matéria ("Spring Boot" p/ Java). */
+  termo?: string;
+}
+export interface CombinacaoNewsletter {
+  topico: string;
+  categoria: AnguloNewsletter;
+  /** "Java + Empregos". */
+  rotulo: string;
+  consulta: string;
+  ecossistema: string[];
+}
+export interface EdicaoNewsletter {
+  id: string;
+  assunto: string;
+  tipo: "agendada" | "manual";
+  enviada_em: string;
+  quantidade: number;
+  itens: MateriaNewsletter[];
+}
+export interface PainelNewsletter {
+  config: ConfigNewsletter & { last_sent_on: string | null; next_send_on: string | null };
+  combinacoes: CombinacaoNewsletter[];
+  edicoes: EdicaoNewsletter[];
+  /** O interruptor geral da Operação. */
+  ativa: boolean;
+  fontes: { tavily: boolean; brave: boolean };
+  email_configurado: boolean;
+  destino: string;
+  fuso: string;
+  angulos: { key: AnguloNewsletter; rotulo: string }[];
+  frequencias: FrequenciaNewsletter[];
+  limites: { max_temas: number; max_consultas: number; max_itens_por_busca: number };
+}
+export const newsletter = {
+  painel: () => api.getSemCache<PainelNewsletter>("/admin/newsletter"),
+  salvar: (config: ConfigNewsletter) =>
+    api.put<{ config: PainelNewsletter["config"]; combinacoes: CombinacaoNewsletter[] }>(
+      "/admin/newsletter/config",
+      config,
+    ),
+  buscar: (corpo: { topics?: string[]; angles?: AnguloNewsletter[] } = {}) =>
+    api.post<{ dias: number; combinacoes: CombinacaoNewsletter[]; itens: MateriaNewsletter[] }>(
+      "/admin/newsletter/buscar",
+      corpo,
+    ),
+  /** Sem `itens`: monta e envia uma edição com a configuração salva. */
+  enviar: (itens?: MateriaNewsletter[]) =>
+    api.post<{ enviado: boolean; assunto?: string; motivo?: string; itens: number }>(
+      "/admin/newsletter/enviar",
+      { itens: itens ?? null },
+    ),
+  edicoes: () => api.getSemCache<{ edicoes: EdicaoNewsletter[] }>("/newsletter"),
+};
+
 export const relatos = {
   enviar: (dados: { tipo: TipoRelato; mensagem: string; pagina?: string; foto?: File | null }) => {
     const form = new FormData();

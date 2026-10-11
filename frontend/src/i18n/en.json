@@ -1455,7 +1455,8 @@
       "avisos": "Notices and Privacy",
       "integracoes": "API Status",
       "moderacao": "Moderation",
-      "recursos": "Resources"
+      "recursos": "Resources",
+      "newsletter": "Newsletter"
     },
     "legaisAria": "Legal Documents",
     "legais": {
@@ -3090,6 +3091,99 @@
         "titulo": "Tech Lead: Technical Leadership and Architecture",
         "detalhe": "technical decisions, code reviews, and mentoring"
       }
+    }
+  },
+  "newsletter": {
+    "titulo": "Newsletter",
+    "explica": "Real tech news, curated from the web based on the topics you choose, delivered straight to your email on the days and at the times you set.",
+    "avisoPausada": "The newsletter is currently paused. Nothing will be sent until it is reactivated.",
+    "avisoSemFonte": "No search source has been configured (TAVILY_API_KEY or BRAVE_API_KEY). Without it, nothing is found.",
+    "avisoSemEmail": "Email (Brevo) is not configured in this environment: the message does not reach the inbox.",
+    "tecnologias": "Technologies",
+    "tecnologiasAjuda": "Languages and subjects. Add as many as you like, up t{max}s.",
+    "adicionarRotulo": "Add technology",
+    "adicionarPlaceholder": "Examples: Java, Rust, Kubernetes…",
+    "adicionar": "Add",
+    "remover": "Remove {nome}",
+    "sugestoes": "Suggestions",
+    "angulos": "What to watch",
+    "angulosAjuda": "Each angle complements each technology, and they build on one another.",
+    "angulo": {
+      "noticias": "General News",
+      "novidades": "What's New",
+      "trabalhos": "Jobs",
+      "polemicas": "Controversies"
+    },
+    "combinacoes": "Combinations",
+    "combinacoesAjuda": "This is what we will be aiming for. Each one already embodies the technology ecosystem—not just its name.",
+    "combinacoesVazio": "Select at least one technology to view the combinations.",
+    "combinacoesTotal": "{n} {max} combinations",
+    "combinacoesDemais": "Too many combinations: remove some technology or angle.",
+    "inclui": "includes {termos}",
+    "ecossistemaDescoberto": "The ecosystem is discovered during the search",
+    "quando": "When",
+    "frequencia": "Frequency",
+    "frequenciaOpcao": {
+      "diaria": "Every day",
+      "dias_uteis": "Business days",
+      "fim_de_semana": "Weekend",
+      "semanal": "Once a week",
+      "mensal": "Once a month",
+      "personalizada": "Days I Choose"
+    },
+    "diasDaSemana": "Days of the Week",
+    "dia": [
+      "Mon",
+      "To have",
+      "Wed",
+      "Thu",
+      "Sex",
+      "Sat",
+      "Sun"
+    ],
+    "diaDoMes": "Day of the month",
+    "diaDoMesNota": "It runs through the 28th: There aren't any 29th or 31st days in every month.",
+    "horario": "Schedule",
+    "horarioNota": "It arrives around {hora}, during the {fuso} time slot. Shipments are made on the hour.",
+    "porCombinacao": "Subjects by Combination",
+    "envio": "Automatic shipping",
+    "ligada": "On",
+    "pausada": "Paused",
+    "proximo": "Next issue: {data}",
+    "semProximo": "No scheduled shipments.",
+    "ultimo": "Last updated: {data}",
+    "naoSalvo": "There are unsaved changes.",
+    "salvar": "Save",
+    "salvando": "Saving…",
+    "salvo": "Saved.",
+    "erroSalvar": "I couldn't save it. Please check the fields.",
+    "procurar": "Search Now",
+    "procurando": "Searching…",
+    "resultados": "{n} articles from the past {dias} days",
+    "semResultados": "No new results found for these combinations.",
+    "marcarTodas": "Select all",
+    "enviarSelecionadas": "Send {n} to {destino}",
+    "enviarAgora": "Submit the edit now",
+    "enviarAgoraAjuda": "Search and send using the saved settings.",
+    "enviando": "Sending…",
+    "enviada": "Sent: {assunto}",
+    "naoEnviada": "Not sent: {motivo}",
+    "via": "via {termo}",
+    "historico": "Submitted editions",
+    "historicoVazio": "No edits have been submitted yet.",
+    "abrirArquivo": "Open full file",
+    "materias": "{n} articles",
+    "tipo": {
+      "agendada": "scheduled",
+      "manual": "manual"
+    },
+    "pagina": {
+      "titulo": "Newsletter",
+      "subtitulo": "The issues sent to your email, with the articles and links.",
+      "voltar": "Back to PathR",
+      "carregando": "Loading issues…",
+      "vazio": "No issues have been submitted yet. Set it up and submit your first one under Settings › Newsletter.",
+      "configurar": "Set up a newsletter"
     }
   }
 }
