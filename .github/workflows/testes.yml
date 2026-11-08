@@ -1,3 +1,5 @@
+# Roda nos runners deste PC (rótulo rodgoo-ci, contêineres do Hub+: scripts/runner-ci), nunca nos do GitHub.
+# Sem o PC ligado o job espera na fila (escolha do dono, 2026-11-06).
 # Os testes rodando em cada push e em cada PR.
 #
 # Existe para que contribuição de fora não dependa de alguém rodar a suíte na
@@ -22,7 +24,7 @@ concurrency:
 
 jobs:
   backend:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rodgoo-ci]
     defaults:
       run:
         working-directory: backend
@@ -54,7 +56,7 @@ jobs:
       - run: python -m pytest -q
 
   frontend:
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, rodgoo-ci]
     defaults:
       run:
         working-directory: frontend
